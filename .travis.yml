@@ -20,7 +20,7 @@ before_install:
 install:
   - conda update --yes conda
   - conda config --add channels soft-matter
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython
   - source activate test-environment
   - pip install -r requirements.txt
   - pip install coveralls
