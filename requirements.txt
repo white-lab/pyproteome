@@ -11,3 +11,4 @@ seaborn==0.6.0
 somoclu==1.5.1
 pandas==0.17.0
 uniprot==1.2
+numpydoc==0.5
