@@ -1,0 +1,20 @@
+language: python
+sudo: false
+
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+  - pip install coveralls
+
+# command to run tests
+script:
+  - coverage run --source=pyproteome setup.py test
+
+# command to notify coveralls
+after_success:
+  - coveralls
