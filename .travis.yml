@@ -19,7 +19,7 @@ before_install:
 
 install:
   - conda update --yes conda
-  - conda create --yes -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython
+  - conda create --yes -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython
   - source activate test-environment
   - pip install -r requirements.txt
   - pip install coveralls
