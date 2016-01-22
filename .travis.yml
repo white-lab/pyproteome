@@ -17,7 +17,7 @@ before_install:
 install:
   - conda update --yes conda
   - conda config --add channels soft-matter
-  - pip install -r requirements.txt --use-mirrors
+  - pip install -r requirements.txt
   - pip install coveralls
   - echo $PATH
   - which python
