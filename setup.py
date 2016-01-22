@@ -1,7 +1,17 @@
 
-from setuptools import setup
+import os
+from pip.req import parse_requirements
+from pip.download import PipSession
+from setuptools import setup, find_packages
 
 from pyproteome import __version__
+
+
+REQUIREMENTS_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__), "requirements.txt",
+    )
+)
 
 
 setup(
@@ -12,7 +22,11 @@ setup(
     author="Nader Morshed",
     author_email="morshed@mit.edu",
     license="BSD",
-    packages=["pyproteome"],
+    packages=find_packages(),
+    install_requires=[
+        str(i.req)
+        for i in parse_requirements(REQUIREMENTS_PATH, session=PipSession())
+    ],
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
@@ -25,5 +39,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Topic :: Scientific/Engineering",
     ],
-    test_suite="tests",
+    tests_require=[
+        "coverage",
+    ],
 )
