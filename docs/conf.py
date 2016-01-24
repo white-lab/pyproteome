@@ -22,7 +22,7 @@ import shlex
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 PROJ_REQUIREMENTS = [
-    str(i.req)
+    str(i.name)
     for i in parse_requirements(
         os.path.join(THIS_DIR, "..", "requirements.txt"),
         session=PipSession(),
@@ -30,7 +30,7 @@ PROJ_REQUIREMENTS = [
 ]
 
 DOCS_REQUIREMENTS = [
-    str(i.req)
+    str(i.name)
     for i in parse_requirements(
         os.path.join(THIS_DIR, "requirements.txt"),
         session=PipSession(),
@@ -65,7 +65,6 @@ autodoc_mock_imports = [
     for mod_name in PROJ_REQUIREMENTS
     if mod_name not in DOCS_REQUIREMENTS
 ]
-print(autodoc_mock_imports)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
