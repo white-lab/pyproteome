@@ -28,6 +28,7 @@ from scipy.stats import ttest_ind
 # from sklearn.cluster import KMeans, MiniBatchKMeans
 
 # Misc extras
+from adjustText import adjust_text
 import Bio.Alphabet.IUPAC
 import Bio.Seq
 import Bio.motifs
@@ -89,10 +90,66 @@ def snr_table(
     display(psms)
 
 
+def _place_labels(x, y, texts, ax=None, spring_k=None, spring_scale=None):
+    if spring_k is None:
+        spring_k = 0.15
+
+    if spring_scale is None:
+        spring_scale = 0.1
+
+    if ax is None:
+        ax = plt.gca()
+
+    if not texts:
+        return
+
+    G = nx.Graph()
+    init_pos = {}
+    data_pos = {}
+    data_nodes = []
+    ano_nodes = []
+
+    for j, b in enumerate(zip(x, y, texts)):
+        x, y, label = b
+        data_str = "data_{}".format(j)
+        ano_str = "ano_{}".format(j)
+
+        G.add_node(ano_str)
+        G.add_node(data_str)
+        G.add_edge(ano_str, data_str, weight=0.1)
+
+        data_nodes.append(data_str)
+        ano_nodes.append(ano_str)
+
+        data_pos[data_str] = (x, y)
+        init_pos[data_str] = (x, y)
+        init_pos[ano_str] = (x, y)
+
+    pos = nx.spring_layout(
+        G, pos=init_pos, fixed=data_nodes,
+        k=spring_k,
+        scale=spring_scale,
+    )
+
+    for j, txt in enumerate(texts):
+        data_str = "data_{}".format(j)
+        ano_str = "ano_{}".format(j)
+
+        ax.annotate(
+            txt,
+            xy=data_pos[data_str], xycoords="data",
+            xytext=pos[ano_str], textcoords="data",
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"),
+            # fontsize=20,
+            bbox=dict(boxstyle='square', fc='pink', ec='none'),
+        )
+
+
 def volcano_plot(
     norm_psms,
     pval_cutoff=1.3, fold_cutoff=1.2, folder_name=None, title=None,
-    spring_k=0.15, spring_scale=0.1,
+    spring_k=None, spring_scale=None, adjust_layout=True,
 ):
     """
     Display a volcano plot of data.
@@ -109,6 +166,9 @@ def volcano_plot(
     title : str, optional
     spring_k : float, optional
     spring_scale : float, optional
+    adjust_layout : bool, optional
+        Use the adjustText library to position labels, otherwise use networkx
+        and its spring_layout function.
     """
     utils.make_folder(folder_name)
 
@@ -159,48 +219,23 @@ def volcano_plot(
     ax.set_ylim(bottom=-0.1)
 
     # Position the labels
-    if sig_labels:
-        G = nx.Graph()
-        init_pos = {}
-        data_pos = {}
-        data_nodes = []
-        ano_nodes = []
-
-        for j, b in enumerate(zip(sig_changes, sig_pvals, sig_labels)):
-            x, y, label = b
-            data_str = "data_{}".format(j)
-            ano_str = "ano_{}".format(j)
-
-            G.add_node(ano_str)
-            G.add_node(data_str)
-            G.add_edge(ano_str, data_str, weight=0.1)
-
-            data_nodes.append(data_str)
-            ano_nodes.append(ano_str)
-
-            data_pos[data_str] = (x, y)
-            init_pos[data_str] = (x, y)
-            init_pos[ano_str] = (x, y)
-
-        pos = nx.spring_layout(
-            G, pos=init_pos, fixed=data_nodes,
-            k=spring_k,
-            scale=spring_scale,
+    if adjust_layout:
+        adjust_text(
+            x=sig_changes,
+            y=sig_pvals,
+            texts=sig_labels,
+            ax=ax,
         )
+    else:
+        _place_labels(
+            x=sig_changes,
+            y=sig_pvals,
+            texts=sig_labels,
+            ax=ax,
+            spring_k=spring_k,
+            spring_scale=spring_scale,
 
-        for j, txt in enumerate(sig_labels):
-            data_str = "data_{}".format(j)
-            ano_str = "ano_{}".format(j)
-
-            ax.annotate(
-                txt,
-                xy=data_pos[data_str], xycoords="data",
-                xytext=pos[ano_str], textcoords="data",
-                arrowprops=dict(arrowstyle="->",
-                                connectionstyle="arc3"),
-                # fontsize=20,
-                bbox=dict(boxstyle='square', fc='pink', ec='none'),
-            )
+        )
 
     if title:
         ax.set_title(title)
