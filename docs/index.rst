@@ -11,9 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: pyproteome
-   :members:
-
+   modules
 
 Indices and tables
 ==================
