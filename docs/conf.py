@@ -14,8 +14,39 @@
 
 import sys
 import os
+from pip.req import parse_requirements
+from pip.download import PipSession
 import shlex
 
+from unittest.mock import MagicMock
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJ_REQUIREMENTS = [
+    str(i.req)
+    for i in parse_requirements(
+        os.path.join(THIS_DIR, "..", "requirements.txt"),
+        session=PipSession(),
+    )
+]
+DOCS_REQUIREMENTS = [
+    str(i.req)
+    for i in parse_requirements(
+        os.path.join(THIS_DIR, "requirements.txt"),
+        session=PipSession(),
+    )
+]
+
+sys.modules.update(
+    (mod_name, Mock())
+    for mod_name in PROJ_REQUIREMENTS
+    if mod_name not in DOCS_REQUIREMENTS
+)
 sys.path.insert(0, '..')
 
 # If extensions (or modules to document with autodoc) are in another directory,
