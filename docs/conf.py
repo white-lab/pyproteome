@@ -70,6 +70,7 @@ autodoc_mock_imports = [
     "IPython", "IPython.display",
     "scipy.stats",
     "Bio", "Bio.Alphabet", "Bio.Alphabet.IUPAC", "Bio.Seq", "Bio.motifs",
+    "adjustText.adjustText",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

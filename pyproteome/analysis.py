@@ -28,7 +28,7 @@ from scipy.stats import ttest_ind
 # from sklearn.cluster import KMeans, MiniBatchKMeans
 
 # Misc extras
-from adjustText import adjust_text
+from adjustText.adjustText import adjust_text
 import Bio.Alphabet.IUPAC
 import Bio.Seq
 import Bio.motifs
