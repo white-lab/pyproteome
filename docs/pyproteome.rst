@@ -1,13 +1,6 @@
 pyproteome package
 ==================
 
-Subpackages
------------
-
-.. toctree::
-
-    pyproteome.tests
-
 Submodules
 ----------
 
