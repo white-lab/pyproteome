@@ -64,7 +64,7 @@ autodoc_mock_imports = [
     mod_name.replace("-", "_")
     for mod_name in PROJ_REQUIREMENTS
     if mod_name not in DOCS_REQUIREMENTS
-] + ["sklearn"]
+] + ["sklearn", "IPython", "scipy.stats"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
