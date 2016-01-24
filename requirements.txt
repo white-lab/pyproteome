@@ -1,4 +1,4 @@
-adjustText==0.5
+-e git+https://github.com/Phlya/adjustText#egg=adjustText
 biopython>=1.66
 fastcluster==1.1.20
 matplotlib>=1.4.0

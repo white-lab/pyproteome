@@ -29,6 +29,7 @@ setup(
     ],
     dependency_links=[
         "git+https://github.com/naderm/uniprot#egg=uniprot",
+        "git+https://github.com/Phlya/adjustText#egg=adjustText"
     ],
     classifiers=[
         "License :: OSI Approved :: BSD License",
