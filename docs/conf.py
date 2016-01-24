@@ -18,15 +18,9 @@ from pip.req import parse_requirements
 from pip.download import PipSession
 import shlex
 
-from unittest.mock import MagicMock
-
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
 PROJ_REQUIREMENTS = [
     str(i.req)
     for i in parse_requirements(
@@ -34,6 +28,7 @@ PROJ_REQUIREMENTS = [
         session=PipSession(),
     )
 ]
+
 DOCS_REQUIREMENTS = [
     str(i.req)
     for i in parse_requirements(
@@ -42,12 +37,7 @@ DOCS_REQUIREMENTS = [
     )
 ]
 
-sys.modules.update(
-    (mod_name, Mock())
-    for mod_name in PROJ_REQUIREMENTS
-    if mod_name not in DOCS_REQUIREMENTS
-)
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(THIS_DIR, '..'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -68,6 +58,12 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'numpydoc',
+]
+
+autodoc_mock_imports = [
+    mod_name
+    for mod_name in PROJ_REQUIREMENTS
+    if mod_name not in DOCS_REQUIREMENTS
 ]
 
 # Add any paths that contain templates here, relative to this directory.
