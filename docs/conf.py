@@ -65,6 +65,7 @@ autodoc_mock_imports = [
     for mod_name in PROJ_REQUIREMENTS
     if mod_name not in DOCS_REQUIREMENTS
 ]
+print(autodoc_mock_imports)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -109,7 +110,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '**/tests*']
+exclude_patterns = ['_build', '**tests**']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

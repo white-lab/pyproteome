@@ -27,6 +27,9 @@ setup(
         str(i.req)
         for i in parse_requirements(REQUIREMENTS_PATH, session=PipSession())
     ],
+    dependency_links=[
+        "git+https://github.com/naderm/uniprot#egg=uniprot",
+    ],
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
