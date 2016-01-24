@@ -46,6 +46,19 @@ class Modifications:
         )
 
     def get_mods(self, letter_mod_types):
+        """
+        Filter the list of modifications.
+
+        Only keeps modifications with a given letter, mod_type, or both.
+
+        Parameters
+        ----------
+        letter_mod_types : list of tuple of str, str
+
+        Returns
+        -------
+        generator of Modification
+        """
         any_letter, any_mod, letter_mod = \
             _extract_letter_mods(letter_mod_types)
         return (
@@ -117,6 +130,13 @@ class Modification:
         ]
 
     def display_mod_type(self):
+        """
+        Return the mod_type in an abbreviated form (i.e. "p" for "Phospho")
+
+        Returns
+        -------
+        str
+        """
         if self.mod_type in ["Phospho"]:
             return "p"
         if self.mod_type in ["Carbamidomethyl"]:
@@ -161,6 +181,18 @@ class Modification:
 
 
 def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
+    """
+    Check if a modification is of a type.
+
+    Filters by letter, mod_type, or both.
+
+    Parameters
+    ----------
+    mod : pyproteome.Modification
+    any_letter : set of str
+    any_mod : set of str
+    letter_mod : set of tuple of str, str
+    """
     return (
         (
             any_letter is None or
