@@ -28,7 +28,7 @@ setup(
         for i in parse_requirements(REQUIREMENTS_PATH, session=PipSession())
     ],
     dependency_links=[
-        "git+https://github.com/naderm/uniprot#egg=uniprot",
+        "git+https://github.com/boscoh/uniprot#egg=uniprot",
         "git+https://github.com/Phlya/adjustText#egg=adjustText"
     ],
     classifiers=[
@@ -38,9 +38,9 @@ setup(
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.2",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
         "Topic :: Scientific/Engineering",
     ],
     tests_require=[
