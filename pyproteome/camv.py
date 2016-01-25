@@ -45,7 +45,11 @@ def load_camv_validation(basename):
         except OSError:
             return None
         else:
-            LOGGER.info("Loading CAMV validation data from {}".format(path))
+            LOGGER.info(
+                "Loading CAMV validation data from \"{}\"".format(
+                    os.path.join(*path.split(os.sep)[-2:]),
+                )
+            )
 
             if existing is not None:
                 df = pd.concat([existing, df])

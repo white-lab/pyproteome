@@ -221,7 +221,11 @@ def load_mascot_psms(basename, camv_slices=1):
         basename + "_psms.txt",
     )
 
-    LOGGER.info("Loading MASCOT peptides from {}".format(psms_path))
+    LOGGER.info(
+        "Loading MASCOT peptides from \"{}\"".format(
+            os.path.basename(psms_path),
+        )
+    )
 
     psms = pd.read_table(psms_path)
     psms = _filter_unassigned_rows(psms)
@@ -270,6 +274,21 @@ def load_mascot_psms(basename, camv_slices=1):
                 # Assuming First Scan always == Last Scan
                 rejected["Scan"] == row["First Scan"],
                 rejected["Sequence"] == row["Sequence"],
+            )
+            if hit.any():
+                reject_mask[index] = True
+
+        psms = psms[~reject_mask]
+
+    if accepted is not None:
+        reject_mask = np.zeros(psms.shape[0], dtype=bool)
+
+        for index, row in psms.iterrows():
+            # Reject hits where the scan number is the same but the sequence
+            # is different.
+            hit = np.logical_and(
+                accepted["Scan"] == row["First Scan"],
+                accepted["Sequence"] != row["Sequence"],
             )
             if hit.any():
                 reject_mask[index] = True
