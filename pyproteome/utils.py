@@ -59,10 +59,10 @@ def norm(channels):
         return channels + "_norm"
 
     if isinstance(channels, list):
-        return [i + "_norm" for i in channels]
+        return [norm(i) for i in channels]
 
     if isinstance(channels, OrderedDict):
         return OrderedDict(
-            (key + "_norm", val)
+            (norm(key), val)
             for key, val in channels.items()
         )

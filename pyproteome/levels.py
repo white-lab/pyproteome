@@ -42,8 +42,9 @@ def get_channel_levels(
     if folder_name:
         file_name = os.path.join(folder_name, file_name)
 
+    channels = list(data.channels.keys())
     channel_levels = OrderedDict()
-    base = data.channels[0]
+    base = channels[0]
     channel_levels[base] = 1
 
     f, axes = plt.subplots(
@@ -53,19 +54,19 @@ def get_channel_levels(
     )
     axes = [i for j in axes for i in j]
 
-    for ax, col in zip(list(axes), data.channels[1:]):
-        data = (data.psms[col] / data.psms[base]).dropna().as_matrix()
-        med = np.median(data)
+    for ax, col in zip(list(axes), channels[1:]):
+        points = (data.psms[col] / data.psms[base]).dropna().as_matrix()
+        med = np.median(points)
         channel_levels[col] = med
 
-        ax.hist(data, bins=40)
+        ax.hist(points, bins=40)
         ax.set_title(
             "{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
                 "{} ({})".format(data.channels[col], col)
                 if isinstance(data.channels, dict) else
                 col,
                 med,
-                data.std(ddof=1),
+                points.std(ddof=1),
             )
         )
         ax.axvline(med, color='k', linestyle='--')

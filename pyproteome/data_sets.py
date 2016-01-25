@@ -1,5 +1,6 @@
 
 # Built-ins
+import copy
 import logging
 
 # Core data analysis libraries
@@ -23,7 +24,7 @@ class DataSet:
     Attributes
     ----------
     psms : pandas.DataFrame
-        Contains at least "Proteins", "Sequences", and "Modifications" columns.
+        Contains at least "Proteins", "Sequence", and "Modifications" columns.
     channels : dict of str, str
         Maps label channel to sample name.
     groups : dict of str, list of str
@@ -46,6 +47,7 @@ class DataSet:
         groups=None, phenotypes=None,
         name="", enrichment="", tissue="",
         dropna=True,
+        camv_slices=1,
     ):
         """
         Initializes a data set.
@@ -62,6 +64,7 @@ class DataSet:
         enrichment : str, optional
         tissue : str, optional
         dropna : bool, optional
+        camv_slices : int, optional
         """
         assert psms is not None or \
             mascot_name is not None or \
@@ -72,6 +75,7 @@ class DataSet:
         if mascot_name:
             psms = loading.load_mascot_psms(
                 mascot_name,
+                camv_slices=1,
             )
             self.source = "MASCOT"
         elif camv_name:
@@ -95,7 +99,10 @@ class DataSet:
             LOGGER.info("Dropping channels with NaN values.")
             self.dropna(inplace=True)
 
-        self._merge_psms()
+    def copy(self):
+        new = copy.copy(self)
+        new.psms = new.psms.copy()
+        return new
 
     def __str__(self):
         return (
@@ -114,10 +121,13 @@ class DataSet:
             new.psms = new.psms[key]
             return new
 
+        if isinstance(key, str):
+            return self.psms[key]
+
         raise TypeError
 
     def _merge_psms(self):
-        channels = list(self.groups.values())
+        channels = list(self.channels.keys())
 
         if self.normalized:
             channels += utils.norm(channels)
@@ -126,7 +136,7 @@ class DataSet:
         self.psms = self.psms.groupby(
             [
                 "Proteins",
-                "Sequences",
+                "Sequence",
                 "Modifications",
             ],
             sort=False,
@@ -179,6 +189,9 @@ class DataSet:
             new.psms[norm_key] = new.psms[key] / levels[key]
 
         new.normalized = True
+
+        new._merge_psms()
+        new._update_snr_change()
 
         return new
 
@@ -331,22 +344,24 @@ class DataSet:
         if self.normalized:
             groups = utils.norm(groups)
 
-        self.psms["SNR"] = pd.Series(
-            [
-                math.snr(row[groups[0]], row[groups[1]])
-                for index, row in self.psms.iterrows()
-            ]
-        )
         if len(groups) == 2:
+            self.psms["SNR"] = pd.Series(
+                [
+                    math.snr(row[groups[0]], row[groups[1]])
+                    for index, row in self.psms.iterrows()
+                ]
+            )
+
             self.psms["Fold Change"] = pd.Series(
-                self.psms[groups[0]].mean() /
-                self.psms[groups[1]].mean()
+                self.psms[groups[0]].mean(axis=1) /
+                self.psms[groups[1]].mean(axis=1)
             )
             self.psms["p-value"] = pd.Series(
                 ttest_ind(
                     self.psms[groups[0]],
                     self.psms[groups[1]],
-                )
+                    axis=1,
+                )[1]
             )
 
 
@@ -365,7 +380,11 @@ def merge_data(data_sets):
     assert len(data_sets) > 0
 
     if any(not isinstance(data, DataSet) for data in data_sets):
-        raise TypeError
+        raise TypeError(
+            "Incompatible types: {}".format(
+                [type(data) for data in data_sets]
+            )
+        )
 
     if any(data.groups != data_sets[0].groups for data in data_sets):
         raise Exception("Incongruent groups between data sets.")

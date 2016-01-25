@@ -60,8 +60,12 @@ def snr_table(
     """
     if folder_name is None:
         folder_name = data.name
+
     if csv_name is None:
-        csv_name = "{}-{}.csv".format(data.name, data.enrichment)
+        csv_name = "{}-{}.csv".format(
+            re.sub("[ ></]", "_", data.name),
+            re.sub("[ ></]", "_", data.enrichment),
+        )
 
     utils.make_folder(folder_name)
 
@@ -279,9 +283,9 @@ def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
     if folder_name and filename:
         filename = os.path.join(folder_name, filename)
 
-    group_a = set(data_a["Sequences"])
-    group_b = set(data_b["Sequences"])
-    group_c = set(data_c["Sequences"])
+    group_a = set(data_a["Sequence"])
+    group_b = set(data_b["Sequence"])
+    group_c = set(data_c["Sequence"])
 
     f = plt.figure(figsize=(12, 12))
     v = mv.venn3(
@@ -380,8 +384,6 @@ def write_lists(
 
 def plot_sequence_between(
     data, sequences,
-    xlabels=None,
-    normalize=True,
 ):
     """
     Plot the levels of a sequence between two groups.
@@ -394,19 +396,23 @@ def plot_sequence_between(
     groups = data.groups
 
     if data.normalized:
-        groups = utils.norm(groups)
+        groups = [utils.norm(group) for group in groups.values()]
+
+    groups = list(reversed(groups))
 
     psms = data.psms.copy()
     psms["Seq Str"] = psms["Sequence"].apply(str)
     psms = psms[psms["Seq Str"].isin(sequences)]
 
-    points = [
-        psms[group].as_matrix()
-        for group in groups
-    ]
+    points = np.array(
+        [
+            psms[group].as_matrix().sum(axis=0)
+            for group in groups
+        ]
+    )
 
-    values = points.mean(axis=0)
-    errs = points.std(axis=0)
+    values = points.mean(axis=1)
+    errs = points.std(axis=1)
 
     f, ax = plt.subplots()
 
@@ -431,9 +437,8 @@ def plot_sequence_between(
     for label in ax.get_yticklabels():
         label.set_fontsize(14)
 
-    if xlabels:
-        ax.set_xticks(indices + bar_width * 1.5)
-        ax.set_xticklabels(xlabels, fontsize=16)
+    ax.set_xticks(indices + bar_width * 1.5)
+    ax.set_xticklabels(list(reversed(data.groups.keys())), fontsize=16)
 
     title = "{}".format(
         " / ".join(sequences),
@@ -446,6 +451,7 @@ def plot_sequence_between(
             return [val]
         return val
 
+    # XXX: Not correct...
     display(
         dict(
             zip(
@@ -473,10 +479,8 @@ def plot_sequence(
     ----------
     data : pyproteome.DataSet
     sequence : str or pyproteome.Sequence
-    channels : list of str
-    normalize : bool, optional
     """
-    channels = list(data.channels)
+    channels = list(data.channels.keys())
 
     if data.normalized:
         channels = utils.norm(channels)
@@ -493,7 +497,7 @@ def plot_sequence(
         bar_width = .35
         f.bar(bar_width + indices, values[i], bar_width)
         ax.set_xticks(indices + bar_width * 1.5)
-        ax.set_xticklabels(list(channels.values()))
+        ax.set_xticklabels(list(data.channels.values()))
 
     display(values)
 

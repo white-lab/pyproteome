@@ -2,7 +2,6 @@
 
 # Core data analysis libraries
 import numpy as np
-from scipy.stats import ttest_ind
 
 
 def log_cum_fold_change(vals):
@@ -41,37 +40,3 @@ def snr(data1, data2):
     """
     return (data1.mean() - data2.mean()) \
         / (data1.std(ddof=1) + data2.std(ddof=1))
-
-
-def fold_change(data1, data2):
-    """
-    Calculate the fold-change between two groups of data.
-
-    Parameters
-    ----------
-    data1 : numpy.array of float
-    data2 : numpy.array of float
-
-    Returns
-    -------
-    float
-    """
-    return data1.mean() / data2.mean()
-
-
-def p_value(data1, data2):
-    """
-    Calculate the p-value between two groups of data.
-
-    Uses a standard 2-sample T-test.
-
-    Parameters
-    ----------
-    data1 : numpy.array of float
-    data2 : numpy.array of float
-
-    Returns
-    -------
-    float
-    """
-    return ttest_ind(data1, data2)[1]

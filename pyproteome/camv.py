@@ -101,8 +101,9 @@ def output_scan_list(
         letter_mod_types=letter_mod_types,
     )
 
-    scan_list = psms["First Scan"]
+    scan_list = psms[["First Scan"]]
     scan_list.sort(
+        columns=["First Scan"],
         ascending=True,
         inplace=True,
     )
@@ -127,7 +128,7 @@ def output_scan_list(
             )
         )
         lst = scan_list[i * slice_sizes:(i + 1) * slice_sizes]
-        scan_lists[out_name] = lst.tolist()
+        scan_lists[out_name] = lst["First Scan"].tolist()
         lst.to_excel(
             writer,
             index=False,
