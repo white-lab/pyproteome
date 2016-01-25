@@ -135,6 +135,7 @@ def output_scan_list(
             )
         )
         lst = scan_list[i * slice_sizes:(i + 1) * slice_sizes]
+        lst = lst.drop_duplicates()
         scan_lists[out_name] = lst["First Scan"].tolist()
         lst.to_excel(
             writer,
@@ -180,15 +181,19 @@ def _run_camv_get_file(
     )
     cmd = [
         CAMV_PATH,
-        "--get-file",
-        raw_path, xml_path, output_dir,
+        "import", "true",
+        "raw_path", raw_path,
+        "xml_path", xml_path,
+        "out_path", output_dir,
     ]
 
     if scan_path:
         cmd += scan_path
 
     if save_path:
-        cmd += ["--save-session", save_path]
+        cmd += ["save", "true", "session_path", save_path]
+
+    cmd += ["exit", "true"]
 
     output = subprocess.check_output(cmd)
 
@@ -216,9 +221,10 @@ def _run_camv_export(save_path):
 
     cmd = [
         CAMV_PATH,
-        "--load-session",
-        save_path,
-        "--export"
+        "load", "true",
+        "session_path", save_path,
+        "export", "true",
+        "exit", "true",
     ]
 
     output = subprocess.check_output(cmd)
