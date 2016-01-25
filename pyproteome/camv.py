@@ -41,7 +41,7 @@ def load_camv_validation(basename):
         except OSError:
             return None
         else:
-            LOGGER.info("Loading validation data from {}".format(path))
+            LOGGER.info("Loading CAMV validation data from {}".format(path))
 
             if existing is not None:
                 df = pd.concat([existing, df])
@@ -90,6 +90,8 @@ def output_scan_list(
     -------
     pandas.DataFrame
         Scan list that is also saved to file
+    dict of str, list of str
+        Dictionary listing the file names and scans segmented into each file.
     """
     assert scan_sets >= 0
 
@@ -114,14 +116,19 @@ def output_scan_list(
 
     slice_sizes = len(scan_list) // scan_sets + (1)
 
+    scan_lists = {}
+
     for i in range(scan_sets):
+        out_name = "{}-{}.xls".format(basename, i + 1)
         writer = pd.ExcelWriter(
             os.path.join(
                 scan_dir,
-                "{}-{}.xls".format(basename, i + 1),
+                out_name,
             )
         )
-        scan_list[i * slice_sizes:(i + 1) * slice_sizes].to_excel(
+        lst = scan_list[i * slice_sizes:(i + 1) * slice_sizes]
+        scan_lists[out_name] = lst.tolist()
+        lst.to_excel(
             writer,
             index=False,
             header=False,
@@ -129,4 +136,4 @@ def output_scan_list(
         )
         writer.save()
 
-    return scan_list
+    return scan_lists
