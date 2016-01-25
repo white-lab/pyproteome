@@ -209,7 +209,7 @@ def volcano_plot(
         colors.append(color)
 
     # Draw the figure
-    fig, ax = plt.subplots()  # figsize=(12, 12))
+    fig, ax = plt.subplots(figsize=(10, 8))
     ax.scatter(changes, pvals, c=colors)
     ax.set_xlabel("$log_2$ Fold Change")
     ax.set_ylabel("$-log_{10}$ p-value")
@@ -220,11 +220,23 @@ def volcano_plot(
 
     # Position the labels
     if adjust_layout:
+        texts = [
+            ax.text(x, y, txt)
+            for x, y, txt in zip(sig_changes, sig_pvals, sig_labels)
+        ]
+
+        for txt in texts:
+            txt.set_bbox(dict(color='pink', alpha=0.7, edgecolor='red'))
+
         adjust_text(
             x=sig_changes,
             y=sig_pvals,
-            texts=sig_labels,
+            texts=texts,
             ax=ax,
+            lim=200,
+            force_text=0.7,
+            force_points=0.5,
+            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=0.5),
         )
     else:
         _place_labels(
