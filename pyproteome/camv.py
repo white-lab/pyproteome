@@ -5,6 +5,7 @@ Currently limited to importing and outputing scan lists.
 """
 
 # Built-ins
+from collections import OrderedDict
 import logging
 import os
 
@@ -116,7 +117,7 @@ def output_scan_list(
 
     slice_sizes = len(scan_list) // scan_sets + (1)
 
-    scan_lists = {}
+    scan_lists = OrderedDict()
 
     for i in range(scan_sets):
         out_name = "{}-{}.xls".format(basename, i + 1)
@@ -127,7 +128,7 @@ def output_scan_list(
             )
         )
         lst = scan_list[i * slice_sizes:(i + 1) * slice_sizes]
-        scan_lists[out_name] = lst.tolist()
+        scan_lists[out_name] = lst["First Scan"].tolist()
         lst.to_excel(
             writer,
             index=False,

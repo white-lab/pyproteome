@@ -36,14 +36,14 @@ import Bio.motifs
 # import somoclu
 # import uniprot
 
-from . import utils, fetch_data, modifications, sequence
+from . import utils, fetch_data, sequence
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
 
 
 def snr_table(
-    psms,
+    data,
     snr_cutoff=None, fold_cutoff=None,
     folder_name=None, csv_name=None,
 ):
@@ -52,18 +52,22 @@ def snr_table(
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    data : pyproteome.DataSet
     snr_cutoff : float, optional
     fold_cutoff : float, optional
     folder_name : str, optional
     csv_name : str, optional
     """
+    if folder_name is None:
+        folder_name = data.name
+    if csv_name is None:
+        csv_name = "{}-{}.csv".format(data.name, data.enrichment)
+
     utils.make_folder(folder_name)
 
-    if folder_name and csv_name:
-        csv_name = os.path.join(folder_name, csv_name)
+    csv_name = os.path.join(folder_name, csv_name)
 
-    psms = psms[["Proteins", "Sequence", "SNR", "Fold Change"]]
+    psms = data.psms[["Proteins", "Sequence", "SNR", "Fold Change"]]
 
     # psms["Sort"] = psms["SNR"].apply(abs)
     psms["Sort"] = psms["Fold Change"].apply(lambda x: max([x, 1/x]))
@@ -74,20 +78,7 @@ def snr_table(
     if csv_name:
         psms.to_csv(csv_name)
 
-    if snr_cutoff:
-        psms = psms[abs(psms["SNR"]) > snr_cutoff]
-
-    if fold_cutoff:
-        psms = psms[
-            np.maximum.reduce(
-                [
-                    psms["Fold Change"],
-                    1 / psms["Fold Change"],
-                ]
-            ) > fold_cutoff
-        ]
-
-    display(psms)
+    return psms
 
 
 def _place_labels(x, y, texts, ax=None, spring_k=None, spring_scale=None):
@@ -147,7 +138,7 @@ def _place_labels(x, y, texts, ax=None, spring_k=None, spring_scale=None):
 
 
 def volcano_plot(
-    norm_psms,
+    data,
     pval_cutoff=1.3, fold_cutoff=1.2, folder_name=None, title=None,
     spring_k=None, spring_scale=None, adjust_layout=True,
 ):
@@ -159,7 +150,7 @@ def volcano_plot(
 
     Parameters
     ----------
-    norm_psms : pandas.DataFrame
+    data : pyproteome.DataSet
     pval_cutoff : float, optional
     fold_cutoff : float, optional
     folder_name : str, optional
@@ -170,7 +161,18 @@ def volcano_plot(
         Use the adjustText library to position labels, otherwise use networkx
         and its spring_layout function.
     """
+    if not folder_name:
+        folder_name = data.name
+
     utils.make_folder(folder_name)
+
+    if not title:
+        title = "{} - {} - (Bio-N={}, Tech-N={})".format(
+            data.tissue,
+            data.enrichment,
+            min(len(group) for group in data.groups),
+            data.sets,
+        )
 
     if title:
         file_name = re.sub("[ ></]", "_", title) + "_Volcano.png"
@@ -189,7 +191,7 @@ def volcano_plot(
     sig_labels = []
     colors = []
 
-    for index, row in norm_psms.iterrows():
+    for index, row in data.psms.iterrows():
         color = "grey"
         row_pval = -np.log10(row["p-value"])
         row_change = np.log2(row["Fold Change"])
@@ -260,15 +262,15 @@ def volcano_plot(
     fig.show()
 
 
-def venn3(psms_a, psms_b, psms_c, folder_name=None, filename=None):
+def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
     """
-    Display a three-way venn diagram.
+    Display a three-way venn diagram between data set sequences.
 
     Parameters
     ----------
-    psms_a : pandas.DataFrame
-    psms_b : pandas.DataFrame
-    psms_c : pandas.DataFrame
+    data_a : pyproteome.DataSet
+    data_b : pyproteome.DataSet
+    data_c : pyproteome.DataSet
     folder_name : str, optional
     filename : str, optional
     """
@@ -277,9 +279,9 @@ def venn3(psms_a, psms_b, psms_c, folder_name=None, filename=None):
     if folder_name and filename:
         filename = os.path.join(folder_name, filename)
 
-    group_a = set(psms_a)
-    group_b = set(psms_b)
-    group_c = set(psms_c)
+    group_a = set(data_a["Sequences"])
+    group_b = set(data_b["Sequences"])
+    group_c = set(data_c["Sequences"])
 
     f = plt.figure(figsize=(12, 12))
     v = mv.venn3(
@@ -292,7 +294,7 @@ def venn3(psms_a, psms_b, psms_c, folder_name=None, filename=None):
             len(group_b.intersection(group_c).difference(group_a)),
             len(group_a.intersection(group_b).intersection(group_c)),
         ),
-        set_labels=("Hippocampus", "Cortex", "Cerebellum"),
+        set_labels=(data_a.tissue, data_b.tissue, data_c.tissue),
     )
 
     for label in v.set_labels:
@@ -309,48 +311,8 @@ def venn3(psms_a, psms_b, psms_c, folder_name=None, filename=None):
         f.savefig(filename, transparent=True)
 
 
-def significant_sequences(psms, snr_cutoff=1, fold_cutoff=None, p_cutoff=None):
-    """
-    Process psms and keep those with significant changes.
-
-    Removes any row with a SNR, Fold Change, or p-value above or below a given
-    threshold.
-
-    Parameters
-    ----------
-    psms : pandas.DataFrame
-    snr_cutoff : float, optional
-    fold_cutoff : float, optional
-    p_cutoff : float, optional
-
-    Returns
-    -------
-    pandas.DataFrame
-    """
-    if fold_cutoff is None:
-        fold_cutoff = 1.3
-
-        if snr_cutoff < 0:
-            fold_cutoff = 1 / fold_cutoff
-
-    if snr_cutoff < 0:
-        psms = psms[psms["SNR"] < snr_cutoff]
-    else:
-        psms = psms[psms["SNR"] > snr_cutoff]
-
-    if p_cutoff:
-        psms = psms[psms["p-value"] < p_cutoff]
-
-    if fold_cutoff < 1:
-        psms = psms[psms["Fold Change"] < fold_cutoff]
-    else:
-        psms = psms[psms["Fold Change"] > fold_cutoff]
-
-    return psms["Sequence"]
-
-
 def write_lists(
-    psms,
+    data,
     folder_name=None, sorted_name="sorted_list.txt",
     hits_name="hits_list.txt", background_name="back_list.txt",
 ):
@@ -362,12 +324,15 @@ def write_lists(
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    data : pyproteome.DataSet
     folder_name : str, optional
     sorted_name : str, optional
     hits_name : str, optional
     background_name : str, optional
     """
+    if folder_name is None:
+        folder_name = data.name
+
     utils.make_folder(folder_name)
 
     if folder_name:
@@ -375,7 +340,7 @@ def write_lists(
         hits_name = os.path.join(folder_name, hits_name)
         background_name = os.path.join(folder_name, background_name)
 
-    change_psms = psms.copy()
+    change_psms = data.psms.copy()
     change_psms["Fold Change"] = np.maximum.reduce(
         [
             change_psms["Fold Change"],
@@ -397,17 +362,10 @@ def write_lists(
         f.write(
             "\n".join(
                 i.accessions[0]
-                for i in psms[
-                    np.logical_and(
-                        abs(psms["SNR"]) >= 1,
-                        np.maximum.reduce(
-                            [
-                                change_psms["Fold Change"],
-                                1 / change_psms["Fold Change"],
-                            ]
-                        ) > 1.3
-                    )
-                ]["Proteins"].drop_duplicates(keep="first")
+                for i in data.filter(
+                    fold_cutoff=1.3,
+                    snr_cutoff=1,
+                ).psms["Proteins"].drop_duplicates(keep="first")
             )
         )
 
@@ -415,16 +373,13 @@ def write_lists(
         f.write(
             "\n".join(
                 i.accessions[0]
-                for i in psms[
-                    abs(psms["SNR"]) < 0.1
-                ]["Proteins"].drop_duplicates(keep="first")
+                for i in data.psms["Proteins"].drop_duplicates(keep="first")
             )
         )
 
 
 def plot_sequence_between(
-    psms, sequences,
-    group_a, group_b,
+    data, sequences,
     xlabels=None,
     normalize=True,
 ):
@@ -433,25 +388,25 @@ def plot_sequence_between(
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    data : pyproteome.DataSet
     sequences : list of str
-    group_a : list of str
-    group_b : list of str
-    normalize : bool, optional
     """
-    if normalize:
-        group_a = utils.norm(group_a)
-        group_b = utils.norm(group_b)
+    groups = data.groups
 
-    psms = psms.copy()
+    if data.normalized:
+        groups = utils.norm(groups)
+
+    psms = data.psms.copy()
     psms["Seq Str"] = psms["Sequence"].apply(str)
     psms = psms[psms["Seq Str"].isin(sequences)]
 
-    values_a = psms[group_a].as_matrix()
-    values_b = psms[group_b].as_matrix()
+    points = [
+        psms[group].as_matrix()
+        for group in groups
+    ]
 
-    values = [values_a.mean(), values_b.mean()]
-    errs = [values_a.std(), values_b.std()]
+    values = points.mean(axis=0)
+    errs = points.std(axis=0)
 
     f, ax = plt.subplots()
 
@@ -465,7 +420,12 @@ def plot_sequence_between(
         ecolor="k",
     )
 
-    ax.set_ylabel("Cumulative TMT Signal", fontsize=20)
+    ax.set_ylabel(
+        "Cumulative Channel Signal{}".format(
+            " (Normalized)" if data.normalized else ""
+        ),
+        fontsize=20,
+    )
     ax.ticklabel_format(style="plain")
 
     for label in ax.get_yticklabels():
@@ -487,32 +447,43 @@ def plot_sequence_between(
         return val
 
     display(
-        dict(zip(sequences, _wrap_list(ttest_ind(values_a.T, values_b.T)[1])))
+        dict(
+            zip(
+                sequences,
+                _wrap_list(
+                    ttest_ind(
+                        points[0, :].T,
+                        points[1, :].T
+                    )[1]
+                )
+            )
+        )
     )
 
     return f
 
 
 def plot_sequence(
-    psms, sequence, channels,
-    normalize=True,
+    data, sequence,
 ):
     """
     Plot the levels of a sequence across multiple channels.
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    data : pyproteome.DataSet
     sequence : str or pyproteome.Sequence
     channels : list of str
     normalize : bool, optional
     """
-    if normalize:
+    channels = list(data.channels)
+
+    if data.normalized:
         channels = utils.norm(channels)
 
-    psms = psms[psms["Sequence"] == sequence]
+    psms = data.psms[data.psms["Sequence"] == sequence]
 
-    values = psms[list(channels.keys())].as_matrix()
+    values = psms[channels].as_matrix()
     values = (values.T / values[:, 0]).T
 
     f, ax = plt.subplots()
@@ -527,16 +498,21 @@ def plot_sequence(
     display(values)
 
 
-def find_tfs(psms, folder_name=None, csv_name=None):
+def find_tfs(data, folder_name=None, csv_name=None):
     """
-    Scan over psms to find proteins annotated as transcription factors.
+    Scan over a data set to find proteins annotated as transcription factors.
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    data : pyproteome.DataSet
     folder_name : str, optional
     csv_name : str, optional
     """
+    if folder_name is None:
+        folder_name = data.name
+    if csv_name is None:
+        csv_name = "Changing TFs.csv"
+
     if folder_name and csv_name:
         csv_name = os.path.join(folder_name, csv_name)
 
@@ -555,7 +531,7 @@ def find_tfs(psms, folder_name=None, csv_name=None):
             for go_term in go_terms
         )
 
-    tfs = psms[psms["Proteins"].apply(_is_tf)]
+    tfs = data.psms[data.psms["Proteins"].apply(_is_tf)]
     tfs.sort(columns="Fold Change", ascending=False, inplace=True)
 
     if csv_name:
@@ -568,7 +544,7 @@ def find_tfs(psms, folder_name=None, csv_name=None):
 
 
 def motif_analysis(
-    psms, letter_mod_types=None,
+    data, letter_mod_types=None,
     folder_name=None, filename="Motif.svg",
 ):
     """
@@ -578,7 +554,7 @@ def motif_analysis(
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    data : pyproteome.DataSet
     letter_mod_types : list of tuple of str, str
     folder_name : str, optional
     filename : str, optional
@@ -591,7 +567,7 @@ def motif_analysis(
         [
             Bio.Seq.Seq(seq.upper(), alphabet=alpha)
             for seq in sequence.generate_n_mers(
-                psms["Sequence"],
+                data.psms["Sequence"],
                 letter_mod_types=letter_mod_types,
             )
         ],

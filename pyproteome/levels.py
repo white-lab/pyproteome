@@ -13,12 +13,12 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 import numpy as np
 
-from . import utils, processing
+from . import utils
 
 
 def get_channel_levels(
-    psms, channel_names,
-    folder_name=None, file_name="channel_levels.png",
+    data,
+    folder_name=None, file_name=None,
 ):
     """
     Calculate channel levels using median channel levels.
@@ -27,46 +27,42 @@ def get_channel_levels(
 
     Parameters
     ----------
-    psms : pandas.DataFrame
-    channel_names : list of str or dict of str, str
+    data : pyproteome.DataSet
     folder_name : str, optional
     file_name : str, optional
     """
+    if folder_name is None:
+        folder_name = data.name
+
+    if not file_name:
+        file_name = "channel_levels.png"
+
     utils.make_folder(folder_name)
 
     if folder_name:
         file_name = os.path.join(folder_name, file_name)
 
-    if isinstance(channel_names, dict):
-        keys = list(channel_names.keys())
-    else:
-        keys = channel_names
-
-    psms = processing.filter_mascot_matches(
-        psms,
-        keys,
-    )
-
     channel_levels = OrderedDict()
-    channel_levels[keys[0]] = 1
+    base = data.channels[0]
+    channel_levels[base] = 1
 
     f, axes = plt.subplots(
-        len(keys) // 2, 2,
+        len(data.channels) // 2, 2,
         sharex=True,
         figsize=(12, 12),
     )
     axes = [i for j in axes for i in j]
 
-    for ax, col in zip(list(axes), keys[1:]):
-        data = (psms[col] / psms[keys[0]]).dropna().as_matrix()
+    for ax, col in zip(list(axes), data.channels[1:]):
+        data = (data.psms[col] / data.psms[base]).dropna().as_matrix()
         med = np.median(data)
         channel_levels[col] = med
 
         ax.hist(data, bins=40)
         ax.set_title(
             "{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
-                "{} ({})".format(channel_names[col], col)
-                if isinstance(channel_names, dict) else
+                "{} ({})".format(data.channels[col], col)
+                if isinstance(data.channels, dict) else
                 col,
                 med,
                 data.std(ddof=1),
@@ -74,7 +70,7 @@ def get_channel_levels(
         )
         ax.axvline(med, color='k', linestyle='--')
 
-    for ax in axes[len(channel_names) - 1:]:
+    for ax in axes[len(data.channels) - 1:]:
         ax.set_axis_off()
 
     f.show()
@@ -85,27 +81,22 @@ def get_channel_levels(
     return channel_levels
 
 
-def get_average_phospho_levels(psms, channel_names):
+def get_average_phospho_levels(data):
     """
     Calculate channel levels using mean channel levels.
 
     Parameters
     ----------
-    psms : pandas.DataFrame
-    channel_names : list of str or dict of str, str
+    data : pyproteome.DataSet
 
     Returns
     -------
     OrderedDict
     """
-    if isinstance(channel_names, dict):
-        keys = list(channel_names.keys())
-    else:
-        keys = channel_names
-
-    levels = psms[keys].mean()
+    base = data.channels[0]
+    levels = data.psms[list(data.channels)].mean()
 
     return OrderedDict(
-        (name, levels[name] / levels[keys[0]])
-        for name in keys
+        (name, levels[name] / levels[base])
+        for name in data.channels
     )
