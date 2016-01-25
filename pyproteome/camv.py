@@ -8,6 +8,7 @@ Currently limited to importing and outputing scan lists.
 from collections import OrderedDict
 import logging
 import os
+import subprocess
 
 # Core data analysis libraries
 import pandas as pd
@@ -16,6 +17,8 @@ from . import utils, modifications
 
 
 LOGGER = logging.getLogger("pyproteome.camv")
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+CAMV_PATH = os.path.join(THIS_DIR, "CAMV", "CAMV.exe")
 
 
 def load_camv_validation(basename):
@@ -138,3 +141,89 @@ def output_scan_list(
         writer.save()
 
     return scan_lists
+
+
+def _run_camv_get_file(
+    raw_path, xml_path, output_dir,
+    scan_path=None, save_path=None,
+):
+    """
+    Run the CAMV "Get File" command and then "Save Session".
+
+    Parameters
+    ----------
+    raw_path : str
+    xml_path : str
+    output_dir : str
+    scan_path : str, optional
+    save_path : str, optional
+    """
+    LOGGER.info(
+        "Running CAMV on \"{}\", \"{}\", \"{}\", scans=\"{}\", save=\"{}\""
+        .format(
+            os.path.basename(raw_path),
+            os.path.basename(xml_path),
+            os.path.split(output_dir)[0],
+            os.path.basename(scan_path) if scan_path else "",
+            os.path.basename(save_path) if save_path else "",
+        )
+    )
+    cmd = [
+        CAMV_PATH,
+        "--get-file",
+        raw_path, xml_path, output_dir,
+    ]
+
+    if scan_path:
+        cmd += scan_path
+
+    if save_path:
+        cmd += ["--save-session", save_path]
+
+    output = subprocess.check_call(cmd)
+
+    return output
+
+
+def run_camv_validation(scan_lists):
+    """
+    Run CAMV on a list of scans.
+
+    Does the initial step of converting, importing, and processing scans.
+
+    Parameters
+    ----------
+    scan_lists : dict of str, list of str
+    """
+    for scan_path, scan_list in scan_lists.items():
+        # Build a list of paths
+        file_name = os.path.basename(scan_path)
+        base_name = file_name.rsplit("-", 1)[0]
+        raw_path = os.path.join(
+            "..", "MS RAW", base_name + ".raw",
+        )
+        mascot_xml_path = os.path.join(
+            "..", "Mascot XMLs", base_name + ".xml",
+        )
+        camv_output_dir = os.path.join(
+            "..", "CAMV Output",
+        )
+        save_path = os.path.join(
+            "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
+        )
+
+        # Run CAMV
+        _run_camv_get_file(
+            raw_path,
+            mascot_xml_path,
+            camv_output_dir,
+            scan_path=scan_path,
+            save_path=save_path,
+        )
+
+        # Check save files exists and is >= 4 MB
+        if not os.path.exists(save_path) or \
+           os.stat(save_path).st_size < 2 ** 12:
+            raise Exception(
+                "CAMV did not create a save file for {}".format(save_path)
+            )

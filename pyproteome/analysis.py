@@ -144,6 +144,7 @@ def _place_labels(x, y, texts, ax=None, spring_k=None, spring_scale=None):
 def volcano_plot(
     data,
     pval_cutoff=1.3, fold_cutoff=1.2, folder_name=None, title=None,
+    figsize=(12, 10),
     spring_k=None, spring_scale=None, adjust_layout=True,
 ):
     """
@@ -159,6 +160,7 @@ def volcano_plot(
     fold_cutoff : float, optional
     folder_name : str, optional
     title : str, optional
+    figsize : tuple of float, float
     spring_k : float, optional
     spring_scale : float, optional
     adjust_layout : bool, optional
@@ -215,7 +217,7 @@ def volcano_plot(
         colors.append(color)
 
     # Draw the figure
-    fig, ax = plt.subplots(figsize=(12, 10))
+    fig, ax = plt.subplots(figsize=figsize)
     ax.scatter(changes, pvals, c=colors)
     ax.set_xlabel("$log_2$ Fold Change")
     ax.set_ylabel("$-log_{10}$ p-value")
