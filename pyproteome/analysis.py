@@ -215,7 +215,7 @@ def volcano_plot(
         colors.append(color)
 
     # Draw the figure
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(12, 10))
     ax.scatter(changes, pvals, c=colors)
     ax.set_xlabel("$log_2$ Fold Change")
     ax.set_ylabel("$-log_{10}$ p-value")

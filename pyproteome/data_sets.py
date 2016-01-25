@@ -285,11 +285,11 @@ class DataSet:
         if asym_snr_cutoff:
             if asym_snr_cutoff > 0:
                 new.psms = new.psms[
-                    new.psms["SNR"] >= snr_cutoff
+                    new.psms["SNR"] >= asym_snr_cutoff
                 ]
             else:
                 new.psms = new.psms[
-                    new.psms["SNR"] <= snr_cutoff
+                    new.psms["SNR"] <= asym_snr_cutoff
                 ]
 
         if p_cutoff:
