@@ -98,7 +98,7 @@ def output_scan_list(
     -------
     pandas.DataFrame
         Scan list that is also saved to file
-    dict of str, list of str
+    dict of str, list of int
         Dictionary listing the file names and scans segmented into each file.
     """
     assert scan_sets >= 0
@@ -152,7 +152,7 @@ def _run_camv_get_file(
     scan_path=None, save_path=None,
 ):
     """
-    Run the CAMV "Get File" command and then "Save Session".
+    Run the CAMV "Get File" command and "Save Session" commands.
 
     Parameters
     ----------
@@ -161,10 +161,16 @@ def _run_camv_get_file(
     output_dir : str
     scan_path : str, optional
     save_path : str, optional
+
+    Returns
+    -------
+    str
     """
     LOGGER.info(
-        "Running CAMV on \"{}\", \"{}\", \"{}\", scans=\"{}\", save=\"{}\""
-        .format(
+        (
+            "Running CAMV import on \"{}\", \"{}\", \"{}\","
+            " scans=\"{}\", save=\"{}\""
+        ).format(
             os.path.basename(raw_path),
             os.path.basename(xml_path),
             os.path.split(output_dir)[0],
@@ -184,7 +190,38 @@ def _run_camv_get_file(
     if save_path:
         cmd += ["--save-session", save_path]
 
-    output = subprocess.check_call(cmd)
+    output = subprocess.check_output(cmd)
+
+    return output
+
+
+def _run_camv_export(save_path):
+    """
+    Run CAMV "Load Session" and "Export" commands.
+
+    Parameters
+    ----------
+    save_path : str
+
+    Returns
+    -------
+    str
+    """
+    LOGGER.info(
+        "Running CAMV export on \"{}\""
+        .format(
+            save_path
+        )
+    )
+
+    cmd = [
+        CAMV_PATH,
+        "--load-session",
+        save_path,
+        "--export"
+    ]
+
+    output = subprocess.check_output(cmd)
 
     return output
 
@@ -197,7 +234,7 @@ def run_camv_validation(scan_lists):
 
     Parameters
     ----------
-    scan_lists : dict of str, list of str
+    scan_lists : dict of str, list of int
     """
     for scan_path, scan_list in scan_lists.items():
         # Build a list of paths
@@ -231,3 +268,22 @@ def run_camv_validation(scan_lists):
             raise Exception(
                 "CAMV did not create a save file for {}".format(save_path)
             )
+
+
+def run_camv_export(scan_lists):
+    """
+    Run CAMV export command.
+
+    Creates a list of excel files for accept / maybe / reject peptides using
+    any saved CAMV sessions.
+
+    Parameters
+    ----------
+    scan_lists : dict of str, list of int
+    """
+    for scan_path, scan_list in scan_lists.items():
+        file_name = os.path.basenme(scan_path)
+        save_path = os.path.join(
+            "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
+        )
+        _run_camv_export(save_path)
