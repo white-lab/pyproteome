@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import ttest_ind
 
-from . import loading, math, utils
+from . import loading, utils
 
 
 LOGGER = logging.getLogger("pyproteome.DataSet")
@@ -353,7 +353,7 @@ class DataSet:
         if len(groups) == 2:
             self.psms["SNR"] = pd.Series(
                 [
-                    math.snr(row[groups[0]], row[groups[1]])
+                    _snr(row[groups[0]], row[groups[1]])
                     for index, row in self.psms.iterrows()
                 ]
             )
@@ -404,3 +404,41 @@ def merge_data(data_sets):
         new._update_snr_change()
 
     return new
+
+
+def _log_cum_fold_change(vals):
+    """
+    Calculate the cumulative fold change (in base-2) of values.
+
+    Fold-change is normalized to the first element in the array.
+
+    Parameters
+    ----------
+    vals : numpy.array
+
+    Returns
+    -------
+    float
+    """
+    return sum(
+        abs(np.log2(i / (vals[0])))
+        for i in vals[1:]
+        if i != 0
+    )
+
+
+def _snr(data1, data2):
+    """
+    Calculate the signal-to-noise ratio between two groups of data.
+
+    Parameters
+    ----------
+    data1 : numpy.array of float
+    data2 : numpy.array of float
+
+    Returns
+    -------
+    float
+    """
+    return (data1.mean() - data2.mean()) \
+        / (data1.std(ddof=1) + data2.std(ddof=1))
