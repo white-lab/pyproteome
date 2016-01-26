@@ -38,6 +38,9 @@ class DataSet:
     tissue : str
     sets : int
         Number of sets merged into this data set.
+    source : str
+    scan_list : dict of str, list of int
+    validated : bool
     """
     def __init__(
         self, channels,
@@ -71,9 +74,11 @@ class DataSet:
             camv_name is not None
 
         self.source = "unknown"
+        self.scan_lists = None
+        self.validated = False
 
         if mascot_name:
-            psms = loading.load_mascot_psms(
+            psms, self.scan_lists, self.validated = loading.load_mascot_psms(
                 mascot_name,
                 camv_slices=camv_slices,
             )
@@ -83,6 +88,7 @@ class DataSet:
                 camv_name,
             )
             self.source = "CAMV"
+            self.validated = True
 
         self.psms = psms
         self.channels = channels

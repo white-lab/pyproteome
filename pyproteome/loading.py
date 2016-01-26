@@ -214,7 +214,9 @@ def load_mascot_psms(basename, camv_slices=None):
 
     Returns
     -------
-    pandas.DataFrame
+    psms : pandas.DataFrame
+    scan_lists : dict of str, list of int
+    filter_camv : bool
     """
     psms_path = os.path.join(
         "..", "MS Searched",
@@ -262,7 +264,7 @@ def load_mascot_psms(basename, camv_slices=None):
         row["Sequence"].modifications = row["Modifications"]
 
     # Output the phosphorylation scan list for CAMV
-    camv.output_scan_list(
+    scan_lists = camv.output_scan_list(
         psms,
         basename=basename,
         letter_mod_types=[(None, "Phospho")],
@@ -271,6 +273,7 @@ def load_mascot_psms(basename, camv_slices=None):
 
     # The load CAMV data to clear unwanted hits if available.
     accepted, maybed, rejected = camv.load_camv_validation(basename)
+    filter_camv = any(i is not None for i in [accepted, maybed, rejected])
 
     if rejected is not None:
         # Remove any peptides that match the scan number and sequence
@@ -303,7 +306,7 @@ def load_mascot_psms(basename, camv_slices=None):
 
         psms = psms[~reject_mask]
 
-    return psms
+    return psms, scan_lists, filter_camv
 
 
 def load_validated_psms(filename):

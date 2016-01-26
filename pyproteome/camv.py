@@ -12,6 +12,7 @@ import os
 import subprocess
 
 # Core data analysis libraries
+from IPython.display import display
 import pandas as pd
 
 from . import utils, modifications
@@ -19,7 +20,13 @@ from . import utils, modifications
 
 LOGGER = logging.getLogger("pyproteome.camv")
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-CAMV_PATH = os.path.join(THIS_DIR, "CAMV", "CAMV.exe")
+CAMV_PATH = utils.which("CAMV.exe")
+
+if CAMV_PATH is None:
+    CAMV_PATH = os.path.join(
+        THIS_DIR, "..", "..",
+        "CAMV", "CAMV", "for_redistribution_files_only", "CAMV.exe",
+    )
 
 
 def load_camv_validation(basename):
@@ -193,7 +200,7 @@ def _run_camv_get_file(
     ]
 
     if scan_path:
-        cmd += scan_path
+        cmd += ["sl_path", scan_path]
 
     if save_path:
         cmd += ["save", "true", "session_path", save_path]
@@ -252,20 +259,23 @@ def run_camv_validation(scan_lists, force=False):
         # Build a list of paths
         file_name = os.path.basename(scan_path)
         base_name = file_name.rsplit("-", 1)[0]
+        base_dir = os.path.abspath("..")
         raw_path = os.path.join(
-            "..", "MS RAW", base_name + ".raw",
+            base_dir, "MS RAW", base_name + ".raw",
         )
         mascot_xml_path = os.path.join(
-            "..", "Mascot XMLs", base_name + ".xml",
+            base_dir, "Mascot XMLs", base_name + ".xml",
         )
         camv_output_dir = os.path.join(
-            "..", "CAMV Output",
+            base_dir, "CAMV Output",
         )
         save_path = os.path.join(
-            "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
+            base_dir, "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
         )
 
-        if os.path.exists(save_path):
+        if not force and \
+           os.path.exists(save_path) and \
+           os.stat(save_path).st_size >= 2 ** 12:
             continue
 
         # Run CAMV
@@ -297,8 +307,8 @@ def run_camv_export(scan_lists):
     scan_lists : dict of str, list of int
     """
     for scan_path, scan_list in scan_lists.items():
-        file_name = os.path.basenme(scan_path)
+        file_name = os.path.basename(scan_path)
         save_path = os.path.join(
             "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
         )
-        _run_camv_export(save_path)
+        display(_run_camv_export(save_path))

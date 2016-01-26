@@ -66,3 +66,33 @@ def norm(channels):
             (norm(key), val)
             for key, val in channels.items()
         )
+
+
+def which(program):
+    """
+    Checks if a program exists in PATH's list of directories.
+
+    Parameters
+    ----------
+    program : str
+
+    Returns
+    -------
+    str or None
+    """
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
