@@ -203,7 +203,7 @@ def _extract_modifications(sequence, mods_string):
     )
 
 
-def load_mascot_psms(basename, camv_slices=1):
+def load_mascot_psms(basename, camv_slices=None):
     """
     Load a list of sequences from a file produced by MASCOT / Discoverer.
 
@@ -261,6 +261,14 @@ def load_mascot_psms(basename, camv_slices=1):
     for index, row in psms.iterrows():
         row["Sequence"].modifications = row["Modifications"]
 
+    # Output the phosphorylation scan list for CAMV
+    camv.output_scan_list(
+        psms,
+        basename=basename,
+        letter_mod_types=[(None, "Phospho")],
+        scan_sets=camv_slices,
+    )
+
     # The load CAMV data to clear unwanted hits if available.
     accepted, maybed, rejected = camv.load_camv_validation(basename)
 
@@ -294,14 +302,6 @@ def load_mascot_psms(basename, camv_slices=1):
                 reject_mask[index] = True
 
         psms = psms[~reject_mask]
-
-    # Output the scan path for CAMV
-    camv.output_scan_list(
-        psms,
-        basename=basename,
-        letter_mod_types=[(None, "Phospho")],
-        scan_sets=camv_slices,
-    )
 
     return psms
 

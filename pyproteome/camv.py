@@ -7,6 +7,7 @@ Currently limited to importing and outputing scan lists.
 # Built-ins
 from collections import OrderedDict
 import logging
+from math import ceil
 import os
 import subprocess
 
@@ -79,7 +80,7 @@ def output_scan_list(
     psms,
     basename="Scan List",
     letter_mod_types=None,
-    scan_sets=1,
+    scan_sets=None,
 ):
     """
     Write a list of scans to file.
@@ -96,17 +97,18 @@ def output_scan_list(
 
     Returns
     -------
-    pandas.DataFrame
-        Scan list that is also saved to file
     dict of str, list of int
         Dictionary listing the file names and scans segmented into each file.
     """
-    assert scan_sets >= 0
-
     psms = modifications.filter_mod_types(
         psms,
         letter_mod_types=letter_mod_types,
     )
+
+    scan_lists = OrderedDict()
+
+    if len(psms) == 0:
+        return scan_lists
 
     scan_list = psms[["First Scan"]]
     scan_list.sort(
@@ -122,9 +124,12 @@ def output_scan_list(
 
     utils.make_folder(scan_dir)
 
-    slice_sizes = len(scan_list) // scan_sets + (1)
+    if scan_sets is None:
+        scan_sets = int(ceil(len(psms) / 2500))
 
-    scan_lists = OrderedDict()
+    assert scan_sets >= 0
+
+    slice_sizes = int(ceil(len(scan_list) / scan_sets))
 
     for i in range(scan_sets):
         out_name = "{}-{}.xls".format(basename, i + 1)
@@ -232,7 +237,7 @@ def _run_camv_export(save_path):
     return output
 
 
-def run_camv_validation(scan_lists):
+def run_camv_validation(scan_lists, force=False):
     """
     Run CAMV on a list of scans.
 
@@ -241,6 +246,7 @@ def run_camv_validation(scan_lists):
     Parameters
     ----------
     scan_lists : dict of str, list of int
+    force : bool, optional
     """
     for scan_path, scan_list in scan_lists.items():
         # Build a list of paths
@@ -258,6 +264,9 @@ def run_camv_validation(scan_lists):
         save_path = os.path.join(
             "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
         )
+
+        if os.path.exists(save_path):
+            continue
 
         # Run CAMV
         _run_camv_get_file(

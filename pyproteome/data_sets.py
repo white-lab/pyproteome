@@ -47,7 +47,7 @@ class DataSet:
         groups=None, phenotypes=None,
         name="", enrichment="", tissue="",
         dropna=True,
-        camv_slices=1,
+        camv_slices=None,
     ):
         """
         Initializes a data set.
@@ -75,7 +75,7 @@ class DataSet:
         if mascot_name:
             psms = loading.load_mascot_psms(
                 mascot_name,
-                camv_slices=1,
+                camv_slices=camv_slices,
             )
             self.source = "MASCOT"
         elif camv_name:
