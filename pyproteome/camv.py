@@ -203,7 +203,10 @@ def _run_camv_get_file(
         cmd += ["sl_path", scan_path]
 
     if save_path:
-        cmd += ["save", "true", "session_path", save_path]
+        cmd += [
+            "save", "true",
+            "session_path", save_path,
+        ]
 
     cmd += ["exit", "true"]
 
@@ -257,9 +260,12 @@ def run_camv_validation(scan_lists, force=False):
     """
     for scan_path, scan_list in scan_lists.items():
         # Build a list of paths
+        base_dir = os.path.abspath("..")
+        scan_path = os.path.join(
+            base_dir, "Scan Lists", scan_path,
+        )
         file_name = os.path.basename(scan_path)
         base_name = file_name.rsplit("-", 1)[0]
-        base_dir = os.path.abspath("..")
         raw_path = os.path.join(
             base_dir, "MS RAW", base_name + ".raw",
         )
