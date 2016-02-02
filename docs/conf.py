@@ -68,7 +68,7 @@ autodoc_mock_imports = [
 ] + [
     "sklearn",
     "IPython", "IPython.display",
-    "scipy.stats",
+    "scipy.stats", "scipy.misc",
     "Bio", "Bio.Alphabet", "Bio.Alphabet.IUPAC", "Bio.Seq", "Bio.motifs",
     "adjustText.adjustText",
 ]
