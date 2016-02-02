@@ -16,7 +16,7 @@ import Bio.Alphabet.IUPAC
 import Bio.Seq
 import Bio.motifs
 import pandas as pd
-from scipy.misc import comb
+from scipy.stats import hypergeom
 
 
 LOGGER = logging.getLogger("pyproteome.sequence")
@@ -205,10 +205,7 @@ def motif_enrichment(
         little_n = len(foreground)
         m = back_hits
         k = fore_hits
-        return sum(
-            comb(m, i) * comb(big_n - m, little_n - i)
-            for i in range(k, little_n + 1)
-        ) / comb(big_n, m)
+        return hypergeom.cdf(k, big_n, m, little_n)
 
     def _motif_stats(motif):
         fore_hits = sum(i in motif for i in foreground)
@@ -220,13 +217,13 @@ def motif_enrichment(
         # Calculate the p-value by comparing sig_p to the motif enrichment
         # score from random subsets of the background.
         p_value = sum(
-            # _motif_sig(
-            sum(
-                i in motif
-                for i in random.sample(background, len(foreground))
-            ) >= fore_hits  # ,
-            # back_hits,
-            # ) < sig_p
+            _motif_sig(
+                sum(
+                    i in motif
+                    for i in random.sample(background, len(foreground))
+                ),
+                back_hits,
+            ) < sig_p
             for _ in range(n_fpr_subsets)
         ) / n_fpr_subsets
 
@@ -316,11 +313,11 @@ def motif_enrichment(
             "Motif",
             "Foreground Hits",
             "Background Hits",
-            "P score",
-            "p-value",
+            "p-score",
+            "fpr-score",
         ],
     )
-    df.sort(columns=["p-value"], inplace=True)
+    df.sort(columns=["p-score"], inplace=True)
     df.reset_index(drop=True)
 
     return df
