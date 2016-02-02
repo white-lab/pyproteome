@@ -371,13 +371,14 @@ class DataSet:
             )
 
 
-def merge_data(data_sets):
+def merge_data(data_sets, name=None):
     """
     Merge a list of data sets together.
 
     Parameters
     ----------
     data_sets : list of pyproteome.DataSet
+    name : str, optional
 
     Returns
     -------
@@ -399,9 +400,15 @@ def merge_data(data_sets):
     new.psms = pd.concat([data.psms for data in data_sets])
     new._merge_psms()
     new.sets = sum(data.sets for data in data_sets)
+    new.enrichment = "-".join(
+        sorted(set(data.enrichment for data in data_sets))
+    )
 
     if new.groups:
         new._update_snr_change()
+
+    if name:
+        new.name = name
 
     return new
 
