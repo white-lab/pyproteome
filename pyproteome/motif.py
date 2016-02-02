@@ -141,7 +141,7 @@ def motif_enrichment(
     foreground, background,
     sig_cutoff=0.01, min_fore_hits=3, max_depth=None,
     start_letter="x", letter_mod_types=None,
-    n_fpr_subsets=5000,
+    n_fpr_subsets=1000,
 ):
     """
     Calculate motifs significantly enriched in a list of sequences.
