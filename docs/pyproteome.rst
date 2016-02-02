@@ -20,6 +20,14 @@ pyproteome.camv module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.data_sets module
+---------------------------
+
+.. automodule:: pyproteome.data_sets
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.enrichment_analysis module
 -------------------------------------
 
@@ -60,14 +68,6 @@ pyproteome.logo module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.math module
-----------------------
-
-.. automodule:: pyproteome.math
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.modifications module
 -------------------------------
 
@@ -76,10 +76,10 @@ pyproteome.modifications module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.processing module
-----------------------------
+pyproteome.motif module
+-----------------------
 
-.. automodule:: pyproteome.processing
+.. automodule:: pyproteome.motif
     :members:
     :undoc-members:
     :show-inheritance:
