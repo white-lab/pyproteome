@@ -321,7 +321,7 @@ def motif_enrichment(
         ],
     )
     df.sort(columns=["p-value"], inplace=True)
-    df.reset_index()
+    df.reset_index(drop=True)
 
     return df
 
