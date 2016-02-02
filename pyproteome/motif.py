@@ -165,7 +165,7 @@ def motif_enrichment(
     .. [1] Joughin, Brian a et al. "An Integrated Comparative Phosphoproteomic
            and Bioinformatic Approach Reveals a Novel Class of MPM-2 Motifs
            Upregulated in EGFRvIII-Expressing Glioblastoma Cells." Molecular
-           bioSystems 5.1 (2009): 59–67.
+           bioSystems 5.1 (2009): 59-67.
     """
     if letter_mod_types is None:
         letter_mod_types = [(None, "Phospho")]
