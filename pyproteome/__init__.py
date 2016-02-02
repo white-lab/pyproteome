@@ -7,7 +7,7 @@ and CAMV.
 """
 
 from .version import __version__
-from .modifications import Modification, Modifications
+from .modification import Modification, Modifications
 from .sequence import Sequence, ProteinMatch
 from .motif import Motif
 from .protein import Protein, Proteins

@@ -17,7 +17,7 @@ import subprocess
 from IPython.display import display
 import pandas as pd
 
-from . import utils, modifications
+from . import utils, modification
 
 
 LOGGER = logging.getLogger("pyproteome.camv")
@@ -109,7 +109,7 @@ def output_scan_list(
     dict of str, list of int
         Dictionary listing the file names and scans segmented into each file.
     """
-    psms = modifications.filter_mod_types(
+    psms = modification.filter_mod_types(
         psms,
         letter_mod_types=letter_mod_types,
     )
