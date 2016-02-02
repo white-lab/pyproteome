@@ -8,6 +8,6 @@ and CAMV.
 
 from .version import __version__
 from .modifications import Modification, Modifications
-from .sequence import Sequence, ProteinMatch
+from .sequence import Sequence, ProteinMatch, Motif
 from .protein import Protein, Proteins
 from .data_sets import DataSet

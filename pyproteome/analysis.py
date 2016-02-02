@@ -4,6 +4,8 @@ This module provides functionality for data set analysis.
 Functions include volcano plots, sorted tables, and plotting sequence levels.
 """
 
+from __future__ import division
+
 # Built-ins
 import logging
 import os
@@ -29,14 +31,11 @@ from scipy.stats import ttest_ind
 
 # Misc extras
 from adjustText.adjustText import adjust_text
-import Bio.Alphabet.IUPAC
-import Bio.Seq
-import Bio.motifs
 # import fastcluster as fst
 # import somoclu
 # import uniprot
 
-from . import utils, fetch_data, sequence
+from . import fetch_data, utils
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
@@ -74,7 +73,7 @@ def snr_table(
     psms = data.psms[["Proteins", "Sequence", "SNR", "Fold Change"]]
 
     # psms["Sort"] = psms["SNR"].apply(abs)
-    psms["Sort"] = psms["Fold Change"].apply(lambda x: max([x, 1/x]))
+    psms["Sort"] = psms["Fold Change"].apply(lambda x: max([x, 1 / x]))
 
     psms.sort_values("Sort", inplace=True, ascending=False)
     psms.drop("Sort", axis=1, inplace=True)
@@ -547,36 +546,3 @@ def find_tfs(data, folder_name=None, csv_name=None):
         )
 
     return tfs
-
-
-def motif_analysis(
-    data, letter_mod_types=None,
-    folder_name=None, filename="Motif.svg",
-):
-    """
-    Create a sequence logo figure.
-
-    Logos are created based on the frequencies of peptides in a data set.
-
-    Parameters
-    ----------
-    data : pyproteome.DataSet
-    letter_mod_types : list of tuple of str, str
-    folder_name : str, optional
-    filename : str, optional
-    """
-    if folder_name and filename:
-        filename = os.path.join(folder_name, filename)
-
-    alpha = Bio.Alphabet.IUPAC.protein
-    m = Bio.motifs.create(
-        [
-            Bio.Seq.Seq(seq.upper(), alphabet=alpha)
-            for seq in sequence.generate_n_mers(
-                data.psms["Sequence"],
-                letter_mod_types=letter_mod_types,
-            )
-        ],
-        alphabet=alpha,
-    )
-    m.weblogo(filename, format="svg", logo_title="Testing")
