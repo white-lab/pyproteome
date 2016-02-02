@@ -5,6 +5,8 @@ Currently limited to importing and outputing scan lists.
 """
 
 # Built-ins
+from __future__ import division
+
 from collections import OrderedDict
 import logging
 from math import ceil
@@ -117,10 +119,12 @@ def output_scan_list(
     if len(psms) == 0:
         return scan_lists
 
-    scan_list = psms[["First Scan"]]
-    scan_list.sort(
-        columns=["First Scan"],
+    scan_list = psms.sort(
+        columns=["Protein Group Accessions", "First Scan"],
         ascending=True,
+    )[["First Scan"]]
+    scan_list.drop_duplicates(
+        subset="First Scan",
         inplace=True,
     )
 
@@ -132,7 +136,13 @@ def output_scan_list(
     utils.make_folder(scan_dir)
 
     if scan_sets is None:
-        scan_sets = int(ceil(len(psms) / 2500))
+        scan_sets = int(ceil(len(scan_list) / 1000))
+        LOGGER.info(
+            "Splitting {} unique scans into {} lists".format(
+                len(scan_list),
+                scan_sets,
+            )
+        )
 
     assert scan_sets >= 0
 
@@ -147,7 +157,6 @@ def output_scan_list(
             )
         )
         lst = scan_list[i * slice_sizes:(i + 1) * slice_sizes]
-        lst = lst.drop_duplicates()
         scan_lists[out_name] = lst["First Scan"].tolist()
         lst.to_excel(
             writer,
@@ -301,18 +310,32 @@ def run_camv_validation(scan_lists, force=False):
             )
 
 
-def run_camv_export(scan_lists):
+def run_camv_export(scan_lists=None):
     """
     Run CAMV export command.
 
     Creates a list of excel files for accept / maybe / reject peptides using
-    any saved CAMV sessions.
+    any saved CAMV sessions. If scan_lists is None, everything in the "CAMV
+    Sessions" directory will be exported.
 
     Parameters
     ----------
-    scan_lists : dict of str, list of int
+    scan_lists : dict of str, list of int, optional
     """
-    for scan_path, scan_list in scan_lists.items():
+    if scan_lists is None:
+        scan_paths = [
+            path
+            for path in os.listdir(
+                os.path.join(
+                    "..", "CAMV Sessions"
+                )
+            )
+            if path.endswith(".mat")
+        ]
+    else:
+        scan_paths = list(scan_lists.keys())
+
+    for scan_path in scan_paths:
         file_name = os.path.basename(scan_path)
         save_path = os.path.join(
             "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
