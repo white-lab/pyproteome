@@ -259,6 +259,8 @@ def load_mascot_psms(basename, camv_slices=None):
         index=psms.index,
     )
 
+    psms.reset_index(inplace=True, drop=True)
+
     # Finally close the reference loop between sequences and modifications
     for index, row in psms.iterrows():
         row["Sequence"].modifications = row["Modifications"]
@@ -281,15 +283,39 @@ def load_mascot_psms(basename, camv_slices=None):
         reject_mask = np.zeros(psms.shape[0], dtype=bool)
 
         for index, row in psms.iterrows():
+            # Check if this specific sequence and scan was rejected
             hit = np.logical_and(
                 # Assuming First Scan always == Last Scan
                 rejected["Scan"] == row["First Scan"],
                 rejected["Sequence"] == row["Sequence"],
             )
+
             if hit.any():
                 reject_mask[index] = True
+                continue
 
-        psms = psms[~reject_mask]
+            # Check if this scan was rejected and no sequences were accepted
+            hit = (rejected["Scan"] == row["First Scan"]).any()
+            if not hit:
+                continue
+
+            if accepted is not None:
+                if np.logical_and(
+                    accepted["Scan"] == row["First Scan"],
+                    accepted["Sequence"] == row["Sequence"],
+                ).any():
+                    continue
+
+            if maybed is not None:
+                if np.logical_and(
+                    maybed["Scan"] == row["First Scan"],
+                    maybed["Sequence"] == row["Sequence"],
+                ).any():
+                    continue
+
+            reject_mask[index] = True
+
+        psms = psms[~reject_mask].reset_index(drop=True)
 
     if accepted is not None:
         reject_mask = np.zeros(psms.shape[0], dtype=bool)
@@ -304,7 +330,7 @@ def load_mascot_psms(basename, camv_slices=None):
             if hit.any():
                 reject_mask[index] = True
 
-        psms = psms[~reject_mask]
+        psms = psms[~reject_mask].reset_index(drop=True)
 
     return psms, scan_lists, filter_camv
 
