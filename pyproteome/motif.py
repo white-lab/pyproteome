@@ -86,11 +86,15 @@ class Motif:
         self.motif = motif
 
     def generate_children(self):
+        char_mapping = {
+            "x": "sty",
+            "O": "MILV",
+            "-": "DE",
+            "+": "RK",
+            ".": "ACDEFGHIKLMNPQRSTVWYystO-+x",
+        }
         for index, x in enumerate(self.motif):
-            if x != ".":
-                continue
-
-            for char in "ACDEFGHIKLMNPQRSTVWYystO-+x":
+            for char in char_mapping.get(x, ""):
                 yield Motif(
                     self.motif[:index] + char + self.motif[index + 1:],
                 )
@@ -117,11 +121,11 @@ class Motif:
         return self._match(other)
 
     matchers = {
+        "x": lambda x: x in "sty",
         "O": lambda x: x in "MILV",
         "-": lambda x: x in "DE",
         "+": lambda x: x in "RK",
         ".": lambda x: True,
-        "x": lambda x: x in "sty",
     }
 
     def _match(self, other):
@@ -223,7 +227,7 @@ def motif_enrichment(
                     for i in random.sample(background, len(foreground))
                 ),
                 back_hits,
-            ) < sig_p
+            ) <= sig_p
             for _ in range(n_fpr_subsets)
         ) / n_fpr_subsets
 
@@ -297,7 +301,10 @@ def motif_enrichment(
         )
     )
 
-    LOGGER.info("Second pass: {} motifs".format(len(motif_hits)))
+    LOGGER.info(
+        "Second pass (less specific filtered): {} motifs"
+        .format(len(motif_hits))
+    )
 
     # Finally prepare the output as a sorted list with the motifs and their
     # associated statistics.
