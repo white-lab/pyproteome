@@ -1,3 +1,9 @@
+"""
+This module provides functionality for post-translational modifications.
+
+Wraps modifications in a structured class and allows filtering of
+modifications by amino acid and modification type.
+"""
 
 LABEL_NAMES = ["TMT", "ITRAQ"]
 

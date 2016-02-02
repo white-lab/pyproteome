@@ -12,13 +12,12 @@ import re
 import numpy as np
 import pandas as pd
 
-from . import Proteins, Protein, ProteinMatch, Sequence, \
-    Modification, Modifications, utils, fetch_data, camv
+from . import camv, fetch_data, protein, sequence, modification, utils
 
 
 LOGGER = logging.getLogger("pyproteome.loading")
-pd.set_option("display.max_colwidth", 500)
-pd.set_option("display.max_rows", 500)
+RE_PROTEIN = re.compile("([A-Za-z0-9\(\)\[\]\\/\',\. \-\+]+) OS=")
+RE_MODIFICATION = re.compile("(N-Term|C-Term|([A-Z])([0-9]*))\((.*)\)")
 
 
 def _filter_unassigned_rows(psms):
@@ -44,17 +43,13 @@ def _filter_unassigned_rows(psms):
     )
 
 
-RE_PROTEIN = re.compile("([A-Za-z0-9\(\)\[\]\\/\',\. \-\+]+) OS=")
-RE_MODIFICATION = re.compile("(N-Term|C-Term|([A-Z])([0-9]*))\((.*)\)")
-
-
 def _extract_protein(prot_string):
     match = fetch_data.RE_ACCESSION.search(prot_string)
     if not match:
         raise Exception(
             "Unable to find accession in \"{}\"".format(prot_string)
         )
-    return Protein(accession=match.group(0))
+    return protein.Protein(accession=match.group(0))
 
 
 def _extract_proteins_from_accessions(prots_string):
@@ -69,9 +64,9 @@ def _extract_proteins_from_accessions(prots_string):
     -------
     pyproteome.Proteins
     """
-    return Proteins(
+    return protein.Proteins(
         proteins=[
-            Protein(
+            protein.Protein(
                 accession=accession.strip(),
             )
             for accession in prots_string.split(";")
@@ -91,9 +86,9 @@ def _extract_proteins_from_description(prots_string):
     -------
     pyproteome.Proteins
     """
-    return Proteins(
+    return protein.Proteins(
         proteins=[
-            Protein(
+            protein.Protein(
                 accession=accession,
             )
             for accession in fetch_data.RE_ACCESSION.findall(prots_string)
@@ -129,29 +124,29 @@ def _extract_sequence(proteins, sequence_string):
 
         return pep_pos, exact
 
-    for protein in proteins:
-        rel_pos, exact = _get_rel_pos(protein, sequence_string.upper())
+    for prot in proteins:
+        rel_pos, exact = _get_rel_pos(prot, sequence_string.upper())
         prot_matches.append(
-            ProteinMatch(
-                protein=protein,
+            protein.ProteinMatch(
+                protein=prot,
                 rel_pos=rel_pos,
                 exact=exact,
             )
         )
 
-    return Sequence(
+    return protein.Sequence(
         pep_seq=sequence_string,
         protein_matches=prot_matches,
     )
 
 
-def _extract_modification(sequence, mod_string):
+def _extract_modification(seq, mod_string):
     """
     Extract a single modification from mod_string.
 
     Parameters
     ----------
-    sequence : pyproteome.Sequence
+    seq : pyproteome.Sequence
     mod_string : str
 
     Returns
@@ -162,7 +157,7 @@ def _extract_modification(sequence, mod_string):
         if match.group(1) == "N-Term":
             return 0, True, False
         elif match.group(1) == "C-Term":
-            return len(sequence.pep_seq) - 1, False, True
+            return len(seq.pep_seq) - 1, False, True
         else:
             return int(match.group(3)) - 1, False, False
 
@@ -173,12 +168,12 @@ def _extract_modification(sequence, mod_string):
     if not nterm and not cterm:
         assert sequence.pep_seq[pos].upper() == letter
 
-    return Modification(
+    return modification.Modification(
         rel_pos=pos,
         mod_type=mod,
         nterm=nterm,
         cterm=cterm,
-        sequence=sequence,
+        sequence=seq,
     )
 
 
@@ -195,7 +190,7 @@ def _extract_modifications(sequence, mods_string):
     -------
     pyproteome.Modifications
     """
-    return Modifications(
+    return modification.Modifications(
         mods=[
             _extract_modification(sequence, i.strip())
             for i in mods_string.split(";")

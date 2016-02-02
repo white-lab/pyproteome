@@ -1,3 +1,9 @@
+"""
+This module provides functionality for manipulating proteomics data sets.
+
+Functionality includes merging data sets and interfacing with attributes in a
+structured format.
+"""
 
 # Built-ins
 import copy

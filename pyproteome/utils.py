@@ -1,4 +1,5 @@
 """Utility functions used in other modules."""
+
 # Built-ins
 import difflib
 from collections import OrderedDict

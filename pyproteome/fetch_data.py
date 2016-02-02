@@ -3,6 +3,7 @@ This module provides functionality for fetching protein data from UniProt.
 
 Caches fetched protein data for faster re-use.
 """
+
 # Built-ins
 import os
 import re

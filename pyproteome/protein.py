@@ -1,3 +1,6 @@
+"""
+This module provides functionality for interfacing with protein data.
+"""
 
 from . import fetch_data
 
