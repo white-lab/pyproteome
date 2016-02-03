@@ -22,7 +22,7 @@ from scipy.stats import hypergeom
 LOGGER = logging.getLogger("pyproteome.sequence")
 
 
-def _generate_n_mers(
+def generate_n_mers(
     sequences, n=15,
     all_matches=True,
     fill_left="A",
@@ -37,6 +37,7 @@ def _generate_n_mers(
     sequences : list of pyproteome.Sequence
     n : int, optional
     all_matches : bool, optional
+        Generate n-mers for all protein matches else just the first match.
     fill_left : str, optional
     fill_right : str, optional
     """
@@ -175,13 +176,13 @@ def motif_enrichment(
         letter_mod_types = [(None, "Phospho")]
 
     foreground = list(
-        _generate_n_mers(
+        generate_n_mers(
             foreground,
             letter_mod_types=letter_mod_types,
         )
     )
     background = list(
-        _generate_n_mers(
+        generate_n_mers(
             background,
             letter_mod_types=letter_mod_types,
         )
@@ -353,7 +354,7 @@ def motif_logo(
     m = Bio.motifs.create(
         [
             Bio.Seq.Seq(seq.upper(), alphabet=alpha)
-            for seq in _generate_n_mers(
+            for seq in generate_n_mers(
                 data.psms["Sequence"],
                 letter_mod_types=letter_mod_types,
             )
