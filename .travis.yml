@@ -6,8 +6,6 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-  - "pypy"
-  - "pypy3"
 
 # command to install dependencies
 before_install:
@@ -18,15 +16,17 @@ before_install:
     fi
   - bash miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
+  - export CONDA_PACKAGES="numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython pyzmq"
 
 install:
   - conda update --yes conda
-  - conda create --yes -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython pyzmq
-  - source activate test-environment
+  - conda create --yes -n env python=$TRAVIS_PYTHON_VERSION $CONDA_PACKAGES
+  - source activate env
   - pip install -r requirements.txt
   - pip install coveralls
   - echo $PATH
   - which python
+  - python --version
   - conda info
   - conda list
   - python setup.py install
