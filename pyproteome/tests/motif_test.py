@@ -8,36 +8,35 @@ class MotifTest(TestCase):
         self.motif = pyp.Motif("O..x.-+")
 
     def test_match(self):
-        self.assertTrue("IEFyFER" in self.motif)
-        self.assertTrue("LEFyFER" in self.motif)
-        self.assertTrue("VEFyFER" in self.motif)
-        self.assertTrue("MEFyFER" in self.motif)
+        self.assertIn("IEFtFER", self.motif)
+        self.assertIn("LEFsFER", self.motif)
+        self.assertIn("VEFtFER", self.motif)
+        self.assertIn("MEFsFER", self.motif)
 
-        self.assertTrue("IEFyFER" in self.motif)
-        self.assertTrue("IEFsFER" in self.motif)
-        self.assertTrue("IEFtFER" in self.motif)
+        self.assertIn("IEFsFER", self.motif)
+        self.assertIn("IEFtFER", self.motif)
 
-        self.assertTrue("IEFyFER" in self.motif)
-        self.assertTrue("IEFyFEK" in self.motif)
+        self.assertIn("IEFsFER", self.motif)
+        self.assertIn("IEFsFEK", self.motif)
 
     def test_no_match(self):
-        self.assertFalse("QEFyFER" in self.motif)
-        self.assertFalse("HEFyFER" in self.motif)
-        self.assertFalse("EEFyFER" in self.motif)
-        self.assertFalse("DEFyFER" in self.motif)
+        self.assertNotIn("QEFtFER", self.motif)
+        self.assertNotIn("HEFsFER", self.motif)
+        self.assertNotIn("EEFtFER", self.motif)
+        self.assertNotIn("DEFsFER", self.motif)
 
-        self.assertFalse("IEFYFER" in self.motif)
-        self.assertFalse("IEFSFER" in self.motif)
-        self.assertFalse("IEFTFER" in self.motif)
+        self.assertNotIn("IEFYFER", self.motif)
+        self.assertNotIn("IEFSFER", self.motif)
+        self.assertNotIn("IEFTFER", self.motif)
 
-        self.assertFalse("IEFyFED" in self.motif)
-        self.assertFalse("IEFyFEE" in self.motif)
+        self.assertNotIn("IEFsFED", self.motif)
+        self.assertNotIn("IEFsFEE", self.motif)
 
 
 class GenerateNMersTest(TestCase):
     def setUp(self):
         self.sequence = pyp.Sequence(
-            pep_seq="GEPNVSyICSR",
+            pep_seq="GEPNVsyICSR",
             protein_matches=[
                 pyp.ProteinMatch(
                     protein=pyp.Protein(
@@ -92,3 +91,46 @@ class GenerateNMersTest(TestCase):
             )
         )
         self.assertEqual(nmers, nmers_no_filter)
+
+
+class MotifEnrichmentTest(TestCase):
+    """
+    Test that the motif_enrichment function runs without error on a simple
+    set of Sequence objects.
+    """
+    def setUp(self):
+        self.sequence = pyp.Sequence(
+            pep_seq="GEPNVsyICSR",
+            protein_matches=[
+                pyp.ProteinMatch(
+                    protein=pyp.Protein(
+                        accession="Q9WV60",
+                    ),
+                    rel_pos=209,
+                    exact=True,
+                ),
+            ],
+        )
+        self.sequence.modifications = pyp.Modifications(
+            [
+                # S215-p
+                pyp.Modification(
+                    rel_pos=5,
+                    mod_type="Phospho",
+                    sequence=self.sequence,
+                ),
+                # Y216-p
+                pyp.Modification(
+                    rel_pos=6,
+                    mod_type="Phospho",
+                    sequence=self.sequence,
+                ),
+            ],
+        )
+        self.sequences = [self.sequence]
+        self.foreground = self.sequences
+        self.background = self.sequences
+
+    def test_simple_enrichment(self):
+        df = pyp.motif.motif_enrichment(self.foreground, self.background)
+        self.assertIsNotNone(df)
