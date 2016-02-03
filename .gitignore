@@ -109,3 +109,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# uniprot
+.uniprot_cache/
