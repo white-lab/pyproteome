@@ -32,6 +32,21 @@ class MotifTest(TestCase):
         self.assertNotIn("IEFsFED", self.motif)
         self.assertNotIn("IEFsFEE", self.motif)
 
+    def test_match_motif(self):
+        # Motifs will match themselves and any more specific motifs, though
+        # they will not match less specific motifs
+        self.assertTrue(self.motif.match("O..x.-+"))
+        self.assertTrue(self.motif.match("O..x.E+"))
+        self.assertTrue(self.motif.match("O..s.-+"))
+        self.assertTrue(self.motif.match("O..t.-+"))
+        self.assertTrue(self.motif.match("M..x.-+"))
+        self.assertTrue(self.motif.match("O..x.-K"))
+
+        self.assertFalse(self.motif.match("...x.-+"))
+        self.assertFalse(self.motif.match("O....-+"))
+        self.assertFalse(self.motif.match("O..x..+"))
+        self.assertFalse(self.motif.match("O..x.-."))
+
 
 class GenerateNMersTest(TestCase):
     def setUp(self):
