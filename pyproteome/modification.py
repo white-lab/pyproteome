@@ -214,12 +214,12 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
 
 
 def _extract_letter_mods(letter_mod_types=None):
+    if letter_mod_types is None:
+        return None, None, None
+
     any_letter = set()
     any_mod = set()
     letter_mod = set()
-
-    if letter_mod_types is None:
-        letter_mod_types = []
 
     for letter, mod_type in letter_mod_types:
         if letter is None and mod_type is None:
