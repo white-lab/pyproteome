@@ -127,7 +127,7 @@ def _extract_sequence(proteins, sequence_string):
     for prot in proteins:
         rel_pos, exact = _get_rel_pos(prot, sequence_string.upper())
         prot_matches.append(
-            protein.ProteinMatch(
+            sequence.ProteinMatch(
                 protein=prot,
                 rel_pos=rel_pos,
                 exact=exact,
