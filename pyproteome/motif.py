@@ -302,7 +302,7 @@ def motif_enrichment(
     )
 
     LOGGER.info(
-        "Second pass (less specific filtered): {} motifs"
+        "Second pass (less specific filtered out): {} motifs"
         .format(len(motif_hits))
     )
 
