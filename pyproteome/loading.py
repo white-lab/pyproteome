@@ -134,7 +134,7 @@ def _extract_sequence(proteins, sequence_string):
             )
         )
 
-    return protein.Sequence(
+    return sequence.Sequence(
         pep_seq=sequence_string,
         protein_matches=prot_matches,
     )
@@ -166,7 +166,7 @@ def _extract_modification(seq, mod_string):
     letter, mod = match.group(2), match.group(4)
 
     if not nterm and not cterm:
-        assert sequence.pep_seq[pos].upper() == letter
+        assert seq.pep_seq[pos].upper() == letter
 
     return modification.Modification(
         rel_pos=pos,
