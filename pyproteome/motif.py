@@ -7,9 +7,10 @@ Functionality includes n-mer generation.
 from __future__ import division
 
 # Built-ins
+from collections import defaultdict
 import logging
 import os
-import random
+import re
 
 # Core data analysis libraries
 import Bio.Alphabet.IUPAC
@@ -18,8 +19,10 @@ import Bio.motifs
 import pandas as pd
 from scipy.stats import hypergeom
 
+from . import sequence
 
-LOGGER = logging.getLogger("pyproteome.sequence")
+
+LOGGER = logging.getLogger("pyproteome.motif")
 
 
 def generate_n_mers(
@@ -68,6 +71,10 @@ class Motif:
     """
     Contains a motif that may match to one or more protein sequences.
 
+    Matches include the regular single-letter amino acid names as well as
+    phosphosites for serine, threonine, and tyrosine, non-polar amino acids,
+    and positively and negatively charged amino acids.
+
     Attributes
     ----------
     motif : str
@@ -86,19 +93,77 @@ class Motif:
     def __init__(self, motif):
         self.motif = motif
 
+    char_mapping = {
+        "x": "st",
+        "O": "MILV",
+        "-": "DE",
+        "+": "RK",
+        ".": "ACDEFGHIKLMNPQRSTVWYystO-+x",
+    }
+
+    @property
+    def motif(self):
+        return self._motif
+
+    @motif.setter
+    def motif(self, value):
+        self._motif = value
+        self._re = self._compile_re(value)
+
+    def _compile_re(self, motif):
+        ret = ""
+
+        for char in motif:
+            if char == "." or char not in self.char_mapping:
+                ret += char
+            else:
+                ret += "[{}{}]".format(self.char_mapping[char], char)
+
+        return re.compile(ret)
+
     def generate_children(self):
-        char_mapping = {
-            "x": "sty",
-            "O": "MILV",
-            "-": "DE",
-            "+": "RK",
-            ".": "ACDEFGHIKLMNPQRSTVWYystO-+x",
-        }
         for index, x in enumerate(self.motif):
-            for char in char_mapping.get(x, ""):
+            if x != ".":
+                continue
+
+            for char in self.char_mapping.get(x, ""):
                 yield Motif(
                     self.motif[:index] + char + self.motif[index + 1:],
                 )
+
+    def generate_pairwise_children(self, hit_list):
+        # First build a list of all of the hits for this motif. We don't want
+        # to generate child motifs that do not at least match any peptides in
+        # that list.
+        allowed_chars = dict(
+            (i, set(hit[i] for hit in hit_list[self]))
+            for i in range(len(self.motif))
+        )
+
+        for i in range(len(self.motif)):
+            allowed_chars[i].update(
+                special_char
+                for special_char in "O-+x"
+                if allowed_chars[i].intersection(
+                    self.char_mapping[special_char]
+                )
+            )
+
+        for i, char_i in enumerate(self.motif):
+            if char_i != ".":
+                continue
+
+            for j, char_j in enumerate(self.motif[i + 1:], start=i + 1):
+                if char_j != ".":
+                    continue
+
+                for new_char_i in allowed_chars[i]:
+                    for new_char_j in allowed_chars[j]:
+                        yield Motif(
+                            self.motif[:i] + new_char_i +
+                            self.motif[i + 1:j] + new_char_j +
+                            self.motif[j + 1:]
+                        )
 
     def __repr__(self):
         return "<pyproteome.Motif: {}>".format(self.motif)
@@ -113,40 +178,52 @@ class Motif:
         if isinstance(other, Motif):
             other = other.motif
 
-        return self._match(other)
-
-    def __eq__(self, other):
-        if isinstance(other, Motif):
-            return self.motif == other.motif
-
-        return self._match(other)
-
-    matchers = {
-        "x": lambda x: x in "sty",
-        "O": lambda x: x in "MILV",
-        "-": lambda x: x in "DE",
-        "+": lambda x: x in "RK",
-        ".": lambda x: True,
-    }
-
-    def _match(self, other):
         if not isinstance(other, str):
             raise TypeError
 
         if len(self.motif) != len(other):
             raise ValueError("Incompatible sequence lengths.")
 
-        return all(
-            Motif.matchers.get(motif, lambda x: x == motif)(char)
-            for char, motif in zip(other, self.motif)
-        )
+        return self.match(other)
+
+    def __eq__(self, other):
+        if isinstance(other, Motif):
+            return self.motif == other.motif
+
+        if not isinstance(other, str):
+            raise TypeError
+
+        if len(self.motif) != len(other):
+            raise ValueError("Incompatible sequence lengths.")
+
+        return self.match(other)
+
+    def __lt__(self, other):
+        if not isinstance(other, Motif):
+            raise TypeError
+
+        return self.motif < other.motif
+
+    def match(self, other):
+        """
+        Match a given sequence to this motif.
+
+        Parameters
+        ----------
+        other : str
+
+        Returns
+        -------
+        bool
+        """
+        return bool(self._re.match(other))
 
 
 def motif_enrichment(
     foreground, background,
-    sig_cutoff=0.01, min_fore_hits=3, max_depth=None,
-    start_letter="x", letter_mod_types=None,
-    n_fpr_subsets=1000,
+    sig_cutoff=0.01, min_fore_hits=0,
+    start_letters=None, letter_mod_types=None,
+    motif_length=15,
 ):
     """
     Calculate motifs significantly enriched in a list of sequences.
@@ -157,9 +234,9 @@ def motif_enrichment(
     background : list of pyproteome.Sequence
     sig_cutoff : float, optional
     min_motifs : int, optional
-    max_depth : int, optional
-    start_letter : str, optional
+    start_letters : list of str, optional
     letter_mod_types : list of tuple of str, str
+    motif_length : int, optional
 
     Returns
     -------
@@ -172,160 +249,274 @@ def motif_enrichment(
            Upregulated in EGFRvIII-Expressing Glioblastoma Cells." Molecular
            bioSystems 5.1 (2009): 59-67.
     """
+    fore_size = len(foreground)
+    back_size = len(background)
+
+    assert fore_size > 0
+    assert back_size > 0
+
     if letter_mod_types is None:
         letter_mod_types = [(None, "Phospho")]
 
-    foreground = list(
-        generate_n_mers(
-            foreground,
-            letter_mod_types=letter_mod_types,
+    if isinstance(foreground[0], sequence.Sequence):
+        foreground = list(
+            generate_n_mers(
+                foreground,
+                n=motif_length,
+                letter_mod_types=letter_mod_types,
+            )
         )
-    )
-    background = list(
-        generate_n_mers(
-            background,
-            letter_mod_types=letter_mod_types,
+
+    if isinstance(background[0], sequence.Sequence):
+        background = list(
+            generate_n_mers(
+                background,
+                n=motif_length,
+                letter_mod_types=letter_mod_types,
+            )
         )
-    )
-    assert len(foreground) > 0
+
     n = len(foreground[0])
     assert n % 2 == 1
 
-    if max_depth is None:
-        max_depth = n - 1
-
     LOGGER.info(
         "Starting analysis, n={}, N={}".format(
-            len(foreground), len(background),
+            fore_size, back_size,
         )
     )
     LOGGER.info(
-        "Motif sig cutoff: {}, Minimum hits: {}, Motif depth: {}".format(
-            sig_cutoff, min_fore_hits, max_depth,
+        "Motif sig cutoff: {}, Minimum hits: {}".format(
+            sig_cutoff, min_fore_hits,
         )
     )
 
     def _motif_sig(fore_hits, back_hits):
-        big_n = len(background)
-        little_n = len(foreground)
-        m = back_hits
-        k = fore_hits
-        return hypergeom.cdf(k, big_n, m, little_n)
+        return (
+            1 -
+            hypergeom.cdf(fore_hits, back_size, back_hits, fore_size) +
+            hypergeom.pmf(fore_hits, back_size, back_hits, fore_size)
+        )
 
     def _motif_stats(motif):
-        fore_hits = sum(i in motif for i in foreground)
-        back_hits = sum(i in motif for i in background)
+        fore_hits, back_hits = done[motif]
 
         # Re-calculate the P enrichment score associated with this motif
-        sig_p = _motif_sig(fore_hits, back_hits)
+        p_value = _motif_sig(fore_hits, back_hits)
 
-        # Calculate the p-value by comparing sig_p to the motif enrichment
-        # score from random subsets of the background.
-        p_value = sum(
-            _motif_sig(
-                sum(
-                    i in motif
-                    for i in random.sample(background, len(foreground))
-                ),
-                back_hits,
-            ) <= sig_p
-            for _ in range(n_fpr_subsets)
-        ) / n_fpr_subsets
+        return (
+            motif,
+            fore_hits, fore_size,
+            back_hits, back_size,
+            p_value,
+        )
 
-        return (motif, fore_hits, back_hits, sig_p, p_value)
+    visited, done = set(), {}
+    fg_hit_list = defaultdict(list)
+    bg_hit_list = defaultdict(list)
 
-    visited = set()
-    motif_hits = set()
+    failed = defaultdict(int)
 
-    # Set the starting motif and begin adding modifications to it.
-    start = Motif(
-        "." * (n // 2) + start_letter + "." * (n // 2)
-    )
+    def _count_occurences(motif, parent, hit_list):
+        hits = [
+            i
+            for i in hit_list[parent]
+            if motif.match(i)
+        ]
+        hit_list[motif] = hits
+        return len(hits)
 
-    LOGGER.info("Starting Motif: {}".format(start))
-
-    to_process = [
-        (motif, 1)
-        for motif in start.generate_children()
-    ]
-
-    # First pass: Find all motifs with p < sig_cutoff
-    for motif, depth in to_process:
-        # Mark motif as visited
-        visited.add(motif)
-
-        # Calculate the number of foreground hits
-        fore_hits = sum(i in motif for i in foreground)
-
-        if fore_hits < min_fore_hits:
-            continue
-
-        # Calculate the number of background hits
-        back_hits = sum(i in motif for i in background)
-
-        # Calculate the motif signifiance
-        sig_p = _motif_sig(fore_hits, back_hits)
-
-        if sig_p >= sig_cutoff:
-            continue
-
-        # If we get this far, we have a hit!
-        motif_hits.add(motif)
-
-        # Now try adding to the list of modifications on the motif to find
-        # something more specific.
-        if depth >= max_depth:
-            continue
-
-        for new_motif in motif.generate_children():
-            if new_motif in visited:
+    def _check_anchestry(motif, parent):
+        for index, char in enumerate(motif.motif):
+            if index == n // 2 or char != ".":
                 continue
 
-            to_process.append((new_motif, depth + 1))
-
-    LOGGER.info("First pass: {} motifs".format(len(motif_hits)))
-
-    # Second pass: Find all motifs that do not include a more specific subset
-    # with the same number of foreground hits.
-    motif_hits = set(
-        motif
-        for motif in motif_hits
-        if not any(
-            # other in motif: other is +more+ specific than motif
-            other in motif and
-            (
-                sum(i in other for i in foreground) >=
-                sum(i in motif for i in foreground)
+            new_motif = Motif(
+                motif.motif[:index] + "." + motif.motif[index + 1:]
             )
-            for other in motif_hits
-            if other != motif
+
+            if new_motif != parent and new_motif in done:
+                return True
+
+        return False
+
+    def _is_a_submotif_with_same_size(motif, fore_hits):
+        """
+        Test whether the 'submotif' is an ancestor of any known motif, and
+        matches the same number of foreground sequences.
+        """
+        return any(
+            motif in checked
+            for checked, checked_hits in done.items()
+            if checked != motif and fore_hits == checked_hits[0]
         )
+
+    def _search_children(to_process, parent=None, track=True):
+        """
+        Run a depth-first search over a given motif.
+        """
+        motif_hits = set()
+
+        for motif in to_process:
+            if motif in visited:
+                failed["checkpat"] += 1
+                continue
+
+            # Mark motif as visited
+            if track:
+                visited.add(motif)
+
+            if motif in done:
+                failed["done"] += 1
+                continue
+
+            # Calculate the number of foreground hits
+            fore_hits = _count_occurences(motif, parent, fg_hit_list)
+
+            if fore_hits < min_fore_hits:
+                failed["count"] = 1
+                del fg_hit_list[motif]
+                continue
+
+            if parent and _check_anchestry(motif, parent):
+                failed["anchestry"] += 1
+                continue
+
+            # Shortcut calculating back-hits if we can help it
+            if _motif_sig(fore_hits, fore_hits) >= sig_cutoff:
+                failed["bestsig"] += 1
+                del fg_hit_list[motif]
+                continue
+
+            if _is_a_submotif_with_same_size(motif, fore_hits):
+                failed["sub"] += 1
+                del fg_hit_list[motif]
+                continue
+
+            # Calculate the number of background hits
+            back_hits = _count_occurences(motif, parent, bg_hit_list)
+
+            # Check the signifiance of the motif
+            if _motif_sig(fore_hits, back_hits) >= sig_cutoff:
+                failed["sig"] += 1
+                del fg_hit_list[motif]
+                del bg_hit_list[motif]
+                continue
+
+            # If we get this far, we have a hit!
+            motif_hits.add(motif)
+            failed["succeed"] += 1
+            done[motif] = (fore_hits, back_hits)
+
+            # Now try adding to the list of modifications on the motif to find
+            # something more specific.
+            motif_hits.update(
+                _search_children(
+                    motif.generate_children(),
+                    parent=motif,
+                    track=track,
+                )
+            )
+            motif_hits.update(
+                _search_children(
+                    motif.generate_pairwise_children(fg_hit_list),
+                    parent=motif,
+                    track=track,
+                )
+            )
+
+            del fg_hit_list[motif]
+            del bg_hit_list[motif]
+
+        return motif_hits
+
+    def _filter_less_specific(prev_pass):
+        return set(
+            motif
+            for motif in prev_pass
+            if not any(
+                # other in motif: other is +more+ specific than motif
+                other in motif and done[other][0] >= done[motif][0]
+                for other in prev_pass
+                if other != motif
+            )
+        )
+
+    # Set the starting motif and begin adding modifications to it.
+    # Note: Order matters, put less specific to the end of this list
+    if start_letters is None:
+        start_letters = ["k", "y", "s", "t", "x"]
+
+    starts = [
+        Motif(
+            "." * (n // 2) + letter + "." * (n // 2)
+        )
+        for letter in start_letters
+    ]
+
+    for start in starts:
+        fg_hit_list[start] = foreground
+        bg_hit_list[start] = background
+
+    LOGGER.info(
+        "Starting Motifs: {}".format(", ".join(str(i) for i in starts))
     )
+
+    first_pass = set()
+
+    try:
+        for start in starts:
+            first_pass.update(
+                _search_children(
+                    start.generate_children(),
+                    parent=start,
+                )
+            )
+
+            first_pass.update(
+                _search_children(
+                    start.generate_pairwise_children(fg_hit_list),
+                    parent=start,
+                )
+            )
+
+            del fg_hit_list[start]
+            del bg_hit_list[start]
+    except KeyboardInterrupt:
+        return
+    finally:
+        LOGGER.info(
+            "\n".join(
+                "FAIL_{}: {}".format(key.upper(), failed[key])
+                for key in [
+                    "done", "sub", "count", "sig", "bestsig",
+                    "anchestry", "checkpat",
+                ]
+            ) + "\nSUCCEED: {}".format(failed["succeed"])
+        )
+
+    LOGGER.info("First pass: {} motifs".format(len(first_pass)))
+
+    second_pass = _filter_less_specific(first_pass)
 
     LOGGER.info(
         "Second pass (less specific filtered out): {} motifs"
-        .format(len(motif_hits))
+        .format(len(second_pass))
     )
 
     # Finally prepare the output as a sorted list with the motifs and their
     # associated statistics.
-    LOGGER.info(
-        "Calculating final p-values associated with motifs (N-FPR-subsets={})."
-        .format(n_fpr_subsets)
-    )
-    motif_hits.add(start)
-
     df = pd.DataFrame(
-        data=[_motif_stats(motif) for motif in motif_hits],
+        data=[_motif_stats(motif) for motif in second_pass],
         columns=[
             "Motif",
             "Foreground Hits",
+            "Foreground Size",
             "Background Hits",
-            "p-score",
-            "fpr-score",
+            "Background Size",
+            "p-value",
         ],
     )
-    df.sort(columns=["p-score"], inplace=True)
+    df.sort_values(by=["p-value", "Motif"], inplace=True)
     df.reset_index(drop=True)
 
     return df
