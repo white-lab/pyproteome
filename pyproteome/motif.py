@@ -136,19 +136,26 @@ class Motif:
         # don't want to generate child motifs that do not at least match any
         # peptides in that list.
         aa_is = dict(
-            (i, set(hit[i] for hit in hit_list[self]))
+            (
+                (i, j),
+                set((hit[i], hit[j]) for hit in hit_list[self]),
+            )
             for i in range(len(self.motif))
+            for j in range(i + 1, len(self.motif))
         )
 
-        for i in range(len(self.motif)):
-            aa_is[i].update(
-                letter
-                for letter in "O-+x"
-                if any(
-                    char in self.char_mapping[letter]
-                    for char in aa_is[i]
-                )
-            )
+        for key, val in aa_is.items():
+            to_add = set()
+            for special_char in "O-+x":
+                for aa_i, aa_j in val:
+                    if aa_i in self.char_mapping[special_char]:
+                        to_add.add((special_char, aa_j))
+                    if aa_j in self.char_mapping[special_char]:
+                        to_add.add((aa_i, special_char))
+                    if aa_i in self.char_mapping[special_char] and \
+                       aa_j in self.char_mapping[special_char]:
+                        to_add.add((special_char, special_char))
+            val.update(to_add)
 
         # Then generate motifs with AAs that match the hit list
         for i, char_i in enumerate(self.motif):
@@ -159,13 +166,7 @@ class Motif:
                 if char_j != ".":
                     continue
 
-                gen_pairs = (
-                    (aa_i, aa_j)
-                    for aa_i in aa_is[i]
-                    for aa_j in aa_is[j]
-                )
-
-                for aa_i, aa_j in gen_pairs:
+                for aa_i, aa_j in aa_is[(i, j)]:
                     yield Motif(
                         self.motif[:i] + aa_i +
                         self.motif[i + 1:j] + aa_j +
