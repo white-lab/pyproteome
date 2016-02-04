@@ -243,12 +243,25 @@ class MotifEnrichmentFullTest(TestCase):
             self.assertIn(motif, true_hits)
 
         # Check every row of output is the same
-        for pd_row, out_row in zip(hits.iterrows(), self.output):
-            index, row = pd_row
+        for calc_row, out_row in zip(hits.iterrows(), self.output.iterrows()):
+            _, calc_row = calc_row
+            _, out_row = out_row
 
-            self.assertEqual(row["Motif"], out_row[0])
-            self.assertEqual(row["Foreground Hits"], out_row[1])
-            self.assertEqual(row["Foreground Size"], out_row[2])
-            self.assertEqual(row["Background Hits"], out_row[3])
-            self.assertEqual(row["Background Size"], out_row[4])
-            self.assertLess(abs(row["p-value"] - out_row[5]), 0.001)
+            self.assertEqual(
+                calc_row["Motif"], out_row["Motif"],
+            )
+            self.assertEqual(
+                calc_row["Foreground Hits"], out_row["Foreground Hits"],
+            )
+            self.assertEqual(
+                calc_row["Foreground Size"], out_row["Foreground Size"],
+            )
+            self.assertEqual(
+                calc_row["Background Hits"], out_row["Background Hits"],
+            )
+            self.assertEqual(
+                calc_row["Background Size"], out_row["Background Size"],
+            )
+            self.assertLess(
+                abs(calc_row["p-value"] - out_row["p-value"]), 0.001,
+            )
