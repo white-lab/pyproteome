@@ -223,7 +223,20 @@ class MotifEnrichmentFullTest(TestCase):
                 "p-value",
             ],
         )
-        self.output.sort_values(by=["p-value", "Motif"], inplace=True)
+        # Re-sort as the p-values on Brian's tables are truncated a bit short.
+        self.output["sort-p-value"] = pd.Series(
+            [
+                pyp.motif._motif_sig(
+                    row["Foreground Hits"],
+                    row["Foreground Size"],
+                    row["Background Hits"],
+                    row["Background Size"],
+                )
+                for _, row in self.output.iterrows()
+            ],
+            index=self.output.index,
+        )
+        self.output.sort_values(by=["sort-p-value", "Motif"], inplace=True)
         self.output.reset_index(drop=True)
 
     def test_motif_enrichment(self):

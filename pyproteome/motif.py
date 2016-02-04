@@ -293,15 +293,16 @@ def motif_enrichment(
 
         return False
 
-    def _is_a_submotif_with_same_size(motif, fore_hits):
+    def _is_a_submotif_with_same_size(submotif, fore_hits):
         """
         Test whether the 'submotif' is an ancestor of any known motif, and
         matches the same number of foreground sequences.
         """
+        # We want to know if this "submotif" contains any completed motifs
         return any(
-            checked in motif
+            checked in submotif
             for checked, checked_hits in done.items()
-            if fore_hits == checked_hits[0] and checked != motif
+            if fore_hits == checked_hits[0] and checked != submotif
         )
 
     def _search_children(children, parent=None):
@@ -487,8 +488,9 @@ def motif_enrichment(
     except KeyboardInterrupt:
         return
     finally:
+        # Output some debugging information to compare with Brian's output
         LOGGER.info(
-            "\n".join(
+            "\n" + "\n".join(
                 "FAIL_{}: {}".format(key.upper(), failed[key])
                 for key in [
                     "done", "sub", "count", "sig", "bestsig",
