@@ -1,6 +1,8 @@
 
 from unittest import TestCase
 
+import pandas as pd
+
 import pyproteome as pyp
 
 
@@ -210,17 +212,30 @@ class MotifEnrichmentFullTest(TestCase):
                     p_val,
                 )
             )
+        self.output = pd.DataFrame(
+            data=self.output,
+            columns=[
+                "Motif",
+                "Foreground Hits",
+                "Foreground Size",
+                "Background Hits",
+                "Background Size",
+                "p-value",
+            ],
+        )
+        self.output.sort_values(by=["p-value", "Motif"], inplace=True)
+        self.output.reset_index(drop=True)
 
     def test_motif_enrichment(self):
         hits = pyp.motif.motif_enrichment(
             self.foreground, self.background,
         )
 
-        true_positives = [i[0] for i in self.output]
+        true_positives = list(self.output["Motif"])
         true_hits = list(hits["Motif"])
 
         # Check for false positives
-        for motif in hits["Motif"]:
+        for motif in true_hits:
             self.assertIn(motif, true_positives)
 
         # Check for false-negatives
