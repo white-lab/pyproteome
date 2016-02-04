@@ -288,7 +288,7 @@ def motif_enrichment(
 
     def _check_anchestry(motif, parent):
         for index, char in enumerate(motif.motif):
-            if index == n // 2 or char != ".":
+            if index == motif_length // 2 or char != ".":
                 continue
 
             new_motif = Motif(
@@ -405,35 +405,31 @@ def motif_enrichment(
             )
         )
 
+    def _make_nmers(lst):
+        if isinstance(lst[0], sequence.Sequence):
+            return list(
+                generate_n_mers(
+                    lst,
+                    n=motif_length,
+                    letter_mod_types=letter_mod_types,
+                )
+            )
+
+        assert all(len(i) == motif_length for i in lst)
+        return lst
+
     fore_size = len(foreground)
     back_size = len(background)
 
     assert fore_size > 0
     assert back_size > 0
+    assert motif_length % 2 == 1
 
     if letter_mod_types is None:
         letter_mod_types = [(None, "Phospho")]
 
-    if isinstance(foreground[0], sequence.Sequence):
-        foreground = list(
-            generate_n_mers(
-                foreground,
-                n=motif_length,
-                letter_mod_types=letter_mod_types,
-            )
-        )
-
-    if isinstance(background[0], sequence.Sequence):
-        background = list(
-            generate_n_mers(
-                background,
-                n=motif_length,
-                letter_mod_types=letter_mod_types,
-            )
-        )
-
-    n = len(foreground[0])
-    assert n % 2 == 1
+    foreground = _make_nmers(foreground)
+    background = _make_nmers(background)
 
     LOGGER.info(
         "Starting analysis, n={}, N={}".format(
@@ -449,7 +445,6 @@ def motif_enrichment(
     visited, done = set(), {}
     fg_hit_list = defaultdict(list)
     bg_hit_list = defaultdict(list)
-
     failed = defaultdict(int)
 
     # Set the starting motif and begin adding modifications to it.
@@ -459,7 +454,7 @@ def motif_enrichment(
 
     starts = [
         Motif(
-            "." * (n // 2) + letter + "." * (n // 2)
+            "." * (motif_length // 2) + letter + "." * (motif_length // 2)
         )
         for letter in start_letters
     ]
