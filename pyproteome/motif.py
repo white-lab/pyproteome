@@ -219,6 +219,14 @@ class Motif:
         return bool(self._re.match(other))
 
 
+def _motif_sig(fore_hits, fore_size, back_hits, back_size):
+    return (
+        1 -
+        hypergeom.cdf(fore_hits, back_size, back_hits, fore_size) +
+        hypergeom.pmf(fore_hits, back_size, back_hits, fore_size)
+    )
+
+
 def motif_enrichment(
     foreground, background,
     sig_cutoff=0.01, min_fore_hits=0,
@@ -249,6 +257,146 @@ def motif_enrichment(
            Upregulated in EGFRvIII-Expressing Glioblastoma Cells." Molecular
            bioSystems 5.1 (2009): 59-67.
     """
+    def _motif_stats(motif):
+        fore_hits, back_hits = done[motif]
+
+        # Re-calculate the P enrichment score associated with this motif
+        p_value = _motif_sig(fore_hits, fore_size, back_hits, back_size)
+
+        return (
+            motif,
+            fore_hits, fore_size,
+            back_hits, back_size,
+            p_value,
+        )
+
+    def _count_occurences(motif, parent, hit_list):
+        hits = [
+            i
+            for i in hit_list[parent]
+            if motif.match(i)
+        ]
+        hit_list[motif] = hits
+        return len(hits)
+
+    def _check_anchestry(motif, parent):
+        for index, char in enumerate(motif.motif):
+            if index == n // 2 or char != ".":
+                continue
+
+            new_motif = Motif(
+                motif.motif[:index] + "." + motif.motif[index + 1:]
+            )
+
+            if new_motif != parent and new_motif in done:
+                return True
+
+        return False
+
+    def _is_a_submotif_with_same_size(motif, fore_hits):
+        """
+        Test whether the 'submotif' is an ancestor of any known motif, and
+        matches the same number of foreground sequences.
+        """
+        return any(
+            checked in motif
+            for checked, checked_hits in done.items()
+            if fore_hits == checked_hits[0] and checked != motif
+        )
+
+    def _search_children(children, parent=None):
+        """
+        Run a depth-first search over a given motif.
+        """
+        motif_hits = set()
+
+        for motif in children:
+            if motif in visited:
+                failed["checkpat"] += 1
+                continue
+
+            # Mark motif as visited
+            visited.add(motif)
+
+            if motif in done:
+                failed["done"] += 1
+                continue
+
+            # Calculate the number of foreground hits
+            fore_hits = _count_occurences(motif, parent, fg_hit_list)
+
+            if fore_hits < min_fore_hits:
+                failed["count"] = 1
+                del fg_hit_list[motif]
+                continue
+
+            # Check if we've already completed the search for a parent of this
+            # motif
+            if parent and _check_anchestry(motif, parent):
+                failed["anchestry"] += 1
+                del fg_hit_list[motif]
+                continue
+
+            # Shortcut calculating back-hits if we can help it
+            best_p = _motif_sig(fore_hits, fore_size, fore_hits, back_size)
+            if best_p > sig_cutoff:
+                failed["bestsig"] += 1
+                del fg_hit_list[motif]
+                continue
+
+            if _is_a_submotif_with_same_size(motif, fore_hits):
+                failed["sub"] += 1
+                del fg_hit_list[motif]
+                continue
+
+            # Calculate the number of background hits
+            back_hits = _count_occurences(motif, parent, bg_hit_list)
+
+            # Check the signifiance of the motif
+            p_value = _motif_sig(fore_hits, fore_size, back_hits, back_size)
+            if p_value > sig_cutoff:
+                failed["sig"] += 1
+                del fg_hit_list[motif]
+                del bg_hit_list[motif]
+                continue
+
+            # If we get this far, we have a hit!
+            motif_hits.add(motif)
+            failed["succeed"] += 1
+            done[motif] = (fore_hits, back_hits)
+
+            # Now try adding to the list of modifications on the motif to find
+            # something more specific.
+            motif_hits.update(
+                _search_children(
+                    children=motif.generate_children(),
+                    parent=motif,
+                )
+            )
+            motif_hits.update(
+                _search_children(
+                    children=motif.generate_pairwise_children(fg_hit_list),
+                    parent=motif,
+                )
+            )
+
+            del fg_hit_list[motif]
+            del bg_hit_list[motif]
+
+        return motif_hits
+
+    def _filter_less_specific(prev_pass):
+        return set(
+            motif
+            for motif in prev_pass
+            if not any(
+                # other in motif: other is +more+ specific than motif
+                other in motif and done[other][0] >= done[motif][0]
+                for other in prev_pass
+                if other != motif
+            )
+        )
+
     fore_size = len(foreground)
     back_size = len(background)
 
@@ -290,156 +438,11 @@ def motif_enrichment(
         )
     )
 
-    def _motif_sig(fore_hits, back_hits):
-        return (
-            1 -
-            hypergeom.cdf(fore_hits, back_size, back_hits, fore_size) +
-            hypergeom.pmf(fore_hits, back_size, back_hits, fore_size)
-        )
-
-    def _motif_stats(motif):
-        fore_hits, back_hits = done[motif]
-
-        # Re-calculate the P enrichment score associated with this motif
-        p_value = _motif_sig(fore_hits, back_hits)
-
-        return (
-            motif,
-            fore_hits, fore_size,
-            back_hits, back_size,
-            p_value,
-        )
-
     visited, done = set(), {}
     fg_hit_list = defaultdict(list)
     bg_hit_list = defaultdict(list)
 
     failed = defaultdict(int)
-
-    def _count_occurences(motif, parent, hit_list):
-        hits = [
-            i
-            for i in hit_list[parent]
-            if motif.match(i)
-        ]
-        hit_list[motif] = hits
-        return len(hits)
-
-    def _check_anchestry(motif, parent):
-        for index, char in enumerate(motif.motif):
-            if index == n // 2 or char != ".":
-                continue
-
-            new_motif = Motif(
-                motif.motif[:index] + "." + motif.motif[index + 1:]
-            )
-
-            if new_motif != parent and new_motif in done:
-                return True
-
-        return False
-
-    def _is_a_submotif_with_same_size(motif, fore_hits):
-        """
-        Test whether the 'submotif' is an ancestor of any known motif, and
-        matches the same number of foreground sequences.
-        """
-        return any(
-            motif in checked
-            for checked, checked_hits in done.items()
-            if checked != motif and fore_hits == checked_hits[0]
-        )
-
-    def _search_children(to_process, parent=None, track=True):
-        """
-        Run a depth-first search over a given motif.
-        """
-        motif_hits = set()
-
-        for motif in to_process:
-            if motif in visited:
-                failed["checkpat"] += 1
-                continue
-
-            # Mark motif as visited
-            if track:
-                visited.add(motif)
-
-            if motif in done:
-                failed["done"] += 1
-                continue
-
-            # Calculate the number of foreground hits
-            fore_hits = _count_occurences(motif, parent, fg_hit_list)
-
-            if fore_hits < min_fore_hits:
-                failed["count"] = 1
-                del fg_hit_list[motif]
-                continue
-
-            if parent and _check_anchestry(motif, parent):
-                failed["anchestry"] += 1
-                continue
-
-            # Shortcut calculating back-hits if we can help it
-            if _motif_sig(fore_hits, fore_hits) >= sig_cutoff:
-                failed["bestsig"] += 1
-                del fg_hit_list[motif]
-                continue
-
-            if _is_a_submotif_with_same_size(motif, fore_hits):
-                failed["sub"] += 1
-                del fg_hit_list[motif]
-                continue
-
-            # Calculate the number of background hits
-            back_hits = _count_occurences(motif, parent, bg_hit_list)
-
-            # Check the signifiance of the motif
-            if _motif_sig(fore_hits, back_hits) >= sig_cutoff:
-                failed["sig"] += 1
-                del fg_hit_list[motif]
-                del bg_hit_list[motif]
-                continue
-
-            # If we get this far, we have a hit!
-            motif_hits.add(motif)
-            failed["succeed"] += 1
-            done[motif] = (fore_hits, back_hits)
-
-            # Now try adding to the list of modifications on the motif to find
-            # something more specific.
-            motif_hits.update(
-                _search_children(
-                    motif.generate_children(),
-                    parent=motif,
-                    track=track,
-                )
-            )
-            motif_hits.update(
-                _search_children(
-                    motif.generate_pairwise_children(fg_hit_list),
-                    parent=motif,
-                    track=track,
-                )
-            )
-
-            del fg_hit_list[motif]
-            del bg_hit_list[motif]
-
-        return motif_hits
-
-    def _filter_less_specific(prev_pass):
-        return set(
-            motif
-            for motif in prev_pass
-            if not any(
-                # other in motif: other is +more+ specific than motif
-                other in motif and done[other][0] >= done[motif][0]
-                for other in prev_pass
-                if other != motif
-            )
-        )
 
     # Set the starting motif and begin adding modifications to it.
     # Note: Order matters, put less specific to the end of this list
@@ -453,13 +456,13 @@ def motif_enrichment(
         for letter in start_letters
     ]
 
-    for start in starts:
-        fg_hit_list[start] = foreground
-        bg_hit_list[start] = background
-
     LOGGER.info(
         "Starting Motifs: {}".format(", ".join(str(i) for i in starts))
     )
+
+    for start in starts:
+        fg_hit_list[start] = foreground
+        bg_hit_list[start] = background
 
     first_pass = set()
 
@@ -467,14 +470,14 @@ def motif_enrichment(
         for start in starts:
             first_pass.update(
                 _search_children(
-                    start.generate_children(),
+                    children=start.generate_children(),
                     parent=start,
                 )
             )
 
             first_pass.update(
                 _search_children(
-                    start.generate_pairwise_children(fg_hit_list),
+                    children=start.generate_pairwise_children(fg_hit_list),
                     parent=start,
                 )
             )
