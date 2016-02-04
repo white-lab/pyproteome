@@ -22,7 +22,7 @@ setup(
     author="Nader Morshed",
     author_email="morshed@mit.edu",
     license="BSD",
-    packages=find_packages(),
+    packages=find_packages(exclude=["*.tests"]),
     install_requires=[
         str(i.req)
         for i in parse_requirements(REQUIREMENTS_PATH, session=PipSession())
@@ -43,7 +43,5 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Topic :: Scientific/Engineering",
     ],
-    tests_require=[
-        "coverage",
-    ],
+    test_suite="pyproteome.tests",
 )
