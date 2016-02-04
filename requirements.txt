@@ -1,15 +1,13 @@
 -e git+https://github.com/Phlya/adjustText#egg=adjustText
 biopython>=1.65
-fastcluster==1.1.20
 matplotlib>=1.4.0
 matplotlib-venn==0.11.1
 networkx>=1.9
 notebook>=4.1.0
 numpy>=1.9.0
 numpydoc==0.5
-pandas>=0.16.0
+pandas>=0.17.0
 scikit-learn>=0.16.0
 scipy>=0.16.0
 seaborn>=0.6.0
-somoclu==1.5.1
 -e git+https://github.com/boscoh/uniprot#egg=uniprot
