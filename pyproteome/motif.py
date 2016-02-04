@@ -91,7 +91,10 @@ class Motif:
     False
     """
     def __init__(self, motif):
-        self.motif = motif
+        # Set _motif and _re explicitly, py2.7 does not call motif's setter
+        # if we just set self.motif here...
+        self._motif = motif
+        self._re = self._compile_re(motif)
 
     char_mapping = {
         "x": "st",
