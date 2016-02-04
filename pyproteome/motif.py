@@ -132,23 +132,25 @@ class Motif:
                 )
 
     def generate_pairwise_children(self, hit_list):
-        # First build a list of all of the hits for this motif. We don't want
-        # to generate child motifs that do not at least match any peptides in
-        # that list.
-        allowed_chars = dict(
+        # First build a list of all of the AAs in the hits for this motif. We
+        # don't want to generate child motifs that do not at least match any
+        # peptides in that list.
+        aa_is = dict(
             (i, set(hit[i] for hit in hit_list[self]))
             for i in range(len(self.motif))
         )
 
         for i in range(len(self.motif)):
-            allowed_chars[i].update(
-                special_char
-                for special_char in "O-+x"
-                if allowed_chars[i].intersection(
-                    self.char_mapping[special_char]
+            aa_is[i].update(
+                letter
+                for letter in "O-+x"
+                if any(
+                    char in self.char_mapping[letter]
+                    for char in aa_is[i]
                 )
             )
 
+        # Then generate motifs with AAs that match the hit list
         for i, char_i in enumerate(self.motif):
             if char_i != ".":
                 continue
@@ -157,13 +159,18 @@ class Motif:
                 if char_j != ".":
                     continue
 
-                for new_char_i in allowed_chars[i]:
-                    for new_char_j in allowed_chars[j]:
-                        yield Motif(
-                            self.motif[:i] + new_char_i +
-                            self.motif[i + 1:j] + new_char_j +
-                            self.motif[j + 1:]
-                        )
+                gen_pairs = (
+                    (aa_i, aa_j)
+                    for aa_i in aa_is[i]
+                    for aa_j in aa_is[j]
+                )
+
+                for aa_i, aa_j in gen_pairs:
+                    yield Motif(
+                        self.motif[:i] + aa_i +
+                        self.motif[i + 1:j] + aa_j +
+                        self.motif[j + 1:]
+                    )
 
     def __repr__(self):
         return "<pyproteome.Motif: {}>".format(self.motif)
@@ -504,7 +511,7 @@ def motif_enrichment(
     second_pass = _filter_less_specific(first_pass)
 
     LOGGER.info(
-        "Second pass (less specific filtered out): {} motifs"
+        "Second pass (less specific motifs removed): {} motifs"
         .format(len(second_pass))
     )
 
