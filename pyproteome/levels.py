@@ -58,6 +58,10 @@ def get_channel_levels(
 
     for ax, col in zip(list(axes), channels[1:]):
         points = (data.psms[col] / data.psms[base]).dropna().as_matrix()
+
+        # Filter ratios > 30, those are likely an error in quantification and
+        # may throw off histogram binning
+        points = points[points < 30]
         med = np.median(points)
         channel_levels[col] = med
 

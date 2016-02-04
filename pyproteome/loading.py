@@ -190,10 +190,14 @@ def _extract_modifications(sequence, mods_string):
     -------
     pyproteome.Modifications
     """
+    if isinstance(mods_string, float):
+        mods_string = ""
+
     return modification.Modifications(
         mods=[
             _extract_modification(sequence, i.strip())
             for i in mods_string.split(";")
+            if i
         ],
     )
 
