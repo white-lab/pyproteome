@@ -410,7 +410,7 @@ def motif_enrichment(
         )
 
     def _make_nmers(lst):
-        if isinstance(lst[0], sequence.Sequence):
+        if isinstance(next(iter(lst)), sequence.Sequence):
             return list(
                 generate_n_mers(
                     lst,

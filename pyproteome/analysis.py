@@ -178,6 +178,8 @@ def volcano_plot(
             min(len(group) for group in data.groups),
             data.sets,
         )
+        if abs(fold_cutoff - 1.2) > 0.1:
+            title += " -- Fold Change > {}".format(fold_cutoff)
 
     if title:
         file_name = re.sub("[ ></]", "_", title) + "_Volcano.png"
