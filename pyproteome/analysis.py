@@ -43,7 +43,6 @@ LOGGER = logging.getLogger("pyproteome.analysis")
 
 def snr_table(
     data,
-    snr_cutoff=None, fold_cutoff=None,
     folder_name=None, csv_name=None,
 ):
     """
@@ -52,8 +51,6 @@ def snr_table(
     Parameters
     ----------
     data : pyproteome.DataSet
-    snr_cutoff : float, optional
-    fold_cutoff : float, optional
     folder_name : str, optional
     csv_name : str, optional
     """
@@ -70,13 +67,8 @@ def snr_table(
 
     csv_name = os.path.join(folder_name, csv_name)
 
-    psms = data.psms[["Proteins", "Sequence", "SNR", "Fold Change"]]
-
-    # psms["Sort"] = psms["SNR"].apply(abs)
-    psms["Sort"] = psms["Fold Change"].apply(lambda x: max([x, 1 / x]))
-
-    psms.sort_values("Sort", inplace=True, ascending=False)
-    psms.drop("Sort", axis=1, inplace=True)
+    psms = data.psms[["Proteins", "Sequence", "Fold Change", "p-value"]]
+    psms.sort_values("p-value", inplace=True, ascending=True)
 
     if csv_name:
         psms.to_csv(csv_name)
