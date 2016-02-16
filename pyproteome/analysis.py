@@ -20,7 +20,7 @@ from matplotlib import pyplot as plt
 import matplotlib_venn as mv
 import networkx as nx
 import numpy as np
-# import pandas as pd
+import pandas as pd
 # import seaborn as sns
 # import scipy
 from scipy.stats import ttest_ind
@@ -74,6 +74,52 @@ def snr_table(
         psms.to_csv(csv_name)
 
     return psms
+
+
+def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
+    """
+    Write a full list of data sets to a single .xlsx file.
+
+    Parameters
+    ----------
+    datas : list of pyproteome.DataSet
+    folder_name : str, optional
+    out_name : str, optional
+    """
+
+    utils.make_folder(folder_name)
+
+    if folder_name is not None:
+        out_name = os.path.join(folder_name, out_name)
+
+    writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
+
+    for data in datas:
+        df = data.psms[["Proteins", "Sequence", "Fold Change", "p-value"]]
+        df.insert(
+            2, "Modifications",
+            df["Sequence"].apply(
+                lambda x: str(x.modifications)
+            ),
+        )
+        df["Sequence"] = df["Sequence"].apply(str)
+        df.sort_values("p-value", inplace=True, ascending=True)
+
+        ws_name = "{}-{}".format(data.name, data.enrichment)
+        df.to_excel(
+            writer,
+            sheet_name=ws_name,
+            index=False,
+        )
+
+        ws = writer.sheets[ws_name]
+        ws.set_column(0, 0, 60)
+        ws.set_column(1, 1, 30)
+        ws.set_column(2, 2, 20)
+        ws.set_column(3, 3, 12)
+        ws.set_column(4, 4, 12)
+
+    writer.save()
 
 
 def _place_labels(x, y, texts, ax=None, spring_k=None, spring_scale=None):
