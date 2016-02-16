@@ -103,6 +103,7 @@ class Modifications:
                 for mod in self.skip_labels_iter()
             )
             for i in range(len(self.mods[0].exact))
+            if list(self.skip_labels_iter())
         )
 
 
