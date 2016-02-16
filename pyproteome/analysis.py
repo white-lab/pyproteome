@@ -509,6 +509,9 @@ def find_tfs(data, folder_name=None, csv_name=None):
     """
     if folder_name is None:
         folder_name = data.name
+
+    utils.make_folder(folder_name)
+
     if csv_name is None:
         csv_name = "Changing TFs.csv"
 
