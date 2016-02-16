@@ -8,7 +8,7 @@ Python library for analyzing mass spectrometry proteomics data.
 
 ## Installation
 
-To install the core pyproteome package, simply run the following command:
+To install the core pyproteome package, run the following command:
 
 ```
 pip install pyproteome
