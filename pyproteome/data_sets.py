@@ -407,7 +407,13 @@ def merge_data(data_sets, name=None):
     new._merge_psms()
     new.sets = sum(data.sets for data in data_sets)
     new.enrichment = "-".join(
-        sorted(set(data.enrichment for data in data_sets))
+        sorted(
+            set(
+                enrichment
+                for data in data_sets
+                for enrichment in data.enrichment.split("-")
+            )
+        )
     )
 
     if new.groups:
