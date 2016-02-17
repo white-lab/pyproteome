@@ -113,6 +113,7 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
         )
 
         ws = writer.sheets[ws_name]
+        ws.freeze_panes(1, 0)
         ws.set_column(0, 0, 60)
         ws.set_column(1, 1, 30)
         ws.set_column(2, 2, 20)
