@@ -215,7 +215,7 @@ def volcano_plot(
         title = "{} - {} - (Bio-N={}, Tech-N={})".format(
             data.tissue,
             data.enrichment,
-            min(len(group) for group in data.groups),
+            min(len(group) for group in data.groups.values()),
             data.sets,
         )
         if abs(fold_cutoff - 1.2) > 0.1:
