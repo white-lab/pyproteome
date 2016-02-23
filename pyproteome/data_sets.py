@@ -6,6 +6,7 @@ structured format.
 """
 
 # Built-ins
+from collections import OrderedDict
 import copy
 import logging
 
@@ -133,16 +134,13 @@ class DataSet:
             new.psms = new.psms[key]
             return new
 
-        if isinstance(key, str):
+        if isinstance(key, str) or isinstance(key, pd.Series):
             return self.psms[key]
 
         raise TypeError
 
     def _merge_psms(self):
         channels = list(self.channels.keys())
-
-        if self.normalized:
-            channels += utils.norm(channels)
 
         agg_dict = dict((channel, sum) for channel in channels)
         self.psms = self.psms.groupby(
@@ -197,10 +195,17 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        for key, norm_key in zip(self.channels, utils.norm(self.channels)):
+        new_channels = utils.norm(self.channels)
+
+        for key, norm_key in zip(self.channels, new_channels):
             new.psms[norm_key] = new.psms[key] / levels[key]
 
         new.normalized = True
+        new.channels = new_channels
+        new.groups = OrderedDict(
+            (key, utils.norm(val))
+            for key, val in self.groups.items()
+        )
 
         new._merge_psms()
         new._update_snr_change()
@@ -352,9 +357,6 @@ class DataSet:
         pandas.DataFrame
         """
         groups = list(self.groups.values())
-
-        if self.normalized:
-            groups = utils.norm(groups)
 
         if len(groups) == 2:
             self.psms["SNR"] = pd.Series(
