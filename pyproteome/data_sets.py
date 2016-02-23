@@ -41,8 +41,8 @@ class DataSet:
         Primary key is the phenotype and its value is a dictionary mapping
         sample names to that phenotype's value.
     name : str
-    enrichment : str
-    tissue : str
+    enrichments : list of str
+    tissues : list of str
     sets : int
         Number of sets merged into this data set.
     source : str
@@ -55,7 +55,7 @@ class DataSet:
         mascot_name=None,
         camv_name=None,
         groups=None, phenotypes=None,
-        name="", enrichment="", tissue="",
+        name="", enrichments=None, tissues=None,
         dropna=True,
         camv_slices=None,
     ):
@@ -71,8 +71,8 @@ class DataSet:
         groups : dict of str, list of str, optional
         phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
-        enrichment : str, optional
-        tissue : str, optional
+        enrichments : list of str, optional
+        tissues : list of str, optional
         dropna : bool, optional
         camv_slices : int, optional
         """
@@ -102,8 +102,8 @@ class DataSet:
         self.groups = groups
         self.phenotypes = phenotypes
         self.name = name
-        self.enrichment = enrichment
-        self.tissue = tissue
+        self.enrichments = enrichments
+        self.tissues = tissues
 
         self.normalized = False
         self.sets = 1
@@ -116,6 +116,14 @@ class DataSet:
         new = copy.copy(self)
         new.psms = new.psms.copy()
         return new
+
+    @property
+    def enrichment(self):
+        return "+".join(self.enrichments)
+
+    @property
+    def tissue(self):
+        return "+".join(self.tissues)
 
     def __str__(self):
         return (
@@ -408,13 +416,18 @@ def merge_data(data_sets, name=None):
     new.psms = pd.concat([data.psms for data in data_sets])
     new._merge_psms()
     new.sets = sum(data.sets for data in data_sets)
-    new.enrichment = "-".join(
-        sorted(
-            set(
-                enrichment
-                for data in data_sets
-                for enrichment in data.enrichment.split("-")
-            )
+    new.enrichments = sorted(
+        set(
+            enrichment
+            for data in data_sets
+            for enrichment in data.enrichments
+        )
+    )
+    new.tissues = sorted(
+        set(
+            tissue
+            for data in data_sets
+            for tissue in data.tissues
         )
     )
 
