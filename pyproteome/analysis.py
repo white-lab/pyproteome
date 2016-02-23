@@ -21,17 +21,18 @@ import matplotlib_venn as mv
 import networkx as nx
 import numpy as np
 import pandas as pd
-# import seaborn as sns
+import seaborn as sns
 # import scipy
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, pearsonr
 # from scipy.stats.mstats import mquantiles
+# from scipy.spatial import distance
 # from scipy.cluster import hierarchy
 # import sklearn
 # from sklearn.cluster import KMeans, MiniBatchKMeans
 
 # Misc extras
 from adjustText.adjustText import adjust_text
-# import fastcluster as fst
+# import fastcluster
 # import somoclu
 # import uniprot
 
@@ -308,6 +309,51 @@ def volcano_plot(
     fig.show()
 
 
+def hierarchical_heatmap(
+    data,
+    baseline_channels=None,
+    metric="euclidean", method="centroid",
+):
+    """
+    Plot a hierarhically-clustered heatmap of a data set.
+
+    Parameters
+    ----------
+    data : pyproteome.DataSet
+    baseline_channels : list of str, optional
+        List of channels to average and use as baseline for each row.
+    metric : str, optional
+        Hierarchical clustering distance metric.
+    method : str, optional
+        Hierarchical clustering method.
+    """
+    channels = [
+        channel
+        for channels in data.groups.values()
+        for channel in channels
+    ]
+    channel_names = [
+        data.channels[i]
+        for i in channels
+    ]
+
+    if baseline_channels is None:
+        baseline_channels = list(data.groups.values())[-1]
+
+    raw = data.psms[channels].as_matrix()
+    raw_baseline = data.psms[baseline_channels].as_matrix().mean(axis=1)
+    raw = np.log2((raw.T / raw_baseline).T)
+
+    sns.clustermap(
+        raw,
+        method=method,
+        metric=metric,
+        col_cluster=False,
+        xticklabels=channel_names,
+        yticklabels=False,
+    )
+
+
 def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
     """
     Display a three-way venn diagram between data set sequences.
@@ -435,12 +481,8 @@ def plot_sequence_between(
     data : pyproteome.DataSet
     sequences : list of str
     """
-    groups = data.groups
-
-    if data.normalized:
-        groups = [utils.norm(group) for group in groups.values()]
-
-    groups = list(reversed(groups))
+    groups = list(reversed(data.groups.values()))
+    labels = list(reversed(data.groups.keys()))
 
     psms = data.psms.copy()
     psms["Seq Str"] = psms["Sequence"].apply(str)
@@ -480,7 +522,7 @@ def plot_sequence_between(
         label.set_fontsize(14)
 
     ax.set_xticks(indices + bar_width * 1.5)
-    ax.set_xticklabels(list(reversed(data.groups.keys())), fontsize=16)
+    ax.set_xticklabels(labels, fontsize=16)
 
     title = "{}".format(
         " / ".join(sequences),
@@ -524,9 +566,6 @@ def plot_sequence(
     """
     channels = list(data.channels.keys())
 
-    if data.normalized:
-        channels = utils.norm(channels)
-
     psms = data.psms[data.psms["Sequence"] == sequence]
 
     values = psms[channels].as_matrix()
@@ -542,6 +581,49 @@ def plot_sequence(
         ax.set_xticklabels(list(data.channels.values()))
 
     display(values)
+
+
+def plot_correlation(data1, data2):
+    """
+    Plot the correlation between peptides levels in two different data sets.
+
+    Parameters
+    ----------
+    data1 : pyproteome.DataSet
+    data2 : pyproteome.DataSet
+    """
+    merged = pd.merge(
+        data1.psms, data2.psms,
+        on="Sequence",
+    ).dropna()
+
+    channels1 = [i + "_x" for i in data1.channels.keys()]
+    channels2 = [i + "_y" for i in data2.channels.keys()]
+
+    levels1 = merged[channels1]
+    levels2 = merged[channels2]
+
+    correlations = [
+        pearsonr(i, j)[0]
+        for i, j in zip(levels1.as_matrix(), levels2.as_matrix())
+    ]
+
+    plt.plot(correlations)
+
+    f, ax = plt.subplots()
+    ax.scatter(
+        np.log2(merged["Fold Change_x"]),
+        np.log2(merged["Fold Change_y"]),
+    )
+
+    ax.set_xlabel("$log_2$ Fold Change -- {}".format(data1.name))
+    ax.set_ylabel("$log_2$ Fold Change -- {}".format(data2.name))
+
+    corr = pearsonr(merged["Fold Change_x"], merged["Fold Change_y"])[0]
+
+    ax.set_title(
+        "Correlation: {:.2f}".format(corr)
+    )
 
 
 def find_tfs(data, folder_name=None, csv_name=None):
