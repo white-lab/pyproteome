@@ -1,1 +1,3 @@
-Nader Morshed <morshed@mit.edu>
+# Authors
+
+* Nader Morshed <morshed@mit.edu>
