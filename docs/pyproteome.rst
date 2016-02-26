@@ -68,10 +68,10 @@ pyproteome.logo module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.modifications module
+pyproteome.modification module
 -------------------------------
 
-.. automodule:: pyproteome.modifications
+.. automodule:: pyproteome.modification
     :members:
     :undoc-members:
     :show-inheritance:
