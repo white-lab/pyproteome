@@ -616,6 +616,10 @@ def plot_correlation(data1, data2):
         np.log2(merged["Fold Change_y"]),
     )
 
+    min_x = min(np.log2(merged["Fold Change_x"]))
+    max_x = max(np.log2(merged["Fold Change_x"]))
+    ax.plot([min_x, max_x], [min_x, max_x], "--")
+
     ax.set_xlabel("$log_2$ Fold Change -- {}".format(data1.name))
     ax.set_ylabel("$log_2$ Fold Change -- {}".format(data2.name))
 
