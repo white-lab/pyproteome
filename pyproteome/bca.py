@@ -5,15 +5,15 @@ This module provides functionality for interpreting BCA assays.
 # Built-ins
 from collections import defaultdict
 import logging
-import os
 import re
 
 # Core data analysis libraries
+from IPython.display import display
+from matplotlib import pyplot as plt
+import matplotlib.cm as cm
 import numpy as np
 import pandas as pd
 from scipy.stats import linregress
-
-from IPython.display import display
 
 LOGGER = logging.getLogger("pyproteome.bca")
 RE_ROW_COL = re.compile("([A-Z]+)(\d+)")
@@ -179,8 +179,26 @@ def interpret_bca_assay(
     # Fit a linear regression model to standards
     slope, intercept, r, _, _ = linregress(std_x, std_y)
 
+    # Plot these points on a graph
+    f, ax = plt.subplots()
+    ax.scatter(
+        x=std_x,
+        y=std_y,
+        s=50,
+        label="BSA Standards",
+    )
+    ax.plot(
+        [0, max(std_x)],
+        [intercept, intercept + slope * max(std_x)],
+    )
+
+    ax.set_title("BSA Standards $R^2$ = {:.3f}".format(r ** 2))
+    ax.set_xlabel("Concentration (mg / mL)")
+    ax.set_ylabel("Absorbance (AU)")
+
     # Sanity check standards
     if r ** 2 < 0.95:
+        ax.legend(loc="lower right")
         raise Exception("R^2 of standards = {:.2f} (< 0.95)".format(r ** 2))
 
     # Extract out sample absorbances and concentrations
@@ -204,9 +222,20 @@ def interpret_bca_assay(
                 absorbance = xls.ix[row][col]
                 concentration = (absorbance - intercept) / slope
                 concentrations[name].append(concentration * dilution)
-                absorbances[name].append(absorbance)
+                absorbances[(name, dilution)].append(absorbance)
 
             row = _next_chr(row)
+
+    # Plot samples and show to user
+    colors = cm.rainbow(np.linspace(0, 1, len(absorbances)))
+    for color, kv in zip(colors, absorbances.items()):
+        key, val = kv
+        name, dilution = key
+        y = np.array(val)
+        x = (y - intercept) / slope
+        ax.scatter(x, y, s=100, label=name, color=color, marker="*")
+
+    ax.legend(loc="lower right")
 
     # Sanity check concentrations
 
