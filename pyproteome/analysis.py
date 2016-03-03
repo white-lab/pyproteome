@@ -18,7 +18,6 @@ from IPython.display import display
 from matplotlib import pyplot as plt
 # import matplotlib.patches as patches
 import matplotlib_venn as mv
-import networkx as nx
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -124,67 +123,12 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     writer.save()
 
 
-def _place_labels(x, y, texts, ax=None, spring_k=None, spring_scale=None):
-    if spring_k is None:
-        spring_k = 0.15
-
-    if spring_scale is None:
-        spring_scale = 0.1
-
-    if ax is None:
-        ax = plt.gca()
-
-    if not texts:
-        return
-
-    G = nx.Graph()
-    init_pos = {}
-    data_pos = {}
-    data_nodes = []
-    ano_nodes = []
-
-    for j, b in enumerate(zip(x, y, texts)):
-        x, y, label = b
-        data_str = "data_{}".format(j)
-        ano_str = "ano_{}".format(j)
-
-        G.add_node(ano_str)
-        G.add_node(data_str)
-        G.add_edge(ano_str, data_str, weight=0.1)
-
-        data_nodes.append(data_str)
-        ano_nodes.append(ano_str)
-
-        data_pos[data_str] = (x, y)
-        init_pos[data_str] = (x, y)
-        init_pos[ano_str] = (x, y)
-
-    pos = nx.spring_layout(
-        G, pos=init_pos, fixed=data_nodes,
-        k=spring_k,
-        scale=spring_scale,
-    )
-
-    for j, txt in enumerate(texts):
-        data_str = "data_{}".format(j)
-        ano_str = "ano_{}".format(j)
-
-        ax.annotate(
-            txt,
-            xy=data_pos[data_str], xycoords="data",
-            xytext=pos[ano_str], textcoords="data",
-            arrowprops=dict(arrowstyle="->",
-                            connectionstyle="arc3"),
-            # fontsize=20,
-            bbox=dict(boxstyle='square', fc='pink', ec='none'),
-        )
-
-
 def volcano_plot(
     data,
-    pval_cutoff=1.3, fold_cutoff=1.2, folder_name=None, title=None,
+    pval_cutoff=1.3, fold_cutoff=1.2,
+    highlight=None,
+    folder_name=None, title=None,
     figsize=(12, 10),
-    spring_k=None, spring_scale=None, adjust_layout=True,
 ):
     """
     Display a volcano plot of data.
@@ -197,14 +141,10 @@ def volcano_plot(
     data : pyproteome.DataSet
     pval_cutoff : float, optional
     fold_cutoff : float, optional
+    highlight : list, optional
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
-    spring_k : float, optional
-    spring_scale : float, optional
-    adjust_layout : bool, optional
-        Use the adjustText library to position labels, otherwise use networkx
-        and its spring_layout function.
     """
     if not folder_name:
         folder_name = data.name
@@ -260,6 +200,8 @@ def volcano_plot(
     # Draw the figure
     fig, ax = plt.subplots(figsize=figsize)
     ax.scatter(changes, pvals, c=colors)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     ax.set_xlabel("$log_2$ Fold Change")
     ax.set_ylabel("$-log_{10}$ p-value")
     ax.axhline(pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
@@ -268,41 +210,43 @@ def volcano_plot(
     ax.set_ylim(bottom=-0.1)
 
     # Position the labels
-    if adjust_layout:
-        texts = [
-            ax.text(x, y, txt)
-            for x, y, txt in zip(sig_changes, sig_pvals, sig_labels)
-        ]
+    texts = []
+    for x, y, txt in zip(sig_changes, sig_pvals, sig_labels):
+        text = ax.text(x, y, txt)
 
-        for txt in texts:
-            txt.set_bbox(dict(color='pink', alpha=0.7, edgecolor='red'))
+        if highlight and txt in highlight:
+            text.set_fontsize(20)
 
-        adjust_text(
-            x=sig_changes,
-            y=sig_pvals,
-            texts=texts,
-            ax=ax,
-            lim=200,
-            force_text=0.7,
-            force_points=0.5,
-            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=0.5),
+        text.set_bbox(
+            dict(
+                color="lightgreen" if x > 0 else "pink",
+                alpha=0.8,
+                edgecolor="red",
+            )
         )
-    else:
-        _place_labels(
-            x=sig_changes,
-            y=sig_pvals,
-            texts=sig_labels,
-            ax=ax,
-            spring_k=spring_k,
-            spring_scale=spring_scale,
 
-        )
+        texts.append(text)
+
+    adjust_text(
+        x=sig_changes,
+        y=sig_pvals,
+        texts=texts,
+        ax=ax,
+        lim=400,
+        force_text=0.5,
+        force_points=0.5,
+        arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+        only_move={
+            "points": "y",
+            "text": "xy",
+        }
+    )
 
     if title:
         ax.set_title(title)
         fig.savefig(
             file_name,
-            bbox_inches='tight', dpi=500,
+            bbox_inches="tight", dpi=500,
             transparent=True,
         )
 
