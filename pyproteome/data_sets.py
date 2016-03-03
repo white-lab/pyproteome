@@ -58,6 +58,8 @@ class DataSet:
         name="", enrichments=None, tissues=None,
         dropna=True,
         camv_slices=None,
+        merge_duplicates=True,
+        merge_subsets=True,
     ):
         """
         Initializes a data set.
@@ -75,6 +77,8 @@ class DataSet:
         tissues : list of str, optional
         dropna : bool, optional
         camv_slices : int, optional
+        merge_duplicates : bool, optional
+        merge_subsets : bool, optional
         """
         assert psms is not None or \
             mascot_name is not None or \
@@ -112,6 +116,14 @@ class DataSet:
             LOGGER.info("Dropping channels with NaN values.")
             self.dropna(inplace=True)
 
+        if merge_duplicates:
+            LOGGER.info("Merging duplicate peptide hits together.")
+            self._merge_duplicates()
+
+        if merge_subsets:
+            LOGGER.info("Merging peptide hits that are subsets together.")
+            self._merge_subsequences()
+
     def copy(self):
         new = copy.copy(self)
         new.psms = new.psms.copy()
@@ -147,12 +159,54 @@ class DataSet:
 
         raise TypeError
 
-    def _merge_psms(self):
+    def _merge_duplicates(self):
         channels = list(self.channels.keys())
-
         agg_dict = dict((channel, sum) for channel in channels)
+
         self.psms = self.psms.groupby(
-            [
+            by=[
+                "Proteins",
+                "Sequence",
+                "Modifications",
+            ],
+            sort=False,
+            as_index=False,
+        ).agg(agg_dict)
+
+    def _merge_subsequences(self):
+        """
+        Merges petides that are a subsequence of another peptide.
+
+        Only merges peptides that contain the same set of modifications and
+        that map to the same protein(s).
+        """
+        channels = list(self.channels.keys())
+        agg_dict = dict((channel, sum) for channel in channels)
+
+        psms = self.psms
+
+        # Find all proteins that have more than one peptide mapping to them
+        for index, row in psms[
+            psms.duplicated(subset="Proteins", keep=False)
+        ].iterrows():
+            seq = row["Sequence"]
+
+            # Then iterate over each peptide and find other non-identical
+            # peptides that map to the same protein
+            for o_index, o_row in psms[
+                np.logical_and(
+                    psms["Proteins"] == row["Proteins"],
+                    psms["Sequence"] != seq,
+                )
+            ].iterrows():
+                # If that other peptide is a subset of this peptide, rename it
+                if o_row["Sequence"] in seq:
+                    psms.set_value(o_index, "Sequence", seq)
+                    psms.set_value(o_index, "Modifications", seq.modifications)
+
+        # And finally group together peptides that were renamed
+        self.psms = psms.groupby(
+            by=[
                 "Proteins",
                 "Sequence",
                 "Modifications",
@@ -215,7 +269,6 @@ class DataSet:
             for key, val in self.groups.items()
         )
 
-        new._merge_psms()
         new._update_snr_change()
 
         return new
@@ -387,7 +440,10 @@ class DataSet:
             )
 
 
-def merge_data(data_sets, name=None):
+def merge_data(
+    data_sets, name=None,
+    merge_duplicates=True, merge_subsets=True,
+):
     """
     Merge a list of data sets together.
 
@@ -395,6 +451,8 @@ def merge_data(data_sets, name=None):
     ----------
     data_sets : list of pyproteome.DataSet
     name : str, optional
+    merge_duplicates : bool, optional
+    merge_subsets : bool, optional
 
     Returns
     -------
@@ -414,7 +472,13 @@ def merge_data(data_sets, name=None):
 
     new = data_sets[0].copy()
     new.psms = pd.concat([data.psms for data in data_sets])
-    new._merge_psms()
+
+    if merge_duplicates:
+        new._merge_duplicates()
+
+    if merge_subsets:
+        new._merge_subsequences()
+
     new.sets = sum(data.sets for data in data_sets)
     new.enrichments = sorted(
         set(
