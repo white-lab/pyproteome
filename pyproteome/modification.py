@@ -37,6 +37,9 @@ class Modifications:
             tuple(self.mods),
         )
 
+    def __len__(self):
+        return len(self.mods)
+
     def skip_labels_iter(self):
         """
         Return an iterable, skipping over any modifications for peptide labels.
@@ -88,9 +91,14 @@ class Modifications:
             for i, j in zip(self.mods, other.mods)
         )
 
-    def __str__(self, absolute=True):
+    def __str__(self, absolute=True, skip_labels=True):
         if len(self.mods) == 0:
             return ""
+
+        if skip_labels:
+            lst = list(self.skip_labels_iter())
+        else:
+            lst = list(iter(self))
 
         return " / ".join(
             ", ".join(
@@ -100,10 +108,10 @@ class Modifications:
                     1 + (mod.abs_pos[i] if absolute else mod.rel_pos),
                     "" if mod.exact[i] else "*"
                 )
-                for mod in self.skip_labels_iter()
+                for mod in lst
             )
             for i in range(len(self.mods[0].exact))
-            if list(self.skip_labels_iter())
+            if lst
         )
 
 
