@@ -58,6 +58,9 @@ class Sequence:
     pep_seq : str
     protein_matches : list of pyproteome.ProteinMatch
     modifications : pyproteome.Modifications
+    alt_hits : list of pyproteome.Sequence
+        This attribute indicates which peptides were identified as
+        non-ambiguous subsequences of this peptide.
     """
 
     def __init__(self, pep_seq, protein_matches, modifications=None):
@@ -71,6 +74,7 @@ class Sequence:
         self.pep_seq = pep_seq
         self.protein_matches = protein_matches
         self.modifications = modifications
+        self.alt_hits = []
 
     def __hash__(self):
         return hash(
@@ -94,6 +98,33 @@ class Sequence:
         ) == (
             other.pep_seq,
             other.modifications,
+        )
+
+    def __contains__(self, other):
+        if not isinstance(other, Sequence):
+            raise TypeError(type(other))
+
+        self_mods = list(self.modifications.skip_labels_iter())
+        other_mods = list(other.modifications.skip_labels_iter())
+
+        return (
+            other.pep_seq.upper() in self.pep_seq.upper() and
+            len(other.protein_matches) == len(self.protein_matches) and
+            all(
+                i.protein == j.protein
+                for i, j in zip(other.protein_matches, self.protein_matches)
+            ) and
+            len(other_mods) == len(self_mods) and
+            all(
+                i.mod_type == j.mod_type and
+                i.abs_pos == j.abs_pos and
+                i.nterm == j.nterm and
+                i.cterm == j.cterm
+                for i, j in zip(
+                    other_mods,
+                    self_mods,
+                )
+            )
         )
 
     def _seq_with_modifications(self):
