@@ -129,6 +129,7 @@ def volcano_plot(
     highlight=None,
     folder_name=None, title=None,
     figsize=(12, 10),
+    adjust=True,
 ):
     """
     Display a volcano plot of data.
@@ -145,6 +146,7 @@ def volcano_plot(
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
+    adjust : bool, optional
     """
     if not folder_name:
         folder_name = data.name
@@ -227,20 +229,32 @@ def volcano_plot(
 
         texts.append(text)
 
-    adjust_text(
-        x=sig_changes,
-        y=sig_pvals,
-        texts=texts,
-        ax=ax,
-        lim=400,
-        force_text=0.5,
-        force_points=0.5,
-        arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-        only_move={
-            "points": "y",
-            "text": "xy",
-        }
-    )
+    if adjust:
+        adjust_text(
+            x=sig_changes,
+            y=sig_pvals,
+            texts=texts,
+            ax=ax,
+            lim=400,
+            force_text=0.1,
+            force_points=0.1,
+            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            only_move={
+                "points": "y",
+                "text": "xy",
+            }
+        )
+    else:
+        for j, text in enumerate(texts):
+            a = ax.annotate(
+                text.get_text(),
+                xy=text.get_position(),
+                xytext=text.get_position(),
+                arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            )
+            a.__dict__.update(text.__dict__)
+            a.draggable()
+            texts[j].remove()
 
     if title:
         ax.set_title(title)
@@ -527,7 +541,7 @@ def plot_sequence(
     display(values)
 
 
-def plot_correlation(data1, data2):
+def plot_correlation(data1, data2, folder_name=None, filename=None):
     """
     Plot the correlation between peptides levels in two different data sets.
 
@@ -535,24 +549,21 @@ def plot_correlation(data1, data2):
     ----------
     data1 : pyproteome.DataSet
     data2 : pyproteome.DataSet
+    folder_name : str, optional
+    filename : str, optional
     """
+    if not folder_name:
+        folder_name = "All" if data1.name != data2.name else data1.name
+
+    utils.make_folder(folder_name)
+
+    if folder_name and filename:
+        filename = os.path.join(folder_name, filename)
+
     merged = pd.merge(
         data1.psms, data2.psms,
         on="Sequence",
     ).dropna()
-
-    channels1 = [i + "_x" for i in data1.channels.keys()]
-    channels2 = [i + "_y" for i in data2.channels.keys()]
-
-    levels1 = merged[channels1]
-    levels2 = merged[channels2]
-
-    correlations = [
-        pearsonr(i, j)[0]
-        for i, j in zip(levels1.as_matrix(), levels2.as_matrix())
-    ]
-
-    plt.plot(correlations)
 
     f, ax = plt.subplots()
     ax.scatter(
@@ -572,6 +583,9 @@ def plot_correlation(data1, data2):
     ax.set_title(
         "Correlation: {:.2f}".format(corr)
     )
+
+    if filename:
+        f.savefig(filename, transparent=True)
 
 
 def find_tfs(data, folder_name=None, csv_name=None):
