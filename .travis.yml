@@ -1,40 +1,40 @@
 language: python
 sudo: false
-
 python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-
-# command to install dependencies
+- '2.7'
+- '3.3'
+- '3.4'
+- '3.5'
 before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh ;
-    else
-        wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh ;
-    fi
-  - bash miniconda.sh -b -p /home/travis/mc
-  - export PATH=/home/travis/mc/bin:$PATH
-  - export CONDA_PACKAGES="numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython pyzmq"
-
+- if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+  -O miniconda.sh ; else wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+  -O miniconda.sh ; fi
+- bash miniconda.sh -b -p /home/travis/mc
+- export PATH=/home/travis/mc/bin:$PATH
+- export CONDA_PACKAGES="numpy scipy matplotlib pandas networkx scikit-learn seaborn
+  biopython pyzmq"
 install:
-  - conda update --yes conda
-  - conda create --yes -n env python=$TRAVIS_PYTHON_VERSION $CONDA_PACKAGES
-  - source activate env
-  - pip install -r requirements.txt
-  - pip install coveralls
-  - echo $PATH
-  - which python
-  - python --version
-  - conda info
-  - conda list
-  - python setup.py install
-
-# command to run tests
+- conda update --yes conda
+- conda create --yes -n env python=$TRAVIS_PYTHON_VERSION $CONDA_PACKAGES
+- source activate env
+- pip install -r requirements.txt
+- pip install coveralls
+- echo $PATH
+- which python
+- python --version
+- conda info
+- conda list
+- python setup.py install
 script:
-  - coverage run --source=pyproteome setup.py test
-
-# command to notify coveralls
+- coverage run --source=pyproteome setup.py test
 after_success:
-  - coveralls
+- coveralls
+deploy:
+  - provider: pypi
+    user: NaderM
+    password:
+      secure: c67sWtb0Lohp2VuallYxxh077LMKV1ppMVLcFRzfykEuisi+fZE2lWjrYk3CpIFLXwRlwUjjcUJDZEmfNKbpmG+VZgRxDUd9cISLMHOKVPFDSeUJodtWq1aXA2BUEmQzSQc5Iu7/YuNDSS1nTosfK9Z6kFCt30e6UzDRZ++NjXTZ5dc72UntajaVoKfNEOfJfiYgJz43fShzYWm4acHZYCp9fLEX2U5863o06rV9vPlpXEdtwfs/r4vLhFze6Jnj96UzDLKbtO7hC6Es/ydNTZBtsA5ufqdkmgzg2bhhxuBqaWjYtc6DmUK87dW7V8jzHBW0wZMiOl45NmDqmxTDBN4l0PSAnQuYorxHiseTOYAyT0/g0wGSNpnGCZmDHr0meFQaW99ikQO0J+Bn4kJjp8KjcaJpl1kN0NoOh601jNfXLtCd+/JJx9lXSH0YsxrFtMEW0lrOS9wMy5FJ8HtYUuu0VVj7lYRsPqm1WrKqC+JSVMPLWRE1o+z3TEkUhOeZ32jTl3VK8lH3YlgLrOofwndO7cMg8pqTGuOkkpQz03Rff+MDoNlK5MT9jd91FRkOFIsWrwUp076xaWdBVXSgyvlu9C0La3AnjqotRQQdaNnY/nsYSoJJTnwYAE2pXv5HDl6vz71OHZ+e7tIlKuAYO+Ev7TvJICiKIqxMG6j0jmU=
+    on:
+      tags: true
+      distributions: sdist bdist_wheel
+      repo: white-lab/pyproteome
