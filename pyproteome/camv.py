@@ -180,7 +180,11 @@ def output_scan_list(
         for index, row in psms[
             psms["First Scan"].isin(scan_lists[out_name])
         ].iterrows():
-            psms.set_value(index, "Scan Paths", set([out_name]))
+            psms.set_value(
+                index,
+                "Scan Paths",
+                set([os.path.splitext(out_name)[0]]),
+            )
 
     return psms, scan_lists
 
