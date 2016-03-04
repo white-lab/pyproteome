@@ -60,6 +60,10 @@ def load_camv_validation(basename):
                     os.path.join(*path.split(os.sep)[-2:]),
                 )
             )
+            in_name = os.path.splitext(os.path.basename(path))[0]
+            df["Scan Paths"] = pd.Series(
+                [set([in_name])] * len(df.index)
+            )
 
             if existing is not None:
                 df = pd.concat([existing, df])
@@ -106,23 +110,28 @@ def output_scan_list(
 
     Returns
     -------
+    pandas.DataFrame
     dict of str, list of int
         Dictionary listing the file names and scans segmented into each file.
     """
-    psms = modification.filter_mod_types(
+    filtered = modification.filter_mod_types(
         psms,
         letter_mod_types=letter_mod_types,
     )
 
     scan_lists = OrderedDict()
 
-    if len(psms) == 0:
-        return scan_lists
+    if len(filtered) == 0:
+        return psms, scan_lists
 
-    scan_list = psms.sort(
+    psms = psms.copy()
+    psms["Scan Paths"] = pd.Series([set("")] * len(psms.index))
+
+    scan_list = filtered.sort(
         columns=["Protein Group Accessions", "First Scan"],
         ascending=True,
     )[["First Scan"]]
+
     scan_list.drop_duplicates(
         subset="First Scan",
         inplace=True,
@@ -158,6 +167,7 @@ def output_scan_list(
         )
         lst = scan_list[i * slice_sizes:(i + 1) * slice_sizes]
         scan_lists[out_name] = lst["First Scan"].tolist()
+
         lst.to_excel(
             writer,
             index=False,
@@ -166,7 +176,13 @@ def output_scan_list(
         )
         writer.save()
 
-    return scan_lists
+        # XXX: Better way to do this?
+        for index, row in psms[
+            psms["First Scan"].isin(scan_lists[out_name])
+        ].iterrows():
+            psms.set_value(index, "Scan Paths", set([out_name]))
+
+    return psms, scan_lists
 
 
 def _run_camv_get_file(

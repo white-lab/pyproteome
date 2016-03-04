@@ -265,16 +265,17 @@ def load_mascot_psms(basename, camv_slices=None):
         row["Sequence"].modifications = row["Modifications"]
 
     # Output the phosphorylation scan list for CAMV
-    scan_lists = camv.output_scan_list(
+    psms, scan_lists = camv.output_scan_list(
         psms,
         basename=basename,
         letter_mod_types=[(None, "Phospho")],
         scan_sets=camv_slices,
     )
 
+    psms["Validated"] = False
+
     # The load CAMV data to clear unwanted hits if available.
     accepted, maybed, rejected = camv.load_camv_validation(basename)
-    filter_camv = any(i is not None for i in [accepted, maybed, rejected])
 
     if rejected is not None:
         # Remove any peptides that match the scan number and sequence
@@ -303,6 +304,7 @@ def load_mascot_psms(basename, camv_slices=None):
                     accepted["Scan"] == row["First Scan"],
                     accepted["Sequence"] == row["Sequence"],
                 ).any():
+                    psms.loc[index, "Validated"] = True
                     continue
 
             if maybed is not None:
@@ -331,7 +333,7 @@ def load_mascot_psms(basename, camv_slices=None):
 
         psms = psms[~reject_mask].reset_index(drop=True)
 
-    return psms, scan_lists, filter_camv
+    return psms, scan_lists
 
 
 def load_validated_psms(filename):
@@ -347,4 +349,6 @@ def load_validated_psms(filename):
     pandas.DataFrame
     """
     accepted, maybed, rejected = camv.load_camv_validation(filename)
+
+    accepted["Validated"] = True
     return accepted

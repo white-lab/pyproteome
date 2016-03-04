@@ -47,7 +47,6 @@ class DataSet:
         Number of sets merged into this data set.
     source : str
     scan_list : dict of str, list of int
-    validated : bool
     """
     def __init__(
         self, channels,
@@ -89,7 +88,7 @@ class DataSet:
         self.validated = False
 
         if mascot_name:
-            psms, self.scan_lists, self.validated = loading.load_mascot_psms(
+            psms, self.scan_lists = loading.load_mascot_psms(
                 mascot_name,
                 camv_slices=camv_slices,
             )
@@ -99,7 +98,6 @@ class DataSet:
                 camv_name,
             )
             self.source = "CAMV"
-            self.validated = True
 
         self.psms = psms
         self.channels = channels
@@ -154,14 +152,24 @@ class DataSet:
             new.psms = new.psms[key]
             return new
 
-        if isinstance(key, str) or isinstance(key, pd.Series):
+        if any(
+            isinstance(key, i)
+            for i in [str, list, tuple, pd.Series, np.ndarray]
+        ):
             return self.psms[key]
 
-        raise TypeError
+        raise TypeError(type(key))
 
     def _merge_duplicates(self):
         channels = list(self.channels.keys())
         agg_dict = dict((channel, sum) for channel in channels)
+
+        agg_dict["Validated"] = all
+        agg_dict["Scan Paths"] = lambda x: set(
+            path
+            for paths in x
+            for path in paths
+        )
 
         self.psms = self.psms.groupby(
             by=[
@@ -180,9 +188,6 @@ class DataSet:
         Only merges peptides that contain the same set of modifications and
         that map to the same protein(s).
         """
-        channels = list(self.channels.keys())
-        agg_dict = dict((channel, sum) for channel in channels)
-
         psms = self.psms
 
         # Find all proteins that have more than one peptide mapping to them
@@ -205,15 +210,7 @@ class DataSet:
                     psms.set_value(o_index, "Modifications", seq.modifications)
 
         # And finally group together peptides that were renamed
-        self.psms = psms.groupby(
-            by=[
-                "Proteins",
-                "Sequence",
-                "Modifications",
-            ],
-            sort=False,
-            as_index=False,
-        ).agg(agg_dict)
+        self._merge_duplicates()
 
     def __add__(self, other):
         """
