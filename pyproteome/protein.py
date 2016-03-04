@@ -26,8 +26,14 @@ class Proteins:
         )
 
     def __eq__(self, other):
+        if isinstance(other, str):
+            return (
+                any(i == other for i in self.genes) or
+                any(i == other for i in self.accessions)
+            )
+
         if not isinstance(other, Proteins):
-            raise TypeError()
+            raise TypeError(type(other))
 
         return len(self.proteins) == len(other.proteins) and all(
             i == j
