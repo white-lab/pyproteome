@@ -58,7 +58,7 @@ class DataSet:
         dropna=True,
         camv_slices=None,
         merge_duplicates=True,
-        merge_subsets=True,
+        merge_subsets=False,
     ):
         """
         Initializes a data set.
@@ -439,7 +439,7 @@ class DataSet:
 
 def merge_data(
     data_sets, name=None,
-    merge_duplicates=True, merge_subsets=True,
+    merge_duplicates=True, merge_subsets=False,
 ):
     """
     Merge a list of data sets together.
