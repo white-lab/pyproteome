@@ -534,7 +534,7 @@ def plot_sequence(
     for i in range(values.shape[0]):
         indices = np.arange(len(values[i]))
         bar_width = .35
-        f.bar(bar_width + indices, values[i], bar_width)
+        ax.bar(bar_width + indices, values[i], bar_width)
         ax.set_xticks(indices + bar_width * 1.5)
         ax.set_xticklabels(list(data.channels.values()))
 
@@ -628,7 +628,6 @@ def plot_correlation(
             a.__dict__.update(text.__dict__)
             a.draggable()
             texts[j].remove()
-
 
     min_x = min(np.log2(merged["Fold Change_x"]))
     max_x = max(np.log2(merged["Fold Change_x"]))
