@@ -541,7 +541,10 @@ def plot_sequence(
     display(values)
 
 
-def plot_correlation(data1, data2, folder_name=None, filename=None):
+def plot_correlation(
+    data1, data2, folder_name=None, filename=None,
+    adjust=True, label_cutoff=1.5,
+):
     """
     Plot the correlation between peptides levels in two different data sets.
 
@@ -571,9 +574,75 @@ def plot_correlation(data1, data2, folder_name=None, filename=None):
         np.log2(merged["Fold Change_y"]),
     )
 
+    label_cutoff = np.log2(label_cutoff)
+    texts, x_s, y_s = [], [], []
+
+    for index, row in merged.iterrows():
+        x = row["Fold Change_x"]
+        y = row["Fold Change_y"]
+        ratio = np.log2(x / y)
+        x, y = np.log2(x), np.log2(y)
+
+        if ratio < label_cutoff and ratio > - label_cutoff:
+            continue
+
+        x_s.append(x)
+        y_s.append(y)
+
+        text = ax.text(
+            x, y, " / ".join(row["Proteins_x"].genes),
+        )
+
+        text.set_bbox(
+            dict(
+                color="lightgreen" if ratio < 0 else "pink",
+                alpha=0.8,
+                edgecolor="red",
+            )
+        )
+        texts.append(text)
+
+    if adjust:
+        adjust_text(
+            x=x_s,
+            y=y_s,
+            texts=texts,
+            ax=ax,
+            lim=400,
+            force_text=0.1,
+            force_points=0.1,
+            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            only_move={
+                "points": "y",
+                "text": "xy",
+            }
+        )
+    else:
+        for j, text in enumerate(texts):
+            a = ax.annotate(
+                text.get_text(),
+                xy=text.get_position(),
+                xytext=text.get_position(),
+                arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            )
+            a.__dict__.update(text.__dict__)
+            a.draggable()
+            texts[j].remove()
+
+
     min_x = min(np.log2(merged["Fold Change_x"]))
     max_x = max(np.log2(merged["Fold Change_x"]))
     ax.plot([min_x, max_x], [min_x, max_x], "--")
+    ax.plot(
+        [min_x, max_x],
+        [min_x + label_cutoff, max_x + label_cutoff],
+        ":",
+    )
+    ax.plot(
+        [min_x, max_x],
+        [min_x - label_cutoff, max_x - label_cutoff],
+        ":",
+    )
 
     ax.set_xlabel("$log_2$ Fold Change -- {}".format(data1.name))
     ax.set_ylabel("$log_2$ Fold Change -- {}".format(data2.name))
