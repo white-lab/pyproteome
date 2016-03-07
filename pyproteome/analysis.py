@@ -635,12 +635,14 @@ def plot_correlation(
     ax.plot(
         [min_x, max_x],
         [min_x + label_cutoff, max_x + label_cutoff],
-        ":",
+        color="lightgreen",
+        linestyle=":",
     )
     ax.plot(
         [min_x, max_x],
         [min_x - label_cutoff, max_x - label_cutoff],
-        ":",
+        color="pink",
+        linestyle=":",
     )
 
     ax.set_xlabel("$log_2$ Fold Change -- {}".format(data1.name))
