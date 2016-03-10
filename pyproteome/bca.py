@@ -5,15 +5,17 @@ This module provides functionality for interpreting BCA assays.
 # Built-ins
 from collections import defaultdict
 import logging
+import os
 import re
 
 # Core data analysis libraries
-from IPython.display import display
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 import pandas as pd
 from scipy.stats import linregress
+
+from . import paths
 
 LOGGER = logging.getLogger("pyproteome.bca")
 RE_ROW_COL = re.compile("([A-Z]+)(\d+)")
@@ -71,7 +73,8 @@ def interpret_bca_assay(
     Parameters
     ----------
     xls_path : str
-        Path to output of Tecan reader.
+        Path to output of Tecan reader. File should be located in
+        paths.BCA_ASSAY_DIR.
     samples : list of tuple of (str, float, str)
         Sample names, dilutions, and positions within the plate. Positions
         should be supplied as either the left index of the first of three
@@ -121,6 +124,7 @@ def interpret_bca_assay(
     >>> print("{:.2f} +/- {:.2f} ug".format(cortex[0], cortex[1])
     8094.51 +/- 340.66 ug
     """
+    xls_path = os.path.join(paths.BCA_ASSAY_DIR, xls_path)
 
     xls = pd.read_excel(
         xls_path,
