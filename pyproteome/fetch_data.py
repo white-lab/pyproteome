@@ -13,6 +13,8 @@ import pandas as pd
 
 import uniprot
 
+from . import paths
+
 
 RE_ACCESSION = re.compile("\[([A-Za-z0-9]+_[A-Z]+)\]")
 
@@ -50,16 +52,13 @@ def prefetch_all_uniprot():
 
     Pulls all UniProt accession IDs from all "_psms.txt" files.
     """
-    psms_path = os.path.join(
-        "..", "MS Searched",
-    )
     accessions = set()
 
-    for filename in os.listdir(psms_path):
+    for filename in os.listdir(paths.MS_SEARCHED_DIR):
         if not filename.endswith("_psms.txt"):
             continue
 
-        psms = pd.read_table(os.path.join(psms_path, filename))
+        psms = pd.read_table(os.path.join(paths.MS_SEARCHED_DIR, filename))
         psms.dropna(
             subset=["Protein Group Accessions"],
             inplace=True,

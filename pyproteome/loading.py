@@ -12,7 +12,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from . import camv, fetch_data, protein, sequence, modification, utils
+from . import camv, fetch_data, protein, sequence, modification, paths, utils
 
 
 LOGGER = logging.getLogger("pyproteome.loading")
@@ -218,7 +218,7 @@ def load_mascot_psms(basename, camv_slices=None):
     filter_camv : bool
     """
     psms_path = os.path.join(
-        "..", "MS Searched",
+        paths.MS_SEARCHED_DIR,
         basename + "_psms.txt",
     )
 

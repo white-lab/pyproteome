@@ -17,7 +17,7 @@ import subprocess
 from IPython.display import display
 import pandas as pd
 
-from . import utils, modification
+from . import modification, paths, utils
 
 
 LOGGER = logging.getLogger("pyproteome.camv")
@@ -25,9 +25,11 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 CAMV_PATH = utils.which("CAMV.exe")
 
 if CAMV_PATH is None:
-    CAMV_PATH = os.path.join(
-        THIS_DIR, "..", "..",
-        "CAMV", "CAMV", "for_redistribution_files_only", "CAMV.exe",
+    CAMV_PATH = os.path.abspath(
+        os.path.join(
+            THIS_DIR, "..", "..",
+            "CAMV", "CAMV", "for_redistribution_files_only", "CAMV.exe",
+        )
     )
 
 
@@ -70,13 +72,9 @@ def load_camv_validation(basename):
 
             return df
 
-    camv_dir = os.path.join(
-        "..", "CAMV Output",
-    )
-
-    for filename in os.listdir(camv_dir):
+    for filename in os.listdir(paths.CAMV_OUT_DIR):
         if filename.startswith(basename):
-            base_dir = os.path.join(camv_dir, filename)
+            base_dir = os.path.join(paths.CAMV_OUT_DIR, filename)
 
             accept_path = os.path.join(base_dir, "accept.xls")
             maybe_path = os.path.join(base_dir, "maybe.xls")
@@ -138,11 +136,7 @@ def output_scan_list(
     )
 
     # Export as XLS
-    scan_dir = os.path.join(
-        "..", "Scan Lists",
-    )
-
-    utils.make_folder(scan_dir)
+    utils.make_folder(paths.SCAN_LISTS_DIR)
 
     if scan_sets is None:
         scan_sets = int(ceil(len(scan_list) / 1000))
@@ -161,7 +155,7 @@ def output_scan_list(
         out_name = "{}-{}.xls".format(basename, i + 1)
         writer = pd.ExcelWriter(
             os.path.join(
-                scan_dir,
+                paths.SCAN_LISTS_DIR,
                 out_name,
             )
         )
@@ -289,23 +283,19 @@ def run_camv_validation(scan_lists, force=False):
     """
     for scan_path, scan_list in scan_lists.items():
         # Build a list of paths
-        base_dir = os.path.abspath("..")
         scan_path = os.path.join(
-            base_dir, "Scan Lists", scan_path,
+            paths.SCAN_LISTS_DIR, scan_path,
         )
         file_name = os.path.basename(scan_path)
         base_name = file_name.rsplit("-", 1)[0]
         raw_path = os.path.join(
-            base_dir, "MS RAW", base_name + ".raw",
+            paths.MS_RAW_DIR, base_name + ".raw",
         )
         mascot_xml_path = os.path.join(
-            base_dir, "Mascot XMLs", base_name + ".xml",
-        )
-        camv_output_dir = os.path.join(
-            base_dir, "CAMV Output",
+            paths.MASCOT_XML_DIR, base_name + ".xml",
         )
         save_path = os.path.join(
-            base_dir, "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
+            paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
         )
 
         if not force and \
@@ -317,7 +307,7 @@ def run_camv_validation(scan_lists, force=False):
         _run_camv_get_file(
             raw_path,
             mascot_xml_path,
-            camv_output_dir,
+            paths.CAMV_OUT_DIR,
             scan_path=scan_path,
             save_path=save_path,
         )
@@ -345,11 +335,7 @@ def run_camv_export(scan_lists=None):
     if scan_lists is None:
         scan_paths = [
             path
-            for path in os.listdir(
-                os.path.join(
-                    "..", "CAMV Sessions"
-                )
-            )
+            for path in os.listdir(paths.CAMV_SESS_DIR)
             if path.endswith(".mat")
         ]
     else:
@@ -358,6 +344,6 @@ def run_camv_export(scan_lists=None):
     for scan_path in scan_paths:
         file_name = os.path.basename(scan_path)
         save_path = os.path.join(
-            "..", "CAMV Sessions", os.path.splitext(file_name)[0] + ".mat"
+            paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
         )
         display(_run_camv_export(save_path))
