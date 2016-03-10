@@ -67,7 +67,14 @@ def snr_table(
 
     csv_name = os.path.join(folder_name, csv_name)
 
-    psms = data.psms[["Proteins", "Sequence", "Fold Change", "p-value"]]
+    psms = data.psms[
+        ["Proteins", "Sequence", "Modifications", "Fold Change", "p-value"]
+    ]
+    psms["Sequence"] = [
+        "{} ({})".format(row["Sequence"], row["Modifications"])
+        for _, row in psms.iterrows()
+    ]
+    psms.drop("Modifications", axis=1, inplace=True)
     psms.sort_values("p-value", inplace=True, ascending=True)
 
     if csv_name:
