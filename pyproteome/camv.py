@@ -7,7 +7,7 @@ Currently limited to importing and outputing scan lists.
 # Built-ins
 from __future__ import division
 
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 import logging
 from math import ceil
 import os
@@ -347,3 +347,71 @@ def run_camv_export(scan_lists=None):
             paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
         )
         display(_run_camv_export(save_path))
+
+
+def _exact_mass(atoms):
+    """
+    Parameters
+    ----------
+    atoms : dict of str, int or iterable
+        Atoms in molecule and their count. If the dictionary's values are
+        integers, use average isotope weights. If values are iterables, use
+        exact count of each isotope, in order of increasing weight.
+
+    Returns
+    -------
+    float
+        Molecular weight of molecule.
+
+    Examples
+    --------
+    >>> _exact_mass({"H": 1})        # One hydrogen (Average isotope)
+    1.007940721855
+    >>> _exact_mass({"H": [1]})      # One hydrogen (Exact isotope)
+    1.007825
+    >>> _exact_mass({"H": [1, 1]})   # One hydrogen, one deuterium
+    3.021927
+    >>> _exact_mass({"H": [0, 1]})   # One deuterium (Exact isotope)
+    2.014102
+    """
+    # Atom name mapping to molecular weight and frequency of that isotope
+    molecular_weights = {
+        "H": [
+            (1.007825, 99.9885),
+            (2.014102,  0.0115),
+        ],
+        "C": [
+            (12.000000, 98.93),
+            (13.003355,  1.07)
+        ],
+        "N": [
+            (14.003074, 99.632),
+            (15.000109,  0.368),
+        ],
+        "O": [
+            (15.994915, 99.757),
+            (16.999131,  0.038),
+            (17.999159,  0.205),
+        ],
+        "S": [
+            (31.972072, 94.93),
+            (32.971459,  0.76),
+            (33.967868,  4.29),
+            (35.967079,  0.02),
+        ],
+        "P": [
+            (30.973763, 100),
+        ],
+    }
+    return sum(
+        sum(
+            weight[0] * count
+            for weight, count in zip(molecular_weights[atom], counts)
+        )
+        if isinstance(counts, Iterable) else
+        sum(
+            weight * counts * frequency / 100
+            for weight, frequency in molecular_weights[atom]
+        )
+        for atom, counts in atoms.items()
+    )
