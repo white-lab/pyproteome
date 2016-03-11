@@ -27,11 +27,11 @@ PeptideQuery = namedtuple(
         "pep_seq",
         "pep_var_mods",
         "scan",
-    ]
+    ],
 )
 
 
-def parse_mascot_2_4_1(root):
+def _parse_mascot_2_4_1(root):
     fixed_mods = [
         i.text
         for i in root.findall(
@@ -117,17 +117,31 @@ def parse_mascot_2_4_1(root):
 def read_mascot_xml(xml_name):
     """
     Parse a MASCOT XML file.
+
+    Parameters
+    ----------
+    xml_name : str
+        Name of XML file in Mascot XMLs directory.
+
+    Returns
+    -------
+    fixed_mods : list of str
+    var_mods : list of str
+    out : list of pyproteome.mascot.PeptideQuery
     """
     tree = ET.parse(os.path.join(paths.MASCOT_XML_DIR, xml_name))
     root = tree.getroot()
 
     ms_version = root.find("mascot:header/mascot:MascotVer", MASCOT_NS).text
+    ms_version = tuple(int(i) for i in ms_version.split("."))
 
-    if ms_version == "2.4.1":
-        return parse_mascot_2_4_1(root)
+    if ms_version >= (2, 4, 1):
+        return _parse_mascot_2_4_1(root)
 #     elif ms_version == "2.4.0":
-#         return parse_mascot_2_4_0(root)
+#         return _parse_mascot_2_4_0(root)
 #     elif ms_version == "2.3.02":
-#         return parse_mascot_2_3_02(root)
+#         return _parse_mascot_2_3_02(root)
 #     elif ms_version == "2.1.03":
-#         return parse_mascot_2_1_03(root)
+#         return _parse_mascot_2_1_03(root)
+    else:
+        raise Exception("Unsupported Mascot Version: {}".format(ms_version))
