@@ -39,7 +39,7 @@ def _parse_mascot_2_4_1(root):
             MASCOT_NS,
         )
     ]
-    var_mods = [
+    variable_mods = [
         i.text
         for i in root.findall(
             "mascot:variable_mods/mascot:modification/mascot:name",
@@ -111,7 +111,7 @@ def _parse_mascot_2_4_1(root):
             )
             index += 1
 
-    return fixed_mods, var_mods, out
+    return fixed_mods, variable_mods, out
 
 
 def read_mascot_xml(xml_name):
