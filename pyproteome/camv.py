@@ -11,13 +11,14 @@ from collections import OrderedDict, Iterable
 import logging
 from math import ceil
 import os
+import re
 import subprocess
 
 # Core data analysis libraries
 from IPython.display import display
 import pandas as pd
 
-from . import modification, paths, utils
+from . import mascot, modification, ms_labels, paths, proteowizard, utils
 
 
 LOGGER = logging.getLogger("pyproteome.camv")
@@ -347,6 +348,78 @@ def run_camv_export(scan_lists=None):
             paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
         )
         display(_run_camv_export(save_path))
+
+
+class SearchOptions:
+    """
+    Contains options used to search a data set in MASCOT.
+
+    Attributes
+    ----------
+    label_type : tuple of (str, int)
+    """
+    def __init__(self, fixed_mods, var_mods):
+        self.label_type = (None, 0)
+
+        for mod in fixed_mods:
+            mod = re.sub(r"([\w-]+) \([\w-]+\)", r"\1", mod)
+            num = ms_labels.LABEL_NUMBERS.get(mod, 0)
+
+            if num > 0:
+                self.label_type = ("Fixed", num)
+
+        for mod in var_mods:
+            mod = re.sub(r"([\w-]+) \([\w-]+\)", r"\1", mod)
+            num = ms_labels.LABEL_NUMBERS.get(mod, 0)
+
+            if num > 0:
+                self.label_type = ("Variable", num)
+
+        # TODO: Parse out SILAC, C-mod, phospho, etc
+
+
+def validat_spectra(basename):
+    """
+    Generate CAMV web page for validating spectra.
+
+    Parameters
+    ----------
+    basename : str
+    """
+    # Read MASCOT xml file
+    xml_name = "{}.xml".format(basename)
+
+    fixed_mods, var_mods, out = mascot.read_mascot_xml(xml_name)
+
+    # Extract MASCOT search options
+    options = SearchOptions(fixed_mods, var_mods)
+
+    # Remove peptides with an excess of modification combinations
+
+    # Initialize AA masses based on label type
+
+    # Get scan data from RAW file
+    a = proteowizard.get_scan_data(basename, [i.scan for i in out])
+
+    # Get MS2 Data
+
+    # Transfer MS2 information to data struct
+
+    # Get iTRAQ data
+
+    # Determine SILAC precursor masses
+
+    # Get Precursor Scan information
+
+    # Remove precursor contaminated scans from validation list
+
+    # Check for Cysteine carbamidomethylation present in MASCOT search
+
+    # Check each assignment to each scan
+
+    # Output data
+
+    return options, a[1]
 
 
 def _exact_mass(atoms):
