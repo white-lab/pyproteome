@@ -6,6 +6,13 @@ LABEL_NUMBERS = {
     "TMT10plex": 10,
 }
 
+LABEL_MZ_WINDOW = {
+    "iTRAQ4plex": [113, 118],
+    "iTRAQ8plex": [112, 122],
+    "TMT6plex": [125, 132],
+    "TMT10plex": [125, 132],
+}
+
 LABEL_MASSES = {
     "iTRAQ4plex": [
         114.1106798,
