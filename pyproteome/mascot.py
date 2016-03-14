@@ -3,9 +3,10 @@ Provides functionality for interacting with MASCOT data.
 """
 
 import os
-from collections import namedtuple
 import re
 import xml.etree.ElementTree as ET
+
+from scipy.misc import comb
 
 from pyproteome import paths
 
@@ -14,21 +15,43 @@ MASCOT_NS = {
         "http://www.matrixscience.com/xmlns/schema/mascot_search_results_2",
 }
 
-PeptideQuery = namedtuple(
-    "PeptideQuery",
-    [
-        "gi",
-        "protein",
-        "query",
-        "pep_rank",
-        "pep_score",
-        "pep_exp_mz",
-        "pep_exp_z",
-        "pep_seq",
-        "pep_var_mods",
-        "scan",
-    ],
-)
+
+class PeptideQuery:
+    def __init__(
+        self, gi, protein, query,
+        pep_rank, pep_score, pep_exp_mz, pep_exp_z, pep_seq,
+        pep_var_mods, scan,
+    ):
+        self.gi = gi
+        self.protein = protein
+        self.query = query
+        self.pep_rank = pep_rank
+        self.pep_score = pep_score
+        self.pep_exp_mz = pep_exp_mz
+        self.pep_exp_z = pep_exp_z
+        self.pep_seq = pep_seq
+        self.pep_var_mods = pep_var_mods
+        self.scan = scan
+        self.num_comb = self._calc_num_comb()
+
+    def _calc_num_comb(self):
+        num_comb = 1
+
+        for count, mod, letters in self.pep_var_mods:
+            if mod == "Phospho" and letters == "ST":
+                letters = "STY"
+
+            potential_mod_sites = sum(self.pep_seq.count(i) for i in letters)
+
+            # Subtract sites that will be taken up by another modification
+            # (i.e. Oxidation and Dioxidation of M)
+            for o_count, o_mod, o_letters in self.pep_var_mods:
+                if o_letters == letters and o_mod != mod:
+                    potential_mod_sites -= o_count
+
+            num_comb *= comb(potential_mod_sites, count)
+
+        return num_comb
 
 
 def _parse_mascot_2_4_1(root):
@@ -66,16 +89,17 @@ def _parse_mascot_2_4_1(root):
             var_mods = peptide.find("mascot:pep_var_mod", MASCOT_NS).text
 
             if var_mods:
+                # i.e. "2 Phospho (STY)""
                 var_mods = [
                     re.match(
-                        "((\d+) )?(.*)",
+                        "((\d+) )?(.+) \((.+)\)",
                         mod.strip()
-                    ).group(2, 3)
+                    ).group(2, 3, 4)
                     for mod in var_mods.split(";")
                 ]
                 var_mods = [
-                    (count if count else 1, name)
-                    for count, name in var_mods
+                    (count if count else 1, name, letters)
+                    for count, name, letters in var_mods
                 ]
             else:
                 var_mods = []
