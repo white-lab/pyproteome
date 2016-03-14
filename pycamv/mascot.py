@@ -17,6 +17,21 @@ MASCOT_NS = {
 
 
 class PeptideQuery:
+    """
+    Attributes
+    ----------
+    gi : str
+    protein : str
+    query : int
+    pep_rank : int
+    pep_score : float
+    pep_exp_mz : float
+    pep_exp_z : int
+    pep_seq : str
+    pep_var_mods : list of tuple of (int, str, str)
+    scan : int
+    num_comb : int
+    """
     def __init__(
         self, gi, protein, query,
         pep_rank, pep_score, pep_exp_mz, pep_exp_z, pep_seq,
@@ -79,11 +94,11 @@ def _parse_mascot_2_4_1(root):
         prot_desc = hit.find("mascot:protein/mascot:prot_desc", MASCOT_NS).text
 
         for peptide in hit.findall("mascot:protein/mascot:peptide", MASCOT_NS):
-            query = peptide.get("query")
-            rank = peptide.get("rank")
-            pep_score = peptide.find("mascot:pep_score", MASCOT_NS).text
-            exp_mz = peptide.find("mascot:pep_exp_mz", MASCOT_NS).text
-            exp_z = peptide.find("mascot:pep_exp_z", MASCOT_NS).text
+            query = int(peptide.get("query"))
+            rank = int(peptide.get("rank"))
+            pep_score = float(peptide.find("mascot:pep_score", MASCOT_NS).text)
+            exp_mz = float(peptide.find("mascot:pep_exp_mz", MASCOT_NS).text)
+            exp_z = int(peptide.find("mascot:pep_exp_z", MASCOT_NS).text)
             pep_seq = peptide.find("mascot:pep_seq", MASCOT_NS).text
 
             var_mods = peptide.find("mascot:pep_var_mod", MASCOT_NS).text
@@ -98,16 +113,18 @@ def _parse_mascot_2_4_1(root):
                     for mod in var_mods.split(";")
                 ]
                 var_mods = [
-                    (count if count else 1, name, letters)
+                    (int(count) if count else 1, name, letters)
                     for count, name, letters in var_mods
                 ]
             else:
                 var_mods = []
 
-            scan = re.search(
-                "(scans:|Cmpd_)(\d+)",
-                peptide.find("mascot:pep_scan_title", MASCOT_NS).text
-            ).group(2)
+            scan = int(
+                re.search(
+                    "(scans:|Cmpd_)(\d+)",
+                    peptide.find("mascot:pep_scan_title", MASCOT_NS).text
+                ).group(2)
+            )
 
             # scan_used
             if scan in scan_used:
