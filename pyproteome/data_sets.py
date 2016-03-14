@@ -530,7 +530,7 @@ def _log_cum_fold_change(vals):
 
     Parameters
     ----------
-    vals : numpy.array
+    vals : :class:`numpy.ndarray` of float
 
     Returns
     -------
@@ -549,8 +549,8 @@ def _snr(data1, data2):
 
     Parameters
     ----------
-    data1 : numpy.array of float
-    data2 : numpy.array of float
+    data1 : :class:`numpy.ndarray` of float
+    data2 : :class:`numpy.ndarray` of float
 
     Returns
     -------
