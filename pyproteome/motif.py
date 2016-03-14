@@ -547,7 +547,7 @@ def motif_logo(
 
     Parameters
     ----------
-    data : pyproteome.DataSet
+    data : :class:`pyproteome.data_sets.DataSet`
     letter_mod_types : list of tuple of str, str
     folder_name : str, optional
     filename : str, optional

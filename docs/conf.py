@@ -64,8 +64,9 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-    "scipy": ('https://docs.scipy.org/doc/scipy/', None),
+    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None)
 }
 
 autodoc_mock_imports = [

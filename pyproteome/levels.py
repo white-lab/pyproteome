@@ -29,7 +29,7 @@ def get_channel_levels(
 
     Parameters
     ----------
-    data : pyproteome.DataSet
+    data : :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     file_name : str, optional
     """
@@ -94,7 +94,7 @@ def get_average_phospho_levels(data):
 
     Parameters
     ----------
-    data : pyproteome.DataSet
+    data : :class:`pyproteome.data_sets.DataSet`
 
     Returns
     -------
