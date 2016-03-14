@@ -15,7 +15,7 @@ class ProteinMatch:
 
     Attributes
     ----------
-    protein : :class:`Protein<pyproteome.protein.Protein`
+    protein : :class:`Protein<pyproteome.protein.Protein>`
     rel_pos : int
     exact : bool
     """
@@ -56,9 +56,9 @@ class Sequence:
     Attributes
     ----------
     pep_seq : str
-    protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch`
-    modifications : :class:`Modifications<pyproteome.modification.Modifications`
-    alt_hits : list of :class:`Sequence<pyproteome.sequence.Sequence`
+    protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
+    modifications : :class:`Modifications<pyproteome.modification.Modifications>`
+    alt_hits : list of :class:`Sequence<pyproteome.sequence.Sequence>`
         This attribute indicates which peptides were identified as
         non-ambiguous subsequences of this peptide.
     """
@@ -68,8 +68,8 @@ class Sequence:
         Parameters
         ----------
         pep_seq : str
-        protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch`
-        modifications : :class:`Modifications<pyproteome.modification.Modifications`, optional
+        protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
+        modifications : :class:`Modifications<pyproteome.modification.Modifications>`, optional
         """
         self.pep_seq = pep_seq
         self.protein_matches = protein_matches

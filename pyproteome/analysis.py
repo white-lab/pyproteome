@@ -527,7 +527,7 @@ def plot_sequence(
     Parameters
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    sequence : str or :class:`Sequence<pyproteome.sequence.Sequence`
+    sequence : str or :class:`Sequence<pyproteome.sequence.Sequence>`
     """
     channels = list(data.channels.keys())
 
