@@ -128,7 +128,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`pyproteome.DataSet`
+        :class:`pyproteome.data_sets.DataSet`
         """
         new = copy.copy(self)
         new.psms = new.psms.copy()
