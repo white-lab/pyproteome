@@ -62,8 +62,11 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
+    "sphinx.ext.intersphinx",
     'numpydoc',
 ]
+
+intersphinx_mapping = {'numpy': ('http://docs.scipy.org/doc/numpy/', None)}
 
 autodoc_mock_imports = [
     mod_name.replace("-", "_")

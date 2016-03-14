@@ -123,16 +123,37 @@ class DataSet:
             self._merge_subsequences()
 
     def copy(self):
+        """
+        Make a copy of self.
+
+        Returns
+        -------
+        `pyproteome.DataSet`
+        """
         new = copy.copy(self)
         new.psms = new.psms.copy()
         return new
 
     @property
     def enrichment(self):
+        """
+        The str version of self.enrichments
+
+        Returns
+        -------
+        str
+        """
         return "+".join(self.enrichments)
 
     @property
     def tissue(self):
+        """
+        The str version of self.tissues
+
+        Returns
+        -------
+        str
+        """
         return "+".join(self.tissues)
 
     def __str__(self):
