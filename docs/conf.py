@@ -111,7 +111,7 @@ version = [
     for line in open(
         os.path.join(THIS_DIR, "..", "pyproteome", "version.py")
     )
-    if line.startswith("version =")
+    if line.startswith("__version__ =")
 ][0]
 # The full version, including alpha/beta/rc tags.
 release = version
