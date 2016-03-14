@@ -43,9 +43,9 @@ def load_camv_validation(basename):
 
     Returns
     -------
-    accepted : pandas.DataFrame
-    maybed : pandas.DataFrame
-    rejected : pandas.DataFrame
+    accepted : :class:`pandas.DataFrame`
+    maybed : :class:`pandas.DataFrame`
+    rejected : :class:`pandas.DataFrame`
     """
     accepted = None
     maybed = None
@@ -101,14 +101,14 @@ def output_scan_list(
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    psms : :class:`pandas.DataFrame`
     basename : str, optional
     letter_mod_types : list of tuple of str or None, str or None, optional
     scan_sets : int, optional
 
     Returns
     -------
-    pandas.DataFrame
+    :class:`pandas.DataFrame`
     dict of str, list of int
         Dictionary listing the file names and scans segmented into each file.
     """

@@ -249,12 +249,12 @@ def filter_mod_types(psms, letter_mod_types=None):
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    psms : :class:`pandas.DataFrame`
     letter_mod_types : list of tuple of str or None, str or None, optional
 
     Returns
     -------
-    pandas.DataFrame
+    :class:`pandas.DataFrame`
     """
     return psms[
         psms["Modifications"].apply(

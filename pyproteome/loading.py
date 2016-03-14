@@ -26,11 +26,11 @@ def _filter_unassigned_rows(psms):
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    psms : :class:`pandas.DataFrame`
 
     Returns
     -------
-    pandas.DataFrame
+    :class:`pandas.DataFrame`
     """
     return psms.dropna(
         axis=0,
@@ -213,7 +213,7 @@ def load_mascot_psms(basename, camv_slices=None):
 
     Returns
     -------
-    psms : pandas.DataFrame
+    psms : :class:`pandas.DataFrame`
     scan_lists : dict of str, list of int
     filter_camv : bool
     """
@@ -346,7 +346,7 @@ def load_validated_psms(filename):
 
     Returns
     -------
-    pandas.DataFrame
+    :class:`pandas.DataFrame`
     """
     accepted, maybed, rejected = camv.load_camv_validation(filename)
 

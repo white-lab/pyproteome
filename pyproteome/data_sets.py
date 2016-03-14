@@ -30,7 +30,7 @@ class DataSet:
 
     Attributes
     ----------
-    psms : pandas.DataFrame
+    psms : :class:`pandas.DataFrame`
         Contains at least "Proteins", "Sequence", and "Modifications" columns.
     channels : dict of str, str
         Maps label channel to sample name.
@@ -66,7 +66,7 @@ class DataSet:
         Parameters
         ----------
         channels : dict of str, str
-        psms : :class:`pandas.DataFrame`, optional
+        psms : :class:`:class:`pandas.DataFrame``, optional
         mascot_name : str, optional
         camv_name : str, optional
         groups : dict of str, list of str, optional
@@ -426,14 +426,14 @@ class DataSet:
 
         Parameters
         ----------
-        psms : pandas.DataFrame
+        psms : :class:`pandas.DataFrame`
         group_a : list of str
         group_b : list of str
         normalize : bool, optional
 
         Returns
         -------
-        pandas.DataFrame
+        :class:`pandas.DataFrame`
         """
         groups = list(self.groups.values())
 

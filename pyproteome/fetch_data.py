@@ -80,7 +80,7 @@ def prefetch_accessions(psms):
 
     Parameters
     ----------
-    psms : pandas.DataFrame
+    psms : :class:`pandas.DataFrame`
     """
     accessions = set()
 

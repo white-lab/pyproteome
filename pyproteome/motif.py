@@ -262,7 +262,7 @@ def motif_enrichment(
 
     Returns
     -------
-    pandas.DataFrame
+    :class:`pandas.DataFrame`
 
     Notes
     -----
