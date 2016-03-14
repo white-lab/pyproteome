@@ -66,7 +66,10 @@ extensions = [
     'numpydoc',
 ]
 
-intersphinx_mapping = {'numpy': ('http://docs.scipy.org/doc/numpy/', None)}
+intersphinx_mapping = {
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    "scipy": ('https://docs.scipy.org/doc/scipy/', None),
+}
 
 autodoc_mock_imports = [
     mod_name.replace("-", "_")
