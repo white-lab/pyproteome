@@ -168,7 +168,7 @@ def read_mascot_xml(xml_name):
     -------
     fixed_mods : list of str
     var_mods : list of str
-    out : list of pyproteome.mascot.PeptideQuery
+    out : list of :class:`pycamv.mascot.PeptideQuery`
     """
     xml_path = os.path.join(paths.MASCOT_XML_DIR, xml_name)
     tree = ET.parse(xml_path)

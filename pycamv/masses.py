@@ -77,6 +77,19 @@ def _exact_mass(atoms):
         for atom, counts in atoms.items()
     )
 
+
+C_TERM = _exact_mass({"H": [1], "O": [1]})
+N_TERM = _exact_mass({"H": [1]})
+
+# iTRAQ Masses not exact due to mass differences between isotopes
+ITRAQ_4_PLEX = _exact_mass({"C": [4, 3], "N": [1, 1], "O": [1], "H": [12]})
+ITRAQ_8_PLEX = _exact_mass({"C": [7, 7], "N": [3, 1], "O": [3], "H": [24]})
+TMT_6_PLEX = _exact_mass({"C": [8, 4], "N": [1, 1], "O": [2], "H": [20]})
+TMT_10_PLEX = TMT_6_PLEX
+
+LYSINE_HYDROGEN = _exact_mass({"H": [1]})
+
+ALANINE = _exact_mass({"H": [5], "C": [3], "O": [1], "N": [1]})
 ARGININE = _exact_mass({"H": [12], "C": [6], "O": [1], "N": [4]})
 ASPARAGINE = _exact_mass({"H": [6], "C": [4], "O": [2], "N": [2]})
 ASPARTATE = _exact_mass({"H": [5], "C": [4], "O": [3], "N": [1]})
@@ -120,3 +133,50 @@ PHOSPHITE = _exact_mass({"H": [1], "P": [1], "O": [3]})
 CARBON_DIOXIDE = _exact_mass({"C": [1], "O": [2]})
 SOCH4 = _exact_mass({"S": [1], "O": [1], "C": [1], "H": [4]})
 SO2CH4 = _exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
+
+
+# Dictionary mapping amino acids and their modifications to weights
+MASSES = dict(
+    [
+        (("A", None), ALANINE),
+        (("R", None), ARGININE),
+        (("N", None), ASPARAGINE),
+        (("D", None), ASPARTATE),
+        (("C", None), CYSTEINE),
+        (("E", None), GLUTAMATE),
+        (("Q", None), GLUTAMINE),
+        (("G", None), GLYCINE),
+        (("H", None), HISTIDINE),
+        (("I", None), ISOLEUCINE),
+        (("L", None), LEUCINE),
+        (("K", None), LYSINE),
+        (("M", None), METHIONINE),
+        (("F", None), PHENYLALANINE),
+        (("P", None), PROLINE),
+        (("S", None), SERINE),
+        (("T", None), THREONINE),
+        (("Y", None), TYROSINE),
+        (("W", None), TRYPTOPHAN),
+        (("V", None), VALINE),
+        (("K", "Acetyl"), ACETYL_LYSINE),
+        (("M", "Oxidation"), OXY_METHIONINE),
+        (("N", "Dioxidation"), DIOXY_METHIONINE),
+        (("C", "Carbamidomethyl"), CARBAMIDOMETHYL_CYSTEINE),
+        (("S", "Phospho"), PHOSPHO_SERINE),
+        (("T", "Phospho"), PHOSPHO_THREONINE),
+        (("Y", "Phospho"), PHOSPHO_TYROSINE),
+        (("N-term", None), N_TERM),
+        (("C-term", None), C_TERM),
+        (("N-term", "iTRAQ4plex"), N_TERM + ITRAQ_4_PLEX),
+        (("N-term", "iTRAQ8plex"), N_TERM + ITRAQ_8_PLEX),
+        (("N-term", "TMT6plex"), N_TERM + TMT_6_PLEX),
+        (("N-term", "TMT10plex"), N_TERM + TMT_10_PLEX),
+        (("K", "iTRAQ4plex"), LYSINE + ITRAQ_4_PLEX - LYSINE_HYDROGEN),
+        (("K", "iTRAQ8plex"), LYSINE + ITRAQ_8_PLEX - LYSINE_HYDROGEN),
+        (("K", "TMT6plex"), LYSINE + TMT_6_PLEX - LYSINE_HYDROGEN),
+        (("K", "TMT10plex"), LYSINE + TMT_10_PLEX - LYSINE_HYDROGEN),
+    ]
+)
+
+# L + H_6?
+# R + H_6?
