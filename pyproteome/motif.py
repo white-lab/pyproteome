@@ -40,7 +40,7 @@ def generate_n_mers(
 
     Parameters
     ----------
-    sequences : list of pyproteome.Sequence
+    sequences : list of :class:`Sequence<pyproteome.sequence.Sequence`
     n : int, optional
     all_matches : bool, optional
         Generate n-mers for all protein matches else just the first match.
@@ -252,8 +252,8 @@ def motif_enrichment(
 
     Parameters
     ----------
-    foreground : list of pyproteome.Sequence
-    background : list of pyproteome.Sequence
+    foreground : list of :class:`Sequence<pyproteome.sequence.Sequence`
+    background : list of :class:`Sequence<pyproteome.sequence.Sequence`
     sig_cutoff : float, optional
     min_motifs : int, optional
     start_letters : list of str, optional
@@ -547,7 +547,7 @@ def motif_logo(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     letter_mod_types : list of tuple of str, str
     folder_name : str, optional
     filename : str, optional

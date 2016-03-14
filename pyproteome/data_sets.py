@@ -66,7 +66,7 @@ class DataSet:
         Parameters
         ----------
         channels : dict of str, str
-        psms : :class:`:class:`pandas.DataFrame``, optional
+        psms : :class:`pandas.DataFrame`, optional
         mascot_name : str, optional
         camv_name : str, optional
         groups : dict of str, list of str, optional
@@ -128,7 +128,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`pyproteome.data_sets.DataSet`
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
         new = copy.copy(self)
         new.psms = new.psms.copy()
@@ -242,11 +242,11 @@ class DataSet:
 
         Parameters
         ----------
-        other : :class:`pyproteome.data_sets.DataSet`
+        other : :class:`DataSet<pyproteome.data_sets.DataSet>`
 
         Returns
         -------
-        :class:`pyproteome.data_sets.DataSet`
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
         return merge_data([self, other])
 
@@ -265,7 +265,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`pyproteome.data_sets.DataSet`
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
         new = self
 
@@ -301,7 +301,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`pyproteome.data_sets.DataSet`
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
         new = self
 
@@ -342,7 +342,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`pyproteome.data_sets.DataSet`
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
         if ion_score_cutoff or confidence_cutoff:
             assert self.source in ["MASCOT"]
@@ -467,14 +467,14 @@ def merge_data(
 
     Parameters
     ----------
-    data_sets : list of :class:`pyproteome.data_sets.DataSet`
+    data_sets : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
     name : str, optional
     merge_duplicates : bool, optional
     merge_subsets : bool, optional
 
     Returns
     -------
-    :class:`pyproteome.data_sets.DataSet`
+    :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
     assert len(data_sets) > 0
 

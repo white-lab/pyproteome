@@ -62,7 +62,7 @@ def _extract_proteins_from_accessions(prots_string):
 
     Returns
     -------
-    pyproteome.Proteins
+    :class:`Proteins<pyproteome.protein.Proteins`
     """
     return protein.Proteins(
         proteins=[
@@ -84,7 +84,7 @@ def _extract_proteins_from_description(prots_string):
 
     Returns
     -------
-    pyproteome.Proteins
+    :class:`Proteins<pyproteome.protein.Proteins`
     """
     return protein.Proteins(
         proteins=[
@@ -104,12 +104,12 @@ def _extract_sequence(proteins, sequence_string):
 
     Parameters
     ----------
-    proteins : list of pyproteome.Protein
+    proteins : list of :class:`Protein<pyproteome.protein.Protein`
     sequence_string : str
 
     Returns
     -------
-    list of pyproteome.Sequence
+    list of :class:`Sequence<pyproteome.sequence.Sequence`
     """
     prot_matches = []
 
@@ -146,12 +146,12 @@ def _extract_modification(seq, mod_string):
 
     Parameters
     ----------
-    seq : pyproteome.Sequence
+    seq : :class:`Sequence<pyproteome.sequence.Sequence`
     mod_string : str
 
     Returns
     -------
-    pyproteome.Modification
+    :class:`Modification<pyproteome.modification.Modification`
     """
     def _get_pos(match):
         if match.group(1) == "N-Term":
@@ -183,12 +183,12 @@ def _extract_modifications(sequence, mods_string):
 
     Parameters
     ----------
-    sequence : pyproteome.Sequence
+    sequence : :class:`Sequence<pyproteome.sequence.Sequence`
     mod_string : str
 
     Returns
     -------
-    pyproteome.Modifications
+    :class:`Modifications<pyproteome.modification.Modifications`
     """
     if isinstance(mods_string, float):
         mods_string = ""

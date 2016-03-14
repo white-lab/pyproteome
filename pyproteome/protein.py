@@ -11,7 +11,7 @@ class Proteins:
 
     Attributes
     ----------
-    proteins : list of pyproteome.Protein
+    proteins : list of :class:`Protein<pyproteome.protein.Protein`
     """
 
     def __init__(self, proteins):

@@ -16,7 +16,7 @@ class Modifications:
 
     Attributes
     ----------
-    mods : list of pyproteome.Modification
+    mods : list of :class:`Modification<pyproteome.modification.Modification`
     """
 
     def __init__(self, mods):
@@ -25,7 +25,7 @@ class Modifications:
 
         Parameters
         ----------
-        mods : list of pyproteome.Modification
+        mods : list of :class:`Modification<pyproteome.modification.Modification`
         """
         self.mods = mods
 
@@ -46,7 +46,7 @@ class Modifications:
 
         Returns
         -------
-        generator of pyproteome.Modification
+        generator of :class:`Modification<pyproteome.modification.Modification`
         """
         return (
             mod
@@ -203,7 +203,7 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
 
     Parameters
     ----------
-    mod : pyproteome.Modification
+    mod : :class:`Modification<pyproteome.modification.Modification`
     any_letter : set of str
     any_mod : set of str
     letter_mod : set of tuple of str, str

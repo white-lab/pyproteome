@@ -50,7 +50,7 @@ def snr_table(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     csv_name : str, optional
     """
@@ -89,7 +89,7 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
 
     Parameters
     ----------
-    datas : list of :class:`pyproteome.data_sets.DataSet`
+    datas : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     out_name : str, optional
     """
@@ -146,7 +146,7 @@ def volcano_plot(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     pval_cutoff : float, optional
     fold_cutoff : float, optional
     highlight : list, optional
@@ -284,7 +284,7 @@ def hierarchical_heatmap(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     baseline_channels : list of str, optional
         List of channels to average and use as baseline for each row.
     metric : str, optional
@@ -325,9 +325,9 @@ def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
 
     Parameters
     ----------
-    data_a : :class:`pyproteome.data_sets.DataSet`
-    data_b : :class:`pyproteome.data_sets.DataSet`
-    data_c : :class:`pyproteome.data_sets.DataSet`
+    data_a : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data_b : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data_c : :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     filename : str, optional
     """
@@ -381,7 +381,7 @@ def write_lists(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     sorted_name : str, optional
     hits_name : str, optional
@@ -443,7 +443,7 @@ def plot_sequence_between(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequences : list of str
     """
     groups = list(reversed(data.groups.values()))
@@ -526,8 +526,8 @@ def plot_sequence(
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
-    sequence : str or pyproteome.Sequence
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    sequence : str or :class:`Sequence<pyproteome.sequence.Sequence`
     """
     channels = list(data.channels.keys())
 
@@ -557,8 +557,8 @@ def plot_correlation(
 
     Parameters
     ----------
-    data1 : :class:`pyproteome.data_sets.DataSet`
-    data2 : :class:`pyproteome.data_sets.DataSet`
+    data1 : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data2 : :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     filename : str, optional
     """
@@ -671,7 +671,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     csv_name : str, optional
     """
