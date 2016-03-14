@@ -98,13 +98,20 @@ TRYPTOPHAN = _exact_mass({"H": [10], "C": [11], "O": [1], "N": [2]})
 VALINE = _exact_mass({"H": [9], "C": [5], "O": [1], "N": [1]})
 
 R = 0
-ACETYL_LYSINE = 0
-OXY_METHIONINE = 0
-DIOXY_METHIONINE = 0
-CARBAMIDOMETHYL_CYSTEINE = 0
-PHOSPHO_SERINE = 0
-PHOSPHO_THREONINE = 0
-PHOSPHO_TYROSINE = 0
+ACETYL_LYSINE = \
+    _exact_mass({"H": [14], "C": [8], "O": [2], "N": [2]})
+OXY_METHIONINE = \
+    _exact_mass({"H": [9], "C": [5], "O": [2], "N": [1], "S": [1]})
+DIOXY_METHIONINE = \
+    _exact_mass({"H": [9], "C": [5], "O": [3], "N": [1], "S": [1]})
+CARBAMIDOMETHYL_CYSTEINE = \
+    _exact_mass({"H": [8], "C": [5], "O": [2], "N": [2], "S": [1]})
+PHOSPHO_SERINE = \
+    _exact_mass({"H": [6], "C": [3], "O": [5], "N": [1], "P": [1]})
+PHOSPHO_THREONINE = \
+    _exact_mass({"H": [8], "C": [4], "O": [5], "N": [1], "P": [1]})
+PHOSPHO_TYROSINE = \
+    _exact_mass({"H": [10], "C": [9], "O": [5], "N": [1], "P": [1]})
 
 AMINE = _exact_mass({"N": [1], "H": [3]})
 WATER = _exact_mass({"H": [2], "O": [1]})
