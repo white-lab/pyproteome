@@ -11,11 +11,14 @@ import tempfile
 
 import pymzml
 
-from . import paths
+from pyproteome import paths
 
 
 PROTEOWIZARD_PATH = None
-PROTEOWIZARD_PATH = r"C:\Users\Nader\Dropbox (MIT)\White Lab\CAMV\ProteoWizard\ProteoWizard 3.0.9205"
+PROTEOWIZARD_PATH = (
+    r"C:\Users\Nader\Dropbox (MIT)\White Lab\CAMV\ProteoWizard"
+    r"\ProteoWizard 3.0.9205"
+)
 
 
 def fetch_proteowizard():

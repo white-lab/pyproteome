@@ -7,18 +7,17 @@ Currently limited to importing and outputing scan lists.
 # Built-ins
 from __future__ import division
 
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
 import logging
 from math import ceil
 import os
-import re
 import subprocess
 
 # Core data analysis libraries
 from IPython.display import display
 import pandas as pd
 
-from . import mascot, modification, ms_labels, paths, proteowizard, utils
+from . import modification, paths, utils
 
 
 LOGGER = logging.getLogger("pyproteome.camv")
@@ -348,143 +347,3 @@ def run_camv_export(scan_lists=None):
             paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
         )
         display(_run_camv_export(save_path))
-
-
-class SearchOptions:
-    """
-    Contains options used to search a data set in MASCOT.
-
-    Attributes
-    ----------
-    label_type : tuple of (str, int)
-    """
-    def __init__(self, fixed_mods, var_mods):
-        self.label_type = (None, 0)
-
-        for mod in fixed_mods:
-            mod = re.sub(r"([\w-]+) \([\w-]+\)", r"\1", mod)
-            num = ms_labels.LABEL_NUMBERS.get(mod, 0)
-
-            if num > 0:
-                self.label_type = ("Fixed", num)
-
-        for mod in var_mods:
-            mod = re.sub(r"([\w-]+) \([\w-]+\)", r"\1", mod)
-            num = ms_labels.LABEL_NUMBERS.get(mod, 0)
-
-            if num > 0:
-                self.label_type = ("Variable", num)
-
-        # TODO: Parse out SILAC, C-mod, phospho, etc
-
-
-def validat_spectra(basename):
-    """
-    Generate CAMV web page for validating spectra.
-
-    Parameters
-    ----------
-    basename : str
-    """
-    # Read MASCOT xml file
-    xml_name = "{}.xml".format(basename)
-
-    fixed_mods, var_mods, out = mascot.read_mascot_xml(xml_name)
-
-    # Extract MASCOT search options
-    options = SearchOptions(fixed_mods, var_mods)
-
-    # Remove peptides with an excess of modification combinations
-
-    # Initialize AA masses based on label type
-
-    # Get scan data from RAW file
-    a = proteowizard.get_scan_data(basename, [i.scan for i in out])
-
-    # Get MS2 Data
-
-    # Transfer MS2 information to data struct
-
-    # Get iTRAQ data
-
-    # Determine SILAC precursor masses
-
-    # Get Precursor Scan information
-
-    # Remove precursor contaminated scans from validation list
-
-    # Check for Cysteine carbamidomethylation present in MASCOT search
-
-    # Check each assignment to each scan
-
-    # Output data
-
-    return options, a[1]
-
-
-def _exact_mass(atoms):
-    """
-    Parameters
-    ----------
-    atoms : dict of str, int or iterable
-        Atoms in molecule and their count. If the dictionary's values are
-        integers, use average isotope weights. If values are iterables, use
-        exact count of each isotope, in order of increasing weight.
-
-    Returns
-    -------
-    float
-        Molecular weight of molecule.
-
-    Examples
-    --------
-    >>> _exact_mass({"H": 1})        # One hydrogen (Average isotope)
-    1.007940721855
-    >>> _exact_mass({"H": [1]})      # One hydrogen (Exact isotope)
-    1.007825
-    >>> _exact_mass({"H": [1, 1]})   # One hydrogen, one deuterium
-    3.021927
-    >>> _exact_mass({"H": [0, 1]})   # One deuterium (Exact isotope)
-    2.014102
-    """
-    # Atom name mapping to molecular weight and frequency of that isotope
-    molecular_weights = {
-        "H": [
-            (1.007825, 99.9885),
-            (2.014102,  0.0115),
-        ],
-        "C": [
-            (12.000000, 98.93),
-            (13.003355,  1.07)
-        ],
-        "N": [
-            (14.003074, 99.632),
-            (15.000109,  0.368),
-        ],
-        "O": [
-            (15.994915, 99.757),
-            (16.999131,  0.038),
-            (17.999159,  0.205),
-        ],
-        "S": [
-            (31.972072, 94.93),
-            (32.971459,  0.76),
-            (33.967868,  4.29),
-            (35.967079,  0.02),
-        ],
-        "P": [
-            (30.973763, 100),
-        ],
-    }
-    return sum(
-        sum(
-            weight[0] * count
-            for weight, count in zip(molecular_weights[atom], counts)
-        )
-        if isinstance(counts, Iterable) else
-        sum(
-            weight * counts * frequency / 100
-            for weight, frequency in molecular_weights[atom]
-        )
-        for atom, counts in atoms.items()
-    )
