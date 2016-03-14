@@ -13,9 +13,12 @@ import os
 import re
 
 # Core data analysis libraries
-import Bio.Alphabet.IUPAC
-import Bio.Seq
-import Bio.motifs
+try:
+    import Bio.Alphabet.IUPAC
+    import Bio.Seq
+    import Bio.motifs
+except ImportError:
+    Bio = None
 import pandas as pd
 from scipy.stats import hypergeom
 
