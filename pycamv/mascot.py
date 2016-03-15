@@ -28,7 +28,7 @@ class PeptideQuery:
     pep_exp_mz : float
     pep_exp_z : int
     pep_seq : str
-    pep_var_mods : list of tuple of (int, str, str)
+    pep_var_mods : list of tuple of (int, str, list of str)
     scan : int
     num_comb : int
     """
@@ -53,8 +53,8 @@ class PeptideQuery:
         num_comb = 1
 
         for count, mod, letters in self.pep_var_mods:
-            if mod == "Phospho" and letters == "ST":
-                letters = "STY"
+            if mod == "Phospho" and letters == ["S", "T"]:
+                letters = ["S", "T", "Y"]
 
             potential_mod_sites = sum(self.pep_seq.count(i) for i in letters)
 
@@ -67,6 +67,26 @@ class PeptideQuery:
             num_comb *= comb(potential_mod_sites, count)
 
         return num_comb
+
+
+def _parse_letters(letters):
+    """
+    Turns a string of residue letters (i.e. "STY") into a list.
+
+    Includes special provisions for N- and C-term modifications.
+
+    Parameters
+    ----------
+    letters : str
+
+    Returns
+    -------
+    list of str
+    """
+    if letters in ["N-term", "C-term"]:
+        return [letters]
+
+    return list(letters)
 
 
 def _parse_mascot_2_4_1(root):
@@ -113,7 +133,7 @@ def _parse_mascot_2_4_1(root):
                     for mod in var_mods.split(";")
                 ]
                 var_mods = [
-                    (int(count) if count else 1, name, letters)
+                    (int(count) if count else 1, name, _parse_letters(letters))
                     for count, name, letters in var_mods
                 ]
             else:
