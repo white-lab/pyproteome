@@ -3,6 +3,8 @@ This module provides functionality for calculating the masses of peptide
 fragments.
 """
 
+import numpy as np
+
 from . import masses, ms_labels
 
 
@@ -98,8 +100,53 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
     return frag_masses
 
 
-def _b_y_ions(pep_seq, frag_masses, fragment_max_charge):
-    pass
+def _get_frag_masses(pep_seq):
+    frag_masses = []
+
+    for index in range(len(pep_seq)):
+        letter, mods = pep_seq[index]
+        mass = masses.MASSES[(letter, mods[0])]
+        frag_masses.append(mass)
+
+    return frag_masses
+
+
+def _b_y_ions(
+    pep_seq, frag_masses,
+    fragment_max_charge,
+    aa_losses, mod_losses
+):
+    proton = masses.MASSES[("Proton", None)]
+
+    ions = {}
+
+    def _generate_ions(mass, basename):
+        ret = {}
+
+        ret[basename] = mass
+
+        # iTRAQ / TMT y-adducts?
+
+        for loss in aa_losses:
+            for charge in range(2, fragment_max_charge):
+                ret[
+                    name + "^\{{:+}\}".format(charge)
+                ] = (mass + charge * proton) / charge
+
+        return ret
+
+    for index in range(2, len(pep_seq) - 1):
+        # b-ions first
+        mass = np.cumsum(frag_masses[:index])
+        name = "b_\{{}\}".format(index - 1)
+        ions.update(_generate_ions(mass, name))
+
+        # y-ions second
+        mass = np.cumsum(frag_masses[index:])
+        name = "y_\{{}\}".format(index - 1)
+        ions.update(_generate_ions(mass, name))
+
+    return ions
 
 
 def _label_ions(pep_seq):
@@ -121,10 +168,10 @@ def _label_ions(pep_seq):
     return ions
 
 
-def _parent_ions(pep_seq, frag_masses, parent_max_charge):
+def _parent_ions(frag_masses, parent_max_charge):
     proton = masses.MASSES[("Proton", None)]
     ions = {}
-    parent = frag_masses[-1]
+    parent = sum(frag_masses)
 
     for charge in range(1, parent_max_charge):
         name = "MH^\{{:+}\}".format(charge)
@@ -184,32 +231,20 @@ def fragment_ions(
     fragment_charge_range = range(1, fragment_max_charge)
     aa_losses, mod_losses = _get_default_losses(aa_losses, mod_losses)
 
-    proton = masses.MASSES[("Proton", None)]
-
-    # First calculate the masses of fragments at each position along the
-    # backbone
-    frag_masses = []
-
-    for index in range(2, len(pep_seq)):
-        fragment = pep_seq[:index]
-
-        mass = sum(
-            masses.MASSES[(letter, mods[0] if mods else None)]
-            for letter, mods in fragment
-        )
-
-        frag_masses.append(mass)
+    # First calculate the masses of each residue along the backbone
+    frag_masses = _get_frag_masses(pep_seq)
 
     other_ions = {}
 
     # Get b/y (and associated a/c/x/z) ions
     frag_ions = _b_y_ions(
         pep_seq, frag_masses, fragment_charge_range,
+        aa_losses, mod_losses,
     )
 
     # Get parent ions (i.e. MH^{+1})
     other_ions.update(
-        _parent_ions(pep_seq, frag_masses, parent_max_charge)
+        _parent_ions(frag_masses, parent_max_charge)
     )
 
     # Get TMT / iTRAQ labels
