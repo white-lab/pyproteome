@@ -77,6 +77,7 @@ def _exact_mass(atoms):
         for atom, counts in atoms.items()
     )
 
+PROTON = _exact_mass({"H": [1]})
 
 C_TERM = _exact_mass({"H": [1], "O": [1]})
 N_TERM = _exact_mass({"H": [1]})
@@ -125,6 +126,8 @@ PHOSPHO_THREONINE = \
     _exact_mass({"H": [8], "C": [4], "O": [5], "N": [1], "P": [1]})
 PHOSPHO_TYROSINE = \
     _exact_mass({"H": [10], "C": [9], "O": [5], "N": [1], "P": [1]})
+PHOSPHO_TYROSINE_IMMONIUM = \
+    _exact_mass({"H": [11], "C": [8], "O": [4], "N": [1], "P": [1]})
 
 SILAC_LYSINE_13C6 = \
     _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [2]})
@@ -152,6 +155,8 @@ SO2CH4 = _exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
 # Dictionary mapping amino acids and their modifications to weights
 MASSES = dict(
     [
+        (("Proton", None), PROTON),
+
         # Amino Acids
         (("A", None), ALANINE),
         (("R", None), ARGININE),
@@ -213,5 +218,8 @@ MASSES = dict(
         (("-H_3PO_4", None), PHOSPHORIC_ACID),     # pS/T
         (("-HPO_3", None,), PHOSPHITE),
         (("-HPO_3-H_2O", None), PHOSPHORIC_ACID),  # pY
+
+        # Other ions
+        (("pY-Immonium", None), PHOSPHO_TYROSINE_IMMONIUM),
     ],
 )
