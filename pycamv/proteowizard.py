@@ -26,12 +26,12 @@ PROTEOWIZARD_PATH = os.path.join(
 
 PROTEOWIZARD_MSI_32_URL = (
     "https://www.dropbox.com/s/5q7flvb32vgdh7d/"
-    "pwiz-setup-3.0.9393-x86.msi?dl=0"
+    "pwiz-setup-3.0.9393-x86.msi?dl=1"
 )
 
 PROTEOWIZARD_MSI_64_URL = (
     "https://www.dropbox.com/s/7bz3wpgjj7zd99a/"
-    "pwiz-setup-3.0.9393-x86_64.msi?dl=0"
+    "pwiz-setup-3.0.9393-x86_64.msi?dl=1"
 )
 
 
@@ -41,19 +41,24 @@ class ScanQuery:
     ----------
     scan : int
     isolation_mz : float or None
+    window_offset : tuple of (int, int) or None
     precursor_scan : int or None
     """
-    def __init__(self, scan, isolation_mz=None, precursor_scan=None):
+    def __init__(
+        self, scan,
+        isolation_mz=None, window_offset=None, precursor_scan=None,
+    ):
         self.scan = scan
         self.precursor_scan = precursor_scan
+        self.window_offset = window_offset
         self.isolation_mz = isolation_mz
 
 
 def fetch_proteowizard(url=None):
-    if os.file.exists(PROTEOWIZARD_PATH):
+    if os.path.exists(PROTEOWIZARD_PATH):
         return
 
-    if platform.sytem() not in ["Windows"]:
+    if platform.system() not in ["Windows"]:
         raise Exception("Proteowizard install not supported on your platform")
 
     if url is None:
@@ -63,9 +68,10 @@ def fetch_proteowizard(url=None):
             url = PROTEOWIZARD_MSI_32_URL
 
     tmpdir = tempfile.mkdtemp()
+    out_path = os.path.join(tmpdir, url.rsplit("/", 1)[1].rsplit("?")[0])
 
-    # Download and extract the install .msi file
-    with open(tempfile.NamedTemporaryFile(mode="w+b", suffix=".msi")) as f:
+    # Download the .msi file
+    with open(out_path, mode="wb") as f:
         response = requests.get(url, stream=True)
 
         if not response.ok:
@@ -74,16 +80,15 @@ def fetch_proteowizard(url=None):
         for block in response.iter_content(1024):
             f.write(block)
 
-        f.flush()
-
-        cmd = [
-            "msiexec",
-            "/a",
-            f.name,
-            "/qb",
-            "TARGETDIR=\"{}\"".format(tmpdir),
-        ]
-        subprocess.check_call(cmd)
+    # Extract the msi file's contents
+    cmd = [
+        "msiexec",
+        "/a",
+        out_path,
+        "/qb",
+        "TARGETDIR=\"{}\"".format(tmpdir),
+    ]
+    subprocess.check_call(cmd)
 
     # Copy the msi file's contents to PROTEOWIZARD_DIR
     src = os.path.join(
@@ -106,6 +111,8 @@ def _raw_to_mzml(basename, queries, out_dir, mz_window=None):
     out_dir : str
     mz_window : list of int, optional
     """
+    fetch_proteowizard()
+
     ms_convert_path = os.path.join(PROTEOWIZARD_PATH, "msconvert.exe")
     raw_path = os.path.join(paths.MS_RAW_DIR, "{}.raw".format(basename))
 
@@ -141,6 +148,10 @@ def _raw_to_mzml(basename, queries, out_dir, mz_window=None):
     out_path = os.path.join(out_dir, "{}.mzML".format(basename))
     data = pymzml.run.Reader(
         out_path,
+        extraAccessions=[
+            ("MS:1000828", ["value"]),  # isolation window lower offset
+            ("MS:1000829", ["value"]),  # isolation window upper offset
+        ],
     )
 
     return data
@@ -173,6 +184,10 @@ def get_scan_data(basename, queries):
 
         scan = spectrum["id"]
         isolation_mz = spectrum["selected ion m/z"]
+        window_offset = (
+            spectrum["isolation window lower offset"],
+            spectrum["isolation window upper offset"],
+        )
 
         spectrum_ref = spectrum.xmlTreeIterFree.find(
             "mzml:precursorList/mzml:precursor", prefix,
@@ -183,6 +198,7 @@ def get_scan_data(basename, queries):
             ScanQuery(
                 scan,
                 precursor_scan=precursor_scan,
+                window_offset=window_offset,
                 isolation_mz=isolation_mz,
             )
         )
