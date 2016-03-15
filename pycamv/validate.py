@@ -67,7 +67,7 @@ def validate_spectra(basename):
     # Initialize AA masses based on label type
 
     # Get scan data from RAW file
-    a = proteowizard.get_scan_data(basename, [i.scan for i in out])
+    a = proteowizard.get_scan_data(basename, out)
 
     # Get MS2 Data
 
