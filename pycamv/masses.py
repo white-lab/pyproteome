@@ -141,9 +141,10 @@ SILAC_ARGININE_13C615N4 = \
 
 AMINE = _exact_mass({"N": [1], "H": [3]})
 WATER = _exact_mass({"H": [2], "O": [1]})
+CARBON_MONOXIDE = _exact_mass({"C": [1], "O": [1]})
+CARBON_DIOXIDE = _exact_mass({"C": [1], "O": [2]})
 PHOSPHORIC_ACID = _exact_mass({"H": [3], "P": [1], "O": [4]})
 PHOSPHITE = _exact_mass({"H": [1], "P": [1], "O": [3]})
-CARBON_DIOXIDE = _exact_mass({"C": [1], "O": [2]})
 SOCH4 = _exact_mass({"S": [1], "O": [1], "C": [1], "H": [4]})
 SO2CH4 = _exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
 
@@ -151,6 +152,7 @@ SO2CH4 = _exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
 # Dictionary mapping amino acids and their modifications to weights
 MASSES = dict(
     [
+        # Amino Acids
         (("A", None), ALANINE),
         (("R", None), ARGININE),
         (("N", None), ASPARAGINE),
@@ -171,6 +173,8 @@ MASSES = dict(
         (("Y", None), TYROSINE),
         (("W", None), TRYPTOPHAN),
         (("V", None), VALINE),
+
+        # Modified Amino Acids
         (("K", "Acetyl"), ACETYL_LYSINE),
         (("M", "Oxidation"), OXY_METHIONINE),
         (("N", "Dioxidation"), DIOXY_METHIONINE),
@@ -178,8 +182,12 @@ MASSES = dict(
         (("S", "Phospho"), PHOSPHO_SERINE),
         (("T", "Phospho"), PHOSPHO_THREONINE),
         (("Y", "Phospho"), PHOSPHO_TYROSINE),
+
+        # N- and C-terminus
         (("N-term", None), N_TERM),
         (("C-term", None), C_TERM),
+
+        # TMT / iTRAQ
         (("N-term", "iTRAQ4plex"), N_TERM + ITRAQ_4_PLEX),
         (("N-term", "iTRAQ8plex"), N_TERM + ITRAQ_8_PLEX),
         (("N-term", "TMT6plex"), N_TERM + TMT_6_PLEX),
@@ -188,9 +196,22 @@ MASSES = dict(
         (("K", "iTRAQ8plex"), LYSINE + ITRAQ_8_PLEX - LYSINE_HYDROGEN),
         (("K", "TMT6plex"), LYSINE + TMT_6_PLEX - LYSINE_HYDROGEN),
         (("K", "TMT10plex"), LYSINE + TMT_10_PLEX - LYSINE_HYDROGEN),
+
+        # SILAC
         (("K", "Lysine-13C6 (K-13C6)"), SILAC_LYSINE_13C6),
         (("K", "Lysine-13C615N2 (K-full)"), SILAC_LYSINE_13C615N2),
         (("R", "Arginine-13C6 (R-13C6)"), SILAC_ARGININE_13C6),
         (("R", "Arginine-13C615N2 (R-full)"), SILAC_ARGININE_13C615N4),
-    ]
+
+        # Neural Losses
+        (("-H_2O", None), WATER),
+        (("-NH_3", None), AMINE),
+        (("-CO", None), CARBON_MONOXIDE),
+        (("-CO_2", None), CARBON_DIOXIDE),
+        (("-SOCH_4", None), SOCH4),                # oxy-M
+        (("-SO2CH4", None), SO2CH4),               # dioxy-M
+        (("-H_3PO_4", None), PHOSPHORIC_ACID),     # pS/T
+        (("-HPO_3", None,), PHOSPHITE),
+        (("-HPO_3-H_2O", None), PHOSPHORIC_ACID),  # pY
+    ],
 )
