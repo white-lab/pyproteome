@@ -126,6 +126,19 @@ PHOSPHO_THREONINE = \
 PHOSPHO_TYROSINE = \
     _exact_mass({"H": [10], "C": [9], "O": [5], "N": [1], "P": [1]})
 
+SILAC_LYSINE_13C6 = \
+    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [2]})
+SILAC_LYSINE_13C615N2 = \
+    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [0, 2]})
+SILAC_ARGININE_13C6 = \
+    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [4]})
+SILAC_ARGININE_13C615N4 = \
+    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [0, 4]})
+
+# XXX: SILAC Tyrosine?
+# XXX: SILAC Leucine?
+# XXX: SILAC Acetyl-lysine? (Multiple modifications)
+
 AMINE = _exact_mass({"N": [1], "H": [3]})
 WATER = _exact_mass({"H": [2], "O": [1]})
 PHOSPHORIC_ACID = _exact_mass({"H": [3], "P": [1], "O": [4]})
@@ -175,8 +188,9 @@ MASSES = dict(
         (("K", "iTRAQ8plex"), LYSINE + ITRAQ_8_PLEX - LYSINE_HYDROGEN),
         (("K", "TMT6plex"), LYSINE + TMT_6_PLEX - LYSINE_HYDROGEN),
         (("K", "TMT10plex"), LYSINE + TMT_10_PLEX - LYSINE_HYDROGEN),
+        (("K", "Lysine-13C6 (K-13C6)"), SILAC_LYSINE_13C6),
+        (("K", "Lysine-13C615N2 (K-full)"), SILAC_LYSINE_13C615N2),
+        (("R", "Arginine-13C6 (R-13C6)"), SILAC_ARGININE_13C6),
+        (("R", "Arginine-13C615N2 (R-full)"), SILAC_ARGININE_13C615N4),
     ]
 )
-
-# L + H_6?
-# R + H_6?
