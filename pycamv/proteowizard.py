@@ -2,6 +2,7 @@
 Provides functions for interacting with MS data through ProteoWizard.
 """
 
+import logging
 import os
 import platform
 import re
@@ -13,6 +14,9 @@ import tempfile
 import pymzml
 
 from pyproteome import paths
+
+
+LOGGER = logging.getLogger("pycamv.proteowizard")
 
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -58,6 +62,8 @@ def fetch_proteowizard(url=None):
     if os.path.exists(PROTEOWIZARD_PATH):
         return
 
+    LOGGER.info("ProteoWizard not installed, fetching now.")
+
     if platform.system() not in ["Windows"]:
         raise Exception("Proteowizard install not supported on your platform")
 
@@ -81,33 +87,34 @@ def fetch_proteowizard(url=None):
             f.write(block)
 
     # Extract the msi file's contents
+    extract_path = os.path.join(tmpdir, "msi_extract")
     cmd = [
         "msiexec",
         "/a",
         out_path,
         "/qb",
-        "TARGETDIR=\"{}\"".format(tmpdir),
+        "TARGETDIR=\"{}\"".format(extract_path),
     ]
-    subprocess.check_call(cmd)
+    subprocess.check_call(" ".join(cmd), shell=True)
 
     # Copy the msi file's contents to PROTEOWIZARD_DIR
     src = os.path.join(
-        tmpdir,
+        extract_path,
         "PFiles",
         "ProteoWizard",
     )
 
-    os.makedirs(PROTEOWIZARD_DIR)
+    shutil.rmtree(PROTEOWIZARD_DIR)
     shutil.copytree(src, PROTEOWIZARD_DIR)
     shutil.rmtree(tmpdir)
 
 
-def _raw_to_mzml(basename, queries, out_dir, mz_window=None):
+def _raw_to_mzml(basename, scans, out_dir, mz_window=None):
     """
     Parameters
     ----------
     basename : str
-    queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
+    scans : list of int
     out_dir : str
     mz_window : list of int, optional
     """
@@ -121,7 +128,7 @@ def _raw_to_mzml(basename, queries, out_dir, mz_window=None):
 
     config.write(
         "filter=\"scanNumber {}\"\n".format(
-            " ".join(str(query.scan) for query in queries)
+            " ".join(str(scan) for scan in scans)
         )
     )
 
@@ -173,7 +180,7 @@ def get_scan_data(basename, queries):
     out_dir = tempfile.mkdtemp()
 
     # Collect MS^2 data
-    ms2_data = _raw_to_mzml(basename, queries, out_dir)
+    ms2_data = _raw_to_mzml(basename, [i.scan for i in queries], out_dir)
 
     prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
     scan_queries = []
