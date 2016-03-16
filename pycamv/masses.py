@@ -167,6 +167,9 @@ AMINO_ACIDS = {
     "W": TRYPTOPHAN,
     "V": VALINE,
 
+    # Unknown Amino Acid
+    "X": 0,
+
     # N- and C-terminus
     "N-term": N_TERM,
     "C-term": C_TERM,
@@ -209,13 +212,13 @@ MASSES = {
     "Proton": PROTON,
 
     # Neural Losses
-    "-H_2O": WATER,
-    "-NH_3": AMINE,
-    "-CO": CARBON_MONOXIDE,
-    "-CO_2": CARBON_DIOXIDE,
-    "-SOCH_4": SOCH4,                # oxy-M
-    "-SO2CH4": SO2CH4,               # dioxy-M
-    "-H_3PO_4": PHOSPHORIC_ACID,     # pS/T
-    "-HPO_3": PHOSPHITE,
-    "-HPO_3-H_2O": PHOSPHORIC_ACID,  # pY
+    "H_2O": WATER,
+    "NH_3": AMINE,
+    "CO": CARBON_MONOXIDE,
+    "CO_2": CARBON_DIOXIDE,
+    "SOCH_4": SOCH4,                # oxy-M
+    "SO2CH4": SO2CH4,               # dioxy-M
+    "H_3PO_4": PHOSPHORIC_ACID,     # pS/T
+    "HPO_3": PHOSPHITE,
+    "HPO_3-H_2O": PHOSPHORIC_ACID,  # pY
 }
