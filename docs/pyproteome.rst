@@ -38,10 +38,10 @@ pyproteome.data_sets module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.enrichment_analysis module
+pyproteome.enrichment module
 -------------------------------------
 
-.. automodule:: pyproteome.enrichment_analysis
+.. automodule:: pyproteome.enrichment
     :members:
     :undoc-members:
     :show-inheritance:

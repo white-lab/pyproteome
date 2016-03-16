@@ -14,6 +14,30 @@ Module contents
 Submodules
 ----------
 
+pycamv.compare module
+--------------------
+
+.. automodule:: pycamv.compare
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pycamv.fragments module
+--------------------
+
+.. automodule:: pycamv.fragments
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pycamv.gen_sequences module
+--------------------
+
+.. automodule:: pycamv.gen_sequences
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pycamv.mascot module
 --------------------
 
