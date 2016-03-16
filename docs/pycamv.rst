@@ -15,7 +15,7 @@ Submodules
 ----------
 
 pycamv.compare module
---------------------
+---------------------
 
 .. automodule:: pycamv.compare
     :members:
@@ -23,7 +23,7 @@ pycamv.compare module
     :show-inheritance:
 
 pycamv.fragments module
---------------------
+-----------------------
 
 .. automodule:: pycamv.fragments
     :members:
@@ -31,7 +31,7 @@ pycamv.fragments module
     :show-inheritance:
 
 pycamv.gen_sequences module
---------------------
+---------------------------
 
 .. automodule:: pycamv.gen_sequences
     :members:
