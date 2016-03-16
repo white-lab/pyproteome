@@ -104,14 +104,10 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
 
 
 def _get_frag_masses(pep_seq):
-    frag_masses = []
-
-    for index in range(len(pep_seq)):
-        letter, mods = pep_seq[index]
-        mass = masses.MODIFICATIONS[(letter, mods[0])]
-        frag_masses.append(mass)
-
-    return frag_masses
+    return [
+        _sequence_mass([pep_seq[index]])
+        for index in range(len(pep_seq))
+    ]
 
 
 def _b_y_ions(
@@ -119,7 +115,7 @@ def _b_y_ions(
     fragment_max_charge,
     aa_losses, mod_losses
 ):
-    proton = masses.MASSES["Proton"]
+    proton = masses.PROTON
 
     ions = {}
 
@@ -130,11 +126,13 @@ def _b_y_ions(
 
         # iTRAQ / TMT y-adducts?
 
-        for loss in aa_losses:
+        for loss in aa_losses + [""]:
+            loss_mass = masses.MASSES[loss]
+
             for charge in range(2, fragment_max_charge):
                 ret[
                     name + "^\{{:+}\}".format(charge)
-                ] = (mass + charge * proton) / charge
+                ] = (mass - loss_mass + charge * proton) / charge
 
         return ret
 
@@ -172,7 +170,7 @@ def _label_ions(pep_seq):
 
 
 def _parent_ions(frag_masses, parent_max_charge):
-    proton = masses.MASSES["Proton"]
+    proton = masses.PROTON
     ions = {}
     parent = sum(frag_masses)
 
@@ -190,7 +188,8 @@ def _py_ions(pep_seq):
         letter == "Y" and "Phospho" in mods
         for letter, mods in pep_seq
     ):
-        ions["pY"] = masses.MASSES["pY-Immonium"]
+        ions["pY"] = masses.IMMONIUM_IONS["Y"] + \
+            masses.MODIFICATIONS["Y", "Phospho"]
 
     return ions
 

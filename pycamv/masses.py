@@ -172,6 +172,11 @@ AMINO_ACIDS = {
     "C-term": C_TERM,
 }
 
+IMMONIUM_IONS = {
+    residue: mass - CARBON_MONOXIDE + PROTON
+    for residue, mass in AMINO_ACIDS.items()
+}
+
 MODIFICATIONS = {
     # Modified Amino Acids
     ("K", "Acetyl"): ACETYL_LYSINE,
@@ -213,7 +218,4 @@ MASSES = {
     "-H_3PO_4": PHOSPHORIC_ACID,     # pS/T
     "-HPO_3": PHOSPHITE,
     "-HPO_3-H_2O": PHOSPHORIC_ACID,  # pY
-
-    # Other ions
-    "pY-Immonium": PHOSPHO_TYROSINE_IMMONIUM,
 }
