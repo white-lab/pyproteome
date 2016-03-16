@@ -26,7 +26,7 @@ def compare_spectra(
     """
     Parameters
     ----------
-    spectra : :class:`pymzml.spec.Spectrum<spec.Spectrum>``
+    spectra : :class:`pymzml.spec.Spectrum<spec.Spectrum>`
     frag_ions : dict of str, float
     other_ions : dict of str, float
     charge : int
