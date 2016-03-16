@@ -217,24 +217,20 @@ def _b_y_ions(
 
     for index in range(2, len(pep_seq) - 1):
         # XXX: a/c, x/z ions?
-
-        # b-ions first
-        mass = np.cumsum(frag_masses[:index])
-        name = "b_\{{}\}".format(index - 1)
-
-        for name, mz in _generate_ions(pep_seq[:index], mass, name):
-            yield name, mz
-
-        # y-ions second
         # XXX: 2 x Proton mass?
-        mass = np.cumsum(frag_masses[index:]) + 2 * masses.PROTON
-        name = "y_\{{}\}".format(index - 1)
+        # XXX: iTRAQ / TMT y-adducts?
+        base_ions = {
+            "a_\{{}\}".format(index - 1):
+                np.cumsum(frag_masses[:index]) - masses.MASSES["CO"],
+            "b_\{{}\}".format(index - 1):
+                np.cumsum(frag_masses[:index]),
+            "y_\{{}\}".format(index - 1):
+                np.cumsum(frag_masses[index:]) + 2 * masses.PROTON,
+        }
 
-        for name, mz in _generate_ions(pep_seq[index:], name, mass):
-            yield name, mz
-
-        # iTRAQ / TMT y-adducts?
-        # ...
+        for name, mass in base_ions.items():
+            for name, mz in _generate_ions(pep_seq[:index], mass, name):
+                yield name, mz
 
 
 def _label_ions(pep_seq):
