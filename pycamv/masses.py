@@ -111,115 +111,109 @@ TYROSINE = _exact_mass({"H": [9], "C": [9], "O": [2], "N": [1]})
 TRYPTOPHAN = _exact_mass({"H": [10], "C": [11], "O": [1], "N": [2]})
 VALINE = _exact_mass({"H": [9], "C": [5], "O": [1], "N": [1]})
 
-R = 0
-ACETYL_LYSINE = \
-    _exact_mass({"H": [14], "C": [8], "O": [2], "N": [2]})
-OXY_METHIONINE = \
-    _exact_mass({"H": [9], "C": [5], "O": [2], "N": [1], "S": [1]})
-DIOXY_METHIONINE = \
-    _exact_mass({"H": [9], "C": [5], "O": [3], "N": [1], "S": [1]})
-CARBAMIDOMETHYL_CYSTEINE = \
-    _exact_mass({"H": [8], "C": [5], "O": [2], "N": [2], "S": [1]})
-PHOSPHO_SERINE = \
-    _exact_mass({"H": [6], "C": [3], "O": [5], "N": [1], "P": [1]})
-PHOSPHO_THREONINE = \
-    _exact_mass({"H": [8], "C": [4], "O": [5], "N": [1], "P": [1]})
-PHOSPHO_TYROSINE = \
-    _exact_mass({"H": [10], "C": [9], "O": [5], "N": [1], "P": [1]})
-PHOSPHO_TYROSINE_IMMONIUM = \
-    _exact_mass({"H": [11], "C": [8], "O": [4], "N": [1], "P": [1]})
-
-SILAC_LYSINE_13C6 = \
-    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [2]})
-SILAC_LYSINE_13C615N2 = \
-    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [0, 2]})
-SILAC_ARGININE_13C6 = \
-    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [4]})
-SILAC_ARGININE_13C615N4 = \
-    _exact_mass({"H": [12], "C": [0, 6], "O": [1], "N": [0, 4]})
-
-# XXX: SILAC Tyrosine?
-# XXX: SILAC Leucine?
-# XXX: SILAC Acetyl-lysine? (Multiple modifications)
-
 AMINE = _exact_mass({"N": [1], "H": [3]})
 WATER = _exact_mass({"H": [2], "O": [1]})
+OXIDE = _exact_mass({"O": [1]})
+DIOXIDE = _exact_mass({"O": [2]})
 CARBON_MONOXIDE = _exact_mass({"C": [1], "O": [1]})
 CARBON_DIOXIDE = _exact_mass({"C": [1], "O": [2]})
 PHOSPHORIC_ACID = _exact_mass({"H": [3], "P": [1], "O": [4]})
 PHOSPHITE = _exact_mass({"H": [1], "P": [1], "O": [3]})
 SOCH4 = _exact_mass({"S": [1], "O": [1], "C": [1], "H": [4]})
 SO2CH4 = _exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
+HYDROXYL = _exact_mass({"H": [1], "O": [1]})
+H2_PHOSPHATE = _exact_mass({"H": [2], "O": [4], "P": [1]})
+ACETYL = _exact_mass({"H": [3], "C": [2], "O": [1]})
+CARBAMIDOMETHYL = _exact_mass({"H": [2], "C": [2], "O": [1], "N": [1]})
 
+ACETYL_LYSINE = -PROTON + ACETYL
+OXY_METHIONINE = OXIDE
+DIOXY_METHIONINE = DIOXIDE
+CARBAMIDOMETHYL_CYSTEINE = -PROTON + CARBAMIDOMETHYL
+PHOSPHO_SERINE = -HYDROXYL + H2_PHOSPHATE
+PHOSPHO_THREONINE = -HYDROXYL + H2_PHOSPHATE
+PHOSPHO_TYROSINE = -HYDROXYL + H2_PHOSPHATE
+PHOSPHO_TYROSINE_IMMONIUM = PHOSPHO_TYROSINE - CARBON_MONOXIDE + PROTON
+
+SILAC_LYSINE_13C6 = _exact_mass({"C": [-6, 6]})
+SILAC_LYSINE_13C615N2 = _exact_mass({"C": [-6, 6], "N": [-2, 2]})
+SILAC_ARGININE_13C6 = _exact_mass({"C": [-6, 6]})
+SILAC_ARGININE_13C615N4 = _exact_mass({"C": [-6, 6], "N": [-4, 4]})
+
+# XXX: SILAC Tyrosine?
+# XXX: SILAC Leucine?
+# XXX: SILAC Acetyl-lysine? (Multiple modifications)
+
+AMINO_ACIDS = {
+    # Amino Acids
+    "A": ALANINE,
+    "R": ARGININE,
+    "N": ASPARAGINE,
+    "D": ASPARTATE,
+    "C": CYSTEINE,
+    "E": GLUTAMATE,
+    "Q": GLUTAMINE,
+    "G": GLYCINE,
+    "H": HISTIDINE,
+    "I": ISOLEUCINE,
+    "L": LEUCINE,
+    "K": LYSINE,
+    "M": METHIONINE,
+    "F": PHENYLALANINE,
+    "P": PROLINE,
+    "S": SERINE,
+    "T": THREONINE,
+    "Y": TYROSINE,
+    "W": TRYPTOPHAN,
+    "V": VALINE,
+
+    # N- and C-terminus
+    "N-term": N_TERM,
+    "C-term": C_TERM,
+}
+
+MODIFICATIONS = {
+    # Modified Amino Acids
+    ("K", "Acetyl"): ACETYL_LYSINE,
+    ("M", "Oxidation"): OXY_METHIONINE,
+    ("N", "Dioxidation"): DIOXY_METHIONINE,
+    ("C", "Carbamidomethyl"): CARBAMIDOMETHYL_CYSTEINE,
+    ("S", "Phospho"): PHOSPHO_SERINE,
+    ("T", "Phospho"): PHOSPHO_THREONINE,
+    ("Y", "Phospho"): PHOSPHO_TYROSINE,
+
+    # TMT / iTRAQ
+    ("N-term", "iTRAQ4plex"): ITRAQ_4_PLEX,
+    ("N-term", "iTRAQ8plex"): ITRAQ_8_PLEX,
+    ("N-term", "TMT6plex"): TMT_6_PLEX,
+    ("N-term", "TMT10plex"): TMT_10_PLEX,
+    ("K", "iTRAQ4plex"): ITRAQ_4_PLEX - LYSINE_HYDROGEN,
+    ("K", "iTRAQ8plex"): ITRAQ_8_PLEX - LYSINE_HYDROGEN,
+    ("K", "TMT6plex"): TMT_6_PLEX - LYSINE_HYDROGEN,
+    ("K", "TMT10plex"): TMT_10_PLEX - LYSINE_HYDROGEN,
+
+    # SILAC
+    ("K", "Lysine-13C6 (K-13C6)"): SILAC_LYSINE_13C6,
+    ("K", "Lysine-13C615N2 (K-full)"): SILAC_LYSINE_13C615N2,
+    ("R", "Arginine-13C6 (R-13C6)"): SILAC_ARGININE_13C6,
+    ("R", "Arginine-13C615N2 (R-full)"): SILAC_ARGININE_13C615N4,
+}
 
 # Dictionary mapping amino acids and their modifications to weights
-MASSES = dict(
-    [
-        (("Proton", None), PROTON),
+MASSES = {
+    "Proton": PROTON,
 
-        # Amino Acids
-        (("A", None), ALANINE),
-        (("R", None), ARGININE),
-        (("N", None), ASPARAGINE),
-        (("D", None), ASPARTATE),
-        (("C", None), CYSTEINE),
-        (("E", None), GLUTAMATE),
-        (("Q", None), GLUTAMINE),
-        (("G", None), GLYCINE),
-        (("H", None), HISTIDINE),
-        (("I", None), ISOLEUCINE),
-        (("L", None), LEUCINE),
-        (("K", None), LYSINE),
-        (("M", None), METHIONINE),
-        (("F", None), PHENYLALANINE),
-        (("P", None), PROLINE),
-        (("S", None), SERINE),
-        (("T", None), THREONINE),
-        (("Y", None), TYROSINE),
-        (("W", None), TRYPTOPHAN),
-        (("V", None), VALINE),
+    # Neural Losses
+    "-H_2O": WATER,
+    "-NH_3": AMINE,
+    "-CO": CARBON_MONOXIDE,
+    "-CO_2": CARBON_DIOXIDE,
+    "-SOCH_4": SOCH4,                # oxy-M
+    "-SO2CH4": SO2CH4,               # dioxy-M
+    "-H_3PO_4": PHOSPHORIC_ACID,     # pS/T
+    "-HPO_3": PHOSPHITE,
+    "-HPO_3-H_2O": PHOSPHORIC_ACID,  # pY
 
-        # Modified Amino Acids
-        (("K", "Acetyl"), ACETYL_LYSINE),
-        (("M", "Oxidation"), OXY_METHIONINE),
-        (("N", "Dioxidation"), DIOXY_METHIONINE),
-        (("C", "Carbamidomethyl"), CARBAMIDOMETHYL_CYSTEINE),
-        (("S", "Phospho"), PHOSPHO_SERINE),
-        (("T", "Phospho"), PHOSPHO_THREONINE),
-        (("Y", "Phospho"), PHOSPHO_TYROSINE),
-
-        # N- and C-terminus
-        (("N-term", None), N_TERM),
-        (("C-term", None), C_TERM),
-
-        # TMT / iTRAQ
-        (("N-term", "iTRAQ4plex"), N_TERM + ITRAQ_4_PLEX),
-        (("N-term", "iTRAQ8plex"), N_TERM + ITRAQ_8_PLEX),
-        (("N-term", "TMT6plex"), N_TERM + TMT_6_PLEX),
-        (("N-term", "TMT10plex"), N_TERM + TMT_10_PLEX),
-        (("K", "iTRAQ4plex"), LYSINE + ITRAQ_4_PLEX - LYSINE_HYDROGEN),
-        (("K", "iTRAQ8plex"), LYSINE + ITRAQ_8_PLEX - LYSINE_HYDROGEN),
-        (("K", "TMT6plex"), LYSINE + TMT_6_PLEX - LYSINE_HYDROGEN),
-        (("K", "TMT10plex"), LYSINE + TMT_10_PLEX - LYSINE_HYDROGEN),
-
-        # SILAC
-        (("K", "Lysine-13C6 (K-13C6)"), SILAC_LYSINE_13C6),
-        (("K", "Lysine-13C615N2 (K-full)"), SILAC_LYSINE_13C615N2),
-        (("R", "Arginine-13C6 (R-13C6)"), SILAC_ARGININE_13C6),
-        (("R", "Arginine-13C615N2 (R-full)"), SILAC_ARGININE_13C615N4),
-
-        # Neural Losses
-        (("-H_2O", None), WATER),
-        (("-NH_3", None), AMINE),
-        (("-CO", None), CARBON_MONOXIDE),
-        (("-CO_2", None), CARBON_DIOXIDE),
-        (("-SOCH_4", None), SOCH4),                # oxy-M
-        (("-SO2CH4", None), SO2CH4),               # dioxy-M
-        (("-H_3PO_4", None), PHOSPHORIC_ACID),     # pS/T
-        (("-HPO_3", None,), PHOSPHITE),
-        (("-HPO_3-H_2O", None), PHOSPHORIC_ACID),  # pY
-
-        # Other ions
-        (("pY-Immonium", None), PHOSPHO_TYROSINE_IMMONIUM),
-    ],
-)
+    # Other ions
+    "pY-Immonium": PHOSPHO_TYROSINE_IMMONIUM,
+}

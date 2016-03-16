@@ -28,6 +28,22 @@ def _get_default_losses(aa_losses, mod_losses):
     return aa_losses, mod_losses
 
 
+def _sequence_mass(pep_seq):
+    return sum(
+        masses.AMINO_ACIDS[letter] +
+        masses.MODIFICATIONS[(letter, mods[0] if mods else None)]
+        for letter, mods in pep_seq
+    )
+
+
+def _sequence_name(pep_seq):
+    return "".join(
+        letter
+        for letter, mods in pep_seq
+        if letter not in ["N-term", "C-term"]
+    )
+
+
 def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
     """
     Calculate the m/z of all internal fragmenets of a peptide.
@@ -61,29 +77,17 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
 
     for start in range(2, len(pep_seq)):
         for end in range(start + 1, len(pep_seq)):
-            fragment = pep_seq[start:end]
-
             # Only add the mass of an N-terminus, cleavage will be between
             # C=O and N-H bond, adding a hydrogen to N-H
-            n_term = masses.MASSES[("N-term", None)]
+            fragment = [("N-term", [])] + pep_seq[start:end]
 
-            # XXX: Support multiple modifications to a single residue
-            mass = n_term + sum(
-                masses.MASSES[(letter, mods[0] if mods else None)]
-                for letter, mods in fragment
-            )
-            name = "".join(
-                [
-                    letter.lower() if mod else letter
-                    for letter, mod in fragment
-                ]
-            )
+            mass = _sequence_mass(fragment)
+            name = _sequence_name(fragment)
 
             frag_masses[name] = mass
 
             for loss in aa_losses:
-                frag_masses[name + loss] = \
-                    mass - masses.MASSES[(loss, None)]
+                frag_masses[name + loss] = mass - masses.MASSES[loss]
 
             # M, ST, Y losses
             for (letter, mod), losses in mod_losses.items():
@@ -94,8 +98,7 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
                     continue
 
                 for loss in losses:
-                    frag_masses[name + loss] = \
-                        mass - masses.MASSES[(loss, None)]
+                    frag_masses[name + loss] = mass - masses.MASSES[loss]
 
     return frag_masses
 
@@ -105,7 +108,7 @@ def _get_frag_masses(pep_seq):
 
     for index in range(len(pep_seq)):
         letter, mods = pep_seq[index]
-        mass = masses.MASSES[(letter, mods[0])]
+        mass = masses.MODIFICATIONS[(letter, mods[0])]
         frag_masses.append(mass)
 
     return frag_masses
@@ -116,7 +119,7 @@ def _b_y_ions(
     fragment_max_charge,
     aa_losses, mod_losses
 ):
-    proton = masses.MASSES[("Proton", None)]
+    proton = masses.MASSES["Proton"]
 
     ions = {}
 
@@ -169,7 +172,7 @@ def _label_ions(pep_seq):
 
 
 def _parent_ions(frag_masses, parent_max_charge):
-    proton = masses.MASSES[("Proton", None)]
+    proton = masses.MASSES["Proton"]
     ions = {}
     parent = sum(frag_masses)
 
@@ -187,7 +190,7 @@ def _py_ions(pep_seq):
         letter == "Y" and "Phospho" in mods
         for letter, mods in pep_seq
     ):
-        ions["pY"] = masses.MASSES[("pY-Immonium", None)]
+        ions["pY"] = masses.MASSES["pY-Immonium"]
 
     return ions
 
