@@ -1,6 +1,16 @@
 pyproteome package
 ==================
 
+
+Module contents
+---------------
+
+.. automodule:: pyproteome
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Submodules
 ----------
 
@@ -112,15 +122,6 @@ pyproteome.version module
 -------------------------
 
 .. automodule:: pyproteome.version
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyproteome
     :members:
     :undoc-members:
     :show-inheritance:

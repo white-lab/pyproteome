@@ -1,6 +1,16 @@
 pycamv package
 ==============
 
+
+Module contents
+---------------
+
+.. automodule:: pycamv
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Submodules
 ----------
 
@@ -40,15 +50,6 @@ pycamv.validate module
 ----------------------
 
 .. automodule:: pycamv.validate
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pycamv
     :members:
     :undoc-members:
     :show-inheritance:
