@@ -141,6 +141,8 @@ def _raw_to_mzml(basename, scans, out_dir, mz_window=None):
 
     config.flush()
 
+    LOGGER.info("Converting \"{}\" to .mzML format.".format(raw_path))
+
     cmd = [
         ms_convert_path,
         raw_path,
