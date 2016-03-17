@@ -5,7 +5,6 @@ Provides functions for interacting with MS data through ProteoWizard.
 import logging
 import os
 import platform
-import re
 import requests
 import shutil
 import subprocess
@@ -37,25 +36,6 @@ PROTEOWIZARD_MSI_64_URL = (
     "https://www.dropbox.com/s/7bz3wpgjj7zd99a/"
     "pwiz-setup-3.0.9393-x86_64.msi?dl=1"
 )
-
-
-class ScanQuery:
-    """
-    Attributes
-    ----------
-    scan : int
-    isolation_mz : float or None
-    window_offset : tuple of (int, int) or None
-    precursor_scan : int or None
-    """
-    def __init__(
-        self, scan,
-        isolation_mz=None, window_offset=None, precursor_scan=None,
-    ):
-        self.scan = scan
-        self.precursor_scan = precursor_scan
-        self.window_offset = window_offset
-        self.isolation_mz = isolation_mz
 
 
 def fetch_proteowizard(url=None):
@@ -163,68 +143,8 @@ def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
         extraAccessions=[
             ("MS:1000828", ["value"]),  # isolation window lower offset
             ("MS:1000829", ["value"]),  # isolation window upper offset
+            ("MS:1000512", ["value"]),  # filter string
         ],
     )
 
     return data
-
-
-def get_scan_data(basename, queries):
-    """
-    Gets MS^2 and MS data for all scans in queries.
-
-    Parameters
-    ----------
-    basename : str
-    queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
-
-    Returns
-    -------
-    list of :class:`ScanQuery<pycamv.proteowizard.ScanQuery>`
-    """
-    out_dir = tempfile.mkdtemp()
-
-    # Collect MS^2 data
-    ms2_data = raw_to_mzml(
-        basename, out_dir,
-        scans=[i.scan for i in queries],
-    )
-
-    prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
-    scan_queries = []
-
-    for spectrum in ms2_data:
-        if spectrum["ms level"] != 2:
-            continue
-
-        scan = spectrum["id"]
-        isolation_mz = spectrum["selected ion m/z"]
-        window_offset = (
-            spectrum["isolation window lower offset"],
-            spectrum["isolation window upper offset"],
-        )
-
-        spectrum_ref = spectrum.xmlTreeIterFree.find(
-            "mzml:precursorList/mzml:precursor", prefix,
-        ).get("spectrumRef")
-        precursor_scan = re.search("scan=(\d+)", spectrum_ref).group(1)
-
-        scan_queries.append(
-            ScanQuery(
-                scan,
-                precursor_scan=precursor_scan,
-                window_offset=window_offset,
-                isolation_mz=isolation_mz,
-            )
-        )
-
-    # Collect MS^1 data
-    ms_data = raw_to_mzml(
-        basename, out_dir,
-        scans=sorted(set(i.precursor_scan for i in scan_queries)),
-    )
-
-    # del ms2_data
-    # shutil.rmtree(out_dir)
-
-    return scan_queries, spectrum
