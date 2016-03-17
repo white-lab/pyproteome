@@ -51,6 +51,22 @@ class PeptideQuery:
         self.scan = scan
         self.num_comb = self._calc_num_comb()
 
+    def _unique_tuple(self):
+        return (
+            self.gi,
+            self.query,
+            self.pep_seq,
+            self.scan,
+        )
+
+    def __hash__(self):
+        return hash(self._unique_tuple())
+
+    def __eq__(self, other):
+        if not isinstance(other, PeptideQuery):
+            raise TypeError(other)
+        return self._unique_tuple() == other._unique_tuple()
+
     @property
     def get_label_mods(self):
         return [
