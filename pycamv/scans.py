@@ -93,6 +93,20 @@ def _c13_num(pep_query, scan_query):
     )
 
 
+def get_precursor_peak_window(scan_queries, ms_data, window_size=1):
+    pass
+
+
+def get_label_peak_window(pep_queries, ms2_data, window_size=1):
+    """
+    Parameters
+    ----------
+    pep_queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
+    ms2_data : :class:`pymzml.run.Reader<run.Reader>`
+    """
+    pass
+
+
 def get_scan_data(basename, pep_queries, out_dir=None):
     """
     Gets MS^2 and MS data for all scans in queries.
@@ -106,8 +120,8 @@ def get_scan_data(basename, pep_queries, out_dir=None):
     Returns
     -------
     scan_queries : list of :class:`ScanQuery<pycamv.scans.ScanQuery>`
-    ms2_data : :class:`pymzml.scan.Spectrum<scan.Spectrum>`
-    ms_data : :class:`pymzml.scan.Spectrum<scan.Spectrum>`
+    ms2_data : :class:`pymzml.run.Reader<run.Reader>`
+    ms_data : :class:`pymzml.run.Reader<run.Reader>`
     """
     if out_dir is None:
         out_dir = tempfile.mkdtemp()
