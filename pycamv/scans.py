@@ -38,7 +38,7 @@ def _scanquery_from_spectrum(spectrum):
     """
     Parameters
     ----------
-    spectrum : :class:`pymzml.scan.Spectrum<scan.Spectrum>`
+    spectrum : :class:`pymzml.spec.Spectrum<spec.Spectrum>`
 
     Returns
     -------
