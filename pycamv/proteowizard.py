@@ -99,6 +99,10 @@ def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
     out_dir : str
     scans : list of int, optional
     mz_window : list of int, optional
+
+    Returns
+    -------
+    :class:`pymzml.run.Reader<run.Reader>`
     """
     fetch_proteowizard()
 
