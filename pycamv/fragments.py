@@ -328,7 +328,6 @@ def fragment_ions(
     # First calculate the masses of each residue along the backbone
     frag_masses = _get_frag_masses(pep_seq)
 
-    other_ions = {}
     frag_ions = {}
 
     # Get b/y (and associated a/c/x/z) ions
@@ -340,22 +339,22 @@ def fragment_ions(
     )
 
     # Get parent ions (i.e. MH^{+1})
-    other_ions.update(
+    frag_ions.update(
         _parent_ions(frag_masses, parent_max_charge)
     )
 
     # Get TMT / iTRAQ labels
-    other_ions.update(
+    frag_ions.update(
         _label_ions(pep_seq)
     )
 
     # Get pY peak
-    other_ions.update(
+    frag_ions.update(
         _py_ions(pep_seq)
     )
 
     # Get internal fragments
-    other_ions.update(
+    frag_ions.update(
         internal_fragment_ions(
             pep_seq,
             aa_losses=aa_losses,
@@ -363,4 +362,4 @@ def fragment_ions(
         )
     )
 
-    return frag_ions, other_ions
+    return frag_ions

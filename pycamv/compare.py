@@ -56,7 +56,7 @@ def _calculate_ion_score(ion_name):
 
 
 def compare_spectra(
-    spectra, frag_ions, other_ions, charge, c13_num,
+    spectra, frag_ions, charge, c13_num,
     tol=None,
 ):
     """
@@ -64,7 +64,6 @@ def compare_spectra(
     ----------
     spectra : :class:`pymzml.spec.Spectrum<spec.Spectrum>`
     frag_ions : dict of str, float
-    other_ions : dict of str, float
     charge : int
     c13_num : int
     tol : float, optional
