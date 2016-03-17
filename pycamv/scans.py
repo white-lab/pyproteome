@@ -114,7 +114,7 @@ def get_precursor_peak_window(scan_queries, ms_data, window_size=1):
 
         return [
             (mz, i)
-            for mz, i in ms_data[query.precursor_scan].peaks
+            for mz, i in ms_data[query.precursor_scan].centroidedPeaks
             if mz > window[0] and mz < window[1]
         ]
 
@@ -152,7 +152,7 @@ def get_label_peak_window(pep_queries, ms2_data, window_size=1):
 
         return [
             (mz, i)
-            for mz, i in ms2_data[query.scan].peaks
+            for mz, i in ms2_data[query.scan].centroidedPeaks
             if mz > window[0] and mz < window[1]
         ]
 

@@ -87,7 +87,7 @@ def compare_spectra(
     out = []
 
     # Reprofiled Peaks? Centroided Peaks?
-    for intensity, mz in spectra.peaks:
+    for intensity, mz in spectra.centroidedPeaks:
         peak_candidates = {
             ion_name: (ion_mz, abs(ion_mz - mz))
             for ion_name, ion_mz in frag_ions.items()
