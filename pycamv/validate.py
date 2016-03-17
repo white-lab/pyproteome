@@ -14,7 +14,7 @@ import shutil
 
 # Core data analysis libraries
 
-from . import mascot, ms_labels, scans
+from . import compare, fragments, gen_sequences, mascot, ms_labels, scans
 
 
 LOGGER = logging.getLogger("pycamv.validate")
@@ -82,13 +82,57 @@ def validate_spectra(basename, scan_list=None):
         basename, pep_queries, out_dir,
     )
 
-    # Determine SILAC precursor masses
+    scan_mapping = {
+        pep_query: scan_query
+        for pep_query, scan_query in zip(pep_queries, scan_queries)
+    }
 
-    # Get Precursor Scan information
+    # Generate sequences
+    sequence_mapping = {
+        pep_query: tuple(
+            gen_sequences.gen_possible_seq(
+                pep_query.pep_seq,
+                pep_query.var_mods,
+            )
+        )
+        for pep_query in pep_queries
+    }
 
-    # Remove precursor contaminated scans from validation list
+    fragment_mapping = {
+        (pep_query, sequence): fragments.fragment_ions(
+            sequence, pep_query.pep_exp_z,
+        )
+        for pep_query, sequences in sequence_mapping.items()
+        for sequence in sequences
+    }
 
-    # Check for Cysteine carbamidomethylation present in MASCOT search
+    peak_hits = {
+        (pep_query, sequence): compare.compare_spectra(
+            ms2_data[pep_query.scan],
+            frag_ions,
+            pep_query.pep_exp_z,
+            scans.c13_num(pep_query, scan_mapping[pep_query]),
+            tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
+        )
+        for (pep_query, sequence), frag_ions in fragment_mapping.items()
+    }
+
+    # XXX: Determine SILAC precursor masses?
+
+    precursor_windows = dict(
+        zip(
+            pep_queries,
+            scans.get_precursor_peak_window(scan_queries, ms_data)
+        )
+    )
+    label_windows = dict(
+        zip(
+            pep_queries,
+            scans.get_label_peak_window(pep_queries, ms2_data)
+        )
+    )
+
+    # XXX: Remove precursor contaminated scans from validation list?
 
     # Check each assignment to each scan
 
