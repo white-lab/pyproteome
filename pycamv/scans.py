@@ -42,7 +42,7 @@ def _scanquery_from_spectrum(spectrum):
 
     Returns
     -------
-    :class:`ScanQuery<pycamv.validate.ScanQuery>`
+    :class:`ScanQuery<pycamv.scans.ScanQuery>`
     """
     prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
 
@@ -79,7 +79,7 @@ def _c13_num(pep_query, scan_query):
     Parameters
     ----------
     pep_query : :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
-    scan_query : :class:`ScanQuery<pycamv.validate.ScanQuery>`
+    scan_query : :class:`ScanQuery<pycamv.scans.ScanQuery>`
 
     Returns
     -------
@@ -105,7 +105,7 @@ def get_scan_data(basename, pep_queries, out_dir=None):
 
     Returns
     -------
-    scan_queries : list of :class:`ScanQuery<pycamv.validate.ScanQuery>`
+    scan_queries : list of :class:`ScanQuery<pycamv.scans.ScanQuery>`
     ms2_data : :class:`pymzml.scan.Spectrum<scan.Spectrum>`
     ms_data : :class:`pymzml.scan.Spectrum<scan.Spectrum>`
     """
