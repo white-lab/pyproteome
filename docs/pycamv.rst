@@ -70,6 +70,14 @@ pycamv.proteowizard module
     :undoc-members:
     :show-inheritance:
 
+pycamv.scans module
+-------------------
+
+.. automodule:: pycamv.scans
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pycamv.validate module
 ----------------------
 
