@@ -136,7 +136,7 @@ def _scanquery_from_spectrum(spectrum):
     prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
 
     scan = spectrum["id"]
-    isolation_mz = spectrum["selected ion m/z"]
+    isolation_mz = spectrum["isolation window target m/z"]
     window_offset = (
         spectrum["isolation window lower offset"],
         spectrum["isolation window upper offset"],
@@ -160,14 +160,23 @@ def _scanquery_from_spectrum(spectrum):
     )
 
 
-def get_scan_data(basename, queries, out_dir=None):
+def _c13_num(pep_query, scan_query):
+    return int(
+        round(
+            pep_query.pep_exp_z *
+            abs(pep_query.pep_exp_mz - scan_query.isolation_mz)
+        )
+    )
+
+
+def get_scan_data(basename, pep_queries, out_dir=None):
     """
     Gets MS^2 and MS data for all scans in queries.
 
     Parameters
     ----------
     basename : str
-    queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
+    pep_queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
     out_dir : str, optional
 
     Returns
@@ -181,14 +190,18 @@ def get_scan_data(basename, queries, out_dir=None):
     LOGGER.info("Converting MS^2 data.")
     ms2_data = proteowizard.raw_to_mzml(
         basename, out_dir,
-        scans=[i.scan for i in queries],
+        scans=[pep_query.scan for pep_query in pep_queries],
     )
 
     # Build a list of scan queries, including data about each scan
+    # scan_queries = [
+    #     _scanquery_from_spectrum(spectrum)
+    #     for spectrum in ms2_data
+    #     if spectrum["ms level"] == 2
+    # ]
     scan_queries = [
-        _scanquery_from_spectrum(spectrum)
-        for spectrum in ms2_data
-        if spectrum["ms level"] == 2
+        _scanquery_from_spectrum(ms2_data[pep_query.scan])
+        for pep_query in pep_queries
     ]
 
     # Collect MS^1 data

@@ -141,6 +141,7 @@ def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
     data = pymzml.run.Reader(
         out_path,
         extraAccessions=[
+            ("MS:1000827", ["value"]),  # isolation window target m/z
             ("MS:1000828", ["value"]),  # isolation window lower offset
             ("MS:1000829", ["value"]),  # isolation window upper offset
             ("MS:1000512", ["value"]),  # filter string

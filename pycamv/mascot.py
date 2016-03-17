@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 from scipy.misc import comb
 
 from pyproteome import paths
+from . import ms_labels
+
 
 MASCOT_NS = {
     "mascot":
@@ -48,6 +50,13 @@ class PeptideQuery:
         self.pep_var_mods = pep_var_mods
         self.scan = scan
         self.num_comb = self._calc_num_comb()
+
+    @property
+    def is_labeled(self):
+        return any(
+            mod in ms_labels.LABEL_NAMES
+            for count, mod, letters in self.pep_var_mods
+        )
 
     def _calc_num_comb(self):
         num_comb = 1

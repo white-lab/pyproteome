@@ -80,8 +80,8 @@ def compare_spectra(
 
     # C13 isotope calculations
     # XXX: Support C13 isotopes
-    # delta_c13 = masses.exact_mass({"C": [-1, 1]})
-    # delta_iso = [delta_c13/i for i in range(1, charge + 1)]
+    delta_c13 = masses.exact_mass({"C": [-1, 1]})
+    delta_iso = [delta_c13/i for i in range(1, charge + 1)]
 
     # Iterate over each peak, looking for fragments to assign to it
     out = []
