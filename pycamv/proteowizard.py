@@ -109,13 +109,15 @@ def fetch_proteowizard(url=None):
     shutil.rmtree(tmpdir)
 
 
-def _raw_to_mzml(basename, scans, out_dir, mz_window=None):
+def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
     """
+    Covert a RAW file to .mzML using ProteoWizard.
+
     Parameters
     ----------
     basename : str
-    scans : list of int
     out_dir : str
+    scans : list of int, optional
     mz_window : list of int, optional
     """
     fetch_proteowizard()
@@ -126,11 +128,12 @@ def _raw_to_mzml(basename, scans, out_dir, mz_window=None):
     # Create a config file,
     config = tempfile.NamedTemporaryFile(mode="w+", suffix=".txt")
 
-    config.write(
-        "filter=\"scanNumber {}\"\n".format(
-            " ".join(str(scan) for scan in scans)
+    if scans:
+        config.write(
+            "filter=\"scanNumber {}\"\n".format(
+                " ".join(str(scan) for scan in scans)
+            )
         )
-    )
 
     if mz_window:
         config.write(
@@ -182,7 +185,10 @@ def get_scan_data(basename, queries):
     out_dir = tempfile.mkdtemp()
 
     # Collect MS^2 data
-    ms2_data = _raw_to_mzml(basename, [i.scan for i in queries], out_dir)
+    ms2_data = raw_to_mzml(
+        basename, out_dir,
+        scans=[i.scan for i in queries],
+    )
 
     prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
     scan_queries = []
@@ -213,10 +219,9 @@ def get_scan_data(basename, queries):
         )
 
     # Collect MS^1 data
-    ms_data = _raw_to_mzml(
-        basename,
-        sorted(set(i.precursor_scan for i in scan_queries)),
-        out_dir,
+    ms_data = raw_to_mzml(
+        basename, out_dir,
+        scans=sorted(set(i.precursor_scan for i in scan_queries)),
     )
 
     # del ms2_data
