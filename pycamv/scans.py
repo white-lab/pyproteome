@@ -44,7 +44,7 @@ def _scanquery_from_spectrum(spectrum):
     -------
     :class:`ScanQuery<pycamv.scans.ScanQuery>`
     """
-    prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
+    # prefix = {"mzml": "http://psi.hupo.org/ms/mzml"}
 
     scan = spectrum["id"]
     isolation_mz = spectrum["isolation window target m/z"]
@@ -58,7 +58,7 @@ def _scanquery_from_spectrum(spectrum):
     ).group(1).upper()
 
     spectrum_ref = spectrum.xmlTreeIterFree.find(
-        "mzml:precursorList/mzml:precursor", prefix,
+        "precursorList/precursor",
     ).get("spectrumRef")
     precursor_scan = re.search("scan=(\d+)", spectrum_ref).group(1)
 

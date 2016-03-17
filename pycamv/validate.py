@@ -92,7 +92,7 @@ def validate_spectra(basename, scan_list=None):
         pep_query: tuple(
             gen_sequences.gen_possible_seq(
                 pep_query.pep_seq,
-                pep_query.var_mods,
+                pep_query.pep_var_mods,
             )
         )
         for pep_query in pep_queries
