@@ -55,7 +55,7 @@ def _scanquery_from_spectrum(spectrum):
     collision_type = re.search(
         ".*@(\w+)\d+",
         spectrum["filter string"]
-    ).groups(1).upper()
+    ).group(1).upper()
 
     spectrum_ref = spectrum.xmlTreeIterFree.find(
         "mzml:precursorList/mzml:precursor", prefix,
