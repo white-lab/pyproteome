@@ -10,7 +10,7 @@ from collections import Iterable
 # Core data analysis libraries
 
 
-def _exact_mass(atoms):
+def exact_mass(atoms):
     """
     Parameters
     ----------
@@ -26,13 +26,13 @@ def _exact_mass(atoms):
 
     Examples
     --------
-    >>> _exact_mass({"H": 1})        # One hydrogen (Average isotope)
+    >>> exact_mass({"H": 1})        # One hydrogen (Average isotope)
     1.007940721855
-    >>> _exact_mass({"H": [1]})      # One hydrogen (Exact isotope)
+    >>> exact_mass({"H": [1]})      # One hydrogen (Exact isotope)
     1.007825
-    >>> _exact_mass({"H": [1, 1]})   # One hydrogen, one deuterium
+    >>> exact_mass({"H": [1, 1]})   # One hydrogen, one deuterium
     3.021927
-    >>> _exact_mass({"H": [0, 1]})   # One deuterium (Exact isotope)
+    >>> exact_mass({"H": [0, 1]})   # One deuterium (Exact isotope)
     2.014102
     """
     # Atom name mapping to molecular weight and frequency of that isotope
@@ -77,54 +77,54 @@ def _exact_mass(atoms):
         for atom, counts in atoms.items()
     )
 
-PROTON = _exact_mass({"H": [1]})
+PROTON = exact_mass({"H": [1]})
 
-C_TERM = _exact_mass({"H": [1], "O": [1]})
-N_TERM = _exact_mass({"H": [1]})
+C_TERM = exact_mass({"H": [1], "O": [1]})
+N_TERM = exact_mass({"H": [1]})
 
 # iTRAQ Masses not exact due to mass differences between isotopes
-ITRAQ_4_PLEX = _exact_mass({"C": [4, 3], "N": [1, 1], "O": [1], "H": [12]})
-ITRAQ_8_PLEX = _exact_mass({"C": [7, 7], "N": [3, 1], "O": [3], "H": [24]})
-TMT_6_PLEX = _exact_mass({"C": [8, 4], "N": [1, 1], "O": [2], "H": [20]})
+ITRAQ_4_PLEX = exact_mass({"C": [4, 3], "N": [1, 1], "O": [1], "H": [12]})
+ITRAQ_8_PLEX = exact_mass({"C": [7, 7], "N": [3, 1], "O": [3], "H": [24]})
+TMT_6_PLEX = exact_mass({"C": [8, 4], "N": [1, 1], "O": [2], "H": [20]})
 TMT_10_PLEX = TMT_6_PLEX
 
-LYSINE_HYDROGEN = _exact_mass({"H": [1]})
+LYSINE_HYDROGEN = exact_mass({"H": [1]})
 
-ALANINE = _exact_mass({"H": [5], "C": [3], "O": [1], "N": [1]})
-ARGININE = _exact_mass({"H": [12], "C": [6], "O": [1], "N": [4]})
-ASPARAGINE = _exact_mass({"H": [6], "C": [4], "O": [2], "N": [2]})
-ASPARTATE = _exact_mass({"H": [5], "C": [4], "O": [3], "N": [1]})
-CYSTEINE = _exact_mass({"H": [5], "C": [3], "O": [1], "N": [1], "S": [1]})
-GLUTAMATE = _exact_mass({"H": [7], "C": [5], "O": [3], "N": [1]})
-GLUTAMINE = _exact_mass({"H": [8], "C": [5], "O": [2], "N": [2]})
-GLYCINE = _exact_mass({"H": [3], "C": [2], "O": [1], "N": [1]})
-HISTIDINE = _exact_mass({"H": [7], "C": [6], "O": [1], "N": [3]})
-ISOLEUCINE = _exact_mass({"H": [11], "C": [6], "O": [1], "N": [1]})
-LEUCINE = _exact_mass({"H": [11], "C": [6], "O": [1], "N": [1]})
-LYSINE = _exact_mass({"H": [12], "C": [6], "O": [1], "N": [2]})
-METHIONINE = _exact_mass({"H": [9], "C": [5], "O": [1], "N": [1], "S": [1]})
-PHENYLALANINE = _exact_mass({"H": [9], "C": [9], "O": [1], "N": [1]})
-PROLINE = _exact_mass({"H": [7], "C": [5], "O": [1], "N": [1]})
-SERINE = _exact_mass({"H": [5], "C": [3], "O": [2], "N": [1]})
-THREONINE = _exact_mass({"H": [7], "C": [4], "O": [2], "N": [1]})
-TYROSINE = _exact_mass({"H": [9], "C": [9], "O": [2], "N": [1]})
-TRYPTOPHAN = _exact_mass({"H": [10], "C": [11], "O": [1], "N": [2]})
-VALINE = _exact_mass({"H": [9], "C": [5], "O": [1], "N": [1]})
+ALANINE = exact_mass({"H": [5], "C": [3], "O": [1], "N": [1]})
+ARGININE = exact_mass({"H": [12], "C": [6], "O": [1], "N": [4]})
+ASPARAGINE = exact_mass({"H": [6], "C": [4], "O": [2], "N": [2]})
+ASPARTATE = exact_mass({"H": [5], "C": [4], "O": [3], "N": [1]})
+CYSTEINE = exact_mass({"H": [5], "C": [3], "O": [1], "N": [1], "S": [1]})
+GLUTAMATE = exact_mass({"H": [7], "C": [5], "O": [3], "N": [1]})
+GLUTAMINE = exact_mass({"H": [8], "C": [5], "O": [2], "N": [2]})
+GLYCINE = exact_mass({"H": [3], "C": [2], "O": [1], "N": [1]})
+HISTIDINE = exact_mass({"H": [7], "C": [6], "O": [1], "N": [3]})
+ISOLEUCINE = exact_mass({"H": [11], "C": [6], "O": [1], "N": [1]})
+LEUCINE = exact_mass({"H": [11], "C": [6], "O": [1], "N": [1]})
+LYSINE = exact_mass({"H": [12], "C": [6], "O": [1], "N": [2]})
+METHIONINE = exact_mass({"H": [9], "C": [5], "O": [1], "N": [1], "S": [1]})
+PHENYLALANINE = exact_mass({"H": [9], "C": [9], "O": [1], "N": [1]})
+PROLINE = exact_mass({"H": [7], "C": [5], "O": [1], "N": [1]})
+SERINE = exact_mass({"H": [5], "C": [3], "O": [2], "N": [1]})
+THREONINE = exact_mass({"H": [7], "C": [4], "O": [2], "N": [1]})
+TYROSINE = exact_mass({"H": [9], "C": [9], "O": [2], "N": [1]})
+TRYPTOPHAN = exact_mass({"H": [10], "C": [11], "O": [1], "N": [2]})
+VALINE = exact_mass({"H": [9], "C": [5], "O": [1], "N": [1]})
 
-AMINE = _exact_mass({"N": [1], "H": [3]})
-WATER = _exact_mass({"H": [2], "O": [1]})
-OXIDE = _exact_mass({"O": [1]})
-DIOXIDE = _exact_mass({"O": [2]})
-CARBON_MONOXIDE = _exact_mass({"C": [1], "O": [1]})
-CARBON_DIOXIDE = _exact_mass({"C": [1], "O": [2]})
-PHOSPHORIC_ACID = _exact_mass({"H": [3], "P": [1], "O": [4]})
-PHOSPHITE = _exact_mass({"H": [1], "P": [1], "O": [3]})
-SOCH4 = _exact_mass({"S": [1], "O": [1], "C": [1], "H": [4]})
-SO2CH4 = _exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
-HYDROXYL = _exact_mass({"H": [1], "O": [1]})
-H2_PHOSPHATE = _exact_mass({"H": [2], "O": [4], "P": [1]})
-ACETYL = _exact_mass({"H": [3], "C": [2], "O": [1]})
-CARBAMIDOMETHYL = _exact_mass({"H": [2], "C": [2], "O": [1], "N": [1]})
+AMINE = exact_mass({"N": [1], "H": [3]})
+WATER = exact_mass({"H": [2], "O": [1]})
+OXIDE = exact_mass({"O": [1]})
+DIOXIDE = exact_mass({"O": [2]})
+CARBON_MONOXIDE = exact_mass({"C": [1], "O": [1]})
+CARBON_DIOXIDE = exact_mass({"C": [1], "O": [2]})
+PHOSPHORIC_ACID = exact_mass({"H": [3], "P": [1], "O": [4]})
+PHOSPHITE = exact_mass({"H": [1], "P": [1], "O": [3]})
+SOCH4 = exact_mass({"S": [1], "O": [1], "C": [1], "H": [4]})
+SO2CH4 = exact_mass({"S": [1], "O": [2], "C": [1], "H": [4]})
+HYDROXYL = exact_mass({"H": [1], "O": [1]})
+H2_PHOSPHATE = exact_mass({"H": [2], "O": [4], "P": [1]})
+ACETYL = exact_mass({"H": [3], "C": [2], "O": [1]})
+CARBAMIDOMETHYL = exact_mass({"H": [2], "C": [2], "O": [1], "N": [1]})
 
 ACETYL_LYSINE = -PROTON + ACETYL
 OXY_METHIONINE = OXIDE
@@ -135,10 +135,10 @@ PHOSPHO_THREONINE = -HYDROXYL + H2_PHOSPHATE
 PHOSPHO_TYROSINE = -HYDROXYL + H2_PHOSPHATE
 PHOSPHO_TYROSINE_IMMONIUM = PHOSPHO_TYROSINE - CARBON_MONOXIDE + PROTON
 
-SILAC_LYSINE_13C6 = _exact_mass({"C": [-6, 6]})
-SILAC_LYSINE_13C615N2 = _exact_mass({"C": [-6, 6], "N": [-2, 2]})
-SILAC_ARGININE_13C6 = _exact_mass({"C": [-6, 6]})
-SILAC_ARGININE_13C615N4 = _exact_mass({"C": [-6, 6], "N": [-4, 4]})
+SILAC_LYSINE_13C6 = exact_mass({"C": [-6, 6]})
+SILAC_LYSINE_13C615N2 = exact_mass({"C": [-6, 6], "N": [-2, 2]})
+SILAC_ARGININE_13C6 = exact_mass({"C": [-6, 6]})
+SILAC_ARGININE_13C615N4 = exact_mass({"C": [-6, 6], "N": [-4, 4]})
 
 # XXX: SILAC Tyrosine?
 # XXX: SILAC Leucine?
