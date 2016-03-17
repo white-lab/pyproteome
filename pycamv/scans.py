@@ -71,7 +71,7 @@ def _scanquery_from_spectrum(spectrum):
     )
 
 
-def _c13_num(pep_query, scan_query):
+def c13_num(pep_query, scan_query):
     """
     Counts the number of C13 atoms in a query, based on the mass-error between
     the expected and isolated m/z values.
