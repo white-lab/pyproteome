@@ -52,11 +52,12 @@ class PeptideQuery:
         self.num_comb = self._calc_num_comb()
 
     @property
-    def is_labeled(self):
-        return any(
-            mod in ms_labels.LABEL_NAMES
+    def get_label_mods(self):
+        return [
+            mod
             for count, mod, letters in self.pep_var_mods
-        )
+            if mod in ms_labels.LABEL_NAMES and letters == ["N-term"]
+        ]
 
     def _calc_num_comb(self):
         num_comb = 1

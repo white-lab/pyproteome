@@ -6,7 +6,7 @@ import logging
 import re
 import tempfile
 
-from . import proteowizard
+from . import ms_labels, proteowizard
 
 
 LOGGER = logging.getLogger("pycamv.scans")
@@ -94,17 +94,72 @@ def _c13_num(pep_query, scan_query):
 
 
 def get_precursor_peak_window(scan_queries, ms_data, window_size=1):
-    pass
-
-
-def get_label_peak_window(pep_queries, ms2_data, window_size=1):
     """
+    Get ion peaks around each peptide's precursor m/z range.
+
     Parameters
     ----------
     pep_queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
     ms2_data : :class:`pymzml.run.Reader<run.Reader>`
+
+    Returns
+    -------
+    list of list of tuple of (float, float)
     """
-    pass
+    def _get_percursor_peaks(query):
+        window = (
+            query.isolation_mz - window_size,
+            query.isolation_mz + window_size,
+        )
+
+        return [
+            (mz, i)
+            for mz, i in ms_data[query.precursor_scan].peaks
+            if mz > window[0] and mz < window[1]
+        ]
+
+    return [
+        _get_percursor_peaks(query)
+        for query in scan_queries
+    ]
+
+
+def get_label_peak_window(pep_queries, ms2_data, window_size=1):
+    """
+    Get ion peaks around each peptide's label m/z range.
+
+    Parameters
+    ----------
+    pep_queries : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
+    ms2_data : :class:`pymzml.run.Reader<run.Reader>`
+
+    Returns
+    -------
+    list of list of tuple of (float, float)
+    """
+
+    def _get_labels_peaks(query):
+        label_mods = query.get_label_mods()
+
+        if not not label_mods:
+            return []
+
+        window = ms_labels.LABEL_MZ_WINDOW[label_mods[0]]
+        window = (
+            window[0] - window_size,
+            window[1] + window_size
+        )
+
+        return [
+            (mz, i)
+            for mz, i in ms2_data[query.scan].peaks
+            if mz > window[0] and mz < window[1]
+        ]
+
+    return [
+        _get_labels_peaks(pep_query)
+        for pep_query in pep_queries
+    ]
 
 
 def get_scan_data(basename, pep_queries, out_dir=None):
