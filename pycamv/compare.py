@@ -9,6 +9,11 @@ from . import masses
 CID_TOL = 1000
 HCD_TOL = 10
 
+COLLISION_TOLS = {
+    "CID": CID_TOL,
+    "HCD": HCD_TOL,
+}
+
 
 class PeptideHit:
     """
