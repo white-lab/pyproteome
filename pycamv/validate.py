@@ -7,6 +7,7 @@ Currently limited to importing and outputing scan lists.
 # Built-ins
 from __future__ import division
 
+from collections import OrderedDict
 import logging
 import re
 import tempfile
@@ -83,48 +84,54 @@ def validate_spectra(basename, scan_list=None):
         basename, pep_queries, out_dir,
     )
 
-    scan_mapping = {
-        pep_query: scan_query
+    scan_mapping = OrderedDict(
+        (pep_query, scan_query)
         for pep_query, scan_query in zip(pep_queries, scan_queries)
-    }
+    )
 
     # Generate sequences
     LOGGER.info("Generating sequences.")
-    sequence_mapping = {
-        pep_query: tuple(
-            gen_sequences.gen_possible_seq(
-                pep_query.pep_seq,
-                pep_query.pep_var_mods,
-            )
+    sequence_mapping = OrderedDict(
+        (
+            pep_query,
+            tuple(
+                gen_sequences.gen_possible_seq(
+                    pep_query.pep_seq,
+                    pep_query.pep_var_mods,
+                )
+            ),
         )
         for pep_query in pep_queries
-    }
+    )
 
     LOGGER.info("Generating fragment ions.")
-    fragment_mapping = {
-        (pep_query, tuple(sequence)): fragments.fragment_ions(
-            sequence, pep_query.pep_exp_z,
+    fragment_mapping = OrderedDict(
+        (
+            (pep_query, tuple(sequence)),
+            fragments.fragment_ions(
+                sequence, pep_query.pep_exp_z,
+            ),
         )
         for pep_query, sequences in sequence_mapping.items()
         for sequence in sequences
-    }
+    )
 
     LOGGER.info("Comparing predicted peaks to spectra.")
-    peak_hits = {
-        (pep_query, sequence): compare.compare_spectra(
-            ms2_data[pep_query.scan],
-            frag_ions,
-            pep_query.pep_exp_z,
-            scans.c13_num(pep_query, scan_mapping[pep_query]),
-            tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
-        )
-        for (pep_query, sequence), frag_ions in fragment_mapping.items()
-    }
+    # peak_hits = {
+    #     (pep_query, sequence): compare.compare_spectra(
+    #         ms2_data[pep_query.scan],
+    #         frag_ions,
+    #         pep_query.pep_exp_z,
+    #         scans.c13_num(pep_query, scan_mapping[pep_query]),
+    #         tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
+    #     )
+    #     for (pep_query, sequence), frag_ions in list(fragment_mapping.items())[:1]
+    # }
 
     # XXX: Determine SILAC precursor masses?
 
     LOGGER.info("Collecting precursor ion peaks.")
-    precursor_windows = dict(
+    precursor_windows = OrderedDict(
         zip(
             pep_queries,
             scans.get_precursor_peak_window(scan_queries, ms_data)
@@ -132,7 +139,7 @@ def validate_spectra(basename, scan_list=None):
     )
 
     LOGGER.info("Collecting peptide label peaks.")
-    label_windows = dict(
+    label_windows = OrderedDict(
         zip(
             pep_queries,
             scans.get_label_peak_window(pep_queries, ms2_data)

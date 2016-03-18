@@ -198,6 +198,8 @@ def _parse_mascot_2_4_1(root):
             )
             index += 1
 
+    out = sorted(out, key=lambda x: x.scan)
+
     return fixed_mods, variable_mods, out
 
 
