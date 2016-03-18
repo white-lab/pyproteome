@@ -224,9 +224,8 @@ def _b_y_ions(
                 yield name, mz
 
     for index in range(2, len(pep_seq) - 1):
-        # XXX: a/c, x/z ions?
-        # XXX: 2 x Proton mass?
         # XXX: iTRAQ / TMT y-adducts?
+        # y ion: 1 hydrogen added to NH group, one hydrogen on K/R
         base_ions = {
             "a_{{{}}}".format(index - 1):
                 sum(frag_masses[:index]) - masses.MASSES["CO"],
