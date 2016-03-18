@@ -8,6 +8,7 @@ import platform
 import requests
 import shutil
 import subprocess
+import sys
 import tempfile
 
 import pymzml
@@ -110,24 +111,24 @@ def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
     raw_path = os.path.join(paths.MS_RAW_DIR, "{}.raw".format(basename))
 
     # Create a config file,
-    config = tempfile.NamedTemporaryFile(mode="w+", suffix=".txt")
+    config, config_path = tempfile.mkstemp(suffix=".txt", text=True)
 
-    if scans:
-        config.write(
-            "filter=\"scanNumber {}\"\n".format(
-                " ".join(str(scan) for scan in scans)
+    with os.fdopen(config, "w+") as config:
+        if scans:
+            config.write(
+                "filter=\"scanNumber {}\"\n".format(
+                    " ".join(str(scan) for scan in scans)
+                )
             )
-        )
 
-    if mz_window:
-        config.write(
-            "filter=\"mzWindow [{},{}]\"\n".format(
-                mz_window[0], mz_window[1],
+        if mz_window:
+            config.write(
+                "filter=\"mzWindow [{},{}]\"\n".format(
+                    mz_window[0], mz_window[1],
+                )
             )
-        )
 
-    config.flush()
-
+    # Run msconvert to convert raw file to mzML
     LOGGER.info("Converting \"{}\" to .mzML format.".format(raw_path))
 
     cmd = [
@@ -135,12 +136,15 @@ def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
         raw_path,
         "-o", out_dir,
         "--mzML",
-        "-c", config.name,
+        "-c", config_path,
     ]
 
-    subprocess.check_call(cmd)
-    config.close()
+    out = subprocess.check_output(cmd)
+    LOGGER.debug(out.decode(sys.stdout.encoding))
 
+    os.remove(config_path)
+
+    # Read the file into memory using pymzml
     out_path = os.path.join(out_dir, "{}.mzML".format(basename))
     data = pymzml.run.Reader(
         out_path,
