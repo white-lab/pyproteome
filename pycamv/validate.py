@@ -117,16 +117,16 @@ def validate_spectra(basename, scan_list=None):
     )
 
     LOGGER.info("Comparing predicted peaks to spectra.")
-    # peak_hits = {
-    #     (pep_query, sequence): compare.compare_spectra(
-    #         ms2_data[pep_query.scan],
-    #         frag_ions,
-    #         pep_query.pep_exp_z,
-    #         scans.c13_num(pep_query, scan_mapping[pep_query]),
-    #         tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
-    #     )
-    #     for (pep_query, sequence), frag_ions in list(fragment_mapping.items())[:1]
-    # }
+    peak_hits = {
+        (pep_query, sequence): compare.compare_spectra(
+            ms2_data[pep_query.scan],
+            frag_ions,
+            pep_query.pep_exp_z,
+            scans.c13_num(pep_query, scan_mapping[pep_query]),
+            tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
+        )
+        for (pep_query, sequence), frag_ions in list(fragment_mapping.items())
+    }
 
     # XXX: Determine SILAC precursor masses?
 
@@ -156,4 +156,4 @@ def validate_spectra(basename, scan_list=None):
     del ms2_data
     shutil.rmtree(out_dir)
 
-    return options
+    return options, len(peak_hits)

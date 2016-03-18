@@ -117,7 +117,7 @@ def _charged_m_zs(name, mass, max_charge):
                 (
                     "^{{{:+}}}".format(charge)
                     if charge > 1 else
-                    "^{{+}}"
+                    "^{+}"
                 ) +
                 "-".join([] + name.split("-")[1:])
             ),

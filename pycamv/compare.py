@@ -93,10 +93,11 @@ def compare_spectra(
 
     # Reprofiled Peaks? Centroided Peaks?
     for intensity, mz in spectra.centroidedPeaks:
+        # intensity, mz = np.array(intensity)
         peak_candidates = {
             ion_name: (ion_mz, abs(ion_mz - mz))
             for ion_name, ion_mz in frag_ions.items()
-            if abs(ion_mz - mz) / ion_mz < 1.5 * tol
+            if abs(ion_mz - mz) / ion_mz < 1.5 * tol / 1e6
         }
 
         if not peak_candidates:
@@ -140,5 +141,12 @@ def compare_spectra(
                 match_list=peak_candidates,
             )
         )
+
+    # Free up memory so we don't keep duplicate info about a spectra's peaks
+    del spectra._peaks
+    del spectra._mz
+    del spectra._i
+    del spectra._centroidedPeaks
+    del spectra._reprofiledPeaks
 
     return out
