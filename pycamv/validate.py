@@ -117,16 +117,49 @@ def validate_spectra(basename, scan_list=None):
     )
 
     LOGGER.info("Comparing predicted peaks to spectra.")
-    peak_hits = {
-        (pep_query, sequence): compare.compare_spectra(
-            ms2_data[pep_query.scan],
+    from concurrent.futures import ThreadPoolExecutor
+    # from multiprocessing import Pool
+
+    # pymzml.run.Reader has a race condition in its __getitem__ method.
+    # Retrieve all spectra first before passing them to compare_spectra
+    scans_mapping = {
+        pep_query.scan: ms2_data[pep_query.scan]
+        for pep_query in pep_queries
+    }
+
+    def _compare(kv):
+        key, val = kv
+        pep_query, sequence = key
+        frag_ions = val
+        return compare.compare_spectra(
+            scans_mapping[pep_query.scan],
             frag_ions,
             pep_query.pep_exp_z,
             scans.c13_num(pep_query, scan_mapping[pep_query]),
             tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
         )
-        for (pep_query, sequence), frag_ions in list(fragment_mapping.items())
-    }
+
+    # with Pool() as ex:
+    with ThreadPoolExecutor() as ex:
+        peak_hits = dict(
+            zip(
+                fragment_mapping.keys(),
+                ex.map(_compare, fragment_mapping.items())
+            )
+        )
+        # peak_hits = {
+        #     (pep_query, sequence): compare.compare_spectra(
+        #         ms2_data[pep_query.scan],
+        #         frag_ions,
+        #         pep_query.pep_exp_z,
+        #         scans.c13_num(pep_query, scan_mapping[pep_query]),
+        #         tol=compare.COLLISION_TOLS[scan_mapping[pep_query].collision_type],
+        #     )
+        #     for (pep_query, sequence), frag_ions in fragment_mapping.items()
+        # }
+
+    assert len(peak_hits) == len(fragment_mapping)
+    del scans_mapping
 
     # XXX: Determine SILAC precursor masses?
 
@@ -156,4 +189,4 @@ def validate_spectra(basename, scan_list=None):
     del ms2_data
     shutil.rmtree(out_dir)
 
-    return options, len(peak_hits)
+    return options, peak_hits, precursor_windows, label_windows
