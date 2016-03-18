@@ -3,6 +3,7 @@ This module provides functionality for interacting with mass spec scan data.
 """
 
 import logging
+import os
 import re
 import tempfile
 
@@ -60,7 +61,7 @@ def _scanquery_from_spectrum(spectrum):
     spectrum_ref = spectrum.xmlTreeIterFree.find(
         "precursorList/precursor",
     ).get("spectrumRef")
-    precursor_scan = re.search("scan=(\d+)", spectrum_ref).group(1)
+    precursor_scan = int(re.search("scan=(\d+)", spectrum_ref).group(1))
 
     return ScanQuery(
         scan,
@@ -139,9 +140,9 @@ def get_label_peak_window(pep_queries, ms2_data, window_size=1):
     """
 
     def _get_labels_peaks(query):
-        label_mods = query.get_label_mods()
+        label_mods = query.get_label_mods
 
-        if not not label_mods:
+        if not label_mods:
             return []
 
         window = ms_labels.LABEL_MZ_WINDOW[label_mods[0]]
@@ -184,7 +185,7 @@ def get_scan_data(basename, pep_queries, out_dir=None):
     # Collect MS^2 data
     LOGGER.info("Converting MS^2 data.")
     ms2_data = proteowizard.raw_to_mzml(
-        basename, out_dir,
+        basename, os.path.join(out_dir, "ms2"),
         scans=sorted(set(pep_query.scan for pep_query in pep_queries)),
     )
 
@@ -202,7 +203,7 @@ def get_scan_data(basename, pep_queries, out_dir=None):
     # Collect MS^1 data
     LOGGER.info("Converting MS^1 data.")
     ms_data = proteowizard.raw_to_mzml(
-        basename, out_dir,
+        basename, os.path.join(out_dir, "ms"),
         scans=sorted(set(i.precursor_scan for i in scan_queries)),
     )
 
