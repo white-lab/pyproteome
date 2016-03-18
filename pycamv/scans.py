@@ -53,7 +53,7 @@ def _scanquery_from_spectrum(spectrum):
         spectrum["isolation window upper offset"],
     )
     collision_type = re.search(
-        ".*@(\w+)\d+",
+        ".*@([A-Za-z]+)\d+",
         spectrum["filter string"]
     ).group(1).upper()
 

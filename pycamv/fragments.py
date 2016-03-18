@@ -13,7 +13,10 @@ from . import masses, ms_labels
 def _sequence_mass(pep_seq):
     return sum(
         masses.AMINO_ACIDS[letter] +
-        masses.MODIFICATIONS[(letter, mods[0] if mods else None)]
+        sum(
+            masses.MODIFICATIONS[letter, mod]
+            for mod in mods
+        )
         for letter, mods in pep_seq
     )
 
@@ -112,9 +115,9 @@ def _charged_m_zs(name, mass, max_charge):
             (
                 name.split("-")[0] +
                 (
-                    "^\{{:+}\}".format(charge)
+                    "^{{{:+}}}".format(charge)
                     if charge > 1 else
-                    "^\{+\}"
+                    "^{{+}}"
                 ) +
                 "-".join([] + name.split("-")[1:])
             ),
@@ -123,8 +126,7 @@ def _charged_m_zs(name, mass, max_charge):
 
 
 def _b_y_ions(
-    pep_seq, frag_masses,
-    fragment_max_charge,
+    pep_seq, frag_masses, fragment_max_charge,
     any_losses, aa_losses, mod_losses,
 ):
     def _generate_losses(seq, losses=None, max_depth=2):
@@ -133,6 +135,7 @@ def _b_y_ions(
 
         if max_depth < 1:
             yield losses
+            return
 
         for loss in any_losses:
             new_losses = losses.copy()
@@ -140,46 +143,51 @@ def _b_y_ions(
 
             yield new_losses
 
-            child_losses = _generate_losses(seq, new_losses, max_depth - 1)
+            child_losses = _generate_losses(
+                seq, new_losses,
+                max_depth=max_depth - 1,
+            )
 
             for new_losses in child_losses:
                 yield new_losses
 
-        for aa, losses in mod_losses.items():
-            for index, (letter, mods) in enumerate(mod_losses):
+        for aa, a_losses in aa_losses.items():
+            for index, (letter, mods) in enumerate(seq):
                 if aa != letter:
                     continue
 
                 new_seq = seq[:index] + seq[index + 1:]
 
-                for loss in losses:
+                for loss in a_losses:
                     new_losses = losses.copy()
                     new_losses[loss] += 1
 
                     yield new_losses
 
-                    child_losses = _generate_ions(
-                        new_seq, new_losses, max_depth - 1
+                    child_losses = _generate_losses(
+                        new_seq, new_losses,
+                        max_depth=max_depth - 1,
                     )
 
                     for new_losses in child_losses:
                         yield new_losses
 
-        for (aa, mod), losses in mod_losses.items():
-            for index, (letter, mods) in enumerate(mod_losses):
+        for (aa, mod), m_losses in mod_losses.items():
+            for index, (letter, mods) in enumerate(seq):
                 if aa != letter or mod not in mods:
                     continue
 
                 new_seq = seq[:index] + seq[index + 1:]
 
-                for loss in losses:
+                for loss in m_losses:
                     new_losses = losses.copy()
                     new_losses[loss] += 1
 
                     yield new_losses
 
-                    child_losses = _generate_ions(
-                        new_seq, new_losses, max_depth - 1
+                    child_losses = _generate_losses(
+                        new_seq, new_losses,
+                        max_depth=max_depth - 1,
                     )
 
                     for new_losses in child_losses:
@@ -220,16 +228,18 @@ def _b_y_ions(
         # XXX: 2 x Proton mass?
         # XXX: iTRAQ / TMT y-adducts?
         base_ions = {
-            "a_\{{}\}".format(index - 1):
-                np.cumsum(frag_masses[:index]) - masses.MASSES["CO"],
-            "b_\{{}\}".format(index - 1):
-                np.cumsum(frag_masses[:index]),
-            "y_\{{}\}".format(index - 1):
-                np.cumsum(frag_masses[index:]) + 2 * masses.PROTON,
+            "a_{{{}}}".format(index - 1):
+                sum(frag_masses[:index]) - masses.MASSES["CO"],
+            "b_{{{}}}".format(index - 1):
+                sum(frag_masses[:index]),
+            "y_{{{}}}".format(index - 1):
+                sum(frag_masses[index:]) + 2 * masses.PROTON,
         }
 
-        for name, mass in base_ions.items():
-            for name, mz in _generate_ions(pep_seq[:index], mass, name):
+        for ion_name, ion_mass in base_ions.items():
+            for name, mz in _generate_ions(
+                pep_seq[:index], ion_mass, ion_name,
+            ):
                 yield name, mz
 
 
@@ -251,7 +261,7 @@ def _label_ions(pep_seq):
 def _parent_ions(frag_masses, parent_max_charge):
     parent_mass = sum(frag_masses)
 
-    for name, mz in _charged_m_zs(parent_mass, "MH", parent_max_charge):
+    for name, mz in _charged_m_zs("MH", parent_mass, parent_max_charge):
         yield name, mz
 
 
@@ -334,7 +344,7 @@ def fragment_ions(
     frag_ions.update(
         _b_y_ions(
             pep_seq, frag_masses, fragment_max_charge,
-            mod_losses,
+            any_losses, aa_losses, mod_losses,
         )
     )
 

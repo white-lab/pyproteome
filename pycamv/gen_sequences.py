@@ -51,13 +51,13 @@ def gen_possible_seq(pep_seq, var_mods):
             tmp_seq = [
                 (
                     letter,
-                    mods + (mod,) if index in mod_indices else mods,
+                    (mods + (mod,)) if index in mod_indices else mods,
                 )
                 for index, (letter, mods) in enumerate(seq)
             ]
 
-            for seq in _gen_mods(tmp_seq, mods[1:]):
-                yield seq
+            for new_seq in _gen_mods(tmp_seq, mods[1:]):
+                yield new_seq
 
     # Ideally we would use py>3.3 syntax: yield from, but we are also
     # supporting py2.7

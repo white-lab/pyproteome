@@ -112,18 +112,19 @@ def compare_spectra(
 
         # XXX: 0.5? 1
         closest_ion = min(peak_candidates, key=lambda x: peak_candidates[x][1])
-        scores[closest_ion[0]] += 1
+        scores[closest_ion] += 1
 
-        best_ion = max(scores, lambda x: scores[x])
+        best_ion = max(scores, key=lambda x: scores[x])
 
         retain = (
             intensity > 0.1 * max_y or
             best_ion.startswith("MH") or
             best_ion.startswith("b_") or
-            best_ion.startswith("y_")
-        ) or (
-            best_ion.count("-") == 0 and
-            intensity > 0.025 * max_y
+            best_ion.startswith("y_") or
+            (
+                best_ion.count("-") == 0 and
+                intensity > 0.025 * max_y
+            )
         )
 
         if not retain:

@@ -78,6 +78,7 @@ def validate_spectra(basename, scan_list=None):
     # Get scan data from RAW file
     out_dir = tempfile.mkdtemp()
 
+    LOGGER.info("Getting scan data.")
     scan_queries, ms2_data, ms_data = scans.get_scan_data(
         basename, pep_queries, out_dir,
     )
@@ -88,6 +89,7 @@ def validate_spectra(basename, scan_list=None):
     }
 
     # Generate sequences
+    LOGGER.info("Generating sequences.")
     sequence_mapping = {
         pep_query: tuple(
             gen_sequences.gen_possible_seq(
@@ -98,14 +100,16 @@ def validate_spectra(basename, scan_list=None):
         for pep_query in pep_queries
     }
 
+    LOGGER.info("Generating fragment ions.")
     fragment_mapping = {
-        (pep_query, sequence): fragments.fragment_ions(
+        (pep_query, tuple(sequence)): fragments.fragment_ions(
             sequence, pep_query.pep_exp_z,
         )
         for pep_query, sequences in sequence_mapping.items()
         for sequence in sequences
     }
 
+    LOGGER.info("Comparing predicted peaks to spectra.")
     peak_hits = {
         (pep_query, sequence): compare.compare_spectra(
             ms2_data[pep_query.scan],
@@ -119,12 +123,15 @@ def validate_spectra(basename, scan_list=None):
 
     # XXX: Determine SILAC precursor masses?
 
+    LOGGER.info("Collecting precursor ion peaks.")
     precursor_windows = dict(
         zip(
             pep_queries,
             scans.get_precursor_peak_window(scan_queries, ms_data)
         )
     )
+
+    LOGGER.info("Collecting peptide label peaks.")
     label_windows = dict(
         zip(
             pep_queries,
