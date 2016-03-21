@@ -64,7 +64,7 @@ def interpret_bca_assay(
     n=3,
     data_row_start=27,
 ):
-    """
+    u"""
     Load and interpret a plate reader output.
 
     Fits a curve to the standards, checks data sanity, and calculates sample
