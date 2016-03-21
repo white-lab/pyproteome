@@ -14,6 +14,7 @@ class GenSequencesTest(TestCase):
         self.assertEqual(len(seqs), 2)
         self.assertIn(
             [
+                ("N-term", ()),
                 ("I", ()),
                 ("E", ()),
                 ("F", ()),
@@ -21,11 +22,13 @@ class GenSequencesTest(TestCase):
                 ("T", ()),
                 ("E", ()),
                 ("R", ()),
+                ("C-term", ()),
             ],
             seqs,
         )
         self.assertIn(
             [
+                ("N-term", ()),
                 ("I", ()),
                 ("E", ()),
                 ("F", ()),
@@ -33,6 +36,7 @@ class GenSequencesTest(TestCase):
                 ("T", ("Phospho",)),
                 ("E", ()),
                 ("R", ()),
+                ("C-term", ()),
             ],
             seqs,
         )
