@@ -21,7 +21,7 @@ class GenSequencesTest(TestCase):
                 ("T", None),
                 ("E", None),
                 ("R", None),
-            ]
+            ],
             seqs,
         )
         self.assertIn(
@@ -33,6 +33,6 @@ class GenSequencesTest(TestCase):
                 ("T", "Phospho"),
                 ("E", None),
                 ("R", None),
-            ]
+            ],
             seqs,
         )
