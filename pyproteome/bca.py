@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module provides functionality for interpreting BCA assays.
 """
