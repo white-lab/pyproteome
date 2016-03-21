@@ -1,4 +1,4 @@
-language: python
+OAlanguage: python
 sudo: false
 python:
 - '2.7'
@@ -26,7 +26,7 @@ install:
 - conda list
 - python setup.py install
 script:
-- coverage run --source=pyproteome setup.py test
+- coverage run --source=pyproteome,pycamv setup.py test
 after_success:
 - coveralls
 deploy:
