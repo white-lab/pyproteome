@@ -23,6 +23,9 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+bin/
+include/
+share/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -33,6 +36,7 @@ var/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+pip-selfcheck.json
 src/
 
 # Unit test / coverage reports
@@ -112,7 +116,6 @@ $RECYCLE.BIN/
 
 # uniprot
 .uniprot_cache/
+
+# ProteoWizard
 pycamv/ProteoWizard/
-bin/
-include/
-pip-selfcheck.json
