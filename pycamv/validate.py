@@ -80,7 +80,7 @@ def validate_spectra(basename, scan_list=None):
     out_dir = tempfile.mkdtemp()
 
     LOGGER.info("Getting scan data.")
-    scan_queries, ms2_data, ms_data = scans.get_scan_data(
+    scan_queries, ms_two_data, ms_data = scans.get_scan_data(
         basename, pep_queries, out_dir,
     )
 
@@ -119,7 +119,7 @@ def validate_spectra(basename, scan_list=None):
     LOGGER.info("Comparing predicted peaks to spectra.")
     peak_hits = {
         (pep_query, sequence): compare.compare_spectra(
-            ms2_data[pep_query.scan],
+            ms_two_data[pep_query.scan],
             frag_ions,
             pep_query.pep_exp_z,
             scans.c13_num(pep_query, scan_mapping[pep_query]),
@@ -142,7 +142,7 @@ def validate_spectra(basename, scan_list=None):
     label_windows = OrderedDict(
         zip(
             pep_queries,
-            scans.get_label_peak_window(pep_queries, ms2_data)
+            scans.get_label_peak_window(pep_queries, ms_two_data)
         )
     )
 
@@ -153,7 +153,7 @@ def validate_spectra(basename, scan_list=None):
     # Output data
 
     del ms_data
-    del ms2_data
+    del ms_two_data
     shutil.rmtree(out_dir)
 
-    return options, len(peak_hits)
+    return options, peak_hits, precursor_windows, label_windows
