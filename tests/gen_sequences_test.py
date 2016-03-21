@@ -11,28 +11,28 @@ class GenSequencesTest(TestCase):
                 [(1, "Phospho", ["T"])],
             )
         )
-        self.assertEqual(len(seqs), 1)
+        self.assertEqual(len(seqs), 2)
         self.assertIn(
             [
-                ("I", None),
-                ("E", None),
-                ("F", None),
-                ("T", "Phospho"),
-                ("T", None),
-                ("E", None),
-                ("R", None),
+                ("I", ()),
+                ("E", ()),
+                ("F", ()),
+                ("T", ("Phospho",)),
+                ("T", ()),
+                ("E", ()),
+                ("R", ()),
             ],
             seqs,
         )
         self.assertIn(
             [
-                ("I", None),
-                ("E", None),
-                ("F", None),
-                ("T", None),
-                ("T", "Phospho"),
-                ("E", None),
-                ("R", None),
+                ("I", ()),
+                ("E", ()),
+                ("F", ()),
+                ("T", ()),
+                ("T", ("Phospho",)),
+                ("E", ()),
+                ("R", ()),
             ],
             seqs,
         )
