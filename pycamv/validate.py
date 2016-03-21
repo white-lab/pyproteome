@@ -152,8 +152,6 @@ def validate_spectra(basename, scan_list=None):
 
     # Output data
 
-    del ms_data
-    del ms_two_data
     shutil.rmtree(out_dir)
 
     return options, peak_hits, precursor_windows, label_windows
