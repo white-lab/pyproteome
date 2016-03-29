@@ -18,7 +18,7 @@ setup(
     name="pyproteome",
     version=__version__,
     description="Package for managing proteomics data",
-    url="https://github.com/naderm/pyproteome",
+    url="https://github.com/white-lab/pyproteome",
     author="Nader Morshed",
     author_email="morshed@mit.edu",
     license="BSD",
