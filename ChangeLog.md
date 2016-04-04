@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.2.0 (2016-??-??)
+
+Features
+
+  - Added pyprotome.pride module for fetching public data sets.
+
+Bugfixes
+
+  - Install all packages from pypi.
+
 ## 0.1.0 (2016-03-29)
 
 Features
