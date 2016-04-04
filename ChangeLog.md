@@ -5,6 +5,7 @@
 Features
 
   - Added pyprotome.pride module for fetching public data sets.
+  - Added pyproteome.discoverer module for reading Proteome Discoverer files.
 
 Bugfixes
 
