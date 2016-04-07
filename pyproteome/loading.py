@@ -260,7 +260,7 @@ def read_table_delimited(basename):
     return psms
 
 
-def load_mascot_psms(basename, camv_slices=None):
+def load_mascot_psms(basename, camv_slices=None, msf=True):
     """
     Load a list of sequences from a file produced by MASCOT / Discoverer.
 
@@ -273,11 +273,14 @@ def load_mascot_psms(basename, camv_slices=None):
     -------
     psms : :class:`pandas.DataFrame`
     scan_lists : dict of str, list of int
-    filter_camv : bool
+    msf : bool, optional
+        Use Discoverer .msf files. Otherwise look for tab-delimited files.
     """
-    psms = read_table_delimited(basename)
-    # psms = discoverer.read_discoverer_msf(basename)
-    # psms = _filter_unassigned_rows(psms)
+    if msf:
+        psms = discoverer.read_discoverer_msf(basename)
+        psms = _filter_unassigned_rows(psms)
+    else:
+        psms = read_table_delimited(basename)
 
     # Output the phosphorylation scan list for CAMV
     psms, scan_lists = camv.output_scan_list(

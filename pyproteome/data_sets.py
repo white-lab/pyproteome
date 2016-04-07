@@ -51,8 +51,7 @@ class DataSet:
     def __init__(
         self, channels,
         psms=None,
-        mascot_name=None,
-        camv_name=None,
+        mascot_name=None, camv_name=None, msf=True,
         groups=None, phenotypes=None,
         name="", enrichments=None, tissues=None,
         dropna=True,
@@ -67,8 +66,13 @@ class DataSet:
         ----------
         channels : dict of str, str
         psms : :class:`pandas.DataFrame`, optional
+            Read psms directly from a DataFrame object.
         mascot_name : str, optional
+            Read psms from MASCOT / Discoverer data files.
         camv_name : str, optional
+            Read psms from CAMV data files.
+        msf : bool, optional
+            Read mascot data from .msf file instead of a tab-delimited file.
         groups : dict of str, list of str, optional
         phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
@@ -79,9 +83,11 @@ class DataSet:
         merge_duplicates : bool, optional
         merge_subsets : bool, optional
         """
-        assert psms is not None or \
-            mascot_name is not None or \
+        assert (
+            psms is not None or
+            mascot_name is not None or
             camv_name is not None
+        )
 
         self.source = "unknown"
         self.scan_lists = None
@@ -91,6 +97,7 @@ class DataSet:
             psms, self.scan_lists = loading.load_mascot_psms(
                 mascot_name,
                 camv_slices=camv_slices,
+                msf=msf,
             )
             self.source = "MASCOT"
         elif camv_name:
