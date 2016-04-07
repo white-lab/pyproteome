@@ -23,7 +23,7 @@ RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
 
 def _read_peptides(conn):
     df = pd.read_sql_query(
-        """
+        sql="""
         SELECT
         Peptides.PeptideID,
         Peptides.SpectrumID,
@@ -45,11 +45,9 @@ def _read_peptides(conn):
         FileInfos.FileID=MassPeaks.FileID AND
         Masspeaks.MassPeakID=SpectrumHeaders.MassPeakID
         """,
-        conn,
+        con=conn,
+        index_col="PeptideID",
     )
-
-    df.index = df["PeptideID"]
-    del df["PeptideID"]
 
     return df
 
