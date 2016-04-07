@@ -14,10 +14,10 @@ import numpy as np
 import pandas as pd
 
 from . import modification, paths, protein
+from .fetch_data import RE_DISCOVERER_ACCESSION
 
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
-RE_ACCESSION = re.compile(r"^>sp\|([\dA-Za-z]+)\|[\dA-Za-z_]+ .*$")
 RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
@@ -114,7 +114,7 @@ def _get_proteins(df, cursor):
 
     for protein_id, prot_string in prots:
         accessions[protein_id].append(
-            RE_ACCESSION.match(prot_string).group(1)
+            RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
         )
 
         descriptions[protein_id].append(

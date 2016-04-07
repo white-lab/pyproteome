@@ -14,10 +14,11 @@ import pandas as pd
 
 import uniprot
 
-from . import discoverer, paths
+from . import paths
 
 
 RE_ACCESSION = re.compile("\[([A-Za-z0-9]+_[A-Z]+)\]")
+RE_DISCOVERER_ACCESSION = re.compile(r"^>sp\|([\dA-Za-z]+)\|[\dA-Za-z_]+ .*$")
 
 UNIPROT_DATA = {}
 
@@ -96,7 +97,7 @@ def prefetch_all_msf_uniprot():
             )
 
             accessions.update(
-                discoverer.RE_ACCESSION.match(prot_string).group(1)
+                RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
                 for (prot_string,) in vals
             )
 
