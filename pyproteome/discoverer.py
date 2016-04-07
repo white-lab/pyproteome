@@ -13,12 +13,13 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
 
-from . import loading, modification, paths, protein
+from . import modification, paths, protein
 
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
 RE_ACCESSION = re.compile(r"^>sp\|([\dA-Za-z]+)\|[\dA-Za-z_]+ .*$")
 RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
+CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
 
 def _read_peptides(conn):
@@ -53,6 +54,9 @@ def _read_peptides(conn):
 
 
 def _extract_sequence(df):
+    # XXX: Hacked on...
+    from . import loading
+
     df["Sequence"] = df.apply(
         lambda row:
         loading.extract_sequence(
@@ -61,6 +65,30 @@ def _extract_sequence(df):
         ),
         axis=1,
     )
+
+    return df
+
+
+def _extract_confidence(df):
+    df["Confidence Level"] = df["Confidence Level"].apply(
+        lambda x: CONFIDENCE_MAPPING[x]
+    )
+
+    return df
+
+
+def _extract_spectrum_file(df):
+    # "path/to/file.ext" => "file.ext"
+    df["Spectrum File"] = df["Spectrum File"].apply(
+        lambda x: os.path.split(x)[1]
+    )
+
+    return df
+
+
+def _fix_sequence_mods(df):
+    for _, row in df.iterrows():
+        row["Sequence"].modifications = row["Modifications"]
 
     return df
 
@@ -92,14 +120,6 @@ def _get_proteins(df, cursor):
         descriptions[protein_id].append(
             RE_DESCRIPTION.match(prot_string).group(1)
         )
-
-    # fetch_data.fetch_uniprot_data(
-    #     [
-    #         accession
-    #         for lst in accessions.values()
-    #         for accession in lst
-    #     ]
-    # )
 
     df["Protein Descriptions"] = df.index.map(
         lambda peptide_id:
@@ -209,9 +229,10 @@ def _get_modifications(df, cursor):
 
 
 def _get_quantifications(df, cursor, tag_names):
+    if not tag_names:
+        return df
+
     # XXX: Bug: Peak heights do not exactly match those from Discoverer
-    # for name in tag_names:
-    #     df[name] = np.nan
 
     vals = cursor.execute(
         """
@@ -300,27 +321,12 @@ def read_discoverer_msf(basename):
         df = _read_peptides(conn)
 
         df = _get_proteins(df, cursor)
-
         df = _extract_sequence(df)
-
-        # 1 -> "Low", 2 -> "Medium", 3 -> "High"
-        confidence_mapping = {1: "Low", 2: "Medium", 3: "High"}
-        df["Confidence Level"] = df["Confidence Level"].apply(
-            lambda x: confidence_mapping[x]
-        )
-
-        # "path/to/file.ext" => "file.ext"
-        df["Spectrum File"] = df["Spectrum File"].apply(
-            lambda x: os.path.split(x)[1]
-        )
-
+        df = _extract_confidence(df)
+        df = _extract_spectrum_file(df)
         df = _get_modifications(df, cursor)
-
-        for _, row in df.iterrows():
-            row["Sequence"].modifications = row["Modifications"]
-
-        if tag_names:
-            df = _get_quantifications(df, cursor, tag_names)
+        df = _fix_sequence_mods(df)
+        df = _get_quantifications(df, cursor, tag_names)
 
     df.reset_index(inplace=True, drop=True)
 
