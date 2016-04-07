@@ -12,7 +12,9 @@ import re
 import numpy as np
 import pandas as pd
 
-from . import camv, fetch_data, protein, sequence, modification, paths, utils
+from . import (
+    camv, discoverer, fetch_data, protein, sequence, modification, paths, utils
+)
 
 
 LOGGER = logging.getLogger("pyproteome.loading")
@@ -96,7 +98,7 @@ def _extract_proteins_from_description(prots_string):
     )
 
 
-def _extract_sequence(proteins, sequence_string):
+def extract_sequence(proteins, sequence_string):
     """
     Extract a Sequence object from a list of proteins and sequence string.
 
@@ -113,6 +115,10 @@ def _extract_sequence(proteins, sequence_string):
     """
     prot_matches = []
 
+    # Skip peptides with no protein matches
+    if not isinstance(proteins, protein.Proteins):
+        proteins = []
+
     def _get_rel_pos(protein, pep_seq):
         seq = protein.full_sequence
         pep_pos = seq.find(pep_seq)
@@ -126,6 +132,7 @@ def _extract_sequence(proteins, sequence_string):
 
     for prot in proteins:
         rel_pos, exact = _get_rel_pos(prot, sequence_string.upper())
+
         prot_matches.append(
             sequence.ProteinMatch(
                 protein=prot,
@@ -202,21 +209,7 @@ def _extract_modifications(sequence, mods_string):
     )
 
 
-def load_mascot_psms(basename, camv_slices=None):
-    """
-    Load a list of sequences from a file produced by MASCOT / Discoverer.
-
-    Parameters
-    ----------
-    basenme : str
-    camv_slices : int, optional
-
-    Returns
-    -------
-    psms : :class:`pandas.DataFrame`
-    scan_lists : dict of str, list of int
-    filter_camv : bool
-    """
+def read_table_delimited(basename):
     psms_path = os.path.join(
         paths.MS_SEARCHED_DIR,
         basename + "_psms.txt",
@@ -245,7 +238,7 @@ def load_mascot_psms(basename, camv_slices=None):
     )
     psms["Sequence"] = pd.Series(
         [
-            _extract_sequence(row["Proteins"], row["Sequence"])
+            extract_sequence(row["Proteins"], row["Sequence"])
             for index, row in psms.iterrows()
         ],
         index=psms.index,
@@ -263,6 +256,28 @@ def load_mascot_psms(basename, camv_slices=None):
     # Finally close the reference loop between sequences and modifications
     for index, row in psms.iterrows():
         row["Sequence"].modifications = row["Modifications"]
+
+    return psms
+
+
+def load_mascot_psms(basename, camv_slices=None):
+    """
+    Load a list of sequences from a file produced by MASCOT / Discoverer.
+
+    Parameters
+    ----------
+    basenme : str
+    camv_slices : int, optional
+
+    Returns
+    -------
+    psms : :class:`pandas.DataFrame`
+    scan_lists : dict of str, list of int
+    filter_camv : bool
+    """
+    psms = read_table_delimited(basename)
+    # psms = discoverer.read_discoverer_msf(basename)
+    # psms = _filter_unassigned_rows(psms)
 
     # Output the phosphorylation scan list for CAMV
     psms, scan_lists = camv.output_scan_list(

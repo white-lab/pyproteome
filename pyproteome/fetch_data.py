@@ -7,19 +7,19 @@ Caches fetched protein data for faster re-use.
 # Built-ins
 import os
 import re
+import sqlite3
 
 # Core data analysis libraries
 import pandas as pd
 
 import uniprot
 
-from . import paths
+from . import discoverer, paths
 
 
 RE_ACCESSION = re.compile("\[([A-Za-z0-9]+_[A-Z]+)\]")
 
 UNIPROT_DATA = {}
-MISS_COUNT = {}
 
 
 def fetch_uniprot_data(accessions):
@@ -72,6 +72,37 @@ def prefetch_all_uniprot():
     fetch_uniprot_data(accessions)
 
 
+def prefetch_all_msf_uniprot():
+    """
+    Fetch data for all accesions found in MSF files in MS Searched directory.
+    """
+    accessions = set()
+    for filename in os.listdir(paths.MS_SEARCHED_DIR):
+        if not os.path.splitext(filename)[1].lower() in [".msf"]:
+            continue
+
+        msf_path = os.path.join(paths.MS_SEARCHED_DIR, filename)
+
+        with sqlite3.connect(msf_path) as conn:
+            cursor = conn.cursor()
+
+            vals = cursor.execute(
+                """
+                SELECT
+                ProteinAnnotations.Description
+                FROM
+                ProteinAnnotations
+                """
+            )
+
+            accessions.update(
+                discoverer.RE_ACCESSION.match(prot_string).group(1)
+                for (prot_string,) in vals
+            )
+
+    fetch_uniprot_data(accessions)
+
+
 def prefetch_accessions(psms):
     """
     Pre-fetch all UniProt information.
@@ -118,6 +149,7 @@ def get_uniprot_data(accession):
     dict
     """
     if accession not in UNIPROT_DATA:
+        print(accession)
         fetch_uniprot_data([accession])
 
     return UNIPROT_DATA[accession]

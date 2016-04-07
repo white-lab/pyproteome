@@ -130,9 +130,13 @@ class Sequence:
     def _seq_with_modifications(self):
         string = self.pep_seq.upper()
 
-        for mod in self.modifications.skip_labels_iter():
-            string = string[:mod.rel_pos] + string[mod.rel_pos].lower() + \
-                string[mod.rel_pos + 1:]
+        if self.modifications:
+            for mod in self.modifications.skip_labels_iter():
+                string = (
+                    string[:mod.rel_pos] +
+                    string[mod.rel_pos].lower() +
+                    string[mod.rel_pos + 1:]
+                )
 
         return string
 

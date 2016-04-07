@@ -3,15 +3,254 @@ This module provides functionality for accessing searched data from Proteome
 Discoverer.
 """
 
+from collections import defaultdict
+import logging
 import os
 import re
 import sqlite3
 import xml.etree.ElementTree as ET
 
+import numpy as np
 import pandas as pd
 
+from . import loading, modification, paths, protein
 
-def read_discoverer_msf(path, pep_score_cutoff=15):
+
+LOGGER = logging.getLogger("pyproteome.discoverer")
+RE_ACCESSION = re.compile(r"^>sp\|([\dA-Za-z]+)\|[\dA-Za-z_]+ .*$")
+RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
+
+
+def _read_peptides(conn):
+    df = pd.read_sql_query(
+        """
+        SELECT
+        Peptides.PeptideID,
+        Peptides.SpectrumID,
+        Peptides.Sequence,
+        Peptides.ConfidenceLevel AS "Confidence Level",
+        PeptideScores.ScoreValue AS "IonScore",
+        SpectrumHeaders.FirstScan AS "First Scan",
+        SpectrumHeaders.LastScan AS "Last Scan",
+        FileInfos.FileName AS "Spectrum File"
+        FROM
+        Peptides JOIN
+        PeptideScores JOIN
+        SpectrumHeaders JOIN
+        FileInfos JOIN
+        Masspeaks
+        WHERE
+        Peptides.PeptideID=PeptideScores.PeptideID AND
+        Peptides.SpectrumID=SpectrumHeaders.SpectrumID AND
+        FileInfos.FileID=MassPeaks.FileID AND
+        Masspeaks.MassPeakID=SpectrumHeaders.MassPeakID
+        """,
+        conn,
+    )
+
+    df.index = df["PeptideID"]
+    del df["PeptideID"]
+
+    return df
+
+
+def _extract_sequence(df):
+    df["Sequence"] = df.apply(
+        lambda row:
+        loading.extract_sequence(
+            row["Proteins"],
+            row["Sequence"],
+        ),
+        axis=1,
+    )
+
+    return df
+
+
+def _get_proteins(df, cursor):
+    prots = cursor.execute(
+        """
+        SELECT
+        Peptides.PeptideID,
+        ProteinAnnotations.Description
+        FROM
+        Peptides JOIN
+        PeptidesProteins JOIN
+        ProteinAnnotations
+        WHERE
+        Peptides.PeptideID=PeptidesProteins.PeptideID AND
+        ProteinAnnotations.ProteinID=PeptidesProteins.ProteinID
+        """,
+    )
+
+    accessions = defaultdict(list)
+    descriptions = defaultdict(list)
+
+    for protein_id, prot_string in prots:
+        accessions[protein_id].append(
+            RE_ACCESSION.match(prot_string).group(1)
+        )
+
+        descriptions[protein_id].append(
+            RE_DESCRIPTION.match(prot_string).group(1)
+        )
+
+    # fetch_data.fetch_uniprot_data(
+    #     [
+    #         accession
+    #         for lst in accessions.values()
+    #         for accession in lst
+    #     ]
+    # )
+
+    df["Protein Descriptions"] = df.index.map(
+        lambda peptide_id:
+        "; ".join(descriptions[peptide_id])
+    )
+
+    df["Protein Group Accessions"] = df.index.map(
+        lambda peptide_id:
+        "; ".join(accessions[peptide_id])
+    )
+
+    df["Proteins"] = df.index.map(
+        lambda peptide_id:
+        protein.Proteins(
+            proteins=[
+                protein.Protein(
+                    accession=accession,
+                )
+                for accession in accessions[peptide_id]
+            ]
+        )
+    )
+
+    return df
+
+
+def _get_modifications(df, cursor):
+    aa_mods = cursor.execute(
+        """
+        SELECT
+        Peptides.PeptideID,
+        AminoAcidModifications.Abbreviation,
+        PeptidesAminoAcidModifications.Position
+        FROM
+        Peptides JOIN
+        PeptidesAminoAcidModifications JOIN
+        AminoAcidModifications
+        WHERE
+        Peptides.PeptideID=PeptidesAminoAcidModifications.PeptideID AND
+        PeptidesAminoAcidModifications.AminoAcidModificationID=
+        AminoAcidModifications.AminoAcidModificationID
+        """,
+    )
+
+    aa_mod_dict = defaultdict(list)
+
+    for peptide_id, name, pos in aa_mods:
+        sequence = df.loc[peptide_id]["Sequence"]
+
+        mod = modification.Modification(
+            rel_pos=pos,
+            mod_type=name,
+            nterm=False,
+            cterm=False,
+            sequence=sequence,
+        )
+
+        aa_mod_dict[peptide_id].append(mod)
+
+    term_mods = cursor.execute(
+        """
+        SELECT
+        Peptides.PeptideID,
+        AminoAcidModifications.Abbreviation,
+        AminoAcidModifications.PositionType
+        FROM
+        Peptides JOIN
+        PeptidesTerminalModifications JOIN
+        AminoAcidModifications
+        WHERE
+        Peptides.PeptideID=PeptidesTerminalModifications.PeptideID AND
+        PeptidesTerminalModifications.TerminalModificationID=
+        AminoAcidModifications.AminoAcidModificationID
+        """,
+    )
+
+    term_mod_dict = defaultdict(list)
+
+    # PositionType rules taken from:
+    #
+    # https://github.com/compomics/thermo-msf-parser/blob/
+    # 697a2fe94de2e960a9bb962d1f263dc983461999/thermo_msf_parser_API/
+    # src/main/java/com/compomics/thermo_msf_parser_API/highmeminstance/
+    # Parser.java#L1022
+    for peptide_id, name, pos_type in term_mods:
+        nterm = pos_type == 1
+        mod = modification.Modification(
+            rel_pos=pos,
+            mod_type=name,
+            nterm=nterm,
+            cterm=not nterm,
+            sequence=sequence,
+        )
+        term_mod_dict[peptide_id].append(mod)
+
+    df["Modifications"] = df.index.map(
+        lambda peptide_id:
+        modification.Modifications(
+            mods=(
+                term_mod_dict[peptide_id] +
+                aa_mod_dict[peptide_id]
+            ),
+        )
+    )
+
+    return df
+
+
+def _get_quantifications(df, cursor, tag_names):
+    # XXX: Bug: Peak heights do not exactly match those from Discoverer
+    # for name in tag_names:
+    #     df[name] = np.nan
+
+    vals = cursor.execute(
+        """
+        SELECT
+        Peptides.PeptideID,
+        ReporterIonQuanResults.QuanChannelID,
+        ReporterIonQuanResults.Height
+        FROM
+        Peptides JOIN
+        ReporterIonQuanResults JOIN
+        ReporterIonQuanResultsSearchSpectra
+        WHERE
+        Peptides.SpectrumID=
+        ReporterIonQuanResultsSearchSpectra.SearchSpectrumID AND
+        ReporterIonQuanResultsSearchSpectra.SpectrumID=
+        ReporterIonQuanResults.SpectrumID
+        """,
+    )
+
+    mapping = {
+        (peptide_id, channel_id): height
+        for peptide_id, channel_id, height in vals
+    }
+
+    channel_ids = sorted(set(i[1] for i in mapping.keys()))
+
+    for channel_id in channel_ids:
+        tag_name = tag_names[channel_id - 1]
+        df[tag_name] = df.index.map(
+            lambda peptide_id:
+            mapping.get((peptide_id, channel_id), np.nan)
+        )
+
+    return df
+
+
+def read_discoverer_msf(basename):
     """
     Read a Proteome Discoverer .msf file.
 
@@ -21,14 +260,27 @@ def read_discoverer_msf(path, pep_score_cutoff=15):
     Parameters
     ----------
     path : str
-    pep_score_cutoff : int, optional
 
     Returns
     -------
     :class:`pandas.DataFrame`
     """
-    with sqlite3.connect(path) as conn:
-        quantification = conn.cursor().execute(
+    msf_path = os.path.join(
+        paths.MS_SEARCHED_DIR,
+        basename + ".msf",
+    )
+
+    LOGGER.info(
+        "Loading MASCOT peptides from \"{}\"".format(
+            os.path.basename(msf_path),
+        )
+    )
+
+    with sqlite3.connect(msf_path) as conn:
+        cursor = conn.cursor()
+
+        # Get any N-terminal quantification tags
+        quantification = cursor.execute(
             """
             SELECT
             ParameterValue
@@ -42,161 +294,16 @@ def read_discoverer_msf(path, pep_score_cutoff=15):
             quant_tags = root.findall(
                 "MethodPart/MethodPart/Parameter[@name='TagName']",
             )
-            quant_titles = [i.text for i in quant_tags]
+            tag_names = [i.text for i in quant_tags]
         else:
-            quant_titles = None
+            tag_names = None
 
-        def _get_modifications(sequence, peptide_id):
-            cursor = conn.cursor()
-            aa_mods = cursor.execute(
-                """
-                SELECT
-                AminoAcidModifications.Abbreviation,
-                PeptidesAminoAcidModifications.Position
-                FROM
-                PeptidesAminoAcidModifications JOIN
-                AminoAcidModifications
-                WHERE
-                PeptidesAminoAcidModifications.PeptideID=(?) AND
-                PeptidesAminoAcidModifications.AminoAcidModificationID=
-                AminoAcidModifications.AminoAcidModificationID
-                """,
-                (peptide_id,),
-            )
+        # Read the main peptide properties
+        df = _read_peptides(conn)
 
-            aa_mods = [
-                "{}{}({})".format(
-                    sequence[pos],
-                    pos + 1,
-                    name,
-                )
-                for name, pos in aa_mods
-            ]
+        df = _get_proteins(df, cursor)
 
-            term_mods = cursor.execute(
-                """
-                SELECT
-                AminoAcidModifications.Abbreviation,
-                AminoAcidModifications.PositionType
-                FROM
-                PeptidesTerminalModifications JOIN
-                AminoAcidModifications
-                WHERE
-                PeptidesTerminalModifications.PeptideID=(?) AND
-                PeptidesTerminalModifications.TerminalModificationID=
-                AminoAcidModifications.AminoAcidModificationID
-                """,
-                (peptide_id,),
-            )
-
-            # PositionType rules taken from:
-            #
-            # https://github.com/compomics/thermo-msf-parser/blob/
-            # 697a2fe94de2e960a9bb962d1f263dc983461999/thermo_msf_parser_API/
-            # src/main/java/com/compomics/thermo_msf_parser_API/highmeminstance/
-            # Parser.java#L1022
-            term_mods = [
-                "{}({})".format(
-                    "N-Term" if pos_type == 1 else "C-Term",
-                    name
-                )
-                for name, pos_type in term_mods
-            ]
-
-            mods = (
-                [i for i in term_mods if i.startswith("N-Term")] +
-                aa_mods +
-                [i for i in term_mods if i.startswith("C-Term")]
-            )
-
-            return "; ".join(mods)
-
-        def _get_proteins(peptide_id):
-            prots = conn.cursor().execute(
-                """
-                SELECT
-                ProteinAnnotations.Description
-                FROM
-                PeptidesProteins JOIN
-                ProteinAnnotations
-                WHERE
-                PeptidesProteins.PeptideID=(?) AND
-                ProteinAnnotations.ProteinID=PeptidesProteins.ProteinID
-                """,
-                (int(peptide_id),),
-            ).fetchall()
-            return "; ".join(
-                re.sub(
-                    r"^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) (.*)$",
-                    r"\2 - [\1]",
-                    i[0],
-                )
-                for i in prots
-            )
-
-        def _get_quantifications(peptide_id):
-            # XXX: Bug: Peak heights do not exactly match those from Discoverer
-            vals = conn.cursor().execute(
-                """
-                SELECT
-                ReporterIonQuanResults.Height
-                FROM
-                Peptides JOIN
-                ReporterIonQuanResults JOIN
-                ReporterIonQuanResultsSearchSpectra
-                WHERE
-                Peptides.PeptideID=(?) AND
-                Peptides.SpectrumID=
-                ReporterIonQuanResultsSearchSpectra.SearchSpectrumID AND
-                ReporterIonQuanResultsSearchSpectra.SpectrumID=
-                ReporterIonQuanResults.SpectrumID
-                ORDER BY
-                ReporterIonQuanResults.QuanChannelID ASC
-                """,
-                (peptide_id,),
-            ).fetchall()
-
-            if not vals:
-                return [0] * len(quant_titles)
-
-            # Drop any extra redundant quantifications
-            vals = vals[:len(quant_titles)]
-            vals = [val[0] for val in vals]
-
-            return vals
-
-        df = pd.read_sql_query(
-            """
-            SELECT
-            Peptides.PeptideID,
-            Peptides.Sequence,
-            Peptides.ConfidenceLevel AS "Confidence Level",
-            PeptideScores.ScoreValue AS "IonScore",
-            SpectrumHeaders.FirstScan AS "First Scan",
-            SpectrumHeaders.LastScan AS "Last Scan",
-            FileInfos.FileName AS "Spectrum File"
-            FROM
-            Peptides JOIN
-            PeptideScores JOIN
-            SpectrumHeaders JOIN
-            FileInfos JOIN
-            Masspeaks
-            WHERE
-            Peptides.PeptideID=PeptideScores.PeptideID AND
-            PeptideScores.ScoreValue>={} AND
-            Peptides.SpectrumID=SpectrumHeaders.SpectrumID AND
-            FileInfos.FileID=MassPeaks.FileID AND
-            Masspeaks.MassPeakID=SpectrumHeaders.MassPeakID
-            """.format(pep_score_cutoff),
-            conn
-        )
-
-        # Fix >sp|P59900|EMIL3_MOUSE EMILIN-3 OS=Mus musculus GN=Emilin3 PE=2
-        # SV=1
-        # to EMILIN-3 OS=Mus musculus GN=Emilin3 PE=2 SV=1 - [EMIL3_MOUSE]
-        df["Protein Descriptions"] = df["PeptideID"].apply(
-            _get_proteins
-        )
+        df = _extract_sequence(df)
 
         # 1 -> "Low", 2 -> "Medium", 3 -> "High"
         confidence_mapping = {1: "Low", 2: "Medium", 3: "High"}
@@ -208,17 +315,15 @@ def read_discoverer_msf(path, pep_score_cutoff=15):
         df["Spectrum File"] = df["Spectrum File"].apply(
             lambda x: os.path.split(x)[1]
         )
-        df["Modifications"] = pd.Series(
-            _get_modifications(row["Sequence"], row["PeptideID"])
-            for _, row in df.iterrows()
-        )
 
-        if quant_titles:
-            df[quant_titles] = df.apply(
-                lambda x: pd.Series(
-                    _get_quantifications(x["PeptideID"])
-                ),
-                axis=1,
-            )
+        df = _get_modifications(df, cursor)
+
+        for _, row in df.iterrows():
+            row["Sequence"].modifications = row["Modifications"]
+
+        if tag_names:
+            df = _get_quantifications(df, cursor, tag_names)
+
+    df.reset_index(inplace=True, drop=True)
 
     return df
