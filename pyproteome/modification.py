@@ -100,6 +100,9 @@ class Modifications:
         else:
             lst = list(iter(self))
 
+        if not lst:
+            return ""
+
         return " / ".join(
             ", ".join(
                 "{}{}{}{}".format(
@@ -110,8 +113,7 @@ class Modifications:
                 )
                 for mod in lst
             )
-            for i in range(len(self.mods[0].exact))
-            if lst
+            for i in range(len(lst[0].exact))
         )
 
 
@@ -159,40 +161,25 @@ class Modification:
 
         return self.mod_type
 
-    def __hash__(self):
-        return hash(
-            (
-                self.rel_pos,
-                self.mod_type,
-                self.nterm,
-                self.cterm,
-                self.letter,
-                tuple(self.abs_pos),
-                tuple(self.exact),
-            )
-        )
-
-    def __eq__(self, other):
-        if not isinstance(other, Modification):
-            raise TypeError()
-
+    def to_tuple(self):
         return (
             self.rel_pos,
             self.mod_type,
             self.nterm,
             self.cterm,
             self.letter,
-            self.abs_pos,
-            self.exact,
-        ) == (
-            other.rel_pos,
-            other.mod_type,
-            other.nterm,
-            other.cterm,
-            other.letter,
-            other.abs_pos,
-            other.exact,
+            tuple(self.abs_pos),
+            tuple(self.exact),
         )
+
+    def __hash__(self):
+        return hash(self.to_tuple())
+
+    def __eq__(self, other):
+        if not isinstance(other, Modification):
+            raise TypeError()
+
+        return self.to_tuple() == other.to_tuple()
 
 
 def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
