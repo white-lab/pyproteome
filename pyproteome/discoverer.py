@@ -207,6 +207,8 @@ def _get_modifications(df, cursor):
     for peptide_id, name, pos_type in term_mods:
         nterm = pos_type == 1
         pos = 0 if nterm else len(sequence)
+        sequence = df.loc[peptide_id]["Sequence"]
+
         mod = modification.Modification(
             rel_pos=pos,
             mod_type=name,
