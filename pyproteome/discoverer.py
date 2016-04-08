@@ -206,6 +206,7 @@ def _get_modifications(df, cursor):
     # Parser.java#L1022
     for peptide_id, name, pos_type in term_mods:
         nterm = pos_type == 1
+        pos = 0 if nterm else len(sequence)
         mod = modification.Modification(
             rel_pos=pos,
             mod_type=name,
@@ -256,6 +257,11 @@ def _get_quantifications(df, cursor, tag_names):
         (peptide_id, channel_id): height
         for peptide_id, channel_id, height in vals
     }
+
+    # Convert very low ion counts to nan
+    for key, val in mapping.items():
+        if val <= 1:
+            mapping[key] = np.nan
 
     channel_ids = sorted(set(i[1] for i in mapping.keys()))
 
