@@ -6,6 +6,8 @@ Features
 
   - Added pyprotome.pride module for fetching public data sets.
   - Added pyproteome.discoverer module for reading Proteome Discoverer files.
+  - Color pyproteome.analysis.snr_table() by peptide validation.
+  - Show "Validated" column in pyproteome.analysis.write_full_tables().
 
 Bugfixes
 

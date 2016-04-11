@@ -300,6 +300,7 @@ def load_mascot_psms(basename, camv_slices=None, msf=True):
         # in the rejected list.
         reject_mask = np.zeros(psms.shape[0], dtype=bool)
 
+        # TODO Performance improvement: Don't assign using .loc
         for index, row in psms.iterrows():
             # Check if this specific sequence and scan was rejected
             hit = np.logical_and(

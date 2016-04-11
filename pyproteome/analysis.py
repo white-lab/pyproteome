@@ -70,7 +70,10 @@ def snr_table(
     csv_name = os.path.join(folder_name, csv_name)
 
     psms = data.psms[
-        ["Proteins", "Sequence", "Modifications", "Fold Change", "p-value"]
+        [
+            "Proteins", "Sequence", "Modifications",
+            "Fold Change", "p-value", "Validated",
+        ]
     ]
     psms["Sequence"] = [
         "{} ({})".format(row["Sequence"], row["Modifications"])
@@ -90,7 +93,24 @@ def snr_table(
     if csv_name:
         psms.to_csv(csv_name)
 
-    return psms
+    back_colors = {
+        True: "#BBFFBB",  # light green
+        False: "#FFBBBB",  # light red
+    }
+
+    return psms.style.apply(  # Color validated rows
+        lambda row: [
+            "background-color: " + back_colors[row["Validated"]]
+            for _ in row
+        ],
+        axis=1,
+    ).set_table_styles(  # Hide index and "Validated" columns
+        [
+            {"selector": "th:first-child", "props": [("display", "none")]},
+            {"selector": "td:last-child", "props": [("display", "none")]},
+            {"selector": "th:last-child", "props": [("display", "none")]},
+        ]
+    )
 
 
 def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
@@ -112,7 +132,12 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
 
     for data in datas:
-        df = data.psms[["Proteins", "Sequence", "Fold Change", "p-value"]]
+        df = data.psms[
+            [
+                "Proteins", "Sequence",
+                "Fold Change", "p-value", "Validated",
+            ]
+        ]
         df.insert(
             2, "Modifications",
             df["Sequence"].apply(
