@@ -260,6 +260,89 @@ def read_table_delimited(basename):
     return psms
 
 
+def _calculate_rejected(psms, accepted, maybed, rejected):
+    if rejected is None:
+        return psms
+
+    LOGGER.info("Filtering out rejected scans.")
+
+    # Remove any peptides that match the scan number and sequence
+    # in the rejected list.
+    reject_mask = np.zeros(psms.shape[0], dtype=bool)
+    validations = psms["Validated"].copy()
+
+    for index, row in psms.iterrows():
+        # Check if this specific sequence and scan was rejected
+        hit = np.logical_and(
+            # Assuming First Scan always == Last Scan
+            rejected["Scan"] == row["First Scan"],
+            rejected["Sequence"] == row["Sequence"],
+        )
+
+        if hit.any():
+            reject_mask[index] = True
+            continue
+
+        if accepted is not None:
+            if np.logical_and(
+                accepted["Scan"] == row["First Scan"],
+                accepted["Sequence"] == row["Sequence"],
+            ).any():
+                validations[index] = True
+                continue
+
+        if maybed is not None:
+            if np.logical_and(
+                maybed["Scan"] == row["First Scan"],
+                maybed["Sequence"] == row["Sequence"],
+            ).any():
+                continue
+
+        # Check if this scan was rejected and no sequences were accepted
+        hit = (rejected["Scan"] == row["First Scan"]).any()
+        if not hit:
+            continue
+
+        reject_mask[index] = True
+
+    psms["Validated"] = validations
+    psms = psms[~reject_mask].reset_index(drop=True)
+
+    return psms
+
+
+def _calculate_accepted(psms, accepted):
+    if accepted is None:
+        return psms
+
+    LOGGER.info("Filtering out non-accepted scans.")
+
+    reject_mask = np.zeros(psms.shape[0], dtype=bool)
+    validations = psms["Validated"].copy()
+
+    for index, row in psms.iterrows():
+        # Reject hits where the scan number is the same but the sequence
+        # is different.
+        hit = np.logical_and(
+            accepted["Scan"] == row["First Scan"],
+            accepted["Sequence"] != row["Sequence"],
+        )
+        if hit.any():
+            reject_mask[index] = True
+
+        hit = np.logical_and(
+            accepted["Scan"] == row["First Scan"],
+            accepted["Sequence"] != row["Sequence"],
+        )
+        if hit.any():
+            validations[index] = True
+
+    psms["Validated"] = validations
+    psms = psms[~reject_mask].reset_index(drop=True)
+
+    return psms
+
+
 def load_mascot_psms(basename, camv_slices=None, msf=True):
     """
     Load a list of sequences from a file produced by MASCOT / Discoverer.
@@ -295,62 +378,8 @@ def load_mascot_psms(basename, camv_slices=None, msf=True):
     # The load CAMV data to clear unwanted hits if available.
     accepted, maybed, rejected = camv.load_camv_validation(basename)
 
-    if rejected is not None:
-        # Remove any peptides that match the scan number and sequence
-        # in the rejected list.
-        reject_mask = np.zeros(psms.shape[0], dtype=bool)
-
-        # TODO Performance improvement: Don't assign using .loc
-        for index, row in psms.iterrows():
-            # Check if this specific sequence and scan was rejected
-            hit = np.logical_and(
-                # Assuming First Scan always == Last Scan
-                rejected["Scan"] == row["First Scan"],
-                rejected["Sequence"] == row["Sequence"],
-            )
-
-            if hit.any():
-                reject_mask[index] = True
-                continue
-
-            # Check if this scan was rejected and no sequences were accepted
-            hit = (rejected["Scan"] == row["First Scan"]).any()
-            if not hit:
-                continue
-
-            if accepted is not None:
-                if np.logical_and(
-                    accepted["Scan"] == row["First Scan"],
-                    accepted["Sequence"] == row["Sequence"],
-                ).any():
-                    psms.loc[index, "Validated"] = True
-                    continue
-
-            if maybed is not None:
-                if np.logical_and(
-                    maybed["Scan"] == row["First Scan"],
-                    maybed["Sequence"] == row["Sequence"],
-                ).any():
-                    continue
-
-            reject_mask[index] = True
-
-        psms = psms[~reject_mask].reset_index(drop=True)
-
-    if accepted is not None:
-        reject_mask = np.zeros(psms.shape[0], dtype=bool)
-
-        for index, row in psms.iterrows():
-            # Reject hits where the scan number is the same but the sequence
-            # is different.
-            hit = np.logical_and(
-                accepted["Scan"] == row["First Scan"],
-                accepted["Sequence"] != row["Sequence"],
-            )
-            if hit.any():
-                reject_mask[index] = True
-
-        psms = psms[~reject_mask].reset_index(drop=True)
+    psms = _calculate_rejected(psms, accepted, maybed, rejected)
+    psms = _calculate_accepted(psms, accepted)
 
     return psms, scan_lists
 
