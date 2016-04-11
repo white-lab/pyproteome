@@ -25,28 +25,21 @@ class ProteinMatch:
         self.rel_pos = rel_pos
         self.exact = exact
 
-    def __hash__(self):
-        return hash(
-            (
-                self.protein,
-                self.rel_pos,
-                self.exact,
-            )
-        )
-
-    def __eq__(self, other):
-        if not isinstance(other, ProteinMatch):
-            raise TypeError()
-
+    def to_tuple(self):
         return (
             self.protein,
             self.rel_pos,
             self.exact,
-        ) == (
-            other.protein,
-            other.rel_pos,
-            other.exact,
         )
+
+    def __hash__(self):
+        return hash(self.to_tuple())
+
+    def __eq__(self, other):
+        if not isinstance(other, ProteinMatch):
+            raise TypeError(other)
+
+        return self.to_tuple() == other.to_tuple()
 
 
 class Sequence:
@@ -76,13 +69,14 @@ class Sequence:
         self.modifications = modifications
         self.alt_hits = []
 
-    def __hash__(self):
-        return hash(
-            (
-                self.pep_seq,
-                self.modifications,
-            )
+    def to_tuple(self):
+        return (
+            self.pep_seq,
+            self.modifications,
         )
+
+    def __hash__(self):
+        return hash(self.to_tuple())
 
     def __eq__(self, other):
         # In case of searching just by sequence
@@ -90,15 +84,9 @@ class Sequence:
             return self._seq_with_modifications() == other
 
         if not isinstance(other, Sequence):
-            raise TypeError()
+            raise TypeError(other)
 
-        return (
-            self.pep_seq,
-            self.modifications,
-        ) == (
-            other.pep_seq,
-            other.modifications,
-        )
+        return self.to_tuple() == other.to_tuple()
 
     def __contains__(self, other):
         if not isinstance(other, Sequence):
