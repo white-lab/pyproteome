@@ -57,6 +57,18 @@ def validate_spectra(basename, scan_list=None):
     ----------
     basename : str
     scan_list : list of int, optional
+
+    Returns
+    -------
+    options : :class:`pycamv.validate.SearchOptions`
+    peak_hits : dict of (tuple of :class:`pycamv.mascot.PeptideQuery`, list),
+    list of :class:`pycamv.compare.PeptideHit`
+        Dictionary mapping peptide queries and their sequences to peptide hits.
+    precursor_windows : dict of :class:`pycamv.mascot.PeptideQuery`, list
+        Dictionary mapping peptide queries to peak lists for precursor scans.
+    label_windows : dict of :class:`pycamv.mascot.PeptideQuery`, list
+        Dictionary mapping peptide queries to peak lists for quantification
+        channels.
     """
     # Read MASCOT xml file
     xml_name = "{}.xml".format(basename)
