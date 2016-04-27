@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 # import scipy
-from scipy.stats import ttest_ind, pearsonr
+from scipy.stats import ttest_ind, pearsonr, spearmanr
 # from scipy.stats.mstats import mquantiles
 # from scipy.spatial import distance
 # from scipy.cluster import hierarchy
@@ -690,10 +690,14 @@ def plot_correlation(
     ax.set_xlabel("$log_2$ Fold Change -- {}".format(data1.name))
     ax.set_ylabel("$log_2$ Fold Change -- {}".format(data2.name))
 
-    corr = pearsonr(merged["Fold Change_x"], merged["Fold Change_y"])[0]
+    pear_corr = pearsonr(merged["Fold Change_x"], merged["Fold Change_y"])
+    spear_corr = spearmanr(merged["Fold Change_x"], merged["Fold Change_y"])
 
     ax.set_title(
-        "Correlation: {:.2f}".format(corr)
+        (
+            r"Pearson's: $\rho$={:.2f}, "
+            r"Spearman's: $\rho$={:.2f}"
+        ).format(pear_corr[0], spear_corr[0])
     )
 
     if filename:
