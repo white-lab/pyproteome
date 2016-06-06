@@ -345,7 +345,7 @@ def _calculate_accepted(psms, accepted):
 
 def load_mascot_psms(basename, camv_slices=None, msf=True):
     """
-    Load a list of sequences from a file produced by MASCOT / Discoverer.
+    Load a list of sequences from a MSF file produced by MASCOT / Discoverer.
 
     Parameters
     ----------
