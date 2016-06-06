@@ -13,8 +13,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
 
-from . import modification, paths, protein
-from .fetch_data import RE_DISCOVERER_ACCESSION
+from . import fetch_data, modification, paths, protein
 
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
@@ -114,12 +113,17 @@ def _get_proteins(df, cursor):
 
     for protein_id, prot_string in prots:
         accessions[protein_id].append(
-            RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
+            fetch_data.RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
         )
 
         descriptions[protein_id].append(
             RE_DESCRIPTION.match(prot_string).group(1)
         )
+
+    # Pre-fetch UniProt data to speed up later queries
+    fetch_data.fetch_uniprot_data(
+        [i for lst in accessions.values() for i in lst]
+    )
 
     df["Protein Descriptions"] = df.index.map(
         lambda peptide_id:
