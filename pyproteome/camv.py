@@ -27,7 +27,7 @@ CAMV_PATH = utils.which("CAMV.exe")
 if CAMV_PATH is None:
     CAMV_PATH = os.path.abspath(
         os.path.join(
-            THIS_DIR, "..", "..",
+            THIS_DIR, "..",
             "CAMV", "CAMV", "for_redistribution_files_only", "CAMV.exe",
         )
     )
@@ -55,7 +55,7 @@ def load_camv_validation(basename):
         try:
             df = pd.read_csv(path, sep="\t")
         except OSError:
-            return None
+            return existing
         else:
             LOGGER.info(
                 "Loading CAMV validation data from \"{}\"".format(
