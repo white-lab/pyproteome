@@ -7,7 +7,9 @@ Caches fetched protein data for faster re-use.
 # Built-ins
 import os
 import re
+import shutil
 import sqlite3
+import tempfile
 
 # Core data analysis libraries
 import pandas as pd
@@ -39,12 +41,16 @@ def fetch_uniprot_data(accessions):
     if not accessions:
         return
 
+    cache_dir = tempfile.mkdtemp(suffix="uniprot")
+
     UNIPROT_DATA.update(
         uniprot.get_metadata_with_some_seqid_conversions(
             accessions,
-            cache_dir=os.path.abspath('.uniprot_cache'),
+            cache_dir=cache_dir,
         )
     )
+
+    shutil.rmtree(cache_dir)
 
 
 def prefetch_all_uniprot():
