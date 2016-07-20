@@ -1,9 +1,13 @@
 """Utility functions used in other modules."""
 
 # Built-ins
-import difflib
 from collections import OrderedDict
+import difflib
+import functools
 import os
+
+import numpy as np
+import pandas as pd
 
 
 def fuzzy_find(needle, haystack):
@@ -97,3 +101,16 @@ def which(program):
                 return exe_file
 
     return None
+
+
+def flatten_set(lst):
+    if isinstance(lst, (list, tuple, set, pd.Series, np.ndarray)):
+        ret = set()
+
+        for element in lst:
+            for new_element in flatten_set(element):
+                ret.add(new_element)
+
+        return ret
+
+    return set([lst])
