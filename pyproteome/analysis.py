@@ -479,7 +479,7 @@ def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
     f.show()
 
     if filename:
-        f.savefig(filename, transparent=True, dpi=500f)
+        f.savefig(filename, transparent=True, dpi=500)
 
 
 def write_lists(
