@@ -58,6 +58,7 @@ class DataSet:
         camv_slices=None,
         merge_duplicates=True,
         merge_subsets=False,
+        filter_bad=True,
     ):
         """
         Initializes a data set.
@@ -82,6 +83,7 @@ class DataSet:
         camv_slices : int, optional
         merge_duplicates : bool, optional
         merge_subsets : bool, optional
+        filter_bad : bool, optional
         """
         assert (
             psms is not None or
@@ -120,6 +122,14 @@ class DataSet:
         if dropna:
             LOGGER.info("Dropping channels with NaN values.")
             self.dropna(inplace=True)
+
+        if filter_bad:
+            # self.psms = self.psms[
+            #     self.psms["Confidence Level"].isin(["Medium", "High"])
+            # ]
+            self.psms = self.psms[
+                self.psms["Confidence Level"].isin(["High"])
+            ]
 
         if merge_duplicates:
             LOGGER.info("Merging duplicate peptide hits together.")
@@ -193,11 +203,8 @@ class DataSet:
         agg_dict = dict((channel, sum) for channel in channels)
 
         agg_dict["Validated"] = all
-        agg_dict["Scan Paths"] = lambda x: set(
-            path
-            for paths in x
-            for path in paths
-        )
+        agg_dict["Scan Paths"] = utils.flatten_set
+        agg_dict["First Scan"] = utils.flatten_set
 
         self.psms = self.psms.groupby(
             by=[
