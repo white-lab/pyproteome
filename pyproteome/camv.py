@@ -270,6 +270,51 @@ def _run_camv_export(save_path):
     return output
 
 
+def _run_each_camv_validation(scan_path, scan_list, force=False):
+    # Build a list of paths
+    scan_path = os.path.join(
+        paths.SCAN_LISTS_DIR, scan_path,
+    )
+    file_name = os.path.basename(scan_path)
+    base_name = file_name.rsplit("-", 1)[0]
+    raw_path = os.path.join(
+        paths.MS_RAW_DIR, base_name + ".raw",
+    )
+    mascot_xml_path = os.path.join(
+        paths.MASCOT_XML_DIR, base_name + ".xml",
+    )
+    save_path = os.path.join(
+        paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
+    )
+
+    # Skip archived scan lists
+    for store_ext in [".7z", ".zip", ".tar", ".tar.gz", ".tar.bz2"]:
+        if os.path.exists(save_path + store_ext) or \
+           os.path.exists(os.path.splitext(save_path)[0] + store_ext):
+            return
+
+    if not force and \
+       os.path.exists(save_path) and \
+       os.stat(save_path).st_size >= 2 ** 12:
+        return
+
+    # Run CAMV
+    _run_camv_get_file(
+        raw_path,
+        mascot_xml_path,
+        paths.CAMV_OUT_DIR,
+        scan_path=scan_path,
+        save_path=save_path,
+    )
+
+    # Check save files exists and is >= 4 MB
+    if not os.path.exists(save_path) or \
+       os.stat(save_path).st_size < 2 ** 12:
+        raise Exception(
+            "CAMV did not create a save file for {}".format(save_path)
+        )
+
+
 def run_camv_validation(scan_lists, force=False):
     """
     Run CAMV on a list of scans.
@@ -282,42 +327,7 @@ def run_camv_validation(scan_lists, force=False):
     force : bool, optional
     """
     for scan_path, scan_list in scan_lists.items():
-        # Build a list of paths
-        scan_path = os.path.join(
-            paths.SCAN_LISTS_DIR, scan_path,
-        )
-        file_name = os.path.basename(scan_path)
-        base_name = file_name.rsplit("-", 1)[0]
-        raw_path = os.path.join(
-            paths.MS_RAW_DIR, base_name + ".raw",
-        )
-        mascot_xml_path = os.path.join(
-            paths.MASCOT_XML_DIR, base_name + ".xml",
-        )
-        save_path = os.path.join(
-            paths.CAMV_SESS_DIR, os.path.splitext(file_name)[0] + ".mat"
-        )
-
-        if not force and \
-           os.path.exists(save_path) and \
-           os.stat(save_path).st_size >= 2 ** 12:
-            continue
-
-        # Run CAMV
-        _run_camv_get_file(
-            raw_path,
-            mascot_xml_path,
-            paths.CAMV_OUT_DIR,
-            scan_path=scan_path,
-            save_path=save_path,
-        )
-
-        # Check save files exists and is >= 4 MB
-        if not os.path.exists(save_path) or \
-           os.stat(save_path).st_size < 2 ** 12:
-            raise Exception(
-                "CAMV did not create a save file for {}".format(save_path)
-            )
+        _run_each_camv_validation(scan_path, scan_list, force=force)
 
 
 def run_camv_export(scan_lists=None):
