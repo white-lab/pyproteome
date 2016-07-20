@@ -165,6 +165,26 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     writer.save()
 
 
+def _remove_lesser_dups(pvals, changes, labels):
+    new_pvals, new_changes, new_labels = [], [], []
+
+    for index, (p, change, label) in enumerate(zip(pvals, changes, labels)):
+        for o_index, o_label in enumerate(labels):
+            if index == o_index:
+                continue
+            if (
+                label == o_label and
+                p + change < pvals[o_index] + changes[o_index]
+            ):
+                break
+        else:
+            new_pvals.append(p)
+            new_changes.append(change)
+            new_labels.append(label)
+
+    return new_pvals, new_changes, new_labels
+
+
 def volcano_plot(
     data,
     pval_cutoff=1.3, fold_cutoff=1.2,
@@ -172,6 +192,7 @@ def volcano_plot(
     folder_name=None, title=None,
     figsize=(12, 10),
     adjust=True,
+    compress_dups=True,
 ):
     """
     Display a volcano plot of data.
@@ -189,6 +210,7 @@ def volcano_plot(
     title : str, optional
     figsize : tuple of float, float
     adjust : bool, optional
+    compress_dups : bool, optional
     """
     if not folder_name:
         folder_name = data.name
@@ -232,7 +254,7 @@ def volcano_plot(
 
         if row_pval > pval_cutoff and \
            (row_change > upper_fold or row_change < lower_fold):
-            row_label = " / ".join(row["Proteins"].genes)
+            row_label = " / ".join(sorted(row["Proteins"].genes))
 
             sig_pvals.append(row_pval)
             sig_changes.append(row_change)
@@ -240,6 +262,11 @@ def volcano_plot(
             color = "blue"
 
         colors.append(color)
+
+    if compress_dups:
+        sig_pvals, sig_changes, sig_labels = _remove_lesser_dups(
+            sig_pvals, sig_changes, sig_labels
+        )
 
     # Draw the figure
     fig, ax = plt.subplots(figsize=figsize)
@@ -313,6 +340,7 @@ def hierarchical_heatmap(
     data,
     baseline_channels=None,
     metric="euclidean", method="centroid",
+    row_cluster=True, col_cluster=True
 ):
     """
     Plot a hierarhically-clustered heatmap of a data set.
@@ -326,6 +354,8 @@ def hierarchical_heatmap(
         Hierarchical clustering distance metric.
     method : str, optional
         Hierarchical clustering method.
+    row_cluster : bool, optional
+    col_cluster : bool, optional
     """
     channels = [
         channel
@@ -340,18 +370,67 @@ def hierarchical_heatmap(
     if baseline_channels is None:
         baseline_channels = list(data.groups.values())[-1]
 
-    raw = data.psms[channels].as_matrix()
-    raw_baseline = data.psms[baseline_channels].as_matrix().mean(axis=1)
+    psms = data.psms[
+        data.psms["Fold Change"].apply(lambda x: max([x, 1/x])) > 1.5
+    ]
+
+    raw = psms[channels].as_matrix()
+    raw_baseline = psms[baseline_channels].as_matrix().mean(axis=1)
     raw = np.log2((raw.T / raw_baseline).T)
 
     sns.clustermap(
         raw,
         method=method,
         metric=metric,
-        col_cluster=False,
+        row_cluster=row_cluster,
+        col_cluster=col_cluster,
         xticklabels=channel_names,
         yticklabels=False,
     )
+
+
+def venn2(data_a, data_b, folder_name=None, filename=None):
+    """
+    Display a three-way venn diagram between data set sequences.
+
+    Parameters
+    ----------
+    data_a : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data_b : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data_c : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    folder_name : str, optional
+    filename : str, optional
+    """
+    utils.make_folder(folder_name)
+
+    if folder_name and filename:
+        filename = os.path.join(folder_name, filename)
+
+    group_a = set(data_a["Sequence"])
+    group_b = set(data_b["Sequence"])
+
+    f = plt.figure(figsize=(12, 12))
+    v = mv.venn2(
+        subsets=(
+            len(group_a.difference(group_b)),
+            len(group_b.difference(group_a)),
+            len(group_a.intersection(group_b)),
+        ),
+        set_labels=(data_a.tissue, data_b.tissue),
+    )
+
+    for label in v.set_labels:
+        if label:
+            label.set_fontsize(32)
+
+    for label in v.subset_labels:
+        if label:
+            label.set_fontsize(20)
+
+    f.show()
+
+    if filename:
+        f.savefig(filename, transparent=True, dpi=500)
 
 
 def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
@@ -400,7 +479,7 @@ def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
     f.show()
 
     if filename:
-        f.savefig(filename, transparent=True)
+        f.savefig(filename, transparent=True, dpi=500f)
 
 
 def write_lists(
@@ -701,7 +780,7 @@ def plot_correlation(
     )
 
     if filename:
-        f.savefig(filename, transparent=True)
+        f.savefig(filename, transparent=True, dpi=500)
 
 
 def find_tfs(data, folder_name=None, csv_name=None):
@@ -730,6 +809,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
             "DNA binding",
             "double-stranded DNA binding",
             "transcription factor binding",
+            "transcription, DNA-templated",
         )
         return any(
             go_term in go
