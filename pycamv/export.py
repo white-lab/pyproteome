@@ -10,6 +10,7 @@ import re
 from .utils import DefaultOrderedDict
 
 from . import ms_labels
+from pyproteome.loading import RE_PROTEIN
 
 
 def _peaks_to_dict(peaks):
@@ -60,8 +61,7 @@ def _mod_positions(mods):
 def _pep_mod_name(pep_seq, mods):
     return "".join(
         letter.lower() if mods else letter.upper()
-        for letter, mods in zip(pep_seq, mods)
-        if letter not in ["N-term", "C-term"]
+        for letter, mods in zip(pep_seq, mods[1:-1])
     )
 
 
@@ -93,7 +93,7 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     prot_dict = DefaultOrderedDict(set)
 
     for query, _ in peak_hits.keys():
-        prot_dict[query.protein].add(query.pep_seq)
+        prot_dict[RE_PROTEIN.match(query.protein).group(1)].add(query.pep_seq)
 
     pep_dict = DefaultOrderedDict(set)
 
@@ -362,6 +362,6 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     ])
 
     with open(out_path, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
 
     return data
