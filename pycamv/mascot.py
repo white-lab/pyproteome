@@ -30,7 +30,7 @@ class PeptideQuery:
     pep_exp_mz : float
     pep_exp_z : int
     pep_seq : str
-    pep_var_mods : list of tuple of (int, str, list of str)
+    pep_var_mods : list of tuple of (int, str, tuple of str)
     scan : int
     num_comb : int
     """
@@ -107,12 +107,12 @@ def _parse_letters(letters):
 
     Returns
     -------
-    list of str
+    tuple of str
     """
     if letters in ["N-term", "C-term"]:
-        return [letters]
+        return (letters,)
 
-    return list(letters)
+    return tuple(letters)
 
 
 def _parse_mascot_2_4_1(root):
