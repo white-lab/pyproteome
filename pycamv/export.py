@@ -107,6 +107,11 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
             _extract_mods(seq)
         )
 
+    mod_query_dict = DefaultOrderedDict(list)
+
+    for query, seq in peak_hits.keys():
+        mod_query_dict[query.pep_seq, tuple(query.pep_var_mods)].append(query)
+
     # Mapping for modifications -> queries
     mods_dict = DefaultOrderedDict(list)
 
@@ -120,6 +125,7 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
         query_dict[query].append((query.pep_seq, _extract_mods(seq)))
 
     # Mapping for queries -> peak hits
+    # XXX: Doesn't make sense...
     scan_data = {
         query: hits
         for (query, _), hits in peak_hits.items()
@@ -167,9 +173,9 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     # Scan IDs
     scan_index = {
         query: index
-        for pep_seq, mods in pep_dict.items()
-        for mod in mods
-        for index, (query, _) in enumerate(mods_dict[mod])
+        for pep_seq, mod_states in pep_dict.items()
+        for mod_state in mod_states
+        for index, query in enumerate(mod_query_dict[pep_seq, mod_state])
     }
 
     # Peak Match IDs
@@ -268,16 +274,19 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
         ]
 
     #
-    def _get_default_choice_data(pep_seq, mods):
+    def _get_default_choice_data(pep_seq, mod_state):
         return [
             OrderedDict([
-                ("modsId", mod_index),
+                ("modsId", mod_index[pep_seq, mod]),
                 ("state", None),  # null
             ])
-            for mod_index, _ in enumerate(mods_dict[pep_seq, mods])
+            for mod in mod_states_dict[pep_seq, mod_state]
         ]
 
     def _get_scan_assignments(query, seq):
+        mod = query_dict[query][0][1]
+        full_seq = ["N-term"] + list(seq) + ["C-term"]
+
         return [
             OrderedDict([
                 ("mz", peak_hit.mz),
@@ -290,7 +299,13 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                             (
                                 "matchId",
                                 match_index.get(
-                                    (seq, peak_hit.name),
+                                    (
+                                        seq,
+                                        peak_hits[
+                                            query,
+                                            tuple(zip(full_seq, mods))
+                                        ][index].name,
+                                    ),
                                     None,
                                 ),
                             )
@@ -299,10 +314,12 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                     ],
                 ),
             ])
-            for peak_hit in peak_hits[query, seq]
+            for index, peak_hit in enumerate(
+                peak_hits[query, tuple(zip(full_seq, mod))]
+            )
         ]
 
-    def _get_scans(pep_seq, mods):
+    def _get_scans(pep_seq, mod_state):
         """
         Return information on individual scans, including peaks, precursor
         ions, and peptide modification assignments.
@@ -319,10 +336,16 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                 ("precursorMz", query.pep_exp_mz),
                 ("quantScanData", _peaks_to_dict(label_windows[query])),
                 ("quantMz", _get_labels_mz(query)),
-                ("choiceData", _get_default_choice_data(pep_seq, mods)),
-                ("scanData", _get_scan_assignments(query)),
+                (
+                    "choiceData",
+                    _get_default_choice_data(pep_seq, mod_state),
+                ),
+                (
+                    "scanData",
+                    _get_scan_assignments(query, pep_seq),
+                ),
             ])
-            for query in mods_dict[pep_seq, mods]
+            for query in mod_query_dict[pep_seq, mod_state]
         ]
 
     def _get_peptide_scan_data(peptides):
