@@ -31,13 +31,14 @@ class PeptideQuery:
     pep_exp_z : int
     pep_seq : str
     pep_var_mods : list of tuple of (int, str, tuple of str)
+    pep_fixed_mods : list of tuple of (int, str, tuple of str)
     scan : int
     num_comb : int
     """
     def __init__(
         self, gi, protein, query,
         pep_rank, pep_score, pep_exp_mz, pep_exp_z, pep_seq,
-        pep_var_mods, scan,
+        pep_var_mods, pep_fixed_mods, scan,
     ):
         self.gi = gi
         self.protein = protein
@@ -48,6 +49,7 @@ class PeptideQuery:
         self.pep_exp_z = pep_exp_z
         self.pep_seq = pep_seq
         self.pep_var_mods = pep_var_mods
+        self.pep_fixed_mods = pep_fixed_mods
         self.scan = scan
         self.num_comb = self._calc_num_comb()
 
@@ -71,8 +73,8 @@ class PeptideQuery:
     def get_label_mods(self):
         return [
             mod
-            for count, mod, letters in self.pep_var_mods
-            if mod in ms_labels.LABEL_NAMES and letters == ["N-term"]
+            for _, mod, letters in self.pep_var_mods + self.pep_fixed_mods
+            if mod in ms_labels.LABEL_NAMES and "N-term" in letters
         ]
 
     def _calc_num_comb(self):
@@ -93,6 +95,13 @@ class PeptideQuery:
             num_comb *= comb(potential_mod_sites, count)
 
         return num_comb
+
+
+def _count_instances(pep_seq, letters):
+    return sum(
+        (["N-term"] + list(pep_seq) + ["C-term"]).count(letter)
+        for letter in letters
+    )
 
 
 def _parse_letters(letters):
@@ -149,6 +158,30 @@ def _parse_mascot_2_4_1(root):
 
             var_mods = peptide.find("mascot:pep_var_mod", MASCOT_NS).text
 
+            if fixed_mods:
+                pep_fixed_mods = [
+                    re.match(
+                        "(.+) \((.+)\)",
+                        mod.strip()
+                    ).group(1, 2)
+                    for mod in fixed_mods
+                ]
+                pep_fixed_mods = [
+                    (name, _parse_letters(letters))
+                    for name, letters in pep_fixed_mods
+                ]
+                pep_fixed_mods = [
+                    (_count_instances(pep_seq, letters), name, letters)
+                    for name, letters in pep_fixed_mods
+                ]
+                pep_fixed_mods = [
+                    (count, name, letters)
+                    for count, name, letters in pep_fixed_mods
+                    if count > 0
+                ]
+            else:
+                pep_fixed_mods = []
+
             if var_mods:
                 # i.e. "2 Phospho (STY)""
                 var_mods = [
@@ -193,6 +226,7 @@ def _parse_mascot_2_4_1(root):
                     exp_z,
                     pep_seq,
                     var_mods,
+                    pep_fixed_mods,
                     scan,
                 )
             )
