@@ -132,15 +132,8 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     # Mapping for queries -> sequence + modifications
     query_dict = DefaultOrderedDict(list)
 
-    for (query, seq), hits in peak_hits.items():
+    for query, seq in peak_hits.keys():
         query_dict[query].append((query.pep_seq, _extract_mods(seq)))
-
-    # Mapping for queries -> peak hits
-    # XXX: Doesn't make sense...
-    scan_data = {
-        query: hits
-        for (query, _), hits in peak_hits.items()
-    }
 
     ###
     # Pre-calculate IDs for later reference
@@ -202,18 +195,24 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     }
 
     # Peak Match IDs
-    match_index = {}
-
-    for (query, seq), hits in peak_hits.items():
-        index = 0
-
-        for peak_hit in hits:
-            if not peak_hit.match_list:
-                continue
-
-            for name in peak_hit.match_list.keys():
-                match_index[query.pep_seq, _extract_mods(seq), name] = index
-                index += 1
+    match_index = {
+        (pep_seq, mods, name): index
+        for (pep_seq, mods), queries in mods_dict.items()
+        for index, name in enumerate(
+            name
+            for name in sorted(
+                set(
+                    name
+                    for query in queries
+                    for peak_hit in peak_hits[
+                        query, _join_seq_mods(pep_seq, mods)
+                    ]
+                    if peak_hit.match_list
+                    for name in peak_hit.match_list.keys()
+                )
+            )
+        )
+    }
 
     ###
     # Individual data parsing functions
@@ -255,7 +254,10 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                     visited.add(name)
 
     def _get_match_data(pep_seq, mods):
-        return list(_gen_match_data(pep_seq, mods))
+        return sorted(
+            _gen_match_data(pep_seq, mods),
+            key=lambda x: x["id"],
+        )
 
     def _get_mod_data(pep_seq, mods):
         return [
@@ -307,52 +309,55 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
             )
         ]
 
-    #
     def _get_default_choice_data(pep_seq, mod_state):
         return [
             OrderedDict([
                 ("modsId", mod_index[pep_seq, mod]),
                 ("state", None),  # null
             ])
-            for mod in mod_states_dict[pep_seq, mod_state]
+            for mod in sorted(
+                mod_states_dict[pep_seq, mod_state],
+                key=lambda x: mod_index[pep_seq, x],
+            )
+        ]
+
+    def _get_matches(peak_index, query):
+        return [
+            OrderedDict([
+                ("modsId", mod_index[seq, mods]),
+                (
+                    "matchId",
+                    match_index.get(
+                        (
+                            seq,
+                            mods,
+                            peak_hits[
+                                query,
+                                _join_seq_mods(seq, mods),
+                            ][peak_index].name,
+                        ),
+                        None,
+                    ),
+                ),
+            ])
+            for seq, mods in sorted(
+                query_dict[query],
+                key=lambda x: mod_index[x],
+            )
         ]
 
     def _get_scan_assignments(query, seq):
         mod = query_dict[query][0][1]
-        full_seq = ["N-term"] + list(seq) + ["C-term"]
 
         return [
             OrderedDict([
                 ("mz", peak_hit.mz),
                 ("into", peak_hit.intensity),
-                (
-                    "matchInfo",
-                    [
-                        OrderedDict([
-                            ("modsId", mod_index[seq, mods]),
-                            (
-                                "matchId",
-                                match_index.get(
-                                    (
-                                        seq,
-                                        peak_hits[
-                                            query,
-                                            tuple(zip(full_seq, mods))
-                                        ][index].name,
-                                    ),
-                                    None,
-                                ),
-                            )
-                        ])
-                        for _, mods in query_dict[query]
-                    ],
-                ),
+                ("matchInfo", _get_matches(peak_index, query)),
             ])
-            for index, peak_hit in enumerate(
-                sorted(
-                    peak_hits[query, tuple(zip(full_seq, mod))],
-                    key=lambda x: x.mz,
-                )
+            for peak_index, peak_hit in sorted(
+                enumerate(peak_hits[query, _join_seq_mods(seq, mod)]),
+                key=lambda x: x[1].mz,
             )
         ]
 
