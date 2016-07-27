@@ -65,10 +65,9 @@ def _pep_mod_name(pep_seq, mods):
 
 
 def _get_labels_mz(query):
-    mods = set(mod for _, mod, _ in query.pep_var_mods + query.pep_fixed_mods)
     return [
         mz
-        for mod in mods
+        for mod in set(query.get_label_mods)
         for mz in ms_labels.LABEL_MASSES.get(mod, [])
     ]
 
