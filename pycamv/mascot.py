@@ -70,10 +70,14 @@ class PeptideQuery:
         return self._unique_tuple() == other._unique_tuple()
 
     @property
+    def pep_mods(self):
+        return self.pep_var_mods + self.pep_fixed_mods
+
+    @property
     def get_label_mods(self):
         return [
             mod
-            for _, mod, letters in self.pep_var_mods + self.pep_fixed_mods
+            for _, mod, letters in self.pep_mods
             if mod in ms_labels.LABEL_NAMES and "N-term" in letters
         ]
 
