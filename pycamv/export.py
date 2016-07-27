@@ -396,11 +396,6 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                 ),
                 key=lambda x: pep_index[x],
             )
-            for pep_seq in peptides
-            for mod_state in sorted(
-                pep_dict[pep_seq],
-                key=lambda x: mod_state_index[pep_seq, x],
-            )
         ]
 
     def _get_scan_data():
