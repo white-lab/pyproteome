@@ -5,8 +5,6 @@ fragments.
 
 from collections import defaultdict
 
-import numpy as np
-
 from . import masses, ms_labels
 
 
@@ -287,7 +285,7 @@ def fragment_ions(
 
     Parameters
     ----------
-    pep_seq : str
+    pep_seq : list of tuple of (str, list of str)
     charge : int
     parent_max_charge : int, optional
     fragment_max_charge : int, optional
