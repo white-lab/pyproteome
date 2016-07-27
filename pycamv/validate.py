@@ -109,7 +109,7 @@ def validate_spectra(basename, scan_list=None):
             tuple(
                 gen_sequences.gen_possible_seq(
                     pep_query.pep_seq,
-                    pep_query.pep_var_mods,
+                    pep_query.pep_mods,
                 )
             ),
         )
@@ -164,6 +164,6 @@ def validate_spectra(basename, scan_list=None):
 
     # Output data
 
-    shutil.rmtree(out_dir)
+    # shutil.rmtree(out_dir)
 
     return options, peak_hits, precursor_windows, label_windows
