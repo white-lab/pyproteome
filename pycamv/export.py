@@ -65,10 +65,11 @@ def _pep_mod_name(pep_seq, mods):
 
 
 def _get_labels_mz(query):
+    mods = set(mod for _, mod, _ in query.pep_var_mods + query.pep_fixed_mods)
     return [
         mz
-        for var_mod in query.pep_var_mods
-        for mz in ms_labels.LABEL_MASSES.get(var_mod, [])
+        for mod in mods
+        for mz in ms_labels.LABEL_MASSES.get(mod, [])
     ]
 
 
@@ -84,6 +85,17 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     -------
     data : dict
         Dictionary of data written to file.
+
+    Example
+    -------
+    >>> from pycamv import export, validate
+    >> name = "2016-06-27-CKX13-pY-NTA-elute-pre67-col77"
+    >>> options, peak_hits, precursor_windows, label_windows = \
+    ...     validate.validate_spectra(name)
+    >>> json_out = export.export_to_camv(
+    ...     "{}.camv".format(name),
+    ...     peak_hits, precursor_windows, label_windows,
+    ... )
     """
     ###
     # Mappings between proteins, peptides, modifications, queries, and peaks
