@@ -419,7 +419,4 @@ def fragment_ions(
         )
     )
 
-    if _sequence_name(pep_seq) in ["SVYTEIK"]:
-        print(frag_ions)
-
     return frag_ions
