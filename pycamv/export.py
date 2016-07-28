@@ -13,6 +13,63 @@ from . import ms_labels
 from pyproteome.loading import RE_PROTEIN
 
 
+RE_B_Y_IONS = re.compile("([abcxyz]_\{[0-9]+\})\^\{\+\}")
+SUPERSCRIPT_UNICODE_START = ord("\u2070")
+SUBSCRIPT_UNICODE_START = ord('\u2080')
+SCRIPT_MAPPING = {
+    str(i): i
+    for i in range(10)
+}
+SCRIPT_MAPPING["+"] = 10
+SCRIPT_MAPPING["-"] = 11
+SCRIPT_MAPPING["("] = 12
+SCRIPT_MAPPING[")"] = 13
+
+
+def _rewrite_ion_name(name):
+    m = RE_B_Y_IONS.match(name)
+
+    if m:
+        return m.group(1)
+
+    ret = ""
+    sup, sub = False, False
+    paren = 0
+
+    for char in name:
+        if char in "^_{}":
+            if char == "^":
+                sup, sub = True, False
+            elif char == "_":
+                sup, sub = False, True
+            elif char == "}":
+                sup, sub = False, False
+                paren -= 1
+            elif char == "{":
+                paren += 1
+            continue
+
+        if sup:
+            if char == "1":
+                ret += u"\u00B9"
+            elif char == "2":
+                ret += u"\u00B2"
+            elif char == "3":
+                ret += u"\u00B3"
+            else:
+                ret += chr(SUPERSCRIPT_UNICODE_START + SCRIPT_MAPPING[char])
+        elif sub:
+            ret += chr(SUBSCRIPT_UNICODE_START + SCRIPT_MAPPING[char])
+        else:
+            ret += char
+
+        if sup or sub:
+            if not paren:
+                sup, sub = False, False
+
+    return ret
+
+
 def _peaks_to_dict(peaks):
     return [
         OrderedDict([
@@ -245,7 +302,7 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                     yield OrderedDict([
                         ("id", match_index[pep_seq, mods, name]),
                         ("mz", mz),
-                        ("name", name),
+                        ("name", _rewrite_ion_name(name)),
                         ("ionType", ion_type),
                         ("ionPosition", ion_pos),
                     ])
