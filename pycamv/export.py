@@ -30,7 +30,7 @@ def _rewrite_ion_name(name):
     m = RE_B_Y_IONS.match(name)
 
     if m:
-        return m.group(1)
+        name = m.group(1)
 
     ret = ""
     sup, sub = False, False
