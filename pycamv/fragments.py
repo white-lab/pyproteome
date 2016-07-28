@@ -123,11 +123,15 @@ def _charged_m_zs(name, mass, max_charge):
         )
 
 
-def _b_y_ions(
-    pep_seq, frag_masses, fragment_max_charge,
-    any_losses, aa_losses, mod_losses,
+def _generate_losses(
+    pep_seq,
+    max_depth=2,
+    any_losses=None, aa_losses=None, mod_losses=None,
 ):
-    def _generate_losses(seq, losses=None, max_depth=2):
+    def _generate_loss_combos(
+        seq,
+        losses=None, max_depth=2,
+    ):
         if losses is None:
             losses = defaultdict(int)
 
@@ -141,7 +145,7 @@ def _b_y_ions(
 
             yield new_losses
 
-            child_losses = _generate_losses(
+            child_losses = _generate_loss_combos(
                 seq, new_losses,
                 max_depth=max_depth - 1,
             )
@@ -162,7 +166,7 @@ def _b_y_ions(
 
                     yield new_losses
 
-                    child_losses = _generate_losses(
+                    child_losses = _generate_loss_combos(
                         new_seq, new_losses,
                         max_depth=max_depth - 1,
                     )
@@ -183,7 +187,7 @@ def _b_y_ions(
 
                     yield new_losses
 
-                    child_losses = _generate_losses(
+                    child_losses = _generate_loss_combos(
                         new_seq, new_losses,
                         max_depth=max_depth - 1,
                     )
@@ -191,6 +195,29 @@ def _b_y_ions(
                     for new_losses in child_losses:
                         yield new_losses
 
+    losses = _generate_loss_combos(
+        pep_seq,
+        max_depth=max_depth,
+    )
+    for loss in losses:
+        loss_mass = sum(
+            masses.MASSES[loss_name] * count
+            for loss_name, count in loss.items()
+        )
+        loss_name = "-".join(
+            "{}{}".format(
+                "{} ".format(count) if count > 1 else "",
+                loss_name,
+            )
+            for loss_name, count in loss.items()
+        )
+
+        yield loss_name, loss_mass
+
+def _b_y_ions(
+    pep_seq, frag_masses, fragment_max_charge,
+    any_losses=None, aa_losses=None, mod_losses=None,
+):
     def _generate_ions(seq, mass, basename):
         # b/y ions
         charged_mzs = _charged_m_zs(basename, mass, fragment_max_charge)
@@ -198,20 +225,15 @@ def _b_y_ions(
         for name, mz in charged_mzs:
             yield name, mz
 
-        # b/y ions with losses
-        for losses in _generate_losses(seq):
-            loss_mass = sum(
-                masses.MASSES[loss_name] * count
-                for loss_name, count in losses.items()
-            )
-            loss_name = "-".join(
-                "{}{}".format(
-                    "{} ".format(count) if count > 1 else "",
-                    loss_name,
-                )
-                for loss_name, count in losses.items()
-            )
+        losses = _generate_losses(
+            seq,
+            any_losses=any_losses,
+            aa_losses=aa_losses,
+            mod_losses=mod_losses,
+        )
 
+        # b/y ions with losses
+        for loss_name, loss_mass in losses:
             charged_mzs = _charged_m_zs(
                 "{}-{}".format(basename, loss_name),
                 mass - loss_mass,
@@ -255,12 +277,33 @@ def _label_ions(pep_seq):
             yield name, mz
 
 
-def _parent_ions(frag_masses, parent_max_charge):
-    parent_mass = sum(frag_masses)
+def _parent_ions(
+    pep_seq, frag_masses, parent_max_charge,
+    any_losses=None, aa_losses=None, mod_losses=None,
+):
+    parent_mass = sum(frag_masses) + masses.PROTON
 
-    for name, mz in _charged_m_zs("MH", parent_mass, parent_max_charge):
+    for name, mz in _charged_m_zs(
+        "MH",
+        parent_mass,
+        parent_max_charge,
+    ):
         yield name, mz
 
+    losses = _generate_losses(
+        pep_seq,
+        any_losses=any_losses,
+        aa_losses=aa_losses,
+        mod_losses=mod_losses,
+    )
+
+    for loss_name, loss_mass in losses:
+        for name, mz in _charged_m_zs(
+            "MH",
+            parent_mass - loss_mass,
+            parent_max_charge,
+        ):
+            yield "{}-{}".format(name, loss_name), mz
 
 def _py_ions(pep_seq):
     ions = {}
@@ -341,13 +384,20 @@ def fragment_ions(
     frag_ions.update(
         _b_y_ions(
             pep_seq, frag_masses, fragment_max_charge,
-            any_losses, aa_losses, mod_losses,
+            any_losses=any_losses,
+            aa_losses=aa_losses,
+            mod_losses=mod_losses,
         )
     )
 
     # Get parent ions (i.e. MH^{+1})
     frag_ions.update(
-        _parent_ions(frag_masses, parent_max_charge)
+        _parent_ions(
+            pep_seq, frag_masses, parent_max_charge,
+            any_losses=any_losses,
+            aa_losses=aa_losses,
+            mod_losses=mod_losses,
+        )
     )
 
     # Get TMT / iTRAQ labels
