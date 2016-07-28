@@ -22,7 +22,7 @@ def _sequence_mass(pep_seq):
 def _sequence_name(pep_seq):
     return "".join(
         letter
-        for letter, mods in pep_seq
+        for letter, _ in pep_seq
         if letter not in ["N-term", "C-term"]
     )
 
@@ -117,7 +117,7 @@ def _charged_m_zs(name, mass, max_charge):
                     if charge > 1 else
                     "^{+}"
                 ) +
-                "-".join([] + name.split("-")[1:])
+                "-".join([""] + name.split("-")[1:])
             ),
             (mass + charge * masses.PROTON) / charge,
         )
@@ -251,8 +251,8 @@ def _b_y_ions(
                 sum(frag_masses[:index]) - masses.MASSES["CO"],
             "b_{{{}}}".format(index - 1):
                 sum(frag_masses[:index]),
-            "y_{{{}}}".format(index - 1):
-                sum(frag_masses[index:]) + 2 * masses.PROTON,
+            "y_{{{}}}".format(len(pep_seq) - index - 1):
+                sum(frag_masses[index:]) + masses.PROTON,
         }
 
         for ion_name, ion_mass in base_ions.items():
@@ -418,5 +418,8 @@ def fragment_ions(
             mod_losses=mod_losses,
         )
     )
+
+    if _sequence_name(pep_seq) in ["SVYTEIK"]:
+        print(frag_ions)
 
     return frag_ions

@@ -191,14 +191,14 @@ MODIFICATIONS = {
     ("Y", "Phospho"): PHOSPHO_TYROSINE,
 
     # TMT / iTRAQ
-    ("N-term", "iTRAQ4plex"): ITRAQ_4_PLEX,
-    ("N-term", "iTRAQ8plex"): ITRAQ_8_PLEX,
-    ("N-term", "TMT6plex"): TMT_6_PLEX,
-    ("N-term", "TMT10plex"): TMT_10_PLEX,
-    ("K", "iTRAQ4plex"): ITRAQ_4_PLEX - LYSINE_HYDROGEN,
-    ("K", "iTRAQ8plex"): ITRAQ_8_PLEX - LYSINE_HYDROGEN,
-    ("K", "TMT6plex"): TMT_6_PLEX - LYSINE_HYDROGEN,
-    ("K", "TMT10plex"): TMT_10_PLEX - LYSINE_HYDROGEN,
+    ("N-term", "iTRAQ4plex"): ITRAQ_4_PLEX - N_TERM,
+    ("N-term", "iTRAQ8plex"): ITRAQ_8_PLEX - N_TERM,
+    ("N-term", "TMT6plex"): TMT_6_PLEX - N_TERM,
+    ("N-term", "TMT10plex"): TMT_10_PLEX - N_TERM,
+    ("K", "iTRAQ4plex"): ITRAQ_4_PLEX,
+    ("K", "iTRAQ8plex"): ITRAQ_8_PLEX,
+    ("K", "TMT6plex"): TMT_6_PLEX,
+    ("K", "TMT10plex"): TMT_10_PLEX,
 
     # SILAC
     ("K", "Lysine-13C6 (K-13C6)"): SILAC_LYSINE_13C6,

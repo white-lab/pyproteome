@@ -117,10 +117,10 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
             _extract_mods(seq)
         )
 
-    mod_query_dict = DefaultOrderedDict(list)
+    mod_query_dict = DefaultOrderedDict(set)
 
     for query, seq in peak_hits.keys():
-        mod_query_dict[query.pep_seq, tuple(query.pep_var_mods)].append(query)
+        mod_query_dict[query.pep_seq, tuple(query.pep_var_mods)].add(query)
 
     # Mapping for modifications -> queries
     mods_dict = DefaultOrderedDict(list)
