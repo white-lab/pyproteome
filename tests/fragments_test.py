@@ -50,6 +50,23 @@ class FragmentIonsTest(TestCase):
             (
                 (
                     ("N-term", ("TMT6plex",)),
+                    ("V", ()),
+                    ("I", ()),
+                    ("Y", ("Phospho",)),
+                    ("D", ()),
+                    ("F", ()),
+                    ("I", ()),
+                    ("E", ()),
+                    ("K", ("TMT6plex",)),
+                    ("C-term", ()),
+                ),
+                2,
+            ): {
+                "IyD": 472.15,
+            },
+            (
+                (
+                    ("N-term", ("TMT6plex",)),
                     ("I", ()),
                     ("G", ()),
                     ("E", ()),

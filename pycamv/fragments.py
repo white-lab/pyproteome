@@ -21,8 +21,8 @@ def _sequence_mass(pep_seq):
 
 def _sequence_name(pep_seq):
     return "".join(
-        letter
-        for letter, _ in pep_seq
+        letter.lower() if mods else letter.upper()
+        for letter, mods in pep_seq
         if letter not in ["N-term", "C-term"]
     )
 
@@ -72,7 +72,7 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
 
     frag_masses = {}
 
-    for start in range(2, len(pep_seq)):
+    for start in range(1, len(pep_seq)):
         for end in range(start + 1, len(pep_seq)):
             # Only add the mass of an N-terminus, cleavage will be between
             # C=O and N-H bond, adding a hydrogen to N-H
