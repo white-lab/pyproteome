@@ -8,7 +8,7 @@ class FragmentIonsTest(TestCase):
         test_peptides = {
             (
                 (
-                    ("N-term", "TMT6plex"),
+                    ("N-term", ("TMT6plex",)),
                     ("S", ()),
                     ("V", ()),
                     ("Y", ("Phospho",)),
@@ -49,7 +49,7 @@ class FragmentIonsTest(TestCase):
             },
             (
                 (
-                    ("N-term", ()),
+                    ("N-term", ("TMT6plex",)),
                     ("I", ()),
                     ("G", ()),
                     ("E", ()),
