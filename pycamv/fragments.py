@@ -214,6 +214,7 @@ def _generate_losses(
 
         yield loss_name, loss_mass
 
+
 def _b_y_ions(
     pep_seq, frag_masses, fragment_max_charge,
     any_losses=None, aa_losses=None, mod_losses=None,
@@ -251,6 +252,16 @@ def _b_y_ions(
                 sum(frag_masses[:index]) - masses.MASSES["CO"],
             "b_{{{}}}".format(index - 1):
                 sum(frag_masses[:index]),
+        }
+
+        for ion_name, ion_mass in base_ions.items():
+            for name, mz in _generate_ions(
+                pep_seq[:index], ion_mass, ion_name,
+            ):
+                yield name, mz
+
+    for index in range(1, len(pep_seq) - 1):
+        base_ions = {
             "y_{{{}}}".format(len(pep_seq) - index - 1):
                 sum(frag_masses[index:]) + masses.PROTON,
         }
@@ -304,6 +315,7 @@ def _parent_ions(
             parent_max_charge,
         ):
             yield "{}-{}".format(name, loss_name), mz
+
 
 def _py_ions(pep_seq):
     ions = {}
