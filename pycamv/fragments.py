@@ -27,7 +27,10 @@ def _sequence_name(pep_seq):
     )
 
 
-def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
+def internal_fragment_ions(
+    pep_seq,
+    any_losses=None, aa_losses=None, mod_losses=None,
+):
     """
     Calculate the m/z of all internal fragmenets of a peptide.
 
@@ -38,6 +41,7 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
     aa_losses : list of str, optional
         Potential neutral losses for each fragment (i.e. Water, amine, CO).
         List is composed of neutral loss names.
+    aa_losses : dict of str, str, optional
     mod_losses : dict of tuple of (str, str), list of str
         Potential neutral losses for modified amino acids (i.e. pY-HPO_3).
         Dictionary should map (letter, modification) to a list of neutral
@@ -48,12 +52,15 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
     dict of str, float
         Dictionary mapping ion names to ion m/z's.
     """
-    if aa_losses is None:
-        aa_losses = [
+    if any_losses is None:
+        any_losses = [
             "H_2O",
             "NH_3",
             "CO",
         ]
+
+    if aa_losses is None:
+        aa_losses = {}
 
     if mod_losses is None:
         mod_losses = {
@@ -72,6 +79,8 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
 
     frag_masses = {}
 
+    # Calculate the mass of the peptide cut at any two sites between the N-
+    # and C-terminus
     for start in range(1, len(pep_seq)):
         for end in range(start + 1, len(pep_seq)):
             # Only add the mass of an N-terminus, cleavage will be between
@@ -83,19 +92,17 @@ def internal_fragment_ions(pep_seq, aa_losses=None, mod_losses=None):
 
             frag_masses[name] = mass
 
-            for loss in aa_losses:
-                frag_masses[name + loss] = mass - masses.MASSES[loss]
+            # Also calculate any potential neutral losses from this fragment
+            losses = _generate_losses(
+                fragment, max_depth=1,
+                any_losses=any_losses,
+                aa_losses=aa_losses,
+                mod_losses=mod_losses,
+            )
 
-            # M, ST, Y losses
-            for (letter, mod), losses in mod_losses.items():
-                if not any(
-                    letter == l and mod in mods
-                    for l, mods in fragment
-                ):
-                    continue
-
-                for loss in losses:
-                    frag_masses[name + loss] = mass - masses.MASSES[loss]
+            for loss_name, loss_mass in losses:
+                full_loss_name = "{}-{}".format(name, loss_name)
+                frag_masses[full_loss_name] = mass - loss_mass
 
     return frag_masses
 
@@ -345,9 +352,9 @@ def fragment_ions(
     parent_max_charge : int, optional
     fragment_max_charge : int, optional
     any_losses : list of str, optional
-    aa_losses : dict of str, str, optional
         Potential neutral losses for each fragment (i.e. Water, amine, CO).
         List is composed of neutral loss names.
+    aa_losses : dict of str, str, optional
     mod_losses : dict of tuple of (str, str), str, optional
         Potential neutral losses for modified amino acids (i.e. pY-HPO_3).
         Dictionary should map (letter, modification) to a list of neutral
