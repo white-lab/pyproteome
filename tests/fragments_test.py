@@ -45,7 +45,7 @@ class FragmentIonsTest(TestCase):
                 "MH^{+2}": 689.37,
                 "MH^{+2}-HPO_3": 649.39,
                 "MH^{+2}-H_2O": 680.37,
-                "MH^{+2}-H_2O-HPO_3": 640.39,
+                "MH^{+2}-HPO_3-H_2O": 640.39,
             },
             (
                 (
