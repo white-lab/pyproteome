@@ -15,7 +15,7 @@ class FragmentIonsTest(TestCase):
                     ("T", ()),
                     ("E", ()),
                     ("I", ()),
-                    ("K", ("TMT6plex")),
+                    ("K", ("TMT6plex",)),
                     ("C-term", ()),
                 ),
                 2,
