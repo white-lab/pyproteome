@@ -294,10 +294,11 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
 
                     ion_type, ion_pos = None, None
 
-                    if name_split[0] in "abc":
-                        ion_type, ion_pos = "b", int(name_split[1])
-                    elif name_split[0] in "xyz":
-                        ion_type, ion_pos = "y", int(name_split[1])
+                    if len(name_split) > 1:
+                        if name_split[0] in "abc":
+                            ion_type, ion_pos = "b", int(name_split[1])
+                        elif name_split[0] in "xyz":
+                            ion_type, ion_pos = "y", int(name_split[1])
 
                     yield OrderedDict([
                         ("id", match_index[pep_seq, mods, name]),
