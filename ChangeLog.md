@@ -1,9 +1,11 @@
 # Change Log
 
-## 0.2.0 (2016-??-??)
+## 0.2.0 (2016-08-10)
 
 Features
 
+  - Filled in pycamv package, can now export full .camv files for
+    [CAMV](https://github.com/naderm/CAMV) validation.
   - Added pyprotome.pride module for fetching public data sets.
   - Added pyproteome.discoverer module for reading Proteome Discoverer files.
   - Color pyproteome.analysis.snr_table() by peptide validation.
@@ -11,6 +13,7 @@ Features
 
 Bugfixes
 
+  - Fixed several bugs in calculating fragment ion masses.
   - Install all packages from pypi.
 
 ## 0.1.0 (2016-03-29)
