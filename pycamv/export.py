@@ -129,13 +129,20 @@ def _get_labels_mz(query):
     ]
 
 
-def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
+def export_to_camv(
+    out_path, peak_hits, scan_mapping,
+    precursor_windows, label_windows,
+):
     """
     Export data to .camv file.
 
     Parameters
     ----------
     out_path : str
+    peak_hits
+    scan_mapping
+    precursor_windows
+    label_windows
 
     Returns
     -------
@@ -146,11 +153,11 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
     -------
     >>> from pycamv import export, validate
     >> name = "2016-06-27-CKX13-pY-NTA-elute-pre67-col77"
-    >>> options, peak_hits, precursor_windows, label_windows = \
+    >>> options, peak_hits, scan_mapping, precursor_windows, label_windows = \
     ...     validate.validate_spectra(name)
     >>> json_out = export.export_to_camv(
     ...     "{}.camv".format(name),
-    ...     peak_hits, precursor_windows, label_windows,
+    ...     peak_hits, scan_mapping, precursor_windows, label_windows,
     ... )
     """
     ###
@@ -433,7 +440,7 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                     _peaks_to_dict(precursor_windows[query]),
                 ),
                 ("precursorMz", query.pep_exp_mz),
-                ("precursorIsolationWindow", query.window_offset)
+                ("precursorIsolationWindow", scan_mapping[query].window_offset),
                 ("quantScanData", _peaks_to_dict(label_windows[query])),
                 ("quantMz", _get_labels_mz(query)),
                 (

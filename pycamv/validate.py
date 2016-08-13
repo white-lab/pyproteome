@@ -64,6 +64,10 @@ def validate_spectra(basename, scan_list=None):
     peak_hits : dict of (tuple of :class:`pycamv.mascot.PeptideQuery`, list),
     list of :class:`pycamv.compare.PeptideHit`
         Dictionary mapping peptide queries and their sequences to peptide hits.
+    scan_mapping : OrderedDict of :class:`pycamv.mascot.PeptideQuery`,
+    :class:`pycamv.scans.ScanQuery`
+        Dictionary mapping peptide queries to their scan data, including
+        collision type and size of isolation window.
     precursor_windows : dict of :class:`pycamv.mascot.PeptideQuery`, list
         Dictionary mapping peptide queries to peak lists for precursor scans.
     label_windows : dict of :class:`pycamv.mascot.PeptideQuery`, list
@@ -166,4 +170,4 @@ def validate_spectra(basename, scan_list=None):
 
     # shutil.rmtree(out_dir)
 
-    return options, peak_hits, precursor_windows, label_windows
+    return options, peak_hits, scan_mapping, precursor_windows, label_windows
