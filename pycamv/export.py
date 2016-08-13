@@ -433,6 +433,7 @@ def export_to_camv(out_path, peak_hits, precursor_windows, label_windows):
                     _peaks_to_dict(precursor_windows[query]),
                 ),
                 ("precursorMz", query.pep_exp_mz),
+                ("precursorIsolationWindow", query.window_offset)
                 ("quantScanData", _peaks_to_dict(label_windows[query])),
                 ("quantMz", _get_labels_mz(query)),
                 (
