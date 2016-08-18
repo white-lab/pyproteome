@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.1 (2016-08-??)
+
+Features
+
+  - Added CLI front end to pycamv (`python -m pycamv`)
+
 ## 0.2.0 (2016-08-10)
 
 Features

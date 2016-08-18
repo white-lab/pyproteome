@@ -80,7 +80,7 @@ def validate_spectra(basename, scan_list=None):
     fixed_mods, var_mods, pep_queries = mascot.read_mascot_xml(xml_name)
 
     # Optionally filter queries using a scan list
-    if scan_list is not None:
+    if scan_list:
         pep_queries = [
             query
             for query in pep_queries
