@@ -1,10 +1,11 @@
 # Change Log
 
-## 0.2.1 (2016-08-??)
+## 0.2.1 (2016-08-18)
 
 Features
 
   - Added CLI front end to pycamv (`python -m pycamv`)
+  - Added pycamv support for isolation windows.
 
 ## 0.2.0 (2016-08-10)
 
