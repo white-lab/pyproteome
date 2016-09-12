@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.2 (2016-09-12)
+
+Features
+
+  - Added in uncommitted BCA assay changes.
+
 ## 0.2.1 (2016-08-18)
 
 Features
