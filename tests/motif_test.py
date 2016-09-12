@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-import pyproteome as pyp
+from pyproteome import modification, motif, protein, sequence
 
 
 class MotifTest(TestCase):
     def setUp(self):
-        self.motif = pyp.Motif("O..x.-+")
+        self.motif = motif.Motif("O..x.-+")
 
     def test_match(self):
         self.assertIn("IEFtFER", self.motif)
@@ -50,11 +50,11 @@ class MotifTest(TestCase):
 
 class GenerateNMersTest(TestCase):
     def setUp(self):
-        self.sequence = pyp.Sequence(
+        self.sequence = sequence.Sequence(
             pep_seq="GEPNVsyICSR",
             protein_matches=[
-                pyp.ProteinMatch(
-                    protein=pyp.Protein(
+                sequence.ProteinMatch(
+                    protein=protein.Protein(
                         accession="Q9WV60",
                     ),
                     rel_pos=209,
@@ -62,16 +62,16 @@ class GenerateNMersTest(TestCase):
                 ),
             ],
         )
-        self.sequence.modifications = pyp.Modifications(
+        self.sequence.modifications = modification.Modifications(
             [
                 # S215-p
-                pyp.Modification(
+                modification.Modification(
                     rel_pos=5,
                     mod_type="Phospho",
                     sequence=self.sequence,
                 ),
                 # Y216-p
-                pyp.Modification(
+                modification.Modification(
                     rel_pos=6,
                     mod_type="Phospho",
                     sequence=self.sequence,
@@ -81,7 +81,7 @@ class GenerateNMersTest(TestCase):
 
     def test_n_mers(self):
         nmers = list(
-            pyp.motif.generate_n_mers(
+            motif.generate_n_mers(
                 [self.sequence],
                 letter_mod_types=[(None, "Phospho")]
             )
@@ -101,7 +101,7 @@ class GenerateNMersTest(TestCase):
         )
 
         nmers_no_filter = list(
-            pyp.motif.generate_n_mers(
+            motif.generate_n_mers(
                 [self.sequence],
             )
         )
@@ -114,11 +114,11 @@ class MotifEnrichmentTest(TestCase):
     set of Sequence objects.
     """
     def setUp(self):
-        self.sequence = pyp.Sequence(
+        self.sequence = sequence.Sequence(
             pep_seq="GEPNVsyICSR",
             protein_matches=[
-                pyp.ProteinMatch(
-                    protein=pyp.Protein(
+                sequence.ProteinMatch(
+                    protein=protein.Protein(
                         accession="Q9WV60",
                     ),
                     rel_pos=209,
@@ -126,16 +126,16 @@ class MotifEnrichmentTest(TestCase):
                 ),
             ],
         )
-        self.sequence.modifications = pyp.Modifications(
+        self.sequence.modifications = modification.Modifications(
             [
                 # S215-p
-                pyp.Modification(
+                modification.Modification(
                     rel_pos=5,
                     mod_type="Phospho",
                     sequence=self.sequence,
                 ),
                 # Y216-p
-                pyp.Modification(
+                modification.Modification(
                     rel_pos=6,
                     mod_type="Phospho",
                     sequence=self.sequence,
@@ -147,5 +147,5 @@ class MotifEnrichmentTest(TestCase):
         self.background = self.sequences
 
     def test_simple_enrichment(self):
-        df = pyp.motif.motif_enrichment(self.foreground, self.background)
+        df = motif.motif_enrichment(self.foreground, self.background)
         self.assertIsNotNone(df)
