@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.3 (2016-09-12)
+
+Bugfixes
+
+  - Fixed uniprot needing to be installed separately.
+
 ## 0.2.2 (2016-09-12)
 
 Features
