@@ -4,7 +4,7 @@ This module provides functionality for interpreting BCA assays.
 """
 
 # Built-ins
-from collections import defaultdict
+from collections import OrderedDict
 import logging
 import os
 import re
@@ -17,6 +17,7 @@ import pandas as pd
 from scipy.stats import linregress
 
 from . import paths
+from pycamv.utils import DefaultOrderedDict
 
 LOGGER = logging.getLogger("pyproteome.bca")
 RE_ROW_COL = re.compile("([A-Z]+)(\d+)")
@@ -60,7 +61,7 @@ def _next_chr(char):
 def interpret_bca_assay(
     xls_path,
     samples,
-    volumes,
+    volumes=None,
     standards=None,
     n=3,
     data_row_start=27,
@@ -125,6 +126,9 @@ def interpret_bca_assay(
     >>> print("{:.2f} +/- {:.2f} ug".format(cortex[0], cortex[1])
     8094.51 +/- 340.66 ug
     """
+    if volumes is None:
+        volumes = {i[0]: 1000 for i in samples}
+
     xls_path = os.path.join(paths.BCA_ASSAY_DIR, xls_path)
 
     xls = pd.read_excel(
@@ -135,16 +139,17 @@ def interpret_bca_assay(
         ),
         index_col=0,
     )
+    print(xls)
 
     if isinstance(xls, dict):
         assert len(xls) == 1
         xls = list(xls.values())[0]
 
     # Drop columns with NaN values
-    xls = xls.dropna(
-        axis=1,
-        how="any",
-    )
+    # xls = xls.dropna(
+    #     axis=1,
+    #     how="any",
+    # )
 
     std_start_col = xls.columns[0]
 
@@ -207,9 +212,9 @@ def interpret_bca_assay(
         raise Exception("R^2 of standards = {:.2f} (< 0.95)".format(r ** 2))
 
     # Extract out sample absorbances and concentrations
-    absorbances = defaultdict(list)
-    concentrations = defaultdict(list)
-    total_protein = {}
+    absorbances = DefaultOrderedDict(list)
+    concentrations = DefaultOrderedDict(list)
+    total_protein = OrderedDict()
 
     for name, dilution, pos in samples:
         col_start, col_end, row_start, row_end = _interpret_pos(pos)
