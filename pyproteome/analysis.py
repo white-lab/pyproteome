@@ -224,7 +224,7 @@ def volcano_plot(
             min(len(group) for group in data.groups.values()),
             data.sets,
         )
-        if abs(fold_cutoff - 1.2) > 0.1:
+        if abs(fold_cutoff - 1.2) > 0.1 and abs(fold_cutoff - 1) > 0.01:
             title += " -- Fold Change > {}".format(fold_cutoff)
 
     if title:
@@ -275,10 +275,13 @@ def volcano_plot(
     ax.spines["right"].set_visible(False)
     ax.set_xlabel("$log_2$ Fold Change")
     ax.set_ylabel("$-log_{10}$ p-value")
-    ax.axhline(pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
-    ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
-    ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
     ax.set_ylim(bottom=-0.1)
+
+    ax.axhline(pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
+
+    if abs(fold_cutoff - 1) > 0.01:
+        ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
+        ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
 
     # Position the labels
     texts = []
