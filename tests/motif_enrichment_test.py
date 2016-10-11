@@ -3,7 +3,7 @@ from unittest import TestCase
 
 import pandas as pd
 
-import pyproteome as pyp
+from pyproteome import motif
 
 
 FOREGROUND = """
@@ -194,7 +194,7 @@ class MotifEnrichmentFullTest(TestCase):
 
             tokens = line.split("|")
 
-            motif = pyp.Motif(tokens[1].strip())
+            m = motif.Motif(tokens[1].strip())
 
             fore_hits = int(tokens[2].split("/")[0])
             fore_size = int(tokens[2].split("/")[1])
@@ -206,12 +206,13 @@ class MotifEnrichmentFullTest(TestCase):
 
             self.output.append(
                 (
-                    motif,
+                    m,
                     fore_hits, fore_size,
                     back_hits, back_size,
                     p_val,
                 )
             )
+
         self.output = pd.DataFrame(
             data=self.output,
             columns=[
@@ -226,7 +227,7 @@ class MotifEnrichmentFullTest(TestCase):
         # Re-sort as the p-values on Brian's tables are truncated a bit short.
         self.output["sort-p-value"] = pd.Series(
             [
-                pyp.motif._motif_sig(
+                motif._motif_sig(
                     row["Foreground Hits"],
                     row["Foreground Size"],
                     row["Background Hits"],
@@ -240,7 +241,7 @@ class MotifEnrichmentFullTest(TestCase):
         self.output.reset_index(drop=True)
 
     def test_motif_enrichment(self):
-        hits = pyp.motif.motif_enrichment(
+        hits = motif.motif_enrichment(
             self.foreground, self.background,
         )
 
@@ -248,12 +249,12 @@ class MotifEnrichmentFullTest(TestCase):
         true_hits = list(hits["Motif"])
 
         # Check for false positives
-        for motif in true_hits:
-            self.assertIn(motif, true_positives)
+        for m in true_hits:
+            self.assertIn(m, true_positives)
 
         # Check for false-negatives
-        for motif in true_positives:
-            self.assertIn(motif, true_hits)
+        for m in true_positives:
+            self.assertIn(m, true_hits)
 
         # Check every row of output is the same
         for calc_row, out_row in zip(hits.iterrows(), self.output.iterrows()):
