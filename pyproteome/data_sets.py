@@ -205,6 +205,7 @@ class DataSet:
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
+        agg_dict["IonScore"] = max
 
         self.psms = self.psms.groupby(
             by=[
