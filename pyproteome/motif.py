@@ -566,4 +566,10 @@ def motif_logo(
         ],
         alphabet=alpha,
     )
-    m.weblogo(filename, format="svg", logo_title="Testing")
+    m.weblogo(
+        filename,
+        yaxis_scale=1.5,
+        format="svg",
+        logo_title="Testing",
+        stack_width="large"
+    )
