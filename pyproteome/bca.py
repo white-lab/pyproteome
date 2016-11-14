@@ -82,7 +82,7 @@ def interpret_bca_assay(
         should be supplied as either the left index of the first of three
         aliquots (i.e. "A4") or a range indicating the starting and ending row
         and column (i.e. "A4:B6").
-    volumes : dict of str, float
+    volumes : dict of str, float or int or float
         Volumes of samples, in μL.
     standards : list of (tuple of int, float), optional
         Locations of standards in table. Defaults to the first n (below)
@@ -128,6 +128,8 @@ def interpret_bca_assay(
     """
     if volumes is None:
         volumes = {i[0]: 1000 for i in samples}
+    elif isinstance(volumes, int) or isinstance(volumes, float):
+        volumes = {i[0]: volumes for i in samples}
 
     xls_path = os.path.join(paths.BCA_ASSAY_DIR, xls_path)
 
@@ -139,7 +141,7 @@ def interpret_bca_assay(
         ),
         index_col=0,
     )
-    print(xls)
+    # print(xls)
 
     if isinstance(xls, dict):
         assert len(xls) == 1
@@ -172,7 +174,7 @@ def interpret_bca_assay(
         col_start, col_end, row_start, row_end = _interpret_pos(pos)
 
         if col_end is None:
-            col_end = col_start + 3
+            col_end = col_start + 2
 
         if row_end is None:
             row_end = row_start
@@ -180,7 +182,7 @@ def interpret_bca_assay(
         row = row_start
 
         while row <= row_end:
-            for col in range(std_start_col, std_start_col + 3):
+            for col in range(col_start, col_end + 1):
                 std_x.append(x)
                 std_y.append(xls.ix[row][col])
 
@@ -250,8 +252,8 @@ def interpret_bca_assay(
     # Sanity check concentrations
 
     # Calculate total sample protein content
-    for name, volume in volumes.items():
-        protein = np.array(concentrations[name]) * volume
+    for name, conc in concentrations.items():
+        protein = np.array(conc) * volumes[name]
         total_protein[name] = (
             protein.mean(),
             protein.std(),
