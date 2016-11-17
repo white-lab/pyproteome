@@ -189,6 +189,10 @@ def volcano_plot(
     data,
     pval_cutoff=1.3, fold_cutoff=1.2,
     highlight=None,
+    hide=None,
+    show=None,
+    edgecolors=None,
+    rename=None,
     folder_name=None, title=None,
     figsize=(12, 10),
     adjust=True,
@@ -206,6 +210,10 @@ def volcano_plot(
     pval_cutoff : float, optional
     fold_cutoff : float, optional
     highlight : list, optional
+    hide : list, optional
+    show : list, optional
+    edgecolors : dict, optional
+    rename : dict, optional
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
@@ -214,6 +222,17 @@ def volcano_plot(
     """
     if not folder_name:
         folder_name = data.name
+
+    if not highlight:
+        highlight = {}
+    if not hide:
+        hide = []
+    if not show:
+        show = []
+    if not edgecolors:
+        edgecolors = {}
+    if not rename:
+        rename = {}
 
     utils.make_folder(folder_name)
 
@@ -252,9 +271,15 @@ def volcano_plot(
         pvals.append(row_pval)
         changes.append(row_change)
 
-        if row_pval > pval_cutoff and \
-           (row_change > upper_fold or row_change < lower_fold):
-            row_label = " / ".join(sorted(row["Proteins"].genes))
+        row_label = " / ".join(sorted(row["Proteins"].genes))
+
+        if (
+            row_label in show or
+            (
+                row_pval > pval_cutoff and
+                (row_change > upper_fold or row_change < lower_fold)
+            )
+        ):
 
             sig_pvals.append(row_pval)
             sig_changes.append(row_change)
@@ -273,7 +298,10 @@ def volcano_plot(
     ax.scatter(changes, pvals, c=colors)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.set_xlabel("$log_2$ Fold Change")
+    groups = list(data.groups.keys())
+    ax.set_xlabel(
+        "$log_2$ Fold Change {} / {}".format(groups[0], groups[1])
+    )
     ax.set_ylabel("$-log_{10}$ p-value")
     ax.set_ylim(bottom=-0.1)
 
@@ -286,16 +314,22 @@ def volcano_plot(
     # Position the labels
     texts = []
     for x, y, txt in zip(sig_changes, sig_pvals, sig_labels):
+        if txt in hide:
+            continue
+
+        txt = rename.get(txt, txt)
         text = ax.text(x, y, txt)
 
-        if highlight and txt in highlight:
+        if txt in highlight:
             text.set_fontsize(20)
 
         text.set_bbox(
             dict(
-                color="lightgreen" if x > 0 else "pink",
-                alpha=0.8,
-                edgecolor="red",
+                facecolor="lightgreen" if x > 0 else "pink",
+                alpha=1,
+                linewidth=0.5 if txt not in edgecolors else 3,
+                edgecolor=edgecolors.get(txt, "black"),
+                boxstyle="round",
             )
         )
 
@@ -308,8 +342,8 @@ def volcano_plot(
             texts=texts,
             ax=ax,
             lim=400,
-            force_text=0.1,
-            force_points=0.1,
+            force_text=0.3,
+            force_points=0.01,
             arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
             only_move={
                 "points": "y",
@@ -327,6 +361,9 @@ def volcano_plot(
             a.__dict__.update(text.__dict__)
             a.draggable()
             texts[j].remove()
+
+    ax.xaxis.label.set_fontsize(20)
+    ax.yaxis.label.set_fontsize(20)
 
     if title:
         ax.set_title(title)
@@ -563,22 +600,25 @@ def plot_sequence_between(
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequences : list of str
     """
-    groups = list(reversed(data.groups.values()))
-    labels = list(reversed(data.groups.keys()))
+    groups = list(reversed(data.groups.values()))[-2:]
+    labels = list(reversed(data.groups.keys()))[-2:]
 
     psms = data.psms.copy()
     psms["Seq Str"] = psms["Sequence"].apply(str)
     psms = psms[psms["Seq Str"].isin(sequences)]
 
-    points = np.array(
+    values = np.array(
         [
-            psms[group].as_matrix().sum(axis=0)
+            psms[group].as_matrix().sum(axis=0).mean()
             for group in groups
         ]
     )
-
-    values = points.mean(axis=1)
-    errs = points.std(axis=1)
+    errs = np.array(
+        [
+            psms[group].as_matrix().sum(axis=0).std()
+            for group in groups
+        ]
+    )
 
     f, ax = plt.subplots()
 
@@ -618,19 +658,19 @@ def plot_sequence_between(
         return val
 
     # XXX: Not correct...
-    display(
-        dict(
-            zip(
-                sequences,
-                _wrap_list(
-                    ttest_ind(
-                        points[0, :].T,
-                        points[1, :].T
-                    )[1]
-                )
-            )
-        )
-    )
+    # display(
+    #     dict(
+    #         zip(
+    #             sequences,
+    #             _wrap_list(
+    #                 ttest_ind(
+    #                     points[0, :].T,
+    #                     points[1, :].T
+    #                 )[1]
+    #             )
+    #         )
+    #     )
+    # )
 
     return f
 
@@ -660,7 +700,7 @@ def plot_sequence(
         bar_width = .35
         ax.bar(bar_width + indices, values[i], bar_width)
         ax.set_xticks(indices + bar_width * 1.5)
-        ax.set_xticklabels(list(data.channels.values()))
+        ax.set_xticklabels(list(data.channels.values()), rotation=45)
 
     display(values)
 
