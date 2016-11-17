@@ -100,7 +100,7 @@ def get_average_phospho_levels(data):
     -------
     OrderedDict
     """
-    base = data.channels[0]
+    base = list(data.channels.keys())[0]
     levels = data.psms[list(data.channels)].mean()
 
     return OrderedDict(
