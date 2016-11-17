@@ -91,6 +91,9 @@ class DataSet:
             camv_name is not None
         )
 
+        if enrichments is None:
+            enrichments = []
+
         self.source = "unknown"
         self.scan_lists = None
         self.validated = False
@@ -452,7 +455,7 @@ class DataSet:
         """
         groups = list(self.groups.values())
 
-        if len(groups) == 2:
+        if len(groups) > 1:
             self.psms["SNR"] = pd.Series(
                 [
                     _snr(row[groups[0]], row[groups[1]])
