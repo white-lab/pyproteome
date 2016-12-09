@@ -54,7 +54,7 @@ class DataSet:
         mascot_name=None, camv_name=None, msf=True,
         groups=None, phenotypes=None,
         name="", enrichments=None, tissues=None,
-        dropna=True,
+        dropna=False,
         camv_slices=None,
         merge_duplicates=True,
         merge_subsets=False,
@@ -119,7 +119,8 @@ class DataSet:
         self.enrichments = enrichments
         self.tissues = tissues
 
-        self.normalized = False
+        self.intra_normalized = False
+        self.inter_normalized = False
         self.sets = 1
 
         if dropna:
@@ -202,7 +203,7 @@ class DataSet:
         raise TypeError(type(key))
 
     def _merge_duplicates(self):
-        channels = list(self.channels.keys())
+        channels = list(self.channels.values())
         agg_dict = dict((channel, sum) for channel in channels)
 
         agg_dict["Validated"] = all
@@ -268,9 +269,46 @@ class DataSet:
         """
         return merge_data([self, other])
 
+
+    def inter_normalize(self, norm_channel_name, inplace=False):
+        """
+        Normalize runs to one channel for inter-run comparions.
+
+        Parameters
+        ----------
+        norm_channel_name : str
+        inplace : bool, optional
+            Modify this data set in place.
+
+        Returns
+        -------
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        """
+
+        new = self
+
+        # Don't normalize a data set twice!
+        assert not new.inter_normalized
+
+        norm_channel = self.channels[norm_channel_name]
+
+        if not inplace:
+            new = new.copy()
+
+        for new_channel, old_channel in self.channels.items():
+            new.psms[new_channel] = new.psms[old_channel] / new.psms[norm_channel]
+            del new.psms[old_channel]
+
+        new.inter_normalized = True
+        new.channels = OrderedDict([(key, key) for key in new.channels.keys()])
+        new.groups = self.groups.copy()
+
+        return new
+
+
     def normalize(self, levels, inplace=False):
         """
-        Normalizes a channel to given levels.
+        Normalize channels to given levels for intra-run comparisons.
 
         Divides all channel values by a given level.
 
@@ -288,24 +326,21 @@ class DataSet:
         new = self
 
         # Don't normalize a data set twice!
-        assert not new.normalized
+        assert not new.intra_normalized
 
         if not inplace:
             new = new.copy()
 
         new_channels = utils.norm(self.channels)
 
-        for key, norm_key in zip(self.channels, new_channels):
+        for key, norm_key in zip(self.channels.values(), new_channels.values()):
             new.psms[norm_key] = new.psms[key] / levels[key]
 
-        new.normalized = True
+        new.intra_normalized = True
         new.channels = new_channels
-        new.groups = OrderedDict(
-            (key, utils.norm(val))
-            for key, val in self.groups.items()
-        )
+        new.groups = self.groups.copy()
 
-        new._update_snr_change()
+        new._update_group_changes()
 
         return new
 
@@ -329,7 +364,7 @@ class DataSet:
         new.psms = new.psms.dropna(
             axis=0,
             how="any",
-            subset=list(new.channels.keys()),
+            subset=list(new.channels.values()),
         )
 
         return new
@@ -337,8 +372,6 @@ class DataSet:
     def filter(
         self,
         ion_score_cutoff=None, confidence_cutoff=None,
-        snr_cutoff=None,
-        asym_snr_cutoff=None,
         p_cutoff=None,
         fold_cutoff=None,
         asym_fold_cutoff=None,
@@ -351,8 +384,6 @@ class DataSet:
         ----------
         ion_score_cutoff : int, optional
         confidence_cutoff : {"High", "Medium", "Low"}, optional
-        snr_cutoff : float, optional
-        asym_snr_cutoff : float, optional
         p_cutoff : float, optional
         fold_cutoff : float, optional
         asym_fold_cutoff : float, optional
@@ -391,21 +422,6 @@ class DataSet:
                 new.psms["IonScore"] >= ion_score_cutoff
             ]
 
-        if snr_cutoff:
-            new.psms = new.psms[
-                abs(new.psms["SNR"]) >= snr_cutoff
-            ]
-
-        if asym_snr_cutoff:
-            if asym_snr_cutoff > 0:
-                new.psms = new.psms[
-                    new.psms["SNR"] >= asym_snr_cutoff
-                ]
-            else:
-                new.psms = new.psms[
-                    new.psms["SNR"] <= asym_snr_cutoff
-                ]
-
         if p_cutoff:
             new.psms = new.psms[
                 new.psms["p-value"] <= p_cutoff
@@ -436,18 +452,17 @@ class DataSet:
 
         return new
 
-    def _update_snr_change(self):
+    def _update_group_changes(self, group_a=None, group_b=None):
         """
-        Update a table's SNR, Fold-Change, and p-value columns.
+        Update a table's Fold-Change, and p-value columns.
 
         Values are calculated based on changes between group_a and group_b.
 
         Parameters
         ----------
         psms : :class:`pandas.DataFrame`
-        group_a : list of str
-        group_b : list of str
-        normalize : bool, optional
+        group_a : str or list, optional
+        group_b : str or list, optional
 
         Returns
         -------
@@ -455,23 +470,51 @@ class DataSet:
         """
         groups = list(self.groups.values())
 
-        if len(groups) > 1:
-            self.psms["SNR"] = pd.Series(
-                [
-                    _snr(row[groups[0]], row[groups[1]])
-                    for index, row in self.psms.iterrows()
-                ]
-            )
+        if group_a is None:
+            group_a = groups[0]
+        elif isinstance(group_a, str):
+            group_a = self.groups[group_a]
+        else:
+            group_a = [
+                group
+                for i in group_a
+                for group in self.groups[i]
+            ]
 
+        if group_b is None:
+            group_b = groups[1]
+        elif isinstance(group_b, str):
+            group_b = self.groups[group_b]
+        else:
+            group_b = [
+                group
+                for i in group_b
+                for group in self.groups[i]
+            ]
+
+        channels_a = [
+            self.channels[i]
+            for i in group_a
+            if i in self.channels
+        ]
+
+        channels_b = [
+            self.channels[i]
+            for i in group_b
+            if i in self.channels
+        ]
+
+        if len(groups) > 1:
             self.psms["Fold Change"] = pd.Series(
-                self.psms[groups[0]].mean(axis=1) /
-                self.psms[groups[1]].mean(axis=1)
+                np.nanmean(self.psms[channels_a], axis=1) /
+                np.nanmean(self.psms[channels_b], axis=1)
             )
             self.psms["p-value"] = pd.Series(
                 ttest_ind(
-                    self.psms[groups[0]],
-                    self.psms[groups[1]],
+                    self.psms[channels_a],
+                    self.psms[channels_b],
                     axis=1,
+                    nan_policy="omit",
                 )[1]
             )
 
@@ -506,8 +549,28 @@ def merge_data(
     if any(data.groups != data_sets[0].groups for data in data_sets):
         raise Exception("Incongruent groups between data sets.")
 
+    if (
+        any(data.channels != data_sets[0].channels for data in data_sets) and
+        not all(data.inter_normalized for data in data_sets)
+    ):
+        raise Exception(
+            "Cannot compare across runs without inter-run normalization"
+        )
+
+
     new = data_sets[0].copy()
     new.psms = pd.concat([data.psms for data in data_sets])
+
+    new.channels = OrderedDict()
+    for data in data_sets:
+        for key, val in data.channels.items():
+            if key in new.channels:
+                if new.channels[key] == val:
+                    continue
+                else:
+                    raise Exception("Merging incompatible channels")
+
+            new.channels[key] = val
 
     if merge_duplicates:
         new._merge_duplicates()
@@ -532,7 +595,7 @@ def merge_data(
     )
 
     if new.groups:
-        new._update_snr_change()
+        new._update_group_changes()
 
     if name:
         new.name = name
@@ -559,20 +622,3 @@ def _log_cum_fold_change(vals):
         for i in vals[1:]
         if i != 0
     )
-
-
-def _snr(data1, data2):
-    """
-    Calculate the signal-to-noise ratio between two groups of data.
-
-    Parameters
-    ----------
-    data1 : :class:`numpy.ndarray` of float
-    data2 : :class:`numpy.ndarray` of float
-
-    Returns
-    -------
-    float
-    """
-    return (data1.mean() - data2.mean()) \
-        / (data1.std(ddof=1) + data2.std(ddof=1))

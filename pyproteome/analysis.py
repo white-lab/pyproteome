@@ -47,7 +47,7 @@ def snr_table(
     folder_name=None, csv_name=None,
 ):
     """
-    Show a signal to noise table.
+    Show a table of fold changes and p-values.
 
     Parameters
     ----------
@@ -97,6 +97,9 @@ def snr_table(
         True: "#BBFFBB",  # light green
         False: "#FFBBBB",  # light red
     }
+
+    if psms.empty:
+        return psms
 
     return psms.style.apply(  # Color validated rows
         lambda row: [
@@ -187,6 +190,8 @@ def _remove_lesser_dups(pvals, changes, labels):
 
 def volcano_plot(
     data,
+    group_a=None,
+    group_b=None,
     pval_cutoff=1.3, fold_cutoff=1.2,
     highlight=None,
     hide=None,
@@ -240,7 +245,7 @@ def volcano_plot(
         title = "{} - {} - (Bio-N={}, Tech-N={})".format(
             data.tissue,
             data.enrichment,
-            min(len(group) for group in data.groups.values()),
+            len(data.channels),
             data.sets,
         )
         if abs(fold_cutoff - 1.2) > 0.1 and abs(fold_cutoff - 1) > 0.01:
@@ -298,9 +303,17 @@ def volcano_plot(
     ax.scatter(changes, pvals, c=colors)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+
     groups = list(data.groups.keys())
+
+    if group_a is None:
+        group_a = groups[0]
+
+    if group_b is None:
+        group_b = groups[1]
+
     ax.set_xlabel(
-        "$log_2$ Fold Change {} / {}".format(groups[0], groups[1])
+        "$log_2$ Fold Change {} / {}".format(group_a, group_b)
     )
     ax.set_ylabel("$-log_{10}$ p-value")
     ax.set_ylim(bottom=-0.1)
@@ -369,6 +382,11 @@ def volcano_plot(
         ax.set_title(title)
         fig.savefig(
             file_name,
+            bbox_inches="tight", dpi=1000,
+            transparent=True,
+        )
+        fig.savefig(
+            os.path.splitext(file_name)[0] + ".svg",
             bbox_inches="tight", dpi=500,
             transparent=True,
         )
@@ -575,7 +593,6 @@ def write_lists(
                 i.accessions[0]
                 for i in data.filter(
                     fold_cutoff=1.3,
-                    snr_cutoff=1,
                 ).psms["Proteins"].drop_duplicates(keep="first")
             )
         )
@@ -602,6 +619,14 @@ def plot_sequence_between(
     """
     groups = list(reversed(data.groups.values()))[-2:]
     labels = list(reversed(data.groups.keys()))[-2:]
+    channels = [
+        [
+            data.channels[i]
+            for i in group
+            if i in data.channels
+        ]
+        for group in groups
+    ]
 
     psms = data.psms.copy()
     psms["Seq Str"] = psms["Sequence"].apply(str)
@@ -609,14 +634,14 @@ def plot_sequence_between(
 
     values = np.array(
         [
-            psms[group].as_matrix().sum(axis=0).mean()
-            for group in groups
+            psms[channel].as_matrix().sum(axis=0).mean()
+            for channel in channels
         ]
     )
     errs = np.array(
         [
-            psms[group].as_matrix().sum(axis=0).std()
-            for group in groups
+            psms[channel].as_matrix().sum(axis=0).std()
+            for channel in channels
         ]
     )
 
@@ -633,8 +658,11 @@ def plot_sequence_between(
     )
 
     ax.set_ylabel(
+        "Relative Signal"
+        if not data.inter_normalized
+        else
         "Cumulative Channel Signal{}".format(
-            " (Normalized)" if data.normalized else ""
+            " (Normalized)" if data.intra_normalized else ""
         ),
         fontsize=20,
     )
@@ -677,6 +705,8 @@ def plot_sequence_between(
 
 def plot_sequence(
     data, sequence,
+    title=None,
+    figsize=(12, 8),
 ):
     """
     Plot the levels of a sequence across multiple channels.
@@ -685,24 +715,41 @@ def plot_sequence(
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequence : str or :class:`Sequence<pyproteome.sequence.Sequence>`
+    title : str, optional
+    figsize : tuple of int, int
     """
-    channels = list(data.channels.keys())
+    channel_names = [
+        channel_name
+        for group in data.groups.values()
+        for channel_name in group
+    ]
+    channels = [
+        data.channels[channel_name]
+        for channel_name in channel_names
+    ]
 
     psms = data.psms[data.psms["Sequence"] == sequence]
 
     values = psms[channels].as_matrix()
-    values = (values.T / values[:, 0]).T
+    # values = (values.T / values[:, 0]).T
 
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(figsize=figsize)
 
     for i in range(values.shape[0]):
         indices = np.arange(len(values[i]))
         bar_width = .35
         ax.bar(bar_width + indices, values[i], bar_width)
-        ax.set_xticks(indices + bar_width * 1.5)
-        ax.set_xticklabels(list(data.channels.values()), rotation=45)
+        ax.set_xticks(indices)
+        ax.set_xticklabels(channel_names, fontsize=20, rotation=45)
+
+    ax.set_title(sequence + ("- {}".format(title) if title else ""))
+    ax.set_ylabel("Fold Change")
+    ax.title.set_fontsize(28)
+    ax.yaxis.label.set_fontsize(20)
 
     display(values)
+
+    return f
 
 
 def plot_correlation(

@@ -44,7 +44,8 @@ def get_channel_levels(
     if folder_name:
         file_name = os.path.join(folder_name, file_name)
 
-    channels = list(data.channels.keys())
+    channel_names = list(data.channels.keys())
+    channels = list(data.channels.values())
     channel_levels = OrderedDict()
     base = channels[0]
     channel_levels[base] = 1
@@ -56,7 +57,7 @@ def get_channel_levels(
     )
     axes = [i for j in axes for i in j]
 
-    for ax, col in zip(list(axes), channels[1:]):
+    for ax, col_name, col in zip(list(axes), channel_names[1:], channels[1:]):
         points = (data.psms[col] / data.psms[base]).dropna().as_matrix()
 
         # Filter ratios > 30, those are likely an error in quantification and
@@ -68,7 +69,7 @@ def get_channel_levels(
         ax.hist(points, bins=40)
         ax.set_title(
             "{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
-                "{} ({})".format(data.channels[col], col)
+                "{} ({})".format(col_name, col)
                 if isinstance(data.channels, dict) else
                 col,
                 med,

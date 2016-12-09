@@ -68,7 +68,7 @@ def norm(channels):
 
     if isinstance(channels, OrderedDict):
         return OrderedDict(
-            (norm(key), val)
+            (key, norm(val))
             for key, val in channels.items()
         )
 
