@@ -156,7 +156,6 @@ def get_uniprot_data(accession):
     dict
     """
     if accession not in UNIPROT_DATA:
-        print(accession)
         fetch_uniprot_data([accession])
 
     return UNIPROT_DATA[accession]
