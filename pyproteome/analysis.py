@@ -722,6 +722,7 @@ def plot_sequence(
         channel_name
         for group in data.groups.values()
         for channel_name in group
+        if channel_name in data.channels
     ]
     channels = [
         data.channels[channel_name]
