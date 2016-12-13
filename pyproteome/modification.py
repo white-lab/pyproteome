@@ -70,15 +70,17 @@ class Modifications:
         """
         any_letter, any_mod, letter_mod = \
             _extract_letter_mods(letter_mod_types)
-        return (
-            mod
-            for mod in self.mods
-            if allowed_mod_type(
-                mod,
-                any_letter=any_letter,
-                any_mod=any_mod,
-                letter_mod=letter_mod,
-            )
+        return Modifications(
+            [
+                mod
+                for mod in self.mods
+                if allowed_mod_type(
+                    mod,
+                    any_letter=any_letter,
+                    any_mod=any_mod,
+                    letter_mod=letter_mod,
+                )
+            ]
         )
 
     def __eq__(self, other):
@@ -245,6 +247,6 @@ def filter_mod_types(psms, letter_mod_types=None):
     """
     return psms[
         psms["Modifications"].apply(
-            lambda x: bool(list(x.get_mods(letter_mod_types)))
+            lambda x: bool(x.get_mods(letter_mod_types).mods)
         )
     ]
