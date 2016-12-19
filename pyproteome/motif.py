@@ -568,8 +568,8 @@ def motif_logo(
     )
     m.weblogo(
         filename,
-        yaxis_scale=1.5,
+        yaxis_scale=3,
         format="svg",
-        logo_title="Testing",
+        #logo_title="Testing",
         stack_width="large"
     )
