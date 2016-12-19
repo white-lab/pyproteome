@@ -204,7 +204,7 @@ class DataSet:
 
     def _merge_duplicates(self):
         channels = list(self.channels.values())
-        agg_dict = dict((channel, sum) for channel in channels)
+        agg_dict = dict((channel, _nan_sum) for channel in channels)
 
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
@@ -269,7 +269,6 @@ class DataSet:
         """
         return merge_data([self, other])
 
-
     def inter_normalize(self, norm_channel_name, inplace=False):
         """
         Normalize runs to one channel for inter-run comparions.
@@ -285,18 +284,20 @@ class DataSet:
         :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
 
-        new = self
-
         # Don't normalize a data set twice!
-        assert not new.inter_normalized
+        if self.inter_normalized:
+            return self
 
+        new = self
         norm_channel = self.channels[norm_channel_name]
 
         if not inplace:
             new = new.copy()
 
         for new_channel, old_channel in self.channels.items():
-            new.psms[new_channel] = new.psms[old_channel] / new.psms[norm_channel]
+            new.psms[new_channel] = (
+                new.psms[old_channel] / new.psms[norm_channel]
+            )
             del new.psms[old_channel]
 
         new.inter_normalized = True
@@ -304,7 +305,6 @@ class DataSet:
         new.groups = self.groups.copy()
 
         return new
-
 
     def normalize(self, levels, inplace=False):
         """
@@ -333,14 +333,17 @@ class DataSet:
 
         new_channels = utils.norm(self.channels)
 
-        for key, norm_key in zip(self.channels.values(), new_channels.values()):
+        for key, norm_key in zip(
+            self.channels.values(),
+            new_channels.values(),
+        ):
             new.psms[norm_key] = new.psms[key] / levels[key]
 
         new.intra_normalized = True
         new.channels = new_channels
         new.groups = self.groups.copy()
 
-        new._update_group_changes()
+        new.update_group_changes()
 
         return new
 
@@ -452,7 +455,54 @@ class DataSet:
 
         return new
 
-    def _update_group_changes(self, group_a=None, group_b=None):
+    def get_groups(self, group_a=None, group_b=None):
+        """
+        Get channels associated with two groups.
+
+        Parameters
+        ----------
+        group_a : str or list of str, optional
+        group_b : str or list of str, optional
+
+        Returns
+        -------
+        groups : list of str
+        labels : list of str
+        """
+        groups = list(self.groups.values())
+        labels = list(self.groups.keys())
+
+        if group_a is None:
+            label_a = labels[0]
+            group_a = groups[0]
+        elif isinstance(group_a, str):
+            label_a = group_a
+            group_a = self.groups[group_a]
+        else:
+            label_a = ", ".join(group_a)
+            group_a = [
+                group
+                for i in group_a
+                for group in self.groups[i]
+            ]
+
+        if group_b is None:
+            label_b = labels[1]
+            group_b = groups[1]
+        elif isinstance(group_b, str):
+            label_b = group_b
+            group_b = self.groups[group_b]
+        else:
+            label_b = ", ".join(group_b)
+            group_b = [
+                group
+                for i in group_b
+                for group in self.groups[i]
+            ]
+
+        return (group_a, group_b), (label_a, label_b)
+
+    def update_group_changes(self, group_a=None, group_b=None):
         """
         Update a table's Fold-Change, and p-value columns.
 
@@ -468,30 +518,10 @@ class DataSet:
         -------
         :class:`pandas.DataFrame`
         """
-        groups = list(self.groups.values())
-
-        if group_a is None:
-            group_a = groups[0]
-        elif isinstance(group_a, str):
-            group_a = self.groups[group_a]
-        else:
-            group_a = [
-                group
-                for i in group_a
-                for group in self.groups[i]
-            ]
-
-        if group_b is None:
-            group_b = groups[1]
-        elif isinstance(group_b, str):
-            group_b = self.groups[group_b]
-        else:
-            group_b = [
-                group
-                for i in group_b
-                for group in self.groups[i]
-            ]
-
+        (group_a, group_b), _ = self.get_groups(
+            group_a=group_a,
+            group_b=group_b,
+        )
         channels_a = [
             self.channels[i]
             for i in group_a
@@ -504,7 +534,7 @@ class DataSet:
             if i in self.channels
         ]
 
-        if len(groups) > 1:
+        if channels_a and channels_b:
             self.psms["Fold Change"] = pd.Series(
                 np.nanmean(self.psms[channels_a], axis=1) /
                 np.nanmean(self.psms[channels_b], axis=1)
@@ -557,7 +587,6 @@ def merge_data(
             "Cannot compare across runs without inter-run normalization"
         )
 
-
     new = data_sets[0].copy()
     new.psms = pd.concat([data.psms for data in data_sets])
 
@@ -595,7 +624,7 @@ def merge_data(
     )
 
     if new.groups:
-        new._update_group_changes()
+        new.update_group_changes()
 
     if name:
         new.name = name
@@ -622,3 +651,10 @@ def _log_cum_fold_change(vals):
         for i in vals[1:]
         if i != 0
     )
+
+
+def _nan_sum(lst):
+    if all(np.isnan(i) for i in lst):
+        return np.nan
+    else:
+        return np.nansum(lst)
