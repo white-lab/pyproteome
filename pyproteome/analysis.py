@@ -739,7 +739,10 @@ def plot_sequence(
     psms = data.psms[data.psms["Sequence"] == sequence]
 
     values = psms[channels].as_matrix()
-    # values = (values.T / values[:, 0]).T
+
+    mask = ~np.isnan(values).all(axis=0)
+    channel_names = list(np.array(channel_names)[mask])
+    values = values[:, mask]
 
     f, ax = plt.subplots(figsize=figsize)
 
