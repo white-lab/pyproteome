@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 # import scipy
-from scipy.stats import ttest_ind, pearsonr, spearmanr
+from scipy.stats import pearsonr, spearmanr
 # from scipy.stats.mstats import mquantiles
 # from scipy.spatial import distance
 # from scipy.cluster import hierarchy
@@ -268,7 +268,9 @@ def volcano_plot(
     sig_labels = []
     colors = []
 
-    for index, row in data.psms.iterrows():
+    for _, row in data.psms.dropna(
+        subset=["p-value", "Fold Change"],
+    ).iterrows():
         color = "grey"
         row_pval = -np.log10(row["p-value"])
         row_change = np.log2(row["Fold Change"])
@@ -382,12 +384,12 @@ def volcano_plot(
         ax.set_title(title)
         fig.savefig(
             file_name,
-            bbox_inches="tight", dpi=1000,
+            bbox_inches="tight", dpi=300,
             transparent=True,
         )
         fig.savefig(
             os.path.splitext(file_name)[0] + ".svg",
-            bbox_inches="tight", dpi=500,
+            bbox_inches="tight", dpi=300,
             transparent=True,
         )
 
@@ -608,6 +610,8 @@ def write_lists(
 
 def plot_sequence_between(
     data, sequences,
+    group_a=None,
+    group_b=None,
 ):
     """
     Plot the levels of a sequence between two groups.
@@ -617,15 +621,18 @@ def plot_sequence_between(
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequences : list of str
     """
-    groups = list(reversed(data.groups.values()))[-2:]
-    labels = list(reversed(data.groups.keys()))[-2:]
+    (group_a, group_b), (label_a, label_b) = data.get_groups(
+        group_a=group_a,
+        group_b=group_b,
+    )
+
     channels = [
         [
-            data.channels[i]
-            for i in group
-            if i in data.channels
+            data.channels[channel_name]
+            for channel_name in group
+            if channel_name in data.channels
         ]
-        for group in groups
+        for group in [group_a, group_b]
     ]
 
     psms = data.psms.copy()
@@ -634,13 +641,13 @@ def plot_sequence_between(
 
     values = np.array(
         [
-            psms[channel].as_matrix().sum(axis=0).mean()
+            np.nanmean(psms[channel].as_matrix().sum(axis=0))
             for channel in channels
         ]
     )
     errs = np.array(
         [
-            psms[channel].as_matrix().sum(axis=0).std()
+            np.nanstd(psms[channel].as_matrix().sum(axis=0))
             for channel in channels
         ]
     )
@@ -672,7 +679,7 @@ def plot_sequence_between(
         label.set_fontsize(14)
 
     ax.set_xticks(indices + bar_width * 1.5)
-    ax.set_xticklabels(labels, fontsize=16)
+    ax.set_xticklabels([label_a, label_b], fontsize=16)
 
     title = "{}".format(
         " / ".join(sequences),
@@ -743,7 +750,7 @@ def plot_sequence(
         ax.set_xticks(indices)
         ax.set_xticklabels(channel_names, fontsize=20, rotation=45)
 
-    ax.set_title(sequence + ("- {}".format(title) if title else ""))
+    ax.set_title(sequence + (" - {}".format(title) if title else ""))
     ax.set_ylabel("Fold Change")
     ax.title.set_fontsize(28)
     ax.yaxis.label.set_fontsize(20)
@@ -753,7 +760,7 @@ def plot_sequence(
     return f
 
 
-def plot_correlation(
+def correlate_data_sets(
     data1, data2, folder_name=None, filename=None,
     adjust=True, label_cutoff=1.5,
 ):
