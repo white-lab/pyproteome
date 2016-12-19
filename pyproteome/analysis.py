@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 # import scipy
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import pearsonr, spearmanr, ttest_ind
 # from scipy.stats.mstats import mquantiles
 # from scipy.spatial import distance
 # from scipy.cluster import hierarchy
@@ -639,29 +639,28 @@ def plot_sequence_between(
     psms["Seq Str"] = psms["Sequence"].apply(str)
     psms = psms[psms["Seq Str"].isin(sequences)]
 
-    values = np.array(
-        [
-            np.nanmean(psms[channel].as_matrix().sum(axis=0))
-            for channel in channels
-        ]
-    )
-    errs = np.array(
-        [
-            np.nanstd(psms[channel].as_matrix().sum(axis=0))
-            for channel in channels
-        ]
-    )
+    values = [
+        psms[channel].as_matrix().ravel()
+        for channel in channels
+    ]
+    values = [
+        row[~np.isnan(row)]
+        for row in values
+    ]
+
+    means = np.array([row.mean() for row in values])
+    errs = np.array([row.std() for row in values])
 
     f, ax = plt.subplots()
 
-    indices = np.arange(len(values))
+    indices = np.arange(len(means))
     bar_width = .35
     ax.bar(
         bar_width + indices,
-        values,
+        means,
         bar_width,
         yerr=errs,
-        ecolor="k",
+        error_kw=dict(ecolor='k', lw=2, capsize=10, capthick=2),
     )
 
     ax.set_ylabel(
@@ -687,25 +686,42 @@ def plot_sequence_between(
     ax.set_title(title, fontsize=20)
     ax.xaxis.grid(False)
 
-    def _wrap_list(val):
-        if isinstance(val, float):
-            return [val]
-        return val
+    pval = ttest_ind(values[0], values[1]).pvalue
 
-    # XXX: Not correct...
-    # display(
-    #     dict(
-    #         zip(
-    #             sequences,
-    #             _wrap_list(
-    #                 ttest_ind(
-    #                     points[0, :].T,
-    #                     points[1, :].T
-    #                 )[1]
-    #             )
-    #         )
-    #     )
-    # )
+    def stars(p):
+        if p < 0.0001:
+            return "****"
+        elif (p < 0.001):
+            return "***"
+        elif (p < 0.01):
+            return "**"
+        elif (p < 0.05):
+            return "*"
+        else:
+            return "-"
+
+    if pval < 0.05:
+        y_max = np.max(means + errs)
+        ax.set_ylim(ymax=y_max * 1.2)
+        ax.annotate(
+            "",
+            xy=(indices[0] + bar_width * 1.5, y_max * 1.05),
+            xytext=(indices[1] + bar_width * 1.5, y_max * 1.05),
+            xycoords='data',
+            textcoords='data',
+            arrowprops=dict(
+                arrowstyle="-",
+                ec='#000000',
+                connectionstyle="bar,fraction=0.05",
+            ),
+        )
+        ax.text(
+            x=np.mean(indices) + bar_width * 1.5,
+            y=y_max * 1.125,
+            s=stars(pval),
+            horizontalalignment='center',
+            verticalalignment='center',
+        )
 
     return f
 
@@ -757,8 +773,6 @@ def plot_sequence(
     ax.set_ylabel("Fold Change")
     ax.title.set_fontsize(28)
     ax.yaxis.label.set_fontsize(20)
-
-    display(values)
 
     return f
 
