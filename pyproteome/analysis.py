@@ -150,7 +150,7 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
         df["Sequence"] = df["Sequence"].apply(str)
         df.sort_values("p-value", inplace=True, ascending=True)
 
-        ws_name = "{}-{}".format(data.name, data.enrichment)
+        ws_name = "{}-{}".format(data.name, data.enrichment).replace("/", "+")
         df.to_excel(
             writer,
             sheet_name=ws_name,
@@ -314,10 +314,18 @@ def volcano_plot(
     if group_b is None:
         group_b = groups[1]
 
-    ax.set_xlabel(
-        "$log_2$ Fold Change {} / {}".format(group_a, group_b)
+    ax.set_xlim(
+        xmin=np.floor(min(changes) * 2) / 2,
+        xmax=np.ceil(max(changes) * 2) / 2,
     )
-    ax.set_ylabel("$-log_{10}$ p-value")
+    ax.set_xlabel(
+        "$log_2$ Fold Change {} / {}".format(group_a, group_b),
+        fontsize=20,
+    )
+    ax.set_ylabel(
+        "$-log_{10}$ p-value",
+        fontsize=20,
+    )
     ax.set_ylim(bottom=-0.1)
 
     ax.axhline(pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
@@ -377,11 +385,11 @@ def volcano_plot(
             a.draggable()
             texts[j].remove()
 
-    ax.xaxis.label.set_fontsize(20)
-    ax.yaxis.label.set_fontsize(20)
-
     if title:
-        ax.set_title(title)
+        ax.set_title(
+            title,
+            fontsize=20,
+        )
         fig.savefig(
             file_name,
             bbox_inches="tight", dpi=300,
