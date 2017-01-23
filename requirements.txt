@@ -1,4 +1,4 @@
-adjustText==0.5.3
+adjustText==0.6.0
 biopython>=1.65
 fastcluster>=1.1.20
 matplotlib>=1.4.0
