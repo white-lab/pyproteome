@@ -469,8 +469,16 @@ class DataSet:
         groups : list of str
         labels : list of str
         """
-        groups = list(self.groups.values())
-        labels = list(self.groups.keys())
+        groups = [
+            val
+            for key, val in self.groups.items()
+            if any(chan in self.channels for chan in val)
+        ]
+        labels = [
+            key
+            for key, val in self.groups.items()
+            if any(chan in self.channels for chan in val)
+        ]
 
         if group_a is None:
             label_a = labels[0]
