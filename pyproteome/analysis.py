@@ -176,8 +176,13 @@ def _remove_lesser_dups(pvals, changes, labels):
             if index == o_index:
                 continue
             if (
-                label == o_label and
-                p + change < pvals[o_index] + changes[o_index]
+                label == o_label and (
+                    p + change < pvals[o_index] + changes[o_index] or
+                    (
+                        p + change <= pvals[o_index] + changes[o_index]  and
+                        index < o_index
+                    )
+                )
             ):
                 break
         else:
