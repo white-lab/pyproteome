@@ -666,27 +666,6 @@ def merge_data(
     return new
 
 
-def _log_cum_fold_change(vals):
-    """
-    Calculate the cumulative fold change (in base-2) of values.
-
-    Fold-change is normalized to the first element in the array.
-
-    Parameters
-    ----------
-    vals : :class:`numpy.ndarray` of float
-
-    Returns
-    -------
-    float
-    """
-    return sum(
-        abs(np.log2(i / (vals[0])))
-        for i in vals[1:]
-        if i != 0
-    )
-
-
 def _nan_sum(lst):
     if all(np.isnan(i) for i in lst):
         return np.nan
