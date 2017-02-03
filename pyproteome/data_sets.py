@@ -135,6 +135,9 @@ class DataSet:
                 self.psms["Confidence Level"].isin(["High"])
             ]
 
+        if self.groups:
+            self.update_group_changes()
+
         if merge_duplicates:
             LOGGER.info("Merging duplicate peptide hits together.")
             self._merge_duplicates()

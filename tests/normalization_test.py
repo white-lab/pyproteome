@@ -42,7 +42,7 @@ class NormalizationTest(TestCase):
         )
         self.groups = OrderedDict(
             [
-                ("base", ["low"]),
+                ("base", ["low1", "low2", "low3"]),
                 ("stim", ["med", "high"]),
             ]
         )
