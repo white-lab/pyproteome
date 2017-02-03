@@ -127,7 +127,7 @@ class DataSet:
             LOGGER.info("Dropping channels with NaN values.")
             self.dropna(inplace=True)
 
-        if filter_bad:
+        if filter_bad and "Confidence Level" in self.psms.columns:
             # self.psms = self.psms[
             #     self.psms["Confidence Level"].isin(["Medium", "High"])
             # ]
@@ -204,7 +204,16 @@ class DataSet:
 
     def _merge_duplicates(self):
         channels = list(self.channels.values())
-        agg_dict = dict((channel, _nan_sum) for channel in channels)
+        agg_dict = {}
+
+        for channel in channels:
+            if self.inter_normalized:
+                self.psms[channel] = (
+                    self.psms[channel] * self.psms["{}_weight".format(channel)]
+                )
+                agg_dict["{}_weight".format(channel)] = _nan_sum
+
+            agg_dict[channel] = _nan_sum
 
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
@@ -220,6 +229,12 @@ class DataSet:
             sort=False,
             as_index=False,
         ).agg(agg_dict)
+
+        if self.inter_normalized:
+            for channel in channels:
+                self.psms[channel] = (
+                    self.psms[channel] / self.psms["{}_weight".format(channel)]
+                )
 
     def _merge_subsequences(self):
         """
@@ -298,6 +313,7 @@ class DataSet:
             new.psms[new_channel] = (
                 new.psms[old_channel] / new.psms[norm_channel]
             )
+            new.psms["{}_weight".format(new_channel)] = new.psms[old_channel]
             del new.psms[old_channel]
 
         new.inter_normalized = True
@@ -343,7 +359,8 @@ class DataSet:
         new.channels = new_channels
         new.groups = self.groups.copy()
 
-        new.update_group_changes()
+        if "Fold Change" in new.channels or "p-value" in new.channels:
+            new.update_group_changes()
 
         return new
 
@@ -620,18 +637,24 @@ def merge_data(
         set(
             enrichment
             for data in data_sets
+            if data.enrichments
             for enrichment in data.enrichments
         )
     )
+
     new.tissues = sorted(
         set(
             tissue
             for data in data_sets
+            if data.tissues
             for tissue in data.tissues
         )
     )
 
-    if new.groups:
+    if new.groups and (
+        "Fold Change" in new.psms.columns or
+        "p-value" in new.psms.columns
+    ):
         new.update_group_changes()
 
     if name:
