@@ -88,6 +88,12 @@ class NormalizationTest(TestCase):
             ignore_index=True,
         )
 
+    def test_dropna(self):
+        psms = self.data.dropna()
+        self.assertEqual(
+            len(psms.psms), 0,
+        )
+
     def test_normalization(self):
         norm_levels = OrderedDict([
             ("126", 1),

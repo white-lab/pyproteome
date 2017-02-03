@@ -362,7 +362,7 @@ class DataSet:
         new.channels = new_channels
         new.groups = self.groups.copy()
 
-        if "Fold Change" in new.channels or "p-value" in new.channels:
+        if "Fold Change" in new.psms.columns or "p-value" in new.psms.columns:
             new.update_group_changes()
 
         return new
