@@ -7,12 +7,13 @@ Functions include volcano plots, sorted tables, and plotting sequence levels.
 from __future__ import division
 
 # Built-ins
+import itertools
 import logging
 import os
 import re
 
 # IPython
-from IPython.display import display
+# from IPython.display import display
 
 # Core data analysis libraries
 from matplotlib import pyplot as plt
@@ -205,7 +206,6 @@ def volcano_plot(
     rename=None,
     folder_name=None, title=None,
     figsize=(12, 10),
-    adjust=True,
     compress_dups=True,
 ):
     """
@@ -227,7 +227,6 @@ def volcano_plot(
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
-    adjust : bool, optional
     compress_dups : bool, optional
     """
     if not folder_name:
@@ -280,10 +279,19 @@ def volcano_plot(
         row_pval = -np.log10(row["p-value"])
         row_change = np.log2(row["Fold Change"])
 
+        row_label = " / ".join(sorted(row["Proteins"].genes))
+        row_label = rename.get(row_label, row_label)
+
+        if (
+            np.isnan(row_pval) or
+            np.isnan(row_change) or
+            np.isinf(row_pval) or
+            np.isinf(row_change)
+        ):
+            continue
+
         pvals.append(row_pval)
         changes.append(row_change)
-
-        row_label = " / ".join(sorted(row["Proteins"].genes))
 
         if (
             row_label in show or
@@ -345,7 +353,6 @@ def volcano_plot(
         if txt in hide:
             continue
 
-        txt = rename.get(txt, txt)
         text = ax.text(x, y, txt)
 
         if txt in highlight:
@@ -363,32 +370,20 @@ def volcano_plot(
 
         texts.append(text)
 
-    if adjust:
-        adjust_text(
-            x=sig_changes,
-            y=sig_pvals,
-            texts=texts,
-            ax=ax,
-            lim=400,
-            force_text=0.3,
-            force_points=0.01,
-            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-            only_move={
-                "points": "y",
-                "text": "xy",
-            }
-        )
-    else:
-        for j, text in enumerate(texts):
-            a = ax.annotate(
-                text.get_text(),
-                xy=text.get_position(),
-                xytext=text.get_position(),
-                arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-            )
-            a.__dict__.update(text.__dict__)
-            a.draggable()
-            texts[j].remove()
+    adjust_text(
+        x=sig_changes,
+        y=sig_pvals,
+        texts=texts,
+        ax=ax,
+        lim=400,
+        force_text=0.3,
+        force_points=0.01,
+        arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+        only_move={
+            "points": "y",
+            "text": "xy",
+        }
+    )
 
     if title:
         ax.set_title(
@@ -623,29 +618,22 @@ def write_lists(
 
 def plot_sequence_between(
     data, sequences,
-    group_a=None,
-    group_b=None,
 ):
     """
-    Plot the levels of a sequence between two groups.
+    Plot the levels of a sequence across each group.
 
     Parameters
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequences : list of str
     """
-    (group_a, group_b), (label_a, label_b) = data.get_groups(
-        group_a=group_a,
-        group_b=group_b,
-    )
-
     channels = [
         [
             data.channels[channel_name]
             for channel_name in group
             if channel_name in data.channels
         ]
-        for group in [group_a, group_b]
+        for group in data.groups.values()
     ]
 
     psms = data.psms.copy()
@@ -660,6 +648,16 @@ def plot_sequence_between(
         row[~np.isnan(row)]
         for row in values
     ]
+    labels = [
+        label
+        for label, value in zip(data.groups.keys(), values)
+        if value.any()
+    ]
+    values = [
+        value
+        for value in values
+        if value.any()
+    ]
 
     means = np.array([row.mean() for row in values])
     errs = np.array([row.std() for row in values])
@@ -669,7 +667,7 @@ def plot_sequence_between(
     indices = np.arange(len(means))
     bar_width = .35
     ax.bar(
-        bar_width + indices,
+        bar_width * 1.5 + indices,
         means,
         bar_width,
         yerr=errs,
@@ -691,7 +689,7 @@ def plot_sequence_between(
         label.set_fontsize(14)
 
     ax.set_xticks(indices + bar_width * 1.5)
-    ax.set_xticklabels([label_a, label_b], fontsize=16)
+    ax.set_xticklabels(labels, fontsize=16)
 
     title = "{}".format(
         " / ".join(sequences),
@@ -699,7 +697,7 @@ def plot_sequence_between(
     ax.set_title(title, fontsize=20)
     ax.xaxis.grid(False)
 
-    pval = ttest_ind(values[0], values[1]).pvalue
+    y_max = np.max(means + errs)
 
     def stars(p):
         if p < 0.0001:
@@ -713,28 +711,46 @@ def plot_sequence_between(
         else:
             return "-"
 
-    if pval < 0.05:
-        y_max = np.max(means + errs)
-        ax.set_ylim(ymax=y_max * 1.2)
-        ax.annotate(
-            "",
-            xy=(indices[0] + bar_width * 1.5, y_max * 1.05),
-            xytext=(indices[1] + bar_width * 1.5, y_max * 1.05),
-            xycoords='data',
-            textcoords='data',
-            arrowprops=dict(
-                arrowstyle="-",
-                ec='#000000',
-                connectionstyle="bar,fraction=0.05",
-            ),
-        )
-        ax.text(
-            x=np.mean(indices) + bar_width * 1.5,
-            y=y_max * 1.125,
-            s=stars(pval),
-            horizontalalignment='center',
-            verticalalignment='center',
-        )
+    offset = 0
+
+    for (
+        (index_a, values_a), (index_b, values_b)
+    ) in itertools.combinations(zip(indices, values), 2):
+        pval = ttest_ind(values_a, values_b).pvalue
+
+        if pval < 0.05:
+            ax.set_ylim(
+                ymax=max([
+                    ax.get_ylim()[1],
+                    y_max * (1 + offset * 0.1 + 0.15),
+                ]),
+            )
+            ax.annotate(
+                "",
+                xy=(
+                    index_a + bar_width * 1.5,
+                    y_max * (1.05 + offset * 0.1)
+                ),
+                xytext=(
+                    index_b + bar_width * 1.5,
+                    y_max * (1.05 + offset * 0.1)
+                ),
+                xycoords='data',
+                textcoords='data',
+                arrowprops=dict(
+                    arrowstyle="-",
+                    ec='#000000',
+                ),
+            )
+            ax.text(
+                x=np.mean([index_a, index_b]) + bar_width * 1.5,
+                y=y_max * (1.07 + offset * 0.1),
+                s=stars(pval),
+                horizontalalignment='center',
+                verticalalignment='center',
+            )
+
+            offset += 1
 
     return f
 
@@ -783,7 +799,13 @@ def plot_sequence(
         ax.set_xticklabels(channel_names, fontsize=20, rotation=45)
 
     ax.set_title(sequence + (" - {}".format(title) if title else ""))
-    ax.set_ylabel("Fold Change")
+
+    ax.set_ylabel(
+        "Fold Change"
+        if data.inter_normalized else
+        "Intensity" + (" (Normalized)" if data.intra_normalized else "")
+    )
+
     ax.title.set_fontsize(28)
     ax.yaxis.label.set_fontsize(20)
 
@@ -958,3 +980,197 @@ def find_tfs(data, folder_name=None, csv_name=None):
         )
 
     return tfs
+
+
+def spearmanr_nan(a, b, min_length=5):
+    mask = ~np.array(
+        [np.isnan(i) or np.isnan(j) for i, j in zip(a, b)],
+        dtype=bool,
+    )
+
+    if mask.sum() < min_length:
+        return spearmanr(np.nan, np.nan)
+
+    return spearmanr(a[mask], b[mask])
+
+
+def correlate_signal(
+    data, signal,
+    pval_cutoff=0.05, fold_cutoff=1.2,
+    highlight=None,
+    hide=None,
+    show=None,
+    edgecolors=None,
+    rename=None,
+    folder_name=None, title=None,
+    figsize=(12, 10),
+    xlabel="",
+):
+    if not highlight:
+        highlight = {}
+    if not hide:
+        hide = []
+    if not show:
+        show = []
+    if not edgecolors:
+        edgecolors = {}
+    if not rename:
+        rename = {}
+
+    cp = data.copy()
+
+    signal_chans = [
+        chan
+        for group in cp.groups.values()
+        for chan in group
+        if chan in cp.channels.keys() and
+        chan in signal.columns
+    ]
+    data_chans = [
+        data.channels[chan]
+        for chan in signal_chans
+    ]
+
+    corr = [
+        spearmanr_nan(
+            row[data_chans].as_matrix().ravel(),
+            signal[signal_chans].as_matrix().ravel(),
+        )
+        for _, row in cp.psms.iterrows()
+    ]
+
+    cp.psms["Correlation"] = [i.correlation for i in corr]
+    cp.psms["corr p-value"] = [i.pvalue for i in corr]
+
+    f, ax = plt.subplots()
+    x, y, colors = [], [], []
+    sig_x, sig_y, sig_labels = [], [], []
+
+    for _, row in cp.psms.iterrows():
+        if (
+            np.isinf(row["Correlation"]) or
+            np.isnan(row["Correlation"]) or
+            np.isinf(-np.log10(row["corr p-value"])) or
+            np.isnan(-np.log10(row["corr p-value"]))
+        ):
+            continue
+
+        x.append(row["Correlation"])
+        y.append(-np.log10(row["corr p-value"]))
+
+        if row["corr p-value"] < pval_cutoff:
+            sig_x.append(row["Correlation"])
+            sig_y.append(-np.log10(row["corr p-value"]))
+            sig_labels.append(" / ".join(sorted(row["Proteins"].genes)))
+
+        colors.append(
+            "blue" if row["corr p-value"] < pval_cutoff else "grey"
+        )
+
+    ax.scatter(x, y, c=colors)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    texts = []
+    for xs, ys, txt in zip(sig_x, sig_y, sig_labels):
+        if txt in hide:
+            continue
+
+        txt = rename.get(txt, txt)
+        text = ax.text(xs, ys, txt)
+
+        if txt in highlight:
+            text.set_fontsize(20)
+
+        text.set_bbox(
+            dict(
+                facecolor="lightgreen" if xs > 0 else "pink",
+                alpha=1,
+                linewidth=0.5 if txt not in edgecolors else 3,
+                edgecolor=edgecolors.get(txt, "black"),
+                boxstyle="round",
+            )
+        )
+
+        texts.append(text)
+
+    adjust_text(
+        x=sig_x,
+        y=sig_y,
+        texts=texts,
+        ax=ax,
+        lim=400,
+        force_text=0.3,
+        force_points=0.01,
+        arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+        only_move={
+            "points": "y",
+            "text": "xy",
+        }
+    )
+
+    cp.psms = cp.psms[cp.psms["corr p-value"] < pval_cutoff]
+
+    f, axes = plt.subplots(
+        cp.psms.shape[0] // 3, 3,
+        figsize=(18, cp.psms.shape[0] * 2),
+    )
+
+    for index, (ax, (_, row)) in enumerate(
+        zip(
+            axes.ravel(),
+            cp.psms.sort_values("corr p-value").iterrows(),
+        )
+    ):
+        for data_chan, sig_chan in zip(data_chans, signal_chans):
+            ax.scatter(
+                x=signal[sig_chan],
+                y=row[data_chan],
+                facecolors="red" if "FAD" in sig_chan else "black",
+                edgecolors="black",
+                marker="" "^" if "Δp35ΚΙ" in sig_chan else "o",
+                s=200,
+            )
+
+        row_title = " / ".join(str(i.gene) for i in row["Proteins"])
+
+        if len(row_title) > 20:
+            row_title = "{}...".format(row_title[:18])
+
+        ax.set_title(
+            row_title,
+            fontsize=28,
+            fontweight="bold",
+        )
+
+        ax.set_xlabel(
+            "{}\n$\\rho = {:.2f}; p = {:.2E}$".format(
+                xlabel,
+                row["Correlation"],
+                row["corr p-value"],
+            ),
+            fontsize=22,
+        )
+        row_seq = str(row["Sequence"])
+
+        if len(row_seq) > 20:
+            row_seq = "{}..".format(row_seq[:20])
+
+        row_mods = str(row["Modifications"].get_mods([(None, "Phospho")]))
+
+        if len(row_mods) > 20:
+            row_mods = "{}...".format(row_mods[:20])
+
+        ax.set_ylabel(
+            "{}\n({})".format(
+                row_seq,
+                row_mods,
+            ),
+            fontsize=20,
+        )
+        for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(20)
+
+    f.tight_layout(pad=2)
+
+    return f
