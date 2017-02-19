@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import ttest_ind
 
-from . import loading, utils
+from . import loading, modification, utils
 
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
@@ -135,8 +135,7 @@ class DataSet:
                 self.psms["Confidence Level"].isin(["High"])
             ]
 
-        if self.groups:
-            self.update_group_changes()
+        self.update_group_changes()
 
         if merge_duplicates:
             LOGGER.info("Merging duplicate peptide hits together.")
@@ -362,8 +361,7 @@ class DataSet:
         new.channels = new_channels
         new.groups = self.groups.copy()
 
-        if "Fold Change" in new.psms.columns or "p-value" in new.psms.columns:
-            new.update_group_changes()
+        new.update_group_changes()
 
         return new
 
@@ -398,6 +396,7 @@ class DataSet:
         p_cutoff=None,
         fold_cutoff=None,
         asym_fold_cutoff=None,
+        mod_types=None,
         inplace=False,
     ):
         """
@@ -410,6 +409,7 @@ class DataSet:
         p_cutoff : float, optional
         fold_cutoff : float, optional
         asym_fold_cutoff : float, optional
+        mod_types : list of tuple of str, str, optional
         inplace : bool, optional
 
         Returns
@@ -472,6 +472,9 @@ class DataSet:
                     ]
                 ) >= fold_cutoff
             ]
+
+        if mod_types:
+            new.psms = modification.filter_mod_types(new.psms, mod_types)
 
         return new
 
@@ -654,11 +657,7 @@ def merge_data(
         )
     )
 
-    if new.groups and (
-        "Fold Change" in new.psms.columns or
-        "p-value" in new.psms.columns
-    ):
-        new.update_group_changes()
+    new.update_group_changes()
 
     if name:
         new.name = name
