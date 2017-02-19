@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 """
 This module provides functionality for data set analysis.
 
@@ -1128,7 +1129,7 @@ def correlate_signal(
                 y=row[data_chan],
                 facecolors="red" if "FAD" in sig_chan else "black",
                 edgecolors="black",
-                marker="" "^" if "Δp35ΚΙ" in sig_chan else "o",
+                marker="" "^" if u"Δp35ΚΙ" in sig_chan else "o",
                 s=200,
             )
 
