@@ -123,6 +123,12 @@ class NormalizationTest(TestCase):
         self.assertEqual(
             psms.psms.iloc[0]["131_norm"], 1e4,
         )
+        self.assertEqual(
+            psms.psms.iloc[0]["Fold Change"], 1/3,
+        )
+        self.assertTrue(
+            np.isnan(psms.psms.iloc[0]["p-value"]),
+        )
 
     def test_inter_normalization(self):
         psms = self.data.inter_normalize("norm")
@@ -141,6 +147,12 @@ class NormalizationTest(TestCase):
         )
         self.assertEqual(
             psms.psms.iloc[0]["high"], 4,
+        )
+        self.assertEqual(
+            psms.psms.iloc[0]["Fold Change"], 1/4,
+        )
+        self.assertTrue(
+            np.isnan(psms.psms.iloc[0]["p-value"]),
         )
 
     def test_inter_norm_merge(self):
@@ -173,6 +185,12 @@ class NormalizationTest(TestCase):
         self.assertEqual(
             psms.psms.iloc[0]["high"], 12,
         )
+        self.assertEqual(
+            psms.psms.iloc[0]["Fold Change"], 1/4,
+        )
+        self.assertTrue(
+            np.isnan(psms.psms.iloc[0]["p-value"]),
+        )
 
     def test_nan_norm(self):
         self.data.psms["131"] = np.nan
@@ -192,4 +210,10 @@ class NormalizationTest(TestCase):
         )
         self.assertTrue(
             np.isnan(psms.psms.iloc[0]["high"]),
+        )
+        self.assertTrue(
+            np.isnan(psms.psms.iloc[0]["Fold Change"]),
+        )
+        self.assertTrue(
+            np.isnan(psms.psms.iloc[0]["p-value"]),
         )

@@ -13,6 +13,7 @@ import logging
 # Core data analysis libraries
 import pandas as pd
 import numpy as np
+import numpy.ma as ma
 from scipy.stats import ttest_ind
 
 from . import loading, modification, utils
@@ -322,6 +323,8 @@ class DataSet:
         new.channels = OrderedDict([(key, key) for key in new.channels.keys()])
         new.groups = self.groups.copy()
 
+        new.update_group_changes()
+
         return new
 
     def normalize(self, levels, inplace=False):
@@ -570,14 +573,18 @@ class DataSet:
                 np.nanmean(self.psms[channels_a], axis=1) /
                 np.nanmean(self.psms[channels_b], axis=1)
             )
-            self.psms["p-value"] = pd.Series(
-                ttest_ind(
-                    self.psms[channels_a],
-                    self.psms[channels_b],
-                    axis=1,
-                    nan_policy="omit",
-                )[1]
-            )
+
+            pvals = ttest_ind(
+                self.psms[channels_a],
+                self.psms[channels_b],
+                axis=1,
+                nan_policy="omit",
+            )[1]
+
+            if pvals is ma.masked:
+                pvals = np.nan
+
+            self.psms["p-value"] = pd.Series(pvals)
 
 
 def merge_data(
