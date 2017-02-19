@@ -1,3 +1,6 @@
+
+from __future__ import division
+
 from unittest import TestCase
 
 from pyproteome import data_sets, loading, modification, protein
