@@ -218,6 +218,8 @@ def volcano_plot(
     Parameters
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    group_a : str or list of str, optional
+    group_b : str or list of str, optional
     pval_cutoff : float, optional
     fold_cutoff : float, optional
     highlight : list, optional
@@ -230,6 +232,14 @@ def volcano_plot(
     figsize : tuple of float, float
     compress_dups : bool, optional
     """
+    (_, (label_a, label_b)) = data.get_groups(
+        group_a=group_a,
+        group_b=group_b,
+    )
+
+    if group_a and group_b:
+        data.update_group_changes(group_a=group_a, group_b=group_b)
+
     if not folder_name:
         folder_name = data.name
 
@@ -320,20 +330,15 @@ def volcano_plot(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    groups = list(data.groups.keys())
-
-    if group_a is None:
-        group_a = groups[0]
-
-    if group_b is None:
-        group_b = groups[1]
-
     ax.set_xlim(
         xmin=np.floor(min(changes) * 2) / 2,
         xmax=np.ceil(max(changes) * 2) / 2,
     )
     ax.set_xlabel(
-        "$log_2$ Fold Change {} / {}".format(group_a, group_b),
+        "$log_2$ Fold Change {} / {}".format(
+            label_a,
+            label_b,
+        ),
         fontsize=20,
     )
     ax.set_ylabel(
