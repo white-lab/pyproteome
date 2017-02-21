@@ -479,6 +479,8 @@ class DataSet:
         if mod_types:
             new.psms = modification.filter_mod_types(new.psms, mod_types)
 
+        new.psms.reset_index(inplace=True, drop=True)
+
         return new
 
     def get_groups(self, group_a=None, group_b=None):
