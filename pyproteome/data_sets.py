@@ -368,12 +368,13 @@ class DataSet:
 
         return new
 
-    def dropna(self, inplace=False):
+    def dropna(self, how="any", inplace=False):
         """
         Drop any channels with NaN values.
 
         Parameters
         ----------
+        how : str, optional
         inplace : bool, optional
 
         Returns
@@ -387,7 +388,7 @@ class DataSet:
 
         new.psms = new.psms.dropna(
             axis=0,
-            how="any",
+            how=how,
             subset=list(new.channels.values()),
         )
 
