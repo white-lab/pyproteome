@@ -177,14 +177,18 @@ def _remove_lesser_dups(pvals, changes, labels):
         for o_index, o_label in enumerate(labels):
             if index == o_index:
                 continue
+            if label != o_label:
+                continue
+            if (change < 0) != (changes[o_index] < 0):
+                continue
+
+            mul = 1 if change >= 0 else -1
+
             if (
-                label == o_label and (
-                    p + change < pvals[o_index] + changes[o_index] or
-                    (
-                        p + change <= pvals[o_index] + changes[o_index] and
-                        index < o_index
-                    )
-                )
+                p + mul * change < pvals[o_index] + mul * changes[o_index]
+            ) or (
+                p + mul * change <= pvals[o_index] + mul * changes[o_index] and
+                index < o_index
             ):
                 break
         else:
@@ -1009,6 +1013,8 @@ def correlate_signal(
     edgecolors=None,
     rename=None,
     folder_name=None, title=None,
+    scatter_colors=None,
+    scatter_symbols=None,
     figsize=(12, 10),
     xlabel="",
 ):
@@ -1022,8 +1028,20 @@ def correlate_signal(
         edgecolors = {}
     if not rename:
         rename = {}
+    if not scatter_colors:
+        scatter_colors = {}
+    if not scatter_symbols:
+        scatter_symbols = {}
 
     cp = data.copy()
+
+    signal_groups = [
+        label
+        for label, group in cp.groups.items()
+        for chan in group
+        if chan in cp.channels.keys() and
+        chan in signal.columns
+    ]
 
     signal_chans = [
         chan
@@ -1048,7 +1066,7 @@ def correlate_signal(
     cp.psms["Correlation"] = [i.correlation for i in corr]
     cp.psms["corr p-value"] = [i.pvalue for i in corr]
 
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(figsize=figsize)
     x, y, colors = [], [], []
     sig_x, sig_y, sig_labels = [], [], []
 
@@ -1115,26 +1133,37 @@ def correlate_signal(
         }
     )
 
+    ax.set_xlabel(
+        "Correlation",
+        fontsize=20,
+    )
+    ax.set_ylabel(
+        "$-log_{10}$ p-value",
+        fontsize=20,
+    )
+
     cp.psms = cp.psms[cp.psms["corr p-value"] < pval_cutoff]
 
     f, axes = plt.subplots(
-        cp.psms.shape[0] // 3, 3,
+        int(np.ceil(cp.psms.shape[0] / 3)), 3,
         figsize=(18, cp.psms.shape[0] * 2),
     )
 
     for index, (ax, (_, row)) in enumerate(
         zip(
             axes.ravel(),
-            cp.psms.sort_values("corr p-value").iterrows(),
+            cp.psms.sort_values("Correlation").iterrows(),
         )
     ):
-        for data_chan, sig_chan in zip(data_chans, signal_chans):
+        for data_chan, sig_chan, sig_group in zip(
+            data_chans, signal_chans, signal_groups,
+        ):
             ax.scatter(
                 x=signal[sig_chan],
                 y=row[data_chan],
-                facecolors="red" if "FAD" in sig_chan else "black",
+                facecolors=scatter_colors.get(sig_group, "black"),
                 edgecolors="black",
-                marker="" "^" if u"Δp35ΚΙ" in sig_chan else "o",
+                marker=scatter_symbols.get(sig_group, "o"),
                 s=200,
             )
 
