@@ -588,6 +588,9 @@ class DataSet:
                 pvals = np.nan
 
             self.psms["p-value"] = pd.Series(pvals)
+        else:
+            self.psms["Fold Change"] = np.nan
+            self.psms["p-value"] = np.nan
 
 
 def merge_data(
