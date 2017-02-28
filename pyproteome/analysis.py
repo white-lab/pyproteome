@@ -338,15 +338,28 @@ def volcano_plot(
         xmin=np.floor(min(changes) * 2) / 2,
         xmax=np.ceil(max(changes) * 2) / 2,
     )
+    ax.set_xticks(
+        list(sorted(list(ax.get_xticks()) + [lower_fold, upper_fold]))
+    )
+    ax.set_yticks(
+        list(sorted(list(ax.get_yticks()) + [pval_cutoff]))
+    )
+    ax.set_xticklabels(
+        ["{}".format(2 ** i) for i in ax.get_xticks()]
+    )
+    ax.set_yticklabels(
+        ["{}".format(10 ** -i) for i in ax.get_yticks()]
+    )
+
     ax.set_xlabel(
-        "$log_2$ Fold Change {} / {}".format(
+        "Fold Change {} / {}".format(
             label_a,
             label_b,
         ),
         fontsize=20,
     )
     ax.set_ylabel(
-        "$-log_{10}$ p-value",
+        "p-value",
         fontsize=20,
     )
     ax.set_ylim(bottom=-0.1)
