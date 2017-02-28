@@ -17,7 +17,7 @@ import pandas as pd
 from scipy.stats import linregress
 
 from . import paths
-from pycamv.utils import DefaultOrderedDict
+from .utils import DefaultOrderedDict
 
 LOGGER = logging.getLogger("pyproteome.bca")
 RE_ROW_COL = re.compile("([A-Z]+)(\d+)")

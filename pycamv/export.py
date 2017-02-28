@@ -7,7 +7,7 @@ from collections import OrderedDict
 import json
 import re
 
-from .utils import DefaultOrderedDict
+from pyproteome.utils import DefaultOrderedDict
 
 from . import ms_labels
 from pyproteome.loading import RE_PROTEIN
