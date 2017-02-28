@@ -1,21 +1,25 @@
 # Change Log
 
-## 0.3.1 (2017-\*-\*)
+## 0.3.1 (2017-02-28)
+
+Features
+
+  - Drop notebook requirement down to just ipython.
 
 Bugfixes
 
-  - Fixed truncation of x/y-axis ticks on volcano plots
+  - Fixed truncation of x/y-axis ticks on volcano plots.
 
 ## 0.3.0 (2017-02-28)
 
 Features
 
-  - Added support for > 2 groups
-  - Added support for inter-run normalization
+  - Added support for > 2 groups.
+  - Added support for inter-run normalization.
 
 Bugfixes
 
-  - Too many bug-fixes to count
+  - Too many bug-fixes to count.
 
 ## 0.2.3 (2016-09-12)
 
