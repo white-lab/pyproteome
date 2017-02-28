@@ -8,7 +8,6 @@ import xml.etree.ElementTree as ET
 
 from scipy.misc import comb
 
-from pyproteome import paths
 from . import ms_labels
 
 
@@ -241,14 +240,14 @@ def _parse_mascot_2_4_1(root):
     return fixed_mods, variable_mods, out
 
 
-def read_mascot_xml(xml_name):
+def read_mascot_xml(xml_path):
     """
     Parse a MASCOT XML file.
 
     Parameters
     ----------
-    xml_name : str
-        Name of XML file in Mascot XMLs directory.
+    xml_path : str
+        Path to XML file.
 
     Returns
     -------
@@ -256,7 +255,6 @@ def read_mascot_xml(xml_name):
     var_mods : list of str
     out : list of :class:`PeptideQuery<pycamv.mascot.PeptideQuery>`
     """
-    xml_path = os.path.join(paths.MASCOT_XML_DIR, xml_name)
     tree = ET.parse(xml_path)
     root = tree.getroot()
 

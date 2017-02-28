@@ -13,8 +13,6 @@ import tempfile
 
 import pymzml
 
-from pyproteome import paths
-
 
 LOGGER = logging.getLogger("pycamv.proteowizard")
 
@@ -90,13 +88,13 @@ def fetch_proteowizard(url=None):
     shutil.rmtree(tmpdir)
 
 
-def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
+def raw_to_mzml(raw_path, out_dir, scans=None, mz_window=None):
     """
     Covert a RAW file to .mzML using ProteoWizard.
 
     Parameters
     ----------
-    basename : str
+    raw_path : str
     out_dir : str
     scans : list of int, optional
     mz_window : list of int, optional
@@ -108,7 +106,6 @@ def raw_to_mzml(basename, out_dir, scans=None, mz_window=None):
     fetch_proteowizard()
 
     ms_convert_path = os.path.join(PROTEOWIZARD_PATH, "msconvert.exe")
-    raw_path = os.path.join(paths.MS_RAW_DIR, "{}.raw".format(basename))
 
     # Create a config file,
     config, config_path = tempfile.mkstemp(suffix=".txt", text=True)

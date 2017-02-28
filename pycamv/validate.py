@@ -15,6 +15,8 @@ import shutil
 
 # Core data analysis libraries
 
+from pyproteome import paths
+
 from . import compare, fragments, gen_sequences, mascot, ms_labels, scans
 
 
@@ -49,13 +51,26 @@ class SearchOptions:
         # TODO: Parse out SILAC, C-mod, phospho, etc
 
 
-def validate_spectra(basename, scan_list=None):
+def load_scan_list(scan_path):
+    # TODO
+    return
+
+
+def validate_spectra(
+    basename=None,
+    xml_path=None,
+    raw_path=None,
+    scan_list=None,
+):
     """
     Generate CAMV web page for validating spectra.
 
     Parameters
     ----------
-    basename : str
+    basename : str, optional
+    xml_path : str, optional
+    raw_path : str, optional
+    scan_path : str, optional
     scan_list : list of int, optional
 
     Returns
@@ -75,9 +90,15 @@ def validate_spectra(basename, scan_list=None):
         channels.
     """
     # Read MASCOT xml file
-    xml_name = "{}.xml".format(basename)
+    if xml_path is None:
+        xml_path = os.path.join(
+            paths.MASCOT_XML_DIR, "{}.xml".format(basename)
+        )
 
-    fixed_mods, var_mods, pep_queries = mascot.read_mascot_xml(xml_name)
+    fixed_mods, var_mods, pep_queries = mascot.read_mascot_xml(xml_path)
+
+    if scan_path is not None:
+        scan_list = load_scan_list(scan_path)
 
     # Optionally filter queries using a scan list
     if scan_list:
@@ -96,8 +117,12 @@ def validate_spectra(basename, scan_list=None):
     out_dir = tempfile.mkdtemp()
 
     LOGGER.info("Getting scan data.")
+
+    if raw_path is None:
+        raw_path = os.path.join(paths.MS_RAW_DIR, "{}.raw".format(basename))
+
     scan_queries, ms_two_data, ms_data = scans.get_scan_data(
-        basename, pep_queries, out_dir,
+        raw_path, pep_queries, out_dir,
     )
 
     scan_mapping = OrderedDict(
