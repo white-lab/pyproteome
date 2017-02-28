@@ -18,7 +18,7 @@ install:
     - "conda info -a"
     - "conda create -n env python=%PYTHON_VERSION% %CONDA_PACKAGES%"
     - "activate env"
-    - "pip install -r requirements.txt"
+    - "pip install -r requirements.txt jinja2==2.8.1" # Pin jinja for py < 3.6
     - "pip install pyinstaller"
 
 build_script:
