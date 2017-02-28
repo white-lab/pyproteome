@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.3.0 (2017-02-28)
+
+Features
+
+  - Added support for > 2 groups
+  - Added support for inter-run normalization
+
+Bugfixes
+
+  - Too many bug-fixes to count
+
 ## 0.2.3 (2016-09-12)
 
 Bugfixes
