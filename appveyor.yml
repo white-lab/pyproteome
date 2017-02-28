@@ -7,15 +7,25 @@ build:
 
 environment:
     matrix:
-        - PYTHON: "C:\\Python36"
+        - PYTHON_VERSION: 3.5
+          MINICONDA: "C:\\Miniconda3"
 
 install:
-    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+    - "SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+    - "SET CONDA_PACKAGES="numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython pyzmq"
+    - "conda config --set always_yes yes --set changeps1 no"
+    - "conda update conda"
+    - "conda info -a"
+    - "conda create -n env python=%PYTHON_VERSION% %CONDA_PACKAGES"
+    - "activate env"
     - "pip install -r requirements.txt"
     - "pip install pyinstaller"
 
 build_script:
     - "pyinstaller pycamv.spec"
+
+test_script:
+    - "python setup.py test"
 
 artifacts:
     - path: dist\PyCAMVerter.exe

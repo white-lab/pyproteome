@@ -17,8 +17,9 @@ before_install:
   biopython pyzmq"
 
 install:
-- conda update --yes conda
-- conda create --yes -n env python=$TRAVIS_PYTHON_VERSION $CONDA_PACKAGES
+- conda config --set always_yes yes --set changeps1 no
+- conda update conda
+- conda create -n env python=$TRAVIS_PYTHON_VERSION $CONDA_PACKAGES
 - source activate env
 - pip install -r requirements.txt
 - pip install coveralls
