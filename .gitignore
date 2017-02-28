@@ -116,6 +116,3 @@ $RECYCLE.BIN/
 
 # uniprot
 .uniprot_cache/
-
-# ProteoWizard
-pycamv/ProteoWizard/
