@@ -1,0 +1,33 @@
+version: Build {build}
+
+skip_non_tags: true
+
+build:
+    verbosity: minimal
+
+environment:
+    matrix:
+        - PYTHON: "C:\\Python36"
+
+install:
+    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+    - "pip install -r requirements.txt"
+    - "pip install pyinstaller"
+
+build_script:
+    - "pyinstaller pycamv.spec"
+
+artifacts:
+    - path: dist\PyCAMVerter.exe
+      name: PyCAMVerter
+
+deploy:
+    - provider: GitHub
+      description: ""
+      artifact: PyCAMVerter
+      draft: false
+      prerelease: false
+      on:
+        appveyor_repo_tag: true
+      auth_token:
+        secure: +GzJ//tQ7T8IYqT0tFSseDQ7N5+HfGrh6pv4DHVTMxy3fhd5KYYXUfhgXkqoCIfn
