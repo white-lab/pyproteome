@@ -12,7 +12,7 @@ environment:
 
 install:
     - "SET PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-    - "SET CONDA_PACKAGES="numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython pyzmq"
+    - "SET CONDA_PACKAGES='numpy scipy matplotlib pandas networkx scikit-learn seaborn biopython pyzmq'"
     - "conda config --set always_yes yes --set changeps1 no"
     - "conda update conda"
     - "conda info -a"
