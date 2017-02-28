@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.3.1 (2017-\*-\*)
+
+Bugfixes
+
+  - Fixed truncation of x/y-axis ticks on volcano plots
+
 ## 0.3.0 (2017-02-28)
 
 Features

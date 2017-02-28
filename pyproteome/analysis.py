@@ -345,10 +345,16 @@ def volcano_plot(
         list(sorted(list(ax.get_yticks()) + [pval_cutoff]))
     )
     ax.set_xticklabels(
-        ["{}".format(2 ** i) for i in ax.get_xticks()]
+        [
+            "{:.3}".format(i)
+            for i in np.exp2(ax.get_xticks())
+        ]
     )
     ax.set_yticklabels(
-        ["{}".format(10 ** -i) for i in ax.get_yticks()]
+        [
+            "{:.3}".format(i)
+            for i in np.power(1/10, ax.get_yticks())
+        ]
     )
 
     ax.set_xlabel(
@@ -1114,6 +1120,10 @@ def correlate_signal(
             continue
 
         txt = rename.get(txt, txt)
+
+        if len(txt) > 20:
+            txt = "{}...".format(txt[:20])
+
         text = ax.text(xs, ys, txt)
 
         if txt in highlight:
@@ -1150,8 +1160,12 @@ def correlate_signal(
         "Correlation",
         fontsize=20,
     )
+    ax.set_yticklabels(
+        "{:.3}".format(i)
+        for i in np.power(1/10, ax.get_yticks())
+    )
     ax.set_ylabel(
-        "$-log_{10}$ p-value",
+        "p-value",
         fontsize=20,
     )
 
@@ -1210,9 +1224,8 @@ def correlate_signal(
             row_mods = "{}...".format(row_mods[:20])
 
         ax.set_ylabel(
-            "{}\n({})".format(
-                row_seq,
-                row_mods,
+            row_seq + (
+                "\n({})".format(row_mods) if row_mods else ""
             ),
             fontsize=20,
         )
