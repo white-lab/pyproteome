@@ -43,16 +43,16 @@ dilution.
 >>> from pyproteome import analysis, data_sets, levels,
 >>> from collections import OrderedDict
 >>> ck_channels = OrderedDict([
-...     ("126", "3130 CK"),
-...     ("127", "3131 CK-p25"),
-...     ("128", "3145 CK-p25"),
-...     ("129", "3146 CK-p25"),
-...     ("130", "3148 CK"),
-...     ("131", "3157 CK"),
+...     ("3130 CK",     "126"),
+...     ("3131 CK-p25", "127"),
+...     ("3145 CK-p25", "128"),
+...     ("3146 CK-p25", "129"),
+...     ("3148 CK",     "130"),
+...     ("3157 CK",     "131"),
 ... ])
 >>> ck_groups = OrderedDict([
-...     ("CK-p25", ["127", "128", "129"]),
-...     ("CK", ["126", "130", "131"]),
+...     ("CK-p25", ["3131 CK-p25", "3145 CK-p25", "3146 CK-p25"]),
+...     ("CK", ["3130 CK", "3148 CK", "3157 CK"]),
 ... ])
 >>> ck_name = "CK-p25 vs. CK, 2 weeks"
 >>> ck_h1_py = data_sets.DataSet(
