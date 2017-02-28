@@ -27,10 +27,6 @@ setup(
         str(i.req)
         for i in parse_requirements(REQUIREMENTS_PATH, session=PipSession())
     ],
-    dependency_links=[
-        "git+https://github.com/boscoh/uniprot#egg=uniprot",
-        "git+https://github.com/Phlya/adjustText#egg=adjustText"
-    ],
     classifiers=[
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
