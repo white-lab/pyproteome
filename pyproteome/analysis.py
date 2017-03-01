@@ -236,7 +236,7 @@ def volcano_plot(
     figsize : tuple of float, float
     compress_dups : bool, optional
     """
-    (_, (label_a, label_b)) = data.get_groups(
+    ((channels_a, channels_b), (label_a, label_b)) = data.get_groups(
         group_a=group_a,
         group_b=group_b,
     )
@@ -261,14 +261,10 @@ def volcano_plot(
     utils.make_folder(folder_name)
 
     if not title:
-        title = "{} - {} - (Bio-N={}, Tech-N={})".format(
+        title = "{} - {}".format(
             data.tissue,
             data.enrichment,
-            len(data.channels),
-            data.sets,
         )
-        if abs(fold_cutoff - 1.2) > 0.1 and abs(fold_cutoff - 1) > 0.01:
-            title += " -- Fold Change > {}".format(fold_cutoff)
 
     if title:
         file_name = re.sub("[ ></]", "_", title) + "_Volcano.png"
@@ -358,9 +354,11 @@ def volcano_plot(
     )
 
     ax.set_xlabel(
-        "Fold Change {} / {}".format(
+        "Fold Change {} (n={}) / {} (n={})".format(
             label_a,
+            len(channels_a),
             label_b,
+            len(channels_b),
         ),
         fontsize=20,
     )
@@ -382,7 +380,10 @@ def volcano_plot(
         if txt in hide:
             continue
 
-        text = ax.text(x, y, txt)
+        text = ax.text(
+            x, y,
+            txt[:20] + ("..."  if len(txt) > 20 else ""),
+        )
 
         if txt in highlight:
             text.set_fontsize(20)
@@ -1085,7 +1086,7 @@ def correlate_signal(
     cp.psms["Correlation"] = [i.correlation for i in corr]
     cp.psms["corr p-value"] = [i.pvalue for i in corr]
 
-    f, ax = plt.subplots(figsize=figsize)
+    f_corr, ax = plt.subplots(figsize=figsize)
     x, y, colors = [], [], []
     sig_x, sig_y, sig_labels = [], [], []
 
@@ -1121,10 +1122,10 @@ def correlate_signal(
 
         txt = rename.get(txt, txt)
 
-        if len(txt) > 20:
-            txt = "{}...".format(txt[:20])
-
-        text = ax.text(xs, ys, txt)
+        text = ax.text(
+            xs, ys,
+            txt[:20] + ("..."  if len(txt) > 20 else ""),
+        )
 
         if txt in highlight:
             text.set_fontsize(20)
@@ -1171,7 +1172,7 @@ def correlate_signal(
 
     cp.psms = cp.psms[cp.psms["corr p-value"] < pval_cutoff]
 
-    f, axes = plt.subplots(
+    f_scatter, axes = plt.subplots(
         int(np.ceil(cp.psms.shape[0] / 3)), 3,
         figsize=(18, cp.psms.shape[0] * 2),
     )
@@ -1196,11 +1197,8 @@ def correlate_signal(
 
         row_title = " / ".join(str(i.gene) for i in row["Proteins"])
 
-        if len(row_title) > 20:
-            row_title = "{}...".format(row_title[:18])
-
         ax.set_title(
-            row_title,
+            row_title[:20] + ("..."  if len(row_title) > 20 else ""),
             fontsize=28,
             fontweight="bold",
         )
@@ -1213,25 +1211,23 @@ def correlate_signal(
             ),
             fontsize=22,
         )
+
         row_seq = str(row["Sequence"])
-
-        if len(row_seq) > 20:
-            row_seq = "{}..".format(row_seq[:20])
-
         row_mods = str(row["Modifications"].get_mods([(None, "Phospho")]))
 
-        if len(row_mods) > 20:
-            row_mods = "{}...".format(row_mods[:20])
-
         ax.set_ylabel(
-            row_seq + (
-                "\n({})".format(row_mods) if row_mods else ""
+            row_seq[:20] + (
+                "..."  if len(row_seq) > 20 else ""
+            ) + (
+                "\n({})".format(
+                    row_mods[:20] + ("..."  if len(row_mods) > 20 else "")
+                ) if row_mods else ""
             ),
             fontsize=20,
         )
         for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
             tick.label.set_fontsize(20)
 
-    f.tight_layout(pad=2)
+    f_scatter.tight_layout(pad=2)
 
-    return f
+    return f_corr, f_scatter
