@@ -5,11 +5,12 @@ PRIDE / Proteome Xchange.
 
 from io import BytesIO
 import os
-import requests
 # XXX: This should be a safer alternative package. Otherwise users could be
 # DOS-d by a MITM attack
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
+
+import requests
 
 META_DATA_URL = (
     "http://proteomecentral.proteomexchange.org/cgi/GetDataset?ID={}&"

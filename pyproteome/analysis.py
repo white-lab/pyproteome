@@ -344,13 +344,15 @@ def volcano_plot(
         [
             "{:.3}".format(i)
             for i in np.exp2(ax.get_xticks())
-        ]
+        ],
+        fontsize=20,
     )
     ax.set_yticklabels(
         [
             "{:.3}".format(i)
             for i in np.power(1/10, ax.get_yticks())
-        ]
+        ],
+        fontsize=20,
     )
 
     ax.set_xlabel(
