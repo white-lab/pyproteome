@@ -51,7 +51,7 @@ def get_channel_levels(
     channel_levels[base] = 1
 
     f, axes = plt.subplots(
-        len(data.channels) // 2, 2,
+        int(np.ceil(len(data.channels) / 2)), 2,
         sharex=True,
         figsize=(12, 12),
     )
