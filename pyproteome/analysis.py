@@ -203,7 +203,7 @@ def volcano_plot(
     data,
     group_a=None,
     group_b=None,
-    pval_cutoff=1.3, fold_cutoff=1.2,
+    pval_cutoff=0.05, fold_cutoff=1.2,
     highlight=None,
     hide=None,
     show=None,
@@ -258,6 +258,8 @@ def volcano_plot(
     if not rename:
         rename = {}
 
+    log_pval_cutoff = -np.log10(pval_cutoff)
+
     utils.make_folder(folder_name)
 
     if not title:
@@ -307,7 +309,7 @@ def volcano_plot(
         if (
             row_label in show or
             (
-                row_pval > pval_cutoff and
+                row_pval > log_pval_cutoff and
                 (row_change > upper_fold or row_change < lower_fold)
             )
         ):
@@ -338,7 +340,17 @@ def volcano_plot(
         list(sorted(list(ax.get_xticks()) + [lower_fold, upper_fold]))
     )
     ax.set_yticks(
-        list(sorted(list(ax.get_yticks()) + [pval_cutoff]))
+        list(
+            sorted(
+                [
+                    tick
+                    for tick in ax.get_yticks()
+                    if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
+                    ["1", "5"] and
+                    tick != 0
+                ] + [log_pval_cutoff]
+            )
+        )
     )
     ax.set_xticklabels(
         [
@@ -370,7 +382,7 @@ def volcano_plot(
     )
     ax.set_ylim(bottom=-0.1)
 
-    ax.axhline(pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
+    ax.axhline(log_pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
 
     if abs(fold_cutoff - 1) > 0.01:
         ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
@@ -384,7 +396,7 @@ def volcano_plot(
 
         text = ax.text(
             x, y,
-            txt[:20] + ("..."  if len(txt) > 20 else ""),
+            txt[:20] + ("..." if len(txt) > 20 else ""),
         )
 
         if txt in highlight:
@@ -1126,7 +1138,7 @@ def correlate_signal(
 
         text = ax.text(
             xs, ys,
-            txt[:20] + ("..."  if len(txt) > 20 else ""),
+            txt[:20] + ("..." if len(txt) > 20 else ""),
         )
 
         if txt in highlight:
@@ -1200,7 +1212,7 @@ def correlate_signal(
         row_title = " / ".join(str(i.gene) for i in row["Proteins"])
 
         ax.set_title(
-            row_title[:20] + ("..."  if len(row_title) > 20 else ""),
+            row_title[:20] + ("..." if len(row_title) > 20 else ""),
             fontsize=28,
             fontweight="bold",
         )
@@ -1219,10 +1231,10 @@ def correlate_signal(
 
         ax.set_ylabel(
             row_seq[:20] + (
-                "..."  if len(row_seq) > 20 else ""
+                "..." if len(row_seq) > 20 else ""
             ) + (
                 "\n({})".format(
-                    row_mods[:20] + ("..."  if len(row_mods) > 20 else "")
+                    row_mods[:20] + ("..." if len(row_mods) > 20 else "")
                 ) if row_mods else ""
             ),
             fontsize=20,
