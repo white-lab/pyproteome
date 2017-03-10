@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.3.2 (2017-03-10)
+
+Bugfixes
+
+  - Fixed levels.get_channel_levels not displaying all histogram plots
+  - Cleared up clutter on analysis.volcano_plot
+
 ## 0.3.1 (2017-02-28)
 
 Features
