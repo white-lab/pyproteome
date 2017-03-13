@@ -604,6 +604,9 @@ class DataSet:
         -------
         :class:`pandas.DataFrame`
         """
+        if self.psms.shape[0] < 1:
+            return
+
         (group_a, group_b), _ = self.get_groups(
             group_a=group_a,
             group_b=group_b,
