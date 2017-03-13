@@ -160,6 +160,8 @@ class Modification:
             return "p"
         if self.mod_type in ["Carbamidomethyl"]:
             return "cm"
+        if self.mod_type in ["Oxidation"]:
+            return "ox"
 
         return self.mod_type
 
