@@ -146,9 +146,11 @@ class DataSet:
             self.dropna(inplace=True)
 
         if filter_bad:
+            LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self._filter_bad()
 
         if pick_best_ptm:
+            LOGGER.info("Picking peptides with best ion score for each scan.")
             self._pick_best_ptm()
 
         if merge_duplicates:
