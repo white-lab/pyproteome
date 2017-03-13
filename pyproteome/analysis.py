@@ -118,6 +118,24 @@ def snr_table(
     )
 
 
+def _rewrite_enrichments(lst):
+    mapping = {
+        "MPM2": "pST",
+        "MAPK / CDK": "pST",
+        "MAPK + CDK": "pST",
+        "NTA": "pST",
+        "IMAC": "pST",
+    }
+    return "+".join(
+        sorted(
+            set(
+                mapping.get(i, i)
+                for i in lst
+            )
+        )
+    )
+
+
 def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     """
     Write a full list of data sets to a single .xlsx file.
@@ -137,12 +155,30 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
 
     for data in datas:
+        channels = [
+            (name, data.channels[name])
+            for group in data.groups.values()
+            for name in group
+            if name in data.channels and
+            data.channels[name] in data.psms.columns
+        ]
         df = data.psms[
             [
                 "Proteins", "Sequence",
                 "Fold Change", "p-value", "Validated",
+            ] + [
+                chan
+                for _, chan in channels
             ]
         ]
+
+        df.rename(
+            columns={
+                chan: name
+                for name, chan in channels
+            },
+            inplace=True,
+        )
         df.insert(
             2, "Modifications",
             df["Sequence"].apply(
@@ -152,7 +188,11 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
         df["Sequence"] = df["Sequence"].apply(str)
         df.sort_values("p-value", inplace=True, ascending=True)
 
-        ws_name = "{}-{}".format(data.name, data.enrichment).replace("/", "+")
+        ws_name = "{} - {} - {}".format(
+            data.name,
+            data.tissue,
+            _rewrite_enrichments(data.enrichments),
+        ).replace("/", "+")
         df.to_excel(
             writer,
             sheet_name=ws_name,
