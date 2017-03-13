@@ -203,7 +203,7 @@ def volcano_plot(
     data,
     group_a=None,
     group_b=None,
-    pval_cutoff=0.05, fold_cutoff=1.2,
+    pval_cutoff=0.05, fold_cutoff=1.25,
     highlight=None,
     hide=None,
     show=None,
@@ -1040,7 +1040,7 @@ def spearmanr_nan(a, b, min_length=5):
 
 def correlate_signal(
     data, signal,
-    pval_cutoff=0.05, fold_cutoff=1.2,
+    pval_cutoff=0.05, fold_cutoff=1.25,
     highlight=None,
     hide=None,
     show=None,
