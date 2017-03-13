@@ -67,6 +67,8 @@ class DataSet:
         Parameters
         ----------
         channels : dict of str, str
+            Ordered dictionary mapping sample names to quantification channels
+            (i.e. {"X": "126", "Y": "127", "Z": "128", "W": "129"})
         psms : :class:`pandas.DataFrame`, optional
             Read psms directly from a DataFrame object.
         mascot_name : str, optional
@@ -76,15 +78,25 @@ class DataSet:
         msf : bool, optional
             Read mascot data from .msf file instead of a tab-delimited file.
         groups : dict of str, list of str, optional
+            Ordered dictionary mapping sample names to larger groups
+            (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
         phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
         enrichments : list of str, optional
         tissues : list of str, optional
         dropna : bool, optional
+            Drop scans that have any channels with missing quantification
+            values.
         camv_slices : int, optional
         merge_duplicates : bool, optional
+            Merge scans that have the same peptide sequence into one peptide,
+            summing the quantification channel intensities to give a weighted
+            estimate of relative abundances.
         merge_subsets : bool, optional
+            Merge peptides that are subsets of one another (i.e. "RLK" => "LK")
         filter_bad : bool, optional
+            Remove peptides that do not have a "High" confidence score from
+            ProteomeDiscoverer.
         """
         assert (
             psms is not None or

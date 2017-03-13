@@ -22,6 +22,14 @@ pyproteome.analysis module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.bca module
+--------------------------
+
+.. automodule:: pyproteome.bca
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.camv module
 ----------------------
 
@@ -34,6 +42,14 @@ pyproteome.data_sets module
 ---------------------------
 
 .. automodule:: pyproteome.data_sets
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.discoverer module
+----------------------
+
+.. automodule:: pyproteome.discoverer
     :members:
     :undoc-members:
     :show-inheritance:
