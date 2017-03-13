@@ -28,6 +28,7 @@ def _read_peptides(conn):
         Peptides.PeptideID,
         Peptides.SpectrumID,
         Peptides.Sequence,
+        Peptides.SearchEngineRank AS "Rank",
         Peptides.ConfidenceLevel AS "Confidence Level",
         PeptideScores.ScoreValue AS "IonScore",
         SpectrumHeaders.FirstScan AS "First Scan",

@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.3.3 (2017-\*-\*)
+
+Features
+
+  - Added pick_best_ptm option to DataSet, enabled by default. This selects
+    only the peptide with the best PTM assignment to be used for each scan.
+
 ## 0.3.2 (2017-03-10)
 
 Bugfixes

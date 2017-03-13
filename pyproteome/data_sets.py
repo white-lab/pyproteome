@@ -57,6 +57,7 @@ class DataSet:
         name="", enrichments=None, tissues=None,
         dropna=False,
         camv_slices=None,
+        pick_best_ptm=True,
         merge_duplicates=True,
         merge_subsets=False,
         filter_bad=True,
@@ -88,6 +89,10 @@ class DataSet:
             Drop scans that have any channels with missing quantification
             values.
         camv_slices : int, optional
+        pick_best_ptm : bool, optional
+            Select the peptide sequence for each scan that has the highest
+            MASCOT ion score. (i.e. ["pSTY": 5, "SpTY": 10, "STpY": 20] =>
+            "STpY")
         merge_duplicates : bool, optional
             Merge scans that have the same peptide sequence into one peptide,
             summing the quantification channel intensities to give a weighted
@@ -140,15 +145,11 @@ class DataSet:
             LOGGER.info("Dropping channels with NaN values.")
             self.dropna(inplace=True)
 
-        if filter_bad and "Confidence Level" in self.psms.columns:
-            # self.psms = self.psms[
-            #     self.psms["Confidence Level"].isin(["Medium", "High"])
-            # ]
-            self.psms = self.psms[
-                self.psms["Confidence Level"].isin(["High"])
-            ]
+        if filter_bad:
+            self._filter_bad()
 
-        self.update_group_changes()
+        if pick_best_ptm:
+            self._pick_best_ptm()
 
         if merge_duplicates:
             LOGGER.info("Merging duplicate peptide hits together.")
@@ -157,6 +158,8 @@ class DataSet:
         if merge_subsets:
             LOGGER.info("Merging peptide hits that are subsets together.")
             self._merge_subsequences()
+
+        self.update_group_changes()
 
     def copy(self):
         """
@@ -216,6 +219,38 @@ class DataSet:
             return self.psms[key]
 
         raise TypeError(type(key))
+
+    def _filter_bad(self):
+        if "Confidence Level" in self.psms.columns:
+            # self.psms = self.psms[
+            #     self.psms["Confidence Level"].isin(["Medium", "High"])
+            # ]
+            self.psms = self.psms[
+                self.psms["Confidence Level"].isin(["High"])
+            ]
+
+            self.psms = self.psms.reset_index(drop=True)
+
+    def _pick_best_ptm(self):
+        reject_mask = np.zeros(self.psms.shape[0], dtype=bool)
+
+        for index, row in self.psms.iterrows():
+            hits = np.logical_and(
+                self.psms["First Scan"] == row["First Scan"],
+                self.psms["Sequence"] != row["Sequence"],
+            )
+
+            if "Rank" in self.psms.columns:
+                better = self.psms["Rank"] < row["Rank"]
+            else:
+                better = self.psms["IonScore"] > row["IonScore"]
+
+            hits = np.logical_and(hits, better)
+
+            if hits.any():
+                reject_mask[index] = True
+
+        self.psms = self.psms[~reject_mask].reset_index(drop=True)
 
     def _merge_duplicates(self):
         channels = list(self.channels.values())
