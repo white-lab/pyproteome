@@ -89,6 +89,9 @@ class Sequence:
         return self.to_tuple() == other.to_tuple()
 
     def __contains__(self, other):
+        if isinstance(other, str):
+            return other in self._seq_with_modifications()
+
         if not isinstance(other, Sequence):
             raise TypeError(type(other))
 
