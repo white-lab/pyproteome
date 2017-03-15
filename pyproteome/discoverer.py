@@ -303,7 +303,7 @@ def read_discoverer_msf(basename):
     )
 
     LOGGER.info(
-        "Loading MASCOT peptides from \"{}\"".format(
+        "Loading ProteomeDiscoverer peptides from \"{}\"".format(
             os.path.basename(msf_path),
         )
     )
