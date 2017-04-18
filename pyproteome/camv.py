@@ -125,8 +125,8 @@ def output_scan_list(
     psms = psms.copy()
     psms["Scan Paths"] = pd.Series([set("")] * len(psms.index))
 
-    scan_list = filtered.sort(
-        columns=["Protein Group Accessions", "First Scan"],
+    scan_list = filtered.sort_values(
+        by=["Protein Group Accessions", "First Scan"],
         ascending=True,
     )[["First Scan"]]
 
