@@ -9,6 +9,7 @@ structured format.
 from collections import OrderedDict
 import copy
 import logging
+import warnings
 
 # Core data analysis libraries
 import pandas as pd
@@ -174,6 +175,10 @@ class DataSet:
         new = copy.copy(self)
         new.psms = new.psms.copy()
         return new
+
+    @property
+    def samples(self):
+        return list(self.channels.keys())
 
     @property
     def enrichment(self):
@@ -624,22 +629,24 @@ class DataSet:
         ]
 
         if channels_a and channels_b:
-            self.psms["Fold Change"] = pd.Series(
-                np.nanmean(self.psms[channels_a], axis=1) /
-                np.nanmean(self.psms[channels_b], axis=1)
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                self.psms["Fold Change"] = pd.Series(
+                    np.nanmean(self.psms[channels_a], axis=1) /
+                    np.nanmean(self.psms[channels_b], axis=1)
+                )
 
-            pvals = ttest_ind(
-                self.psms[channels_a],
-                self.psms[channels_b],
-                axis=1,
-                nan_policy="omit",
-            )[1]
+                pvals = ttest_ind(
+                    self.psms[channels_a],
+                    self.psms[channels_b],
+                    axis=1,
+                    nan_policy="omit",
+                )[1]
 
-            if pvals is ma.masked:
-                pvals = np.nan
+                if pvals is ma.masked:
+                    pvals = np.nan
 
-            self.psms["p-value"] = pd.Series(pvals)
+                self.psms["p-value"] = pd.Series(pvals)
         else:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
