@@ -939,8 +939,11 @@ def correlate_data_sets(
         x_s.append(x)
         y_s.append(y)
 
+        txt = " / ".join(row["Proteins_x"].genes)
+        txt = txt[:20] + ("..." if len(txt) > 20 else "")
+
         text = ax.text(
-            x, y, " / ".join(row["Proteins_x"].genes),
+            x, y, txt,
         )
 
         text.set_bbox(
@@ -994,8 +997,11 @@ def correlate_data_sets(
         linestyle=":",
     )
 
-    ax.set_xlabel("$log_2$ Fold Change -- {}".format(data1.name))
-    ax.set_ylabel("$log_2$ Fold Change -- {}".format(data2.name))
+    name1 = "{} - {}".format(data1.name, ", ".join(sorted(data1.tissues)))
+    name2 = "{} - {}".format(data2.name, ", ".join(sorted(data2.tissues)))
+
+    ax.set_xlabel("$log_2$ Fold Change -- {}".format(name1))
+    ax.set_ylabel("$log_2$ Fold Change -- {}".format(name2))
 
     pear_corr = pearsonr(merged["Fold Change_x"], merged["Fold Change_y"])
     spear_corr = spearmanr(merged["Fold Change_x"], merged["Fold Change_y"])
