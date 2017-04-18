@@ -5,9 +5,14 @@
 Features
 
   - Added pick_best_ptm option to DataSet, enabled by default. This selects
-    only the peptide with the best PTM assignment to be used for each scan.
+    only the peptide with the best PTM assignment to be used for each scan. It
+    is recommended to disable this feature on large pS/T data sets.
   - Sequence.\_\_contains\_\_ supports string arguments now.
   - Added individual sample quantitations to analysis.write_full_tables
+
+Bugfixes
+
+  - Fixed several runtime warnings from matplotlib / numpy.
 
 ## 0.3.2 (2017-03-10)
 
