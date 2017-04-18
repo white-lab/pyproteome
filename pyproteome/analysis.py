@@ -625,8 +625,6 @@ def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
         if label:
             label.set_fontsize(20)
 
-    f.show()
-
     if filename:
         f.savefig(filename, transparent=True, dpi=500)
 
@@ -949,7 +947,6 @@ def correlate_data_sets(
             dict(
                 color="lightgreen" if ratio < 0 else "pink",
                 alpha=0.8,
-                edgecolor="red",
             )
         )
         texts.append(text)
@@ -1051,8 +1048,8 @@ def find_tfs(data, folder_name=None, csv_name=None):
             for go_term in go_terms
         )
 
-    tfs = data.psms[data.psms["Proteins"].apply(_is_tf)]
-    tfs.sort(columns="Fold Change", ascending=False, inplace=True)
+    tfs = data.psms[data.psms["Proteins"].apply(_is_tf)].copy()
+    tfs.sort_values(by="Fold Change", ascending=False, inplace=True)
 
     if csv_name:
         tfs[["Proteins", "Sequence", "Modifications", "Fold Change"]].to_csv(
@@ -1143,6 +1140,8 @@ def correlate_signal(
 
     for _, row in cp.psms.iterrows():
         if (
+            row["Correlation"] == 0 or
+            row["corr p-value"] == 0 or
             np.isinf(row["Correlation"]) or
             np.isnan(row["Correlation"]) or
             np.isinf(-np.log10(row["corr p-value"])) or
