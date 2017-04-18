@@ -76,7 +76,7 @@ def snr_table(
             "Proteins", "Sequence", "Modifications",
             "Fold Change", "p-value", "Validated",
         ]
-    ]
+    ].copy()
     psms["Sequence"] = [
         "{} ({})".format(row["Sequence"], row["Modifications"])
         for _, row in psms.iterrows()
@@ -103,13 +103,14 @@ def snr_table(
     if psms.empty:
         return psms
 
-    return psms.style.apply(  # Color validated rows
-        lambda row: [
-            "background-color: " + back_colors[row["Validated"]]
-            for _ in row
-        ],
-        axis=1,
-    ).set_table_styles(  # Hide index and "Validated" columns
+    # return psms.style.apply(  # Color validated rows
+    #     lambda row: [
+    #         "background-color: " + back_colors[row["Validated"]]
+    #         for _ in row
+    #     ],
+    #     axis=1,
+    # )
+    return psms.style.set_table_styles(  # Hide index and "Validated" columns
         [
             {"selector": "th:first-child", "props": [("display", "none")]},
             {"selector": "td:last-child", "props": [("display", "none")]},
@@ -170,7 +171,7 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
                 chan
                 for _, chan in channels
             ]
-        ]
+        ].copy()
 
         df.rename(
             columns={
@@ -485,8 +486,6 @@ def volcano_plot(
             transparent=True,
         )
 
-    fig.show()
-
 
 def hierarchical_heatmap(
     data,
@@ -578,8 +577,6 @@ def venn2(data_a, data_b, folder_name=None, filename=None):
     for label in v.subset_labels:
         if label:
             label.set_fontsize(20)
-
-    f.show()
 
     if filename:
         f.savefig(filename, transparent=True, dpi=500)

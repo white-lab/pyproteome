@@ -81,8 +81,6 @@ def get_channel_levels(
     for ax in axes[len(data.channels) - 1:]:
         ax.set_axis_off()
 
-    f.show()
-
     if file_name:
         f.savefig(file_name)
 
