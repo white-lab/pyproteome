@@ -115,6 +115,7 @@ def snr_table(
             {"selector": "th:first-child", "props": [("display", "none")]},
             {"selector": "td:last-child", "props": [("display", "none")]},
             {"selector": "th:last-child", "props": [("display", "none")]},
+            {"selector": "*", "props": [("text-align", "left")]},
         ]
     )
 
