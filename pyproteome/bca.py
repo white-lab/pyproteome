@@ -192,7 +192,7 @@ def interpret_bca_assay(
     slope, intercept, r, _, _ = linregress(std_x, std_y)
 
     # Plot these points on a graph
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(figsize=(16, 12))
     ax.scatter(
         x=std_x,
         y=std_y,
