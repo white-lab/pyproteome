@@ -1064,7 +1064,14 @@ def find_tfs(data, folder_name=None, csv_name=None):
             index=False,
         )
 
-    return tfs
+    tfs = tfs[["Proteins", "Sequence", "Fold Change", "p-value"]]
+
+    return tfs.style.set_table_styles(  # Hide index and "Validated" columns
+        [
+            {"selector": "th:first-child", "props": [("display", "none")]},
+            {"selector": "*", "props": [("text-align", "left")]},
+        ]
+    )
 
 
 def spearmanr_nan(a, b, min_length=5):
