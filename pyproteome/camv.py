@@ -72,7 +72,12 @@ def load_camv_validation(basename):
 
             return df
 
-    for filename in os.listdir(paths.CAMV_OUT_DIR):
+    try:
+        files = os.listdir(paths.CAMV_OUT_DIR)
+    except FileNotFoundError:
+        return accepted, maybed, rejected
+
+    for filename in files:
         if filename.startswith(basename):
             base_dir = os.path.join(paths.CAMV_OUT_DIR, filename)
 
