@@ -153,6 +153,7 @@ class DataSet:
             self._filter_bad()
 
         if pick_best_ptm and (
+            not mascot_name or
             os.path.splitext(mascot_name)[1] != ".msf" or
             any(i for i in lst)
         ):
