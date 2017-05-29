@@ -116,3 +116,5 @@ $RECYCLE.BIN/
 
 # uniprot
 .uniprot_cache/
+*.exe
+CAMV/
