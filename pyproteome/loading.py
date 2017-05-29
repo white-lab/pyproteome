@@ -343,7 +343,7 @@ def _calculate_accepted(psms, accepted):
     return psms
 
 
-def load_mascot_psms(basename, camv_slices=None, msf=True):
+def load_mascot_psms(basename, camv_slices=None, pick_best_ptm=False):
     """
     Load a list of sequences from a MSF file produced by MASCOT / Discoverer.
 
@@ -356,11 +356,22 @@ def load_mascot_psms(basename, camv_slices=None, msf=True):
     -------
     psms : :class:`pandas.DataFrame`
     scan_lists : dict of str, list of int
-    msf : bool, optional
-        Use Discoverer .msf files. Otherwise look for tab-delimited files.
+    pick_best_ptm : bool, optional
     """
+    msf = os.path.splitext(basename)[1] == ".msf"
+
+    # The load CAMV data to clear unwanted hits if available.
+    accepted, maybed, rejected = camv.load_camv_validation(basename)
+    lst = (accepted, maybed, rejected)
+
     if msf:
-        psms = discoverer.read_discoverer_msf(basename)
+        psms = discoverer.read_discoverer_msf(
+            basename,
+            pick_best_ptm=(
+                pick_best_ptm and
+                all(not i for i in lst)
+            ),
+        )
         psms = _filter_unassigned_rows(psms)
     else:
         psms = read_table_delimited(basename)
@@ -375,13 +386,10 @@ def load_mascot_psms(basename, camv_slices=None, msf=True):
 
     psms["Validated"] = False
 
-    # The load CAMV data to clear unwanted hits if available.
-    accepted, maybed, rejected = camv.load_camv_validation(basename)
-
     psms = _calculate_rejected(psms, accepted, maybed, rejected)
     psms = _calculate_accepted(psms, accepted)
 
-    return psms, scan_lists
+    return psms, scan_lists, lst
 
 
 def load_validated_psms(filename):

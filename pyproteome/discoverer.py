@@ -21,7 +21,7 @@ RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
 
-def _read_peptides(conn):
+def _read_peptides(conn, pick_best_ptm=False):
     df = pd.read_sql_query(
         sql="""
         SELECT
@@ -34,18 +34,18 @@ def _read_peptides(conn):
         SpectrumHeaders.FirstScan AS "First Scan",
         SpectrumHeaders.LastScan AS "Last Scan",
         FileInfos.FileName AS "Spectrum File"
-        FROM
-        Peptides JOIN
-        PeptideScores JOIN
-        SpectrumHeaders JOIN
-        FileInfos JOIN
-        Masspeaks
-        WHERE
-        Peptides.PeptideID=PeptideScores.PeptideID AND
-        Peptides.SpectrumID=SpectrumHeaders.SpectrumID AND
-        FileInfos.FileID=MassPeaks.FileID AND
-        Masspeaks.MassPeakID=SpectrumHeaders.MassPeakID
-        """,
+        FROM Peptides
+        JOIN PeptideScores
+        ON Peptides.PeptideID=PeptideScores.PeptideID
+        JOIN SpectrumHeaders
+        ON Peptides.SpectrumID=SpectrumHeaders.SpectrumID
+        JOIN FileInfos
+        ON FileInfos.FileID=MassPeaks.FileID
+        JOIN Masspeaks
+        ON Masspeaks.MassPeakID=SpectrumHeaders.MassPeakID
+        """ + ("""
+        WHERE Peptides.SearchEngineRank=1
+        """ if pick_best_ptm else ""),
         con=conn,
         index_col="PeptideID",
     )
@@ -99,13 +99,11 @@ def _get_proteins(df, cursor):
         SELECT
         Peptides.PeptideID,
         ProteinAnnotations.Description
-        FROM
-        Peptides JOIN
-        PeptidesProteins JOIN
-        ProteinAnnotations
-        WHERE
-        Peptides.PeptideID=PeptidesProteins.PeptideID AND
-        ProteinAnnotations.ProteinID=PeptidesProteins.ProteinID
+        FROM Peptides
+        JOIN PeptidesProteins
+        ON Peptides.PeptideID=PeptidesProteins.PeptideID
+        JOIN ProteinAnnotations
+        ON ProteinAnnotations.ProteinID=PeptidesProteins.ProteinID
         """,
     )
 
@@ -158,13 +156,11 @@ def _get_modifications(df, cursor):
         Peptides.PeptideID,
         AminoAcidModifications.Abbreviation,
         PeptidesAminoAcidModifications.Position
-        FROM
-        Peptides JOIN
-        PeptidesAminoAcidModifications JOIN
-        AminoAcidModifications
-        WHERE
-        Peptides.PeptideID=PeptidesAminoAcidModifications.PeptideID AND
-        PeptidesAminoAcidModifications.AminoAcidModificationID=
+        FROM Peptides
+        JOIN PeptidesAminoAcidModifications
+        ON Peptides.PeptideID=PeptidesAminoAcidModifications.PeptideID
+        JOIN AminoAcidModifications
+        ON PeptidesAminoAcidModifications.AminoAcidModificationID=
         AminoAcidModifications.AminoAcidModificationID
         """,
     )
@@ -172,7 +168,10 @@ def _get_modifications(df, cursor):
     aa_mod_dict = defaultdict(list)
 
     for peptide_id, name, pos in aa_mods:
-        sequence = df.loc[peptide_id]["Sequence"]
+        try:
+            sequence = df.loc[peptide_id]["Sequence"]
+        except KeyError:
+            continue
 
         mod = modification.Modification(
             rel_pos=pos,
@@ -190,13 +189,11 @@ def _get_modifications(df, cursor):
         Peptides.PeptideID,
         AminoAcidModifications.Abbreviation,
         AminoAcidModifications.PositionType
-        FROM
-        Peptides JOIN
-        PeptidesTerminalModifications JOIN
-        AminoAcidModifications
-        WHERE
-        Peptides.PeptideID=PeptidesTerminalModifications.PeptideID AND
-        PeptidesTerminalModifications.TerminalModificationID=
+        FROM Peptides
+        JOIN PeptidesTerminalModifications
+        ON Peptides.PeptideID=PeptidesTerminalModifications.PeptideID
+        JOIN AminoAcidModifications
+        ON PeptidesTerminalModifications.TerminalModificationID=
         AminoAcidModifications.AminoAcidModificationID
         """,
     )
@@ -212,7 +209,11 @@ def _get_modifications(df, cursor):
     for peptide_id, name, pos_type in term_mods:
         nterm = pos_type == 1
         pos = 0 if nterm else len(sequence)
-        sequence = df.loc[peptide_id]["Sequence"]
+
+        try:
+            sequence = df.loc[peptide_id]["Sequence"]
+        except KeyError:
+            continue
 
         mod = modification.Modification(
             rel_pos=pos,
@@ -248,14 +249,12 @@ def _get_quantifications(df, cursor, tag_names):
         Peptides.PeptideID,
         ReporterIonQuanResults.QuanChannelID,
         ReporterIonQuanResults.Height
-        FROM
-        Peptides JOIN
-        ReporterIonQuanResults JOIN
-        ReporterIonQuanResultsSearchSpectra
-        WHERE
-        Peptides.SpectrumID=
-        ReporterIonQuanResultsSearchSpectra.SearchSpectrumID AND
-        ReporterIonQuanResultsSearchSpectra.SpectrumID=
+        FROM Peptides
+        JOIN ReporterIonQuanResults
+        ON Peptides.SpectrumID=
+        ReporterIonQuanResultsSearchSpectra.SearchSpectrumID
+        JOIN ReporterIonQuanResultsSearchSpectra
+        ON ReporterIonQuanResultsSearchSpectra.SpectrumID=
         ReporterIonQuanResults.SpectrumID
         """,
     )
@@ -282,7 +281,7 @@ def _get_quantifications(df, cursor, tag_names):
     return df
 
 
-def read_discoverer_msf(basename):
+def read_discoverer_msf(basename, pick_best_ptm=False):
     """
     Read a Proteome Discoverer .msf file.
 
@@ -292,6 +291,7 @@ def read_discoverer_msf(basename):
     Parameters
     ----------
     path : str
+    pick_best_ptm : bool, optional
 
     Returns
     -------
@@ -299,7 +299,7 @@ def read_discoverer_msf(basename):
     """
     msf_path = os.path.join(
         paths.MS_SEARCHED_DIR,
-        basename + ".msf",
+        basename,
     )
 
     LOGGER.info(
@@ -331,7 +331,7 @@ def read_discoverer_msf(basename):
             tag_names = None
 
         # Read the main peptide properties
-        df = _read_peptides(conn)
+        df = _read_peptides(conn, pick_best_ptm=pick_best_ptm)
 
         df = _get_proteins(df, cursor)
         df = _extract_sequence(df)

@@ -9,6 +9,7 @@ structured format.
 from collections import OrderedDict
 import copy
 import logging
+import os
 import warnings
 
 # Core data analysis libraries
@@ -53,7 +54,7 @@ class DataSet:
     def __init__(
         self, channels,
         psms=None,
-        mascot_name=None, camv_name=None, msf=True,
+        mascot_name=None, camv_name=None,
         groups=None, phenotypes=None,
         name="", enrichments=None, tissues=None,
         dropna=False,
@@ -77,8 +78,6 @@ class DataSet:
             Read psms from MASCOT / Discoverer data files.
         camv_name : str, optional
             Read psms from CAMV data files.
-        msf : bool, optional
-            Read mascot data from .msf file instead of a tab-delimited file.
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
@@ -110,6 +109,9 @@ class DataSet:
             camv_name is not None
         )
 
+        if os.path.splitext(mascot_name)[1] == "":
+            mascot_name += ".msf"
+
         if enrichments is None:
             enrichments = []
 
@@ -118,10 +120,10 @@ class DataSet:
         self.validated = False
 
         if mascot_name:
-            psms, self.scan_lists = loading.load_mascot_psms(
+            psms, self.scan_lists, lst = loading.load_mascot_psms(
                 mascot_name,
                 camv_slices=camv_slices,
-                msf=msf,
+                pick_best_ptm=pick_best_ptm,
             )
             self.source = "MASCOT"
         elif camv_name:
@@ -150,7 +152,10 @@ class DataSet:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self._filter_bad()
 
-        if pick_best_ptm:
+        if pick_best_ptm and (
+            os.path.splitext(mascot_name)[1] != ".msf" or
+            any(i for i in lst)
+        ):
             LOGGER.info("Picking peptides with best ion score for each scan.")
             self._pick_best_ptm()
 
