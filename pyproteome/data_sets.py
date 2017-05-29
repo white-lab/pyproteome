@@ -109,7 +109,7 @@ class DataSet:
             camv_name is not None
         )
 
-        if os.path.splitext(mascot_name)[1] == "":
+        if mascot_name and os.path.splitext(mascot_name)[1] == "":
             mascot_name += ".msf"
 
         if enrichments is None:
