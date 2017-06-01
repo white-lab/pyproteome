@@ -144,6 +144,10 @@ class NormalizationTest(TestCase):
         )
 
     def test_inter_norm_merge(self):
+        """
+        Test that we can merge two data sets and weight their measurements
+        correctly.
+        """
         psms = self.data.copy()
 
         cp = psms.copy()
@@ -197,6 +201,35 @@ class NormalizationTest(TestCase):
         self.assertTrue(
             np.isnan(psms.psms.iloc[0]["p-value"]),
         )
+
+    def test_missing_norm_merge(self):
+        """
+        Test that values are dropped correctly when a normalization channel is
+        missing.
+        """
+        psms = self.data.copy()
+
+        cp = psms.copy()
+        cp.channels = OrderedDict([
+            ("{}_cp".format(key) if key != "norm" else key, val)
+            for key, val in cp.channels.items()
+        ])
+
+        cp.psms[cp.channels["norm"]] = np.nan
+        psms = data_sets.merge_data(
+            [
+                psms,
+                cp,
+            ],
+        )
+
+        for chan in cp.channels.keys():
+            if chan == "norm":
+                continue
+
+            self.assertTrue(
+                np.isnan(psms.psms.iloc[0][chan]),
+            )
 
     def test_nan_norm(self):
         self.data.psms["131"] = np.nan

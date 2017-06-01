@@ -754,9 +754,6 @@ def plot_sequence_between(
     )
 
     ax.set_ylabel(
-        "Relative Signal"
-        if not data.inter_normalized
-        else
         "Cumulative Channel Signal{}".format(
             " (Normalized)" if data.intra_normalized else ""
         ),

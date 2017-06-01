@@ -48,7 +48,7 @@ class DataSet:
     tissues : list of str
     sets : int
         Number of sets merged into this data set.
-    source : str
+    sources : list of str
     scan_list : dict of str, list of int
     """
     def __init__(
@@ -116,7 +116,7 @@ class DataSet:
 
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
-        self.source = "unknown"
+        self.sources = ["unknown"]
         self.scan_lists = None
         self.validated = False
 
@@ -126,12 +126,12 @@ class DataSet:
                 camv_slices=camv_slices,
                 pick_best_ptm=pick_best_ptm,
             )
-            self.source = "MASCOT"
+            self.sources = ["MASCOT"]
         elif camv_name:
             psms = loading.load_validated_psms(
                 camv_name,
             )
-            self.source = "CAMV"
+            self.sources = ["CAMV"]
 
         if psms is None:
             psms = pd.DataFrame(
@@ -440,7 +440,13 @@ class DataSet:
 
         if (
             not norm_channels or
-            (other and all(i in new.channels.keys() for i in norm_channels))
+            (
+                other and
+                all(
+                    chan in new.channels.keys()
+                    for chan in other.channels.keys()
+                )
+            )
         ):
             return new
 
@@ -458,7 +464,7 @@ class DataSet:
                     suffixes=("_new", "_other"),
                 )[
                     ["{}_other".format(i) for i in norm_channels]
-                ].mean(axis=1).dropna()
+                ].mean(axis=1)
                 if other else 1
             )
 
@@ -770,7 +776,6 @@ def merge_data(
     #     )
 
     new = DataSet()
-    # new.psms = pd.DataFrame(columns=data_sets[0].psms.columns)
 
     for index, data in enumerate(data_sets):
         # Update new.groups
@@ -802,7 +807,13 @@ def merge_data(
     if merge_subsets:
         new._merge_subsequences()
 
-    new.source = data_sets[0].source
+    new.sources = sorted(
+        set(
+            source
+            for data in data_sets
+            for source in data.sources
+        )
+    )
     new.sets = sum(data.sets for data in data_sets)
     new.enrichments = sorted(
         set(
