@@ -95,10 +95,10 @@ def snr_table(
     if csv_name:
         psms.to_csv(csv_name)
 
-    back_colors = {
-        True: "#BBFFBB",  # light green
-        False: "#FFBBBB",  # light red
-    }
+    # back_colors = {
+    #     True: "#BBFFBB",  # light green
+    #     False: "#FFBBBB",  # light red
+    # }
 
     if psms.empty:
         return psms
@@ -212,10 +212,12 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     writer.save()
 
 
-def _remove_lesser_dups(pvals, changes, labels):
-    new_pvals, new_changes, new_labels = [], [], []
+def _remove_lesser_dups(pvals, changes, labels, colors):
+    new_pvals, new_changes, new_labels, new_colors = [], [], [], []
 
-    for index, (p, change, label) in enumerate(zip(pvals, changes, labels)):
+    for index, (p, change, label, color) in enumerate(
+        zip(pvals, changes, labels, colors)
+    ):
         for o_index, o_label in enumerate(labels):
             if index == o_index:
                 continue
@@ -237,8 +239,9 @@ def _remove_lesser_dups(pvals, changes, labels):
             new_pvals.append(p)
             new_changes.append(change)
             new_labels.append(label)
+            new_colors.append(color)
 
-    return new_pvals, new_changes, new_labels
+    return new_pvals, new_changes, new_labels, new_colors
 
 
 def volcano_plot(
@@ -246,11 +249,7 @@ def volcano_plot(
     group_a=None,
     group_b=None,
     pval_cutoff=0.05, fold_cutoff=1.25,
-    highlight=None,
-    hide=None,
-    show=None,
-    edgecolors=None,
-    rename=None,
+    options=None,
     folder_name=None, title=None,
     figsize=(12, 10),
     compress_dups=True,
@@ -268,11 +267,7 @@ def volcano_plot(
     group_b : str or list of str, optional
     pval_cutoff : float, optional
     fold_cutoff : float, optional
-    highlight : list, optional
-    hide : list, optional
-    show : list, optional
-    edgecolors : dict, optional
-    rename : dict, optional
+    options: dict of (str, list), optional
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
@@ -289,16 +284,13 @@ def volcano_plot(
     if not folder_name:
         folder_name = data.name
 
-    if not highlight:
-        highlight = {}
-    if not hide:
-        hide = []
-    if not show:
-        show = []
-    if not edgecolors:
-        edgecolors = {}
-    if not rename:
-        rename = {}
+    options = options or {}
+
+    highlight = options.get('highlight', {})
+    hide = options.get('hide', {})
+    show = options.get('show', {})
+    edgecolors = options.get('edgecolors', {})
+    rename = options.get('rename', {})
 
     log_pval_cutoff = -np.log10(pval_cutoff)
 
@@ -325,6 +317,7 @@ def volcano_plot(
     sig_pvals = []
     sig_changes = []
     sig_labels = []
+    sig_colors = []
     colors = []
 
     for _, row in data.psms.dropna(
@@ -335,7 +328,7 @@ def volcano_plot(
         row_change = np.log2(row["Fold Change"])
 
         row_label = " / ".join(sorted(row["Proteins"].genes))
-        row_label = rename.get(row_label, row_label)
+        re_row_label = rename.get(row_label, row_label)
 
         if (
             np.isnan(row_pval) or
@@ -350,6 +343,7 @@ def volcano_plot(
 
         if (
             row_label in show or
+            re_row_label in show or
             (
                 row_pval > log_pval_cutoff and
                 (row_change > upper_fold or row_change < lower_fold)
@@ -358,14 +352,17 @@ def volcano_plot(
 
             sig_pvals.append(row_pval)
             sig_changes.append(row_change)
-            sig_labels.append(row_label)
+            sig_labels.append(re_row_label)
+            sig_colors.append(
+                edgecolors.get(re_row_label, edgecolors.get(row_label, None))
+            )
             color = "blue"
 
         colors.append(color)
 
     if compress_dups:
-        sig_pvals, sig_changes, sig_labels = _remove_lesser_dups(
-            sig_pvals, sig_changes, sig_labels
+        sig_pvals, sig_changes, sig_labels, sig_colors = _remove_lesser_dups(
+            sig_pvals, sig_changes, sig_labels, sig_colors
         )
 
     # Draw the figure
@@ -432,7 +429,9 @@ def volcano_plot(
 
     # Position the labels
     texts = []
-    for x, y, txt in zip(sig_changes, sig_pvals, sig_labels):
+    for x, y, txt, edgecolor in zip(
+        sig_changes, sig_pvals, sig_labels, sig_colors,
+    ):
         if txt in hide:
             continue
 
@@ -448,8 +447,8 @@ def volcano_plot(
             dict(
                 facecolor="lightgreen" if x > 0 else "pink",
                 alpha=1,
-                linewidth=0.5 if txt not in edgecolors else 3,
-                edgecolor=edgecolors.get(txt, "black"),
+                linewidth=0.5 if not edgecolor else 3,
+                edgecolor=edgecolor or "black",
                 boxstyle="round",
             )
         )
@@ -881,9 +880,8 @@ def plot_sequence(
     ax.set_title(sequence + (" - {}".format(title) if title else ""))
 
     ax.set_ylabel(
-        "Fold Change"
-        if data.inter_normalized else
-        "Intensity" + (" (Normalized)" if data.intra_normalized else "")
+        "Cummulative Intensity" +
+        (" (Normalized)" if data.intra_normalized else "")
     )
 
     ax.title.set_fontsize(28)
@@ -1089,31 +1087,22 @@ def spearmanr_nan(a, b, min_length=5):
 def correlate_signal(
     data, signal,
     pval_cutoff=0.05, fold_cutoff=1.25,
-    highlight=None,
-    hide=None,
-    show=None,
-    edgecolors=None,
-    rename=None,
+    options=None,
     folder_name=None, title=None,
     scatter_colors=None,
     scatter_symbols=None,
     figsize=(12, 10),
     xlabel="",
 ):
-    if not highlight:
-        highlight = {}
-    if not hide:
-        hide = []
-    if not show:
-        show = []
-    if not edgecolors:
-        edgecolors = {}
-    if not rename:
-        rename = {}
-    if not scatter_colors:
-        scatter_colors = {}
-    if not scatter_symbols:
-        scatter_symbols = {}
+
+    options = options or {}
+
+    highlight = options.get('highlight', {})
+    hide = options.get('hide', {})
+    edgecolors = options.get('edgecolors', {})
+    rename = options.get('rename', {})
+    scatter_colors = options.get('scatter_colors', {})
+    scatter_symbols = options.get('scatter_symbols', {})
 
     cp = data.copy()
 
@@ -1172,7 +1161,11 @@ def correlate_signal(
             sig_labels.append(" / ".join(sorted(row["Proteins"].genes)))
 
         colors.append(
-            "blue" if row["corr p-value"] < pval_cutoff else "grey"
+            "blue"
+            if row["corr p-value"] < pval_cutoff else
+            "{:.2f}".format(
+                max([len(row[data_chans].dropna()) / len(data_chans) - .25, 0])
+            )
         )
 
     ax.scatter(x, y, c=colors)
