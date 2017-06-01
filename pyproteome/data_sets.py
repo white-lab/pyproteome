@@ -566,9 +566,6 @@ class DataSet:
         -------
         :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
-        if ion_score_cutoff or confidence_cutoff:
-            assert self.source in ["MASCOT"]
-
         new = self
 
         if not inplace:
@@ -805,6 +802,7 @@ def merge_data(
     if merge_subsets:
         new._merge_subsequences()
 
+    new.source = data_sets[0].source
     new.sets = sum(data.sets for data in data_sets)
     new.enrichments = sorted(
         set(
