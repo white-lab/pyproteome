@@ -67,21 +67,6 @@ class NormalizationTest(TestCase):
         }
 
         self.data = data_sets.DataSet(
-            psms=pd.DataFrame(columns=[
-                "Proteins",
-                "Sequence",
-                "Modifications",
-                "Validated",
-                "First Scan",
-                "IonScore",
-                "126",
-                "127",
-                "128",
-                "129",
-                "130",
-                "131",
-                "Scan Paths",
-            ]),
             channels=self.channels,
             groups=self.groups,
         )
@@ -134,7 +119,7 @@ class NormalizationTest(TestCase):
         )
 
     def test_inter_normalization(self):
-        psms = self.data.inter_normalize("norm")
+        psms = self.data.inter_normalize(["norm"])
 
         self.assertEqual(
             psms.psms.iloc[0]["low1"], 1,
@@ -159,34 +144,52 @@ class NormalizationTest(TestCase):
         )
 
     def test_inter_norm_merge(self):
-        psms = self.data.inter_normalize("norm")
+        psms = self.data.copy()
 
         cp = psms.copy()
 
-        for chan in cp.channels.values():
-            cp.psms[chan] = cp.psms[chan] * 4
-            weight = "{}_weight".format(chan)
-            cp.psms[weight] = cp.psms[weight] * 2
+        for name, chan in cp.channels.items():
+            if name == "norm":
+                # cp.psms[chan] /= 2
+                continue
 
-        psms = data_sets.merge_data([
-            psms,
-            cp,
-        ])
+            cp.psms[chan] *= 4
+            weight = "{}_weight".format(chan)
+            cp.psms[weight] = cp.psms[chan] / 2
+
+        cp.psms["131_C"] = cp.psms[cp.channels["high"]] * 2
+        cp.channels["newhigh"] = "131_C"
+
+        psms = data_sets.merge_data(
+            [
+                psms,
+                cp,
+            ],
+            norm_channels=["norm"],
+        )
 
         self.assertEqual(
-            psms.psms.iloc[0]["low1"], 3,
+            psms.psms.iloc[0]["low1"] /
+            psms.psms.iloc[0]["norm"], 3,
         )
         self.assertEqual(
-            psms.psms.iloc[0]["low2"], 3,
+            psms.psms.iloc[0]["low2"] /
+            psms.psms.iloc[0]["norm"], 3,
         )
         self.assertTrue(
             np.isnan(psms.psms.iloc[0]["low3"]),
         )
         self.assertEqual(
-            psms.psms.iloc[0]["med"], 12,
+            psms.psms.iloc[0]["med"] /
+            psms.psms.iloc[0]["norm"], 12,
         )
         self.assertEqual(
-            psms.psms.iloc[0]["high"], 12,
+            psms.psms.iloc[0]["high"] /
+            psms.psms.iloc[0]["norm"], 12,
+        )
+        self.assertEqual(
+            psms.psms.iloc[0]["newhigh"] /
+            psms.psms.iloc[0]["norm"], 32,
         )
         self.assertEqual(
             psms.psms.iloc[0]["Fold Change"], 1/4,
@@ -197,7 +200,7 @@ class NormalizationTest(TestCase):
 
     def test_nan_norm(self):
         self.data.psms["131"] = np.nan
-        psms = self.data.inter_normalize("norm")
+        psms = self.data.inter_normalize(["norm"])
 
         self.assertTrue(
             np.isnan(psms.psms.iloc[0]["low1"]),

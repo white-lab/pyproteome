@@ -52,11 +52,16 @@ class DataSet:
     scan_list : dict of str, list of int
     """
     def __init__(
-        self, channels,
+        self,
+        channels=None,
         psms=None,
-        mascot_name=None, camv_name=None,
-        groups=None, phenotypes=None,
-        name="", enrichments=None, tissues=None,
+        mascot_name=None,
+        camv_name=None,
+        groups=None,
+        phenotypes=None,
+        name="",
+        enrichments=None,
+        tissues=None,
         dropna=False,
         camv_slices=None,
         pick_best_ptm=True,
@@ -69,7 +74,7 @@ class DataSet:
 
         Parameters
         ----------
-        channels : dict of str, str
+        channels : dict of (str, str), optional
             Ordered dictionary mapping sample names to quantification channels
             (i.e. {"X": "126", "Y": "127", "Z": "128", "W": "129"})
         psms : :class:`pandas.DataFrame`, optional
@@ -103,18 +108,14 @@ class DataSet:
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
         """
-        assert (
-            psms is not None or
-            mascot_name is not None or
-            camv_name is not None
-        )
-
         if mascot_name and os.path.splitext(mascot_name)[1] == "":
             mascot_name += ".msf"
 
         if enrichments is None:
             enrichments = []
 
+        self.channels = channels or OrderedDict()
+        self.groups = groups or OrderedDict()
         self.source = "unknown"
         self.scan_lists = None
         self.validated = False
@@ -132,16 +133,26 @@ class DataSet:
             )
             self.source = "CAMV"
 
+        if psms is None:
+            psms = pd.DataFrame(
+                columns=[
+                    "Proteins",
+                    "Sequence",
+                    "Modifications",
+                    "Validated",
+                    "First Scan",
+                    "IonScore",
+                    "Scan Paths",
+                ] + list(self.channels.values()),
+            )
+
         self.psms = psms
-        self.channels = channels
-        self.groups = groups
         self.phenotypes = phenotypes
         self.name = name
         self.enrichments = enrichments
         self.tissues = tissues
 
         self.intra_normalized = False
-        self.inter_normalized = False
         self.sets = 1
 
         if dropna:
@@ -179,7 +190,11 @@ class DataSet:
         :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
         new = copy.copy(self)
+
         new.psms = new.psms.copy()
+        new.channels = new.channels.copy()
+        new.groups = new.groups.copy()
+
         return new
 
     @property
@@ -270,11 +285,11 @@ class DataSet:
         agg_dict = {}
 
         for channel in channels:
-            if self.inter_normalized:
-                self.psms[channel] = (
-                    self.psms[channel] * self.psms["{}_weight".format(channel)]
-                )
-                agg_dict["{}_weight".format(channel)] = _nan_sum
+            weight = "{}_weight".format(channel)
+
+            if weight in self.psms.columns:
+                self.psms[channel] *= self.psms[weight]
+                agg_dict[weight] = _nan_sum
 
             agg_dict[channel] = _nan_sum
 
@@ -293,10 +308,12 @@ class DataSet:
             as_index=False,
         ).agg(agg_dict)
 
-        if self.inter_normalized:
-            for channel in channels:
+        for channel in channels:
+            weight = "{}_weight".format(channel)
+
+            if weight in self.psms.columns:
                 self.psms[channel] = (
-                    self.psms[channel] / self.psms["{}_weight".format(channel)]
+                    self.psms[channel] / self.psms[weight]
                 )
 
     def _merge_subsequences(self):
@@ -347,13 +364,45 @@ class DataSet:
         """
         return merge_data([self, other])
 
-    def inter_normalize(self, norm_channel_name, inplace=False):
+    def rename_channels(self):
+        """
+        Rename all channels from quantification channel name to sample name.
+        (i.e. "126" => "Mouse 1337")
+        """
+        for new_channel, old_channel in self.channels.items():
+            if new_channel != old_channel:
+                new_weight = "{}_weight".format(new_channel)
+
+                if (
+                    new_channel in self.psms.columns or
+                    new_weight in self.psms.columns
+                ):
+                    raise Exception(
+                        "Channel {} already exists, cannot rename to it"
+                        .format(new_channel)
+                    )
+
+                self.psms[new_channel] = self.psms[old_channel]
+                del self.psms[old_channel]
+
+                old_weight = "{}_weight".format(old_channel)
+
+                if old_weight in self.psms.columns:
+                    self.psms[new_weight] = self.psms[old_weight]
+                    del self.psms[old_weight]
+
+        self.channels = OrderedDict([
+            (key, key) for key in self.channels.keys()
+        ])
+
+    def inter_normalize(self, norm_channels=None, other=None, inplace=False):
         """
         Normalize runs to one channel for inter-run comparions.
 
         Parameters
         ----------
-        norm_channel_name : str
+        other_channels : list of str, optional
+        other : :class:`DataSet<pyproteome.data_sets.DataSet>`, optional
         inplace : bool, optional
             Modify this data set in place.
 
@@ -361,27 +410,48 @@ class DataSet:
         -------
         :class:`DataSet<pyproteome.data_sets.DataSet>`
         """
-
-        # Don't normalize a data set twice!
-        if self.inter_normalized:
-            return self
+        assert (
+            norm_channels is not None or
+            other is not None
+        )
 
         new = self
-        norm_channel = self.channels[norm_channel_name]
 
         if not inplace:
             new = new.copy()
 
-        for new_channel, old_channel in self.channels.items():
-            new.psms[new_channel] = (
-                new.psms[old_channel] / new.psms[norm_channel]
-            )
-            new.psms["{}_weight".format(new_channel)] = new.psms[old_channel]
-            del new.psms[old_channel]
+        new.rename_channels()
 
-        new.inter_normalized = True
-        new.channels = OrderedDict([(key, key) for key in new.channels.keys()])
-        new.groups = self.groups.copy()
+        if norm_channels is None:
+            norm_channels = set(new.channels).intersection(other.channels)
+
+        if other:
+            norm_channels = [
+                chan
+                for chan in norm_channels
+                if chan in other.channels
+            ]
+
+        for channel in new.channels.values():
+            weight = "{}_weight".format(channel)
+
+            if weight not in new.psms.columns:
+                new.psms[weight] = new.psms[channel]
+
+        if not norm_channels:
+            return new
+
+        for channel in new.channels.values():
+            other_mean = (
+                other.psms[norm_channels].mean(axis=1).as_matrix()
+                if other and norm_channels else 1
+            )
+            new_mean = new.psms[norm_channels].mean(axis=1).as_matrix()
+            # print(channel, new_mean, other_mean, new.psms[channel])
+
+            new.psms[channel] = (
+                new.psms[channel] / new_mean * other_mean
+            )
 
         new.update_group_changes()
 
@@ -570,8 +640,8 @@ class DataSet:
         ]
 
         if group_a is None:
-            label_a = labels[0]
-            group_a = groups[0]
+            label_a = labels[0] if labels else None
+            group_a = groups[0] if groups else []
         elif isinstance(group_a, str):
             label_a = group_a
             group_a = self.groups[group_a]
@@ -584,8 +654,8 @@ class DataSet:
             ]
 
         if group_b is None:
-            label_b = labels[1]
-            group_b = groups[1]
+            label_b = labels[1] if labels[1:] else None
+            group_b = groups[1] if groups[1:] else []
         elif isinstance(group_b, str):
             label_b = group_b
             group_b = self.groups[group_b]
@@ -659,7 +729,7 @@ class DataSet:
 
 
 def merge_data(
-    data_sets, name=None,
+    data_sets, name=None, norm_channels=None,
     merge_duplicates=True, merge_subsets=False,
 ):
     """
@@ -676,7 +746,8 @@ def merge_data(
     -------
     :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
-    assert len(data_sets) > 0
+    if len(data_sets) < 1:
+        return DataSet()
 
     if any(not isinstance(data, DataSet) for data in data_sets):
         raise TypeError(
@@ -685,30 +756,32 @@ def merge_data(
             )
         )
 
-    if any(data.groups != data_sets[0].groups for data in data_sets):
-        raise Exception("Incongruent groups between data sets.")
+    new = DataSet()
+    # new.psms = pd.DataFrame(columns=data_sets[0].psms.columns)
 
-    if (
-        any(data.channels != data_sets[0].channels for data in data_sets) and
-        not all(data.inter_normalized for data in data_sets)
-    ):
-        raise Exception(
-            "Cannot compare across runs without inter-run normalization"
-        )
+    for index, data in enumerate(data_sets):
+        # Update new.groups
+        for group, samples in data.groups.items():
+            if group not in new.groups:
+                new.groups[group] = samples
+                continue
 
-    new = data_sets[0].copy()
-    new.psms = pd.concat([data.psms for data in data_sets])
+            new.groups[group] += [
+                sample
+                for sample in samples
+                if sample not in new.groups[group]
+            ]
 
-    new.channels = OrderedDict()
-    for data in data_sets:
+        # Normalize data sets to their common channels
+        data = data.inter_normalize(other=new, norm_channels=norm_channels)
+
         for key, val in data.channels.items():
-            if key in new.channels:
-                if new.channels[key] == val:
-                    continue
-                else:
-                    raise Exception("Merging incompatible channels")
+            assert new.channels.get(key, val) == val
 
-            new.channels[key] = val
+            if key not in new.channels:
+                new.channels[key] = val
+
+        new.psms = pd.concat([new.psms, data.psms])
 
     if merge_duplicates:
         new._merge_duplicates()
