@@ -438,16 +438,31 @@ class DataSet:
             if weight not in new.psms.columns:
                 new.psms[weight] = new.psms[channel]
 
-        if not norm_channels:
+        if (
+            not norm_channels or
+            (other and all(i in new.channels.keys() for i in norm_channels))
+        ):
             return new
 
         for channel in new.channels.values():
             other_mean = (
-                other.psms[norm_channels].mean(axis=1).as_matrix()
-                if other and norm_channels else 1
+                pd.merge(
+                    new.psms,
+                    other.psms,
+                    on=[
+                        "Proteins",
+                        "Sequence",
+                        "Modifications",
+                    ],
+                    how="outer",
+                    suffixes=("_new", "_other"),
+                )[
+                    ["{}_other".format(i) for i in norm_channels]
+                ].mean(axis=1).dropna()
+                if other else 1
             )
-            new_mean = new.psms[norm_channels].mean(axis=1).as_matrix()
-            # print(channel, new_mean, other_mean, new.psms[channel])
+
+            new_mean = new.psms[norm_channels].mean(axis=1)
 
             new.psms[channel] = (
                 new.psms[channel] / new_mean * other_mean
@@ -489,6 +504,7 @@ class DataSet:
             new_channels.values(),
         ):
             new.psms[norm_key] = new.psms[key] / levels[key]
+            del new.psms[key]
 
         new.intra_normalized = True
         new.channels = new_channels
@@ -749,12 +765,12 @@ def merge_data(
     if len(data_sets) < 1:
         return DataSet()
 
-    if any(not isinstance(data, DataSet) for data in data_sets):
-        raise TypeError(
-            "Incompatible types: {}".format(
-                [type(data) for data in data_sets]
-            )
-        )
+    # if any(not isinstance(data, DataSet) for data in data_sets):
+    #     raise TypeError(
+    #         "Incompatible types: {}".format(
+    #             [type(data) for data in data_sets]
+    #         )
+    #     )
 
     new = DataSet()
     # new.psms = pd.DataFrame(columns=data_sets[0].psms.columns)
