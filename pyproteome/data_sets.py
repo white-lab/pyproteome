@@ -425,12 +425,12 @@ class DataSet:
         if norm_channels is None:
             norm_channels = set(new.channels).intersection(other.channels)
 
-        if other:
-            norm_channels = [
-                chan
-                for chan in norm_channels
-                if chan in other.channels
-            ]
+        # Filter norm channels to include only those in other data set
+        norm_channels = [
+            chan
+            for chan in norm_channels
+            if not other or chan in other.channels
+        ]
 
         for channel in new.channels.values():
             weight = "{}_weight".format(channel)
@@ -443,14 +443,16 @@ class DataSet:
             (
                 other and
                 all(
-                    chan in new.channels.keys()
-                    for chan in other.channels.keys()
+                    chan in other.channels.keys()
+                    for chan in new.channels.keys()
                 )
             )
         ):
             return new
 
         for channel in new.channels.values():
+            vals = new.psms[channel]
+
             other_mean = (
                 pd.merge(
                     new.psms,
@@ -470,9 +472,21 @@ class DataSet:
 
             new_mean = new.psms[norm_channels].mean(axis=1)
 
-            new.psms[channel] = (
-                new.psms[channel] / new_mean * other_mean
-            )
+            # Drop values for which there is no normalization data
+            vals = vals[~new_mean.isnull()]
+
+            if other:
+                # Don't scale peptides that do not exist in other_mean
+                for index, val in vals.iteritems():
+                    if index not in other_mean:
+                        new_mean[index] = 1
+
+                # Set scaling factor to 1 where other_mean is None
+                other_mean[other_mean.isnull()] = new_mean[other_mean.isnull()]
+
+                vals *= other_mean / new_mean
+
+            new.psms[channel] = vals
 
         new.update_group_changes()
 
@@ -765,8 +779,10 @@ def merge_data(
     -------
     :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
+    new = DataSet()
+
     if len(data_sets) < 1:
-        return DataSet()
+        return new
 
     # if any(not isinstance(data, DataSet) for data in data_sets):
     #     raise TypeError(
@@ -774,8 +790,6 @@ def merge_data(
     #             [type(data) for data in data_sets]
     #         )
     #     )
-
-    new = DataSet()
 
     for index, data in enumerate(data_sets):
         # Update new.groups
@@ -791,7 +805,15 @@ def merge_data(
             ]
 
         # Normalize data sets to their common channels
-        data = data.inter_normalize(other=new, norm_channels=norm_channels)
+        if len(data_sets) > 1:
+            data = data.inter_normalize(
+                other=new if index > 0 else None,
+                norm_channels=(
+                    norm_channels
+                    if norm_channels or index > 0 else
+                    set(data.channels).intersection(data_sets[1].channels)
+                ),
+            )
 
         for key, val in data.channels.items():
             assert new.channels.get(key, val) == val

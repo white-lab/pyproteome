@@ -122,19 +122,23 @@ class NormalizationTest(TestCase):
         psms = self.data.inter_normalize(["norm"])
 
         self.assertEqual(
-            psms.psms.iloc[0]["low1"], 1,
+            psms.psms.iloc[0]["low1"] /
+            psms.psms.iloc[0]["norm"], 1,
         )
         self.assertEqual(
-            psms.psms.iloc[0]["low2"], 1,
+            psms.psms.iloc[0]["low2"] /
+            psms.psms.iloc[0]["norm"], 1,
         )
         self.assertTrue(
             np.isnan(psms.psms.iloc[0]["low3"]),
         )
         self.assertEqual(
-            psms.psms.iloc[0]["med"], 4,
+            psms.psms.iloc[0]["med"] /
+            psms.psms.iloc[0]["norm"], 4,
         )
         self.assertEqual(
-            psms.psms.iloc[0]["high"], 4,
+            psms.psms.iloc[0]["high"] /
+            psms.psms.iloc[0]["norm"], 4,
         )
         self.assertEqual(
             psms.psms.iloc[0]["Fold Change"], 1/4,
@@ -202,7 +206,7 @@ class NormalizationTest(TestCase):
             np.isnan(psms.psms.iloc[0]["p-value"]),
         )
 
-    def test_missing_norm_merge(self):
+    def test_missing_merge(self):
         """
         Test that values are dropped correctly when a normalization channel is
         missing.
@@ -216,20 +220,27 @@ class NormalizationTest(TestCase):
         ])
 
         cp.psms[cp.channels["norm"]] = np.nan
-        psms = data_sets.merge_data(
-            [
-                psms,
-                cp,
-            ],
-        )
 
-        for chan in cp.channels.keys():
-            if chan == "norm":
-                continue
+        for index, ordered in enumerate([[cp, psms], [psms, cp]]):
+            merge = data_sets.merge_data(ordered)
 
-            self.assertTrue(
-                np.isnan(psms.psms.iloc[0][chan]),
-            )
+            for chan in cp.channels.keys():
+                if chan == "norm":
+                    continue
+
+                # print(index, chan, merge.psms.iloc[0][chan])
+
+                self.assertTrue(
+                    np.isnan(merge.psms.iloc[0][chan]),
+                )
+
+            for chan in psms.channels.keys():
+                if chan == "low3":
+                    continue
+                # print(index, chan, merge.psms.iloc[0][chan])
+                self.assertFalse(
+                    np.isnan(merge.psms.iloc[0][chan]),
+                )
 
     def test_nan_norm(self):
         self.data.psms["131"] = np.nan
