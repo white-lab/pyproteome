@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.3.3 (2017-\*-\*)
+## 0.4.0 (2017-\*-\*)
 
 Features
 
@@ -9,6 +9,7 @@ Features
     is recommended to disable this feature on large pS/T data sets.
   - Sequence.\_\_contains\_\_ supports string arguments now.
   - Added individual sample quantitations to analysis.write_full_tables
+  - Automatically apply inter-normalization when merging multiple data sets.
 
 Bugfixes
 
