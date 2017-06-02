@@ -281,6 +281,9 @@ class DataSet:
         self.psms = self.psms[~reject_mask].reset_index(drop=True)
 
     def _merge_duplicates(self):
+        if len(self.psms) < 1:
+            return
+
         channels = list(self.channels.values())
         agg_dict = {}
 
@@ -450,41 +453,44 @@ class DataSet:
         ):
             return new
 
+        # Calculate the mean normalization signal from each shared channel
+        new_mean = new.psms[norm_channels].mean(axis=1)
+
         for channel in new.channels.values():
+            chan_mean = new_mean.copy()
             vals = new.psms[channel]
-
-            other_mean = (
-                pd.merge(
-                    new.psms,
-                    other.psms,
-                    on=[
-                        "Proteins",
-                        "Sequence",
-                        "Modifications",
-                    ],
-                    how="outer",
-                    suffixes=("_new", "_other"),
-                )[
-                    ["{}_other".format(i) for i in norm_channels]
-                ].mean(axis=1)
-                if other else 1
-            )
-
-            new_mean = new.psms[norm_channels].mean(axis=1)
 
             # Drop values for which there is no normalization data
             vals = vals[~new_mean.isnull()]
 
             if other:
+                other_mean = (
+                    pd.merge(
+                        new.psms,
+                        other.psms,
+                        on=[
+                            "Proteins",
+                            "Sequence",
+                            "Modifications",
+                        ],
+                        how="outer",
+                        suffixes=("_new", "_other"),
+                    )[
+                        ["{}_other".format(i) for i in norm_channels]
+                    ].mean(axis=1)
+                )
+
                 # Don't scale peptides that do not exist in other_mean
                 for index, val in vals.iteritems():
                     if index not in other_mean:
-                        new_mean[index] = 1
+                        chan_mean[index] = 1
 
                 # Set scaling factor to 1 where other_mean is None
-                other_mean[other_mean.isnull()] = new_mean[other_mean.isnull()]
+                other_mean[other_mean.isnull()] = (
+                    chan_mean[other_mean.isnull()]
+                )
 
-                vals *= other_mean / new_mean
+                vals *= other_mean / chan_mean
 
             new.psms[channel] = vals
 
@@ -566,6 +572,8 @@ class DataSet:
         p_cutoff=None,
         fold_cutoff=None,
         asym_fold_cutoff=None,
+        sequence=None,
+        proteins=None,
         mod_types=None,
         inplace=False,
     ):
@@ -579,6 +587,8 @@ class DataSet:
         p_cutoff : float, optional
         fold_cutoff : float, optional
         asym_fold_cutoff : float, optional
+        sequence : str, optional
+        proteins : list of str, optional
         mod_types : list of tuple of str, str, optional
         inplace : bool, optional
 
@@ -638,6 +648,18 @@ class DataSet:
                         1 / new.psms["Fold Change"],
                     ]
                 ) >= fold_cutoff
+            ]
+
+        if proteins:
+            new.psms = new.psms[
+                new.psms["Proteins"]
+                .apply(lambda x: " / ".join(sorted(x.genes)))
+                .isin(proteins)
+            ]
+
+        if sequence:
+            new.psms = new.psms[
+                new.psms["Sequence"] == sequence
             ]
 
         if mod_types:
@@ -754,6 +776,8 @@ class DataSet:
 
                 if pvals is ma.masked:
                     pvals = np.nan
+                elif pvals.shape == ():
+                    pvals = [pvals]
 
                 self.psms["p-value"] = pd.Series(pvals)
         else:
