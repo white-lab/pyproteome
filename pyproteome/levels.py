@@ -82,7 +82,11 @@ def get_channel_levels(
         ax.set_axis_off()
 
     if file_name:
-        f.savefig(file_name)
+        f.savefig(
+            file_name,
+            bbox_inches="tight", dpi=300,
+            transparent=True,
+        )
 
     return channel_levels
 
