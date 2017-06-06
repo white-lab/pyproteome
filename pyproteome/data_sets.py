@@ -568,7 +568,8 @@ class DataSet:
 
     def filter(
         self,
-        ion_score_cutoff=None, confidence_cutoff=None,
+        ion_score_cutoff=None,
+        confidence_cutoff=None,
         p_cutoff=None,
         fold_cutoff=None,
         asym_fold_cutoff=None,
@@ -733,12 +734,8 @@ class DataSet:
         Parameters
         ----------
         psms : :class:`pandas.DataFrame`
-        group_a : str or list, optional
-        group_b : str or list, optional
-
-        Returns
-        -------
-        :class:`pandas.DataFrame`
+        group_a : str or list of str, optional
+        group_b : str or list of str, optional
         """
         if self.psms.shape[0] < 1:
             return
@@ -783,6 +780,24 @@ class DataSet:
         else:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
+
+    @property
+    def data(self):
+        """
+        Get the raw data corresponding to each channels' intensities for each
+        peptide.
+
+        Returns
+        -------
+        :class:`pandas.DataFrame`
+        """
+        return self.psms[
+            [
+                val
+                for key, val in self.channels.items()
+                if any(val in group for group in self.groups.values())
+            ]
+        ]
 
 
 def merge_data(
