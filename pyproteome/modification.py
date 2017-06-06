@@ -93,6 +93,9 @@ class Modifications:
             for i, j in zip(self.mods, other.mods)
         )
 
+    def __repr__(self, absolute=True, skip_labels=True):
+        return self.__str__(absolute=absolute, skip_labels=skip_labels)
+
     def __str__(self, absolute=True, skip_labels=True):
         if len(self.mods) == 0:
             return ""
