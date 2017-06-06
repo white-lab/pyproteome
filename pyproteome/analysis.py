@@ -349,14 +349,17 @@ def volcano_plot(
                 (row_change > upper_fold or row_change < lower_fold)
             )
         ):
-
-            sig_pvals.append(row_pval)
-            sig_changes.append(row_change)
-            sig_labels.append(re_row_label)
-            sig_colors.append(
-                edgecolors.get(re_row_label, edgecolors.get(row_label, None))
-            )
             color = "blue"
+
+            if row_label not in hide and re_row_label not in hide:
+                sig_pvals.append(row_pval)
+                sig_changes.append(row_change)
+                sig_labels.append(re_row_label)
+                sig_colors.append(
+                    edgecolors.get(
+                        re_row_label, edgecolors.get(row_label, None)
+                    )
+                )
 
         colors.append(color)
 
@@ -421,7 +424,11 @@ def volcano_plot(
     )
     ax.set_ylim(bottom=-0.1)
 
-    ax.axhline(log_pval_cutoff, color="r", linestyle="dashed", linewidth=0.5)
+    if not np.isnan(log_pval_cutoff):
+        ax.axhline(
+            log_pval_cutoff,
+            color="r", linestyle="dashed", linewidth=0.5,
+        )
 
     if abs(fold_cutoff - 1) > 0.01:
         ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
@@ -429,12 +436,10 @@ def volcano_plot(
 
     # Position the labels
     texts = []
+
     for x, y, txt, edgecolor in zip(
         sig_changes, sig_pvals, sig_labels, sig_colors,
     ):
-        if txt in hide:
-            continue
-
         text = ax.text(
             x, y,
             txt[:20] + ("..." if len(txt) > 20 else ""),
