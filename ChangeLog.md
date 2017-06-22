@@ -10,6 +10,7 @@ Features
   - Sequence.\_\_contains\_\_ supports string arguments now.
   - Added individual sample quantitations to analysis.write_full_tables
   - Automatically apply inter-normalization when merging multiple data sets.
+  - Filter by isolation interference.
 
 Bugfixes
 
