@@ -162,8 +162,11 @@ class DataSet:
 
         if filter_bad:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
-            self._filter_bad()
-            self = self.filter(isolation_cutoff=20)
+            self.filter(
+                confidence_cutoff="High",
+                isolation_cutoff=20,
+                inplace=True,
+            )
 
         if pick_best_ptm and (
             not mascot_name or
@@ -249,17 +252,6 @@ class DataSet:
             return self.psms[key]
 
         raise TypeError(type(key))
-
-    def _filter_bad(self):
-        if "Confidence Level" in self.psms.columns:
-            # self.psms = self.psms[
-            #     self.psms["Confidence Level"].isin(["Medium", "High"])
-            # ]
-            self.psms = self.psms[
-                self.psms["Confidence Level"].isin(["High"])
-            ]
-
-            self.psms = self.psms.reset_index(drop=True)
 
     def _pick_best_ptm(self):
         reject_mask = np.zeros(self.psms.shape[0], dtype=bool)
