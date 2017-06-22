@@ -142,6 +142,7 @@ class DataSet:
                     "Validated",
                     "First Scan",
                     "IonScore",
+                    "Isolation Interference",
                     "Scan Paths",
                 ] + list(self.channels.values()),
             )
@@ -162,6 +163,7 @@ class DataSet:
         if filter_bad:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self._filter_bad()
+            self = self.filter(isolation_cutoff=20)
 
         if pick_best_ptm and (
             not mascot_name or
@@ -300,6 +302,7 @@ class DataSet:
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
         agg_dict["IonScore"] = max
+        agg_dict["Isolation Interference"] = max
 
         self.psms = self.psms.groupby(
             by=[
@@ -569,6 +572,7 @@ class DataSet:
     def filter(
         self,
         ion_score_cutoff=None,
+        isolation_cutoff=None,
         confidence_cutoff=None,
         p_cutoff=None,
         fold_cutoff=None,
@@ -584,6 +588,7 @@ class DataSet:
         Parameters
         ----------
         ion_score_cutoff : int, optional
+        isolation_cutoff : float, optional
         confidence_cutoff : {"High", "Medium", "Low"}, optional
         p_cutoff : float, optional
         fold_cutoff : float, optional
@@ -621,6 +626,11 @@ class DataSet:
         if ion_score_cutoff:
             new.psms = new.psms[
                 new.psms["IonScore"] >= ion_score_cutoff
+            ]
+
+        if isolation_cutoff:
+            new.psms = new.psms[
+                ~(new.psms["Isolation Interference"] > isolation_cutoff)
             ]
 
         if p_cutoff:
@@ -793,9 +803,9 @@ class DataSet:
         """
         return self.psms[
             [
-                val
-                for key, val in self.channels.items()
-                if any(val in group for group in self.groups.values())
+                self.channels[chan]
+                for group in self.groups.values()
+                for chan in group
             ]
         ]
 

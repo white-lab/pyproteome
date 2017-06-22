@@ -33,7 +33,8 @@ def _read_peptides(conn, pick_best_ptm=False):
         PeptideScores.ScoreValue AS "IonScore",
         SpectrumHeaders.FirstScan AS "First Scan",
         SpectrumHeaders.LastScan AS "Last Scan",
-        FileInfos.FileName AS "Spectrum File"
+        FileInfos.FileName AS "Spectrum File",
+        MassPeaks.PercentIsolationInterference AS "Isolation Interference"
         FROM Peptides
         JOIN PeptideScores
         ON Peptides.PeptideID=PeptideScores.PeptideID
