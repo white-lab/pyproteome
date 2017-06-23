@@ -141,6 +141,7 @@ class DataSet:
                     "Modifications",
                     "Validated",
                     "First Scan",
+                    "Confidence Level",
                     "IonScore",
                     "Isolation Interference",
                     "Scan Paths",
