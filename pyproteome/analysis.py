@@ -875,9 +875,14 @@ def plot_sequence(
     for i in range(values.shape[0]):
         indices = np.arange(len(values[i]))
         bar_width = .35
-        ax.bar(bar_width + indices, values[i], bar_width)
+        ax.bar(indices, values[i], bar_width)
         ax.set_xticks(indices)
-        ax.set_xticklabels(channel_names, fontsize=20, rotation=45)
+        ax.set_xticklabels(
+            channel_names,
+            fontsize=20,
+            rotation=45,
+            horizontalalignment="right",
+        )
 
     ax.set_title(sequence + (" - {}".format(title) if title else ""))
 
