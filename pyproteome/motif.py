@@ -59,7 +59,7 @@ def generate_n_mers(
             fill_right * (abs_pos - len(full_seq) + n // 2 + 1)
         )
 
-    return (
+    return set(
         _n_mer_from_sequence(
             match.protein.full_sequence,
             mod.rel_pos + match.rel_pos,
@@ -255,7 +255,7 @@ def motif_enrichment(
     foreground : list of :class:`Sequence<pyproteome.sequence.Sequence>`
     background : list of :class:`Sequence<pyproteome.sequence.Sequence>`
     sig_cutoff : float, optional
-    min_motifs : int, optional
+    min_fore_hits : int, optional
     start_letters : list of str, optional
     letter_mod_types : list of tuple of str, str
     motif_length : int, optional
@@ -437,6 +437,8 @@ def motif_enrichment(
 
     foreground = _make_nmers(foreground)
     background = _make_nmers(background)
+    fore_size = len(foreground)
+    back_size = len(background)
 
     LOGGER.info(
         "Starting analysis, n={}, N={}".format(
