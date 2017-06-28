@@ -778,6 +778,9 @@ def plot_sequence_between(
     ax.set_title(title, fontsize=20)
     ax.xaxis.grid(False)
 
+    if not means:
+        return f
+
     y_max = np.max(means + errs)
 
     def stars(p):
