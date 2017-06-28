@@ -91,13 +91,13 @@ class GenerateNMersTest(TestCase):
         self.assertTrue(
             all(len(i) == 15 for i in nmers)
         )
-        self.assertEqual(
-            nmers[0],
+        self.assertIn(
             "VRGEPNVsYICSRYY",
+            nmers,
         )
-        self.assertEqual(
-            nmers[1],
+        self.assertIn(
             "RGEPNVSyICSRYYR",
+            nmers,
         )
 
         nmers_no_filter = list(
