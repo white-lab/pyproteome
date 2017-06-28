@@ -273,7 +273,7 @@ def volcano_plot(
     figsize : tuple of float, float
     compress_dups : bool, optional
     """
-    ((channels_a, channels_b), (label_a, label_b)) = data.get_groups(
+    (channels_a, channels_b), (label_a, label_b), _ = data.get_groups(
         group_a=group_a,
         group_b=group_b,
     )

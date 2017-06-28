@@ -246,24 +246,7 @@ class NormalizationTest(TestCase):
         self.data.psms["131"] = np.nan
         psms = self.data.inter_normalize(["norm"])
 
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["low1"]),
-        )
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["low2"]),
-        )
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["low3"]),
-        )
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["med"]),
-        )
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["high"]),
-        )
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["Fold Change"]),
-        )
-        self.assertTrue(
-            np.isnan(psms.psms.iloc[0]["p-value"]),
+        self.assertEqual(
+            psms.psms.shape[0],
+            0,
         )

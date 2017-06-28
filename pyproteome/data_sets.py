@@ -119,6 +119,7 @@ class DataSet:
         self.sources = ["unknown"]
         self.scan_lists = None
         self.validated = False
+        self.group_a, self.group_b = None, None
 
         if mascot_name:
             psms, self.scan_lists, lst = loading.load_mascot_psms(
@@ -430,65 +431,58 @@ class DataSet:
             for chan in norm_channels
             if not other or chan in other.channels
         ]
-
         for channel in new.channels.values():
             weight = "{}_weight".format(channel)
 
             if weight not in new.psms.columns:
                 new.psms[weight] = new.psms[channel]
 
-        if (
-            not norm_channels or
-            (
-                other and
-                all(
-                    chan in other.channels.keys()
-                    for chan in new.channels.keys()
-                )
-            )
-        ):
-            return new
-
         # Calculate the mean normalization signal from each shared channel
         new_mean = new.psms[norm_channels].mean(axis=1)
 
-        for channel in new.channels.values():
-            chan_mean = new_mean.copy()
-            vals = new.psms[channel]
+        # Drop values for which there is no normalization data
+        new.psms = new.psms[~new_mean.isnull()].reset_index(drop=True)
 
-            # Drop values for which there is no normalization data
-            vals = vals[~new_mean.isnull()]
+        if other:
+            merge = pd.merge(
+                new.psms,
+                other.psms,
+                on=[
+                    "Proteins",
+                    "Sequence",
+                    "Modifications",
+                ],
+                how="left",
+                suffixes=("_self", "_other"),
+            )
+            assert merge.shape[0] == new.psms.shape[0]
 
-            if other:
-                other_mean = (
-                    pd.merge(
-                        new.psms,
-                        other.psms,
-                        on=[
-                            "Proteins",
-                            "Sequence",
-                            "Modifications",
-                        ],
-                        how="outer",
-                        suffixes=("_new", "_other"),
-                    )[
-                        ["{}_other".format(i) for i in norm_channels]
-                    ].mean(axis=1)
-                )
+            self_mean = merge[
+                ["{}_self".format(i) for i in norm_channels]
+            ].mean(axis=1)
 
-                # Don't scale peptides that do not exist in other_mean
-                for index, val in vals.iteritems():
-                    if index not in other_mean:
-                        chan_mean[index] = 1
+            other_mean = merge[
+                ["{}_other".format(i) for i in norm_channels]
+            ].mean(axis=1)
+
+            for channel in new.channels.values():
+                vals = merge[
+                    channel
+                    if channel in merge.columns else
+                    "{}_self".format(channel)
+                ]
 
                 # Set scaling factor to 1 where other_mean is None
-                other_mean[other_mean.isnull()] = (
-                    chan_mean[other_mean.isnull()]
+                cp = other_mean.copy()
+                cp[other_mean.isnull()] = (
+                    self_mean[other_mean.isnull()]
                 )
 
-                vals *= other_mean / chan_mean
+                if self_mean.any():
+                    vals *= cp / self_mean
 
-            new.psms[channel] = vals
+                assert new.psms.shape[0] == vals.shape[0]
+                new.psms[channel] = vals
 
         new.update_group_changes()
 
@@ -558,7 +552,7 @@ class DataSet:
             axis=0,
             how=how,
             subset=list(new.channels.values()),
-        )
+        ).reset_index(drop=True)
 
         return new
 
@@ -657,8 +651,7 @@ class DataSet:
         if proteins:
             new.psms = new.psms[
                 new.psms["Proteins"]
-                .apply(lambda x: " / ".join(sorted(x.genes)))
-                .isin(proteins)
+                .apply(lambda x: any(i in proteins for i in x.genes))
             ]
 
         if sequence:
@@ -684,8 +677,9 @@ class DataSet:
 
         Returns
         -------
-        groups : list of str
+        samples : list of str
         labels : list of str
+        groups : tuple of (str or list of str)
         """
         groups = [
             val
@@ -698,15 +692,18 @@ class DataSet:
             if any(chan in self.channels for chan in val)
         ]
 
+        group_a = group_a or self.group_a
+        group_b = group_b or self.group_b
+
         if group_a is None:
             label_a = labels[0] if labels else None
-            group_a = groups[0] if groups else []
+            samples_a = groups[0] if groups else []
         elif isinstance(group_a, str):
             label_a = group_a
-            group_a = self.groups[group_a]
+            samples_a = self.groups[group_a]
         else:
             label_a = ", ".join(group_a)
-            group_a = [
+            samples_a = [
                 group
                 for i in group_a
                 for group in self.groups[i]
@@ -714,19 +711,19 @@ class DataSet:
 
         if group_b is None:
             label_b = labels[1] if labels[1:] else None
-            group_b = groups[1] if groups[1:] else []
+            samples_b = groups[1] if groups[1:] else []
         elif isinstance(group_b, str):
             label_b = group_b
-            group_b = self.groups[group_b]
+            samples_b = self.groups[group_b]
         else:
             label_b = ", ".join(group_b)
-            group_b = [
+            samples_b = [
                 group
                 for i in group_b
                 for group in self.groups[i]
             ]
 
-        return (group_a, group_b), (label_a, label_b)
+        return (samples_a, samples_b), (label_a, label_b), (group_a, group_b)
 
     def update_group_changes(self, group_a=None, group_b=None):
         """
@@ -743,10 +740,11 @@ class DataSet:
         if self.psms.shape[0] < 1:
             return
 
-        (group_a, group_b), _ = self.get_groups(
+        (group_a, group_b), _, (self.group_a, self.group_b) = self.get_groups(
             group_a=group_a,
             group_b=group_b,
         )
+
         channels_a = [
             self.channels[i]
             for i in group_a
@@ -799,6 +797,7 @@ class DataSet:
                 self.channels[chan]
                 for group in self.groups.values()
                 for chan in group
+                if chan in self.channels
             ]
         ]
 
@@ -852,8 +851,11 @@ def merge_data(
                 other=new if index > 0 else None,
                 norm_channels=(
                     norm_channels
-                    if norm_channels or index > 0 else
-                    set(data.channels).intersection(data_sets[1].channels)
+                    if norm_channels else (
+                        set(data.channels).intersection(new.channels)
+                        if index > 0 else
+                        set(data.channels).intersection(data_sets[1].channels)
+                    )
                 ),
             )
 
@@ -865,8 +867,8 @@ def merge_data(
 
         new.psms = pd.concat([new.psms, data.psms])
 
-    if merge_duplicates:
-        new._merge_duplicates()
+        if merge_duplicates:
+            new._merge_duplicates()
 
     if merge_subsets:
         new._merge_subsequences()
@@ -895,6 +897,15 @@ def merge_data(
             if data.tissues
             for tissue in data.tissues
         )
+    )
+
+    new.group_a = next(
+        (i.group_a for i in data_sets if i.group_a is not None),
+        None,
+    )
+    new.group_b = next(
+        (i.group_b for i in data_sets if i.group_b is not None),
+        None,
     )
 
     new.update_group_changes()
