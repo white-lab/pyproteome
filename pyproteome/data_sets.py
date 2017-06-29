@@ -166,7 +166,7 @@ class DataSet:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self.filter(
                 confidence_cutoff="High",
-                isolation_cutoff=20,
+                isolation_cutoff=30,
                 inplace=True,
             )
 
@@ -702,11 +702,17 @@ class DataSet:
             label_a = group_a
             samples_a = self.groups[group_a]
         else:
+            group_a = [
+                group
+                for group in group_a
+                if any(sample in self.channels for sample in self.groups[group])
+            ]
             label_a = ", ".join(group_a)
             samples_a = [
-                group
+                sample
                 for i in group_a
-                for group in self.groups[i]
+                for sample in self.groups[i]
+                if sample in self.channels
             ]
 
         if group_b is None:
@@ -716,11 +722,17 @@ class DataSet:
             label_b = group_b
             samples_b = self.groups[group_b]
         else:
+            group_b = [
+                group
+                for group in group_b
+                if any(sample in self.channels for sample in self.groups[group])
+            ]
             label_b = ", ".join(group_b)
             samples_b = [
-                group
+                sample
                 for i in group_b
-                for group in self.groups[i]
+                for sample in self.groups[i]
+                if sample in self.channels
             ]
 
         return (samples_a, samples_b), (label_a, label_b), (group_a, group_b)
