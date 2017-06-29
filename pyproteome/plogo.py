@@ -92,6 +92,16 @@ def _check_plogo_response(response, message=""):
 def plogo(
     foreground, background, fix_center=True, title="", width=800, height=600,
 ):
+    """
+    Wraps calls to Plogo, returning an image showing the enrichment of a
+    sequence in a foreground set compared to a background set.
+
+    Notes
+    -----
+    .. [1] O’Shea, Joseph P et al. “pLogo: A Probabilistic Approach to
+       Visualizing Sequence Motifs.” Nature Methods 10.12 (2013): 1211–1212.
+       Web.
+    """
     s = requests.Session()
 
     response = s.post(

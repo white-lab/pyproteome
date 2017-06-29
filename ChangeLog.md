@@ -11,6 +11,7 @@ Features
   - Added individual sample quantitations to analysis.write_full_tables
   - Automatically apply inter-normalization when merging multiple data sets.
   - Filter by isolation interference.
+  - Added plogo wrapper.
 
 Bugfixes
 
