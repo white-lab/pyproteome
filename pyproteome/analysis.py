@@ -778,7 +778,7 @@ def plot_sequence_between(
     ax.set_title(title, fontsize=20)
     ax.xaxis.grid(False)
 
-    if not means:
+    if not means.any():
         return f
 
     y_max = np.max(means + errs)
