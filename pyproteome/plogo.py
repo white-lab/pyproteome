@@ -2,8 +2,9 @@ from __future__ import division
 
 # Built-ins
 import logging
-import time
+import math
 import requests
+import time
 
 try:
     from IPython.display import Image
@@ -40,7 +41,7 @@ def _format_title(data, f):
     return "{} - {}".format(data.name, ", ".join(title))
 
 
-def make_plogo(data, f, m=None, letter_mod_types=None, fix_center=False):
+def make_plogo(data, f, m=None, letter_mod_types=None, fix_letter_pos=None):
     if letter_mod_types is None:
         letter_mod_types = [(None, "Phospho")]
 
@@ -63,7 +64,7 @@ def make_plogo(data, f, m=None, letter_mod_types=None, fix_center=False):
     return plogo(
         fore, back,
         title=_format_title(data, f),
-        fix_center=fix_center,
+        fix_letter_pos=fix_letter_pos,
     )
 
 
@@ -90,7 +91,12 @@ def _check_plogo_response(response, message=""):
 
 
 def plogo(
-    foreground, background, fix_center=True, title="", width=800, height=600,
+    foreground, background,
+    fix_letter_pos=None,
+    title="",
+    width=800,
+    height=600,
+    ymax=None,
 ):
     """
     Wraps calls to Plogo, returning an image showing the enrichment of a
@@ -102,6 +108,14 @@ def plogo(
        Visualizing Sequence Motifs.” Nature Methods 10.12 (2013): 1211–1212.
        Web.
     """
+    if fix_letter_pos is None:
+        fix_letter_pos = []
+
+    assert len(foreground) > 0
+    assert len(background) > 0
+
+    letter_width = len(background[0])
+
     s = requests.Session()
 
     response = s.post(
@@ -135,10 +149,10 @@ def plogo(
     response = s.post(
         '{}/initplogo/'.format(PLOGO_BASE),
         data={
-            'width': 15,
+            'width': letter_width,
             'fixedLetter': 'S',
             'fixedPosition': 7,
-            'fix': 1 if fix_center else 0,
+            'fix': 0,
             'jobName': 'pyproteome.motif.plogo',
             'subtract_fg': False,
             'remove_duplicates': True,
@@ -150,12 +164,34 @@ def plogo(
     job = json['state']['jobId']
     plogo_wait_job(s, job)
 
+    for letter, pos in fix_letter_pos:
+        response = s.post(
+            '{}/initplogo/'.format(PLOGO_BASE),
+            data={
+                'width': letter_width,
+                'fixedLetter': letter,
+                'fixedPosition': math.floor(letter_width / 2) + pos,
+                'fix': 1,
+                'jobName': 'pyproteome.motif.plogo - fix',
+                'subtract_fg': False,
+                'remove_duplicates': True,
+                'from_ksdb': False,
+                'referenceId': job,
+            },
+        )
+
+        json = _check_plogo_response(response)
+        job = json['state']['jobId']
+        plogo_wait_job(s, job)
+
     response = s.post(
         '{}/redrawplogo/'.format(PLOGO_BASE),
         data={
             'options[title]': title,
             'options[width]': width,
             'options[height]': height,
+            'options[plogoMode]': 'absolute',
+            'options[maxAbsoluteValue]': ymax,
             'jobId': job,
         },
     )
