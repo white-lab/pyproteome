@@ -572,6 +572,6 @@ def motif_logo(
         filename,
         yaxis_scale=3,
         format="svg",
-        #logo_title="Testing",
+        # logo_title="Testing",
         stack_width="large"
     )
