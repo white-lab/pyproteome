@@ -165,8 +165,8 @@ class DataSet:
         if filter_bad:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self.filter(
-                confidence_cutoff="High",
-                isolation_cutoff=30,
+                ion_score_cutoff=15,
+                isolation_cutoff=50,
                 inplace=True,
             )
 
@@ -567,6 +567,8 @@ class DataSet:
         sequence=None,
         proteins=None,
         mod_types=None,
+        only_validated=False,
+        scan_paths=None,
         inplace=False,
     ):
         """
@@ -583,6 +585,8 @@ class DataSet:
         sequence : str, optional
         proteins : list of str, optional
         mod_types : list of tuple of str, str, optional
+        only_validated : bool, optional
+        scan_paths : list of str, optional
         inplace : bool, optional
 
         Returns
@@ -661,6 +665,15 @@ class DataSet:
 
         if mod_types:
             new.psms = modification.filter_mod_types(new.psms, mod_types)
+
+        if only_validated:
+            new.psms = new.psms[new.psms["Validated"]]
+
+        if scan_paths:
+            new.psms = new.psms[
+                new.psms["Scan Paths"]
+                .apply(lambda x: any(i in scan_paths for i in x))
+            ]
 
         new.psms.reset_index(inplace=True, drop=True)
 
