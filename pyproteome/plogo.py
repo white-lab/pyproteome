@@ -41,7 +41,7 @@ def _format_title(data, f):
     return "{} - {}".format(data.name, ", ".join(title))
 
 
-def make_plogo(data, f, m=None, letter_mod_types=None, fix_letter_pos=None):
+def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
     if letter_mod_types is None:
         letter_mod_types = [(None, "Phospho")]
 
@@ -64,7 +64,7 @@ def make_plogo(data, f, m=None, letter_mod_types=None, fix_letter_pos=None):
     return plogo(
         fore, back,
         title=_format_title(data, f),
-        fix_letter_pos=fix_letter_pos,
+        **kwargs
     )
 
 
