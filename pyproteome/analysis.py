@@ -465,8 +465,8 @@ def volcano_plot(
         y=sig_pvals,
         texts=texts,
         ax=ax,
-        lim=400,
-        force_text=0.3,
+        lim=500,
+        force_text=0.5,
         force_points=0.01,
         arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
         only_move={
@@ -490,6 +490,8 @@ def volcano_plot(
             bbox_inches="tight", dpi=300,
             transparent=True,
         )
+
+    return fig, ax
 
 
 def hierarchical_heatmap(
@@ -1298,3 +1300,61 @@ def correlate_signal(
     f_scatter.tight_layout(pad=2)
 
     return f_corr, f_scatter
+
+
+def plot_all(
+    datas, seqs=None, protein=None, figsize=(16, 8),
+    individual=True, between=False,
+):
+    assert seqs is not None or protein is not None
+
+    if protein:
+        seqs = list(
+            set(
+                str(seq)
+                for data in datas
+                for seq in data[data["Proteins"] == protein]["Sequence"]
+            )
+        )
+
+    if isinstance(seqs, str):
+        seqs = [seqs]
+
+    for seq in seqs:
+        for data in datas:
+            prot = " / ".join(
+                gene
+                for i in data[data["Sequence"] == seq]["Proteins"]
+                for gene in i.genes
+            )
+            if individual:
+                f = plot_sequence(
+                    data, seq,
+                    title="{}-{}".format(
+                        prot,
+                        data.name,
+                        ":".join(data.tissues),
+                    ),
+                    figsize=figsize,
+                )
+                f.savefig(
+                    "{}-{}-{}.png".format(
+                        prot.replace("/", "_"),
+                        ",".join(data.tissues),
+                        data.name,
+                    ),
+                    bbox_inches="tight", dpi=300,
+                    transparent=True,
+                )
+
+            if between:
+                f = plot_sequence_between(data, [seq])
+                f.savefig(
+                    "{}-{}-{}-between.png".format(
+                        prot.replace("/", "_"),
+                        ",".join(data.tissues),
+                        data.name,
+                    ),
+                    bbox_inches="tight", dpi=300,
+                    transparent=True,
+                )
