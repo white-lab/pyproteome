@@ -190,11 +190,15 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
         df["Sequence"] = df["Sequence"].apply(str)
         df.sort_values("p-value", inplace=True, ascending=True)
 
-        ws_name = "{} - {} - {}".format(
-            data.name,
-            data.tissue,
-            _rewrite_enrichments(data.enrichments),
-        ).replace("/", "+")
+        ws_name = re.sub(
+            "/",
+            "+",
+            "{} - {} - {}".format(
+                data.name,
+                data.tissue,
+                _rewrite_enrichments(data.enrichments),
+            ),
+        )
         df.to_excel(
             writer,
             sheet_name=ws_name,
@@ -303,7 +307,7 @@ def volcano_plot(
         )
 
     if title:
-        file_name = re.sub("[ ></]", "_", title) + "_Volcano.png"
+        file_name = re.sub("[ ></?]", "_", title) + "_Volcano.png"
 
         if folder_name:
             file_name = os.path.join(folder_name, file_name)
@@ -1338,10 +1342,14 @@ def plot_all(
                     figsize=figsize,
                 )
                 f.savefig(
-                    "{}-{}-{}.png".format(
-                        prot.replace("/", "_"),
-                        ",".join(data.tissues),
-                        data.name,
+                    re.sub(
+                        "[?/]",
+                        "_",
+                        "{}-{}-{}.png".format(
+                            prot,
+                            ",".join(data.tissues),
+                            data.name,
+                        ),
                     ),
                     bbox_inches="tight", dpi=300,
                     transparent=True,
@@ -1350,10 +1358,14 @@ def plot_all(
             if between:
                 f = plot_sequence_between(data, [seq])
                 f.savefig(
-                    "{}-{}-{}-between.png".format(
-                        prot.replace("/", "_"),
-                        ",".join(data.tissues),
-                        data.name,
+                    re.sub(
+                        "[?/]",
+                        "_",
+                        "{}-{}-{}-between.png".format(
+                            prot,
+                            ",".join(data.tissues),
+                            data.name,
+                        ),
                     ),
                     bbox_inches="tight", dpi=300,
                     transparent=True,
