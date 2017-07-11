@@ -1370,3 +1370,86 @@ def plot_all(
                     bbox_inches="tight", dpi=300,
                     transparent=True,
                 )
+
+
+def plot_volcano_filtered(data, f, **kwargs):
+    data = data.copy()
+    data.update_group_changes(
+        group_a=kwargs.get("group_a", None),
+        group_b=kwargs.get("group_b", None),
+    )
+
+    d = data.filter(**f)
+
+    f, ax = volcano_plot(
+        d,
+        figsize=(18, 14),
+        **kwargs,
+    )
+
+    changes = []
+    pvals = []
+
+    for _, row in data.psms.iterrows():
+        row_pval = -np.log10(row["p-value"])
+        row_change = np.log2(row["Fold Change"])
+
+        if (
+            np.isnan(row_pval) or
+            np.isnan(row_change) or
+            np.isinf(row_pval) or
+            np.isinf(row_change)
+        ):
+            continue
+
+        pvals.append(row_pval)
+        changes.append(row_change)
+
+    ax.scatter(changes, pvals, c="lightblue", zorder=0, alpha=0.3)
+    ax.set_xlim(
+        xmin=np.floor(min(changes) * 2) / 2,
+        xmax=np.ceil(max(changes) * 2) / 2,
+    )
+#     ax.set_xticks(np.log)
+    ax.set_xticks(
+        np.linspace(start=ax.get_xlim()[0], stop=ax.get_xlim()[1], num=8)
+    )
+    ax.set_ylim(bottom=-0.1, top=np.ceil(max(pvals)))
+    ax.set_yticks(np.arange(start=1, stop=np.ceil(max(pvals) + 1), step=1))
+#     ax.set_yticks(
+#         list(
+#             sorted(
+#                 [
+#                     tick
+#                     for tick in ax.get_yticks()
+#                     if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
+#                     ["1", "5"] and
+#                     tick != 0
+#                 ]
+#             )
+#         )
+#     )
+    ax.set_xticklabels(
+        [
+            "{:.3}".format(i)
+            for i in np.exp2(ax.get_xticks())
+        ],
+        fontsize=20,
+    )
+    ax.set_yticklabels(
+        [
+            "{:.3}".format(i)
+            for i in np.power(1/10, ax.get_yticks())
+        ],
+        fontsize=20,
+    )
+
+    f.savefig(
+        os.path.join(
+            data.name,
+            re.sub("[ ></\?]", "_", kwargs.get("title", "Filtered")) +
+            "_Volcano.png",
+        ),
+        bbox_inches="tight", dpi=300,
+        transparent=True,
+    )
