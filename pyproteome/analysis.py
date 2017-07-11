@@ -1382,8 +1382,7 @@ def plot_volcano_filtered(data, f, **kwargs):
     d = data.filter(**f)
 
     f, ax = volcano_plot(
-        d,
-        **kwargs,
+        d, **kwargs
     )
 
     changes = []
