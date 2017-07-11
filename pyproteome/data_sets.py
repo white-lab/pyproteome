@@ -19,6 +19,7 @@ import numpy.ma as ma
 from scipy.stats import ttest_ind
 
 from . import loading, modification, utils
+from . import motif as pymotif
 
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
@@ -569,6 +570,7 @@ class DataSet:
         mod_types=None,
         only_validated=False,
         scan_paths=None,
+        motif=None,
         inplace=False,
     ):
         """
@@ -587,6 +589,7 @@ class DataSet:
         mod_types : list of tuple of str, str, optional
         only_validated : bool, optional
         scan_paths : list of str, optional
+        motif : :class:`pyproteome.motif.Motif`, optional
         inplace : bool, optional
 
         Returns
@@ -652,24 +655,39 @@ class DataSet:
                 ) >= fold_cutoff
             ]
 
-        if proteins:
+        if motif is not None:
+            f = pd.Series([
+                any(
+                    motif.match(nmer)
+                    for nmer in pymotif.generate_n_mers(
+                        [i["Sequence"]],
+                        letter_mod_types=mod_types,
+                    )
+                )
+                for _, i in new.psms.iterrows()
+            ])
+
+            assert f.shape[0] == new.psms.shape[0]
+            new.psms = new.psms[f]
+
+        if proteins is not None:
             new.psms = new.psms[
                 new.psms["Proteins"]
                 .apply(lambda x: any(i in proteins for i in x.genes))
             ]
 
-        if sequence:
+        if sequence is not None:
             new.psms = new.psms[
                 new.psms["Sequence"] == sequence
             ]
 
-        if mod_types:
+        if mod_types is not None:
             new.psms = modification.filter_mod_types(new.psms, mod_types)
 
         if only_validated:
             new.psms = new.psms[new.psms["Validated"]]
 
-        if scan_paths:
+        if scan_paths is not None:
             new.psms = new.psms[
                 new.psms["Scan Paths"]
                 .apply(lambda x: any(i in scan_paths for i in x))
@@ -718,7 +736,10 @@ class DataSet:
             group_a = [
                 group
                 for group in group_a
-                if any(sample in self.channels for sample in self.groups[group])
+                if any(
+                    sample in self.channels
+                    for sample in self.groups[group]
+                )
             ]
             label_a = ", ".join(group_a)
             samples_a = [
@@ -738,7 +759,10 @@ class DataSet:
             group_b = [
                 group
                 for group in group_b
-                if any(sample in self.channels for sample in self.groups[group])
+                if any(
+                    sample in self.channels
+                    for sample in self.groups[group]
+                )
             ]
             label_b = ", ".join(group_b)
             samples_b = [
