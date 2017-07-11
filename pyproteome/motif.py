@@ -21,48 +21,6 @@ from . import sequence
 LOGGER = logging.getLogger("pyproteome.motif")
 
 
-def generate_n_mers(
-    sequences, n=15,
-    all_matches=True,
-    fill_left="A",
-    fill_right="A",
-    letter_mod_types=None,
-):
-    """
-    Generate n-mers around all sites of modification in sequences.
-
-    Parameters
-    ----------
-    sequences : list of :class:`Sequence<pyproteome.sequence.Sequence>`
-    n : int, optional
-    all_matches : bool, optional
-        Generate n-mers for all protein matches else just the first match.
-    fill_left : str, optional
-    fill_right : str, optional
-    """
-    # Check n is odd
-    assert n % 2 == 1
-
-    def _n_mer_from_sequence(full_seq, abs_pos):
-        return (
-            fill_left * (n // 2 - abs_pos) +
-            full_seq[max([abs_pos - n // 2, 0]):abs_pos] +
-            full_seq[abs_pos].lower() +
-            full_seq[abs_pos + 1:abs_pos + n // 2 + 1] +
-            fill_right * (abs_pos - len(full_seq) + n // 2 + 1)
-        )
-
-    return set(
-        _n_mer_from_sequence(
-            match.protein.full_sequence,
-            mod.rel_pos + match.rel_pos,
-        )
-        for seq in sequences
-        for mod in seq.modifications.get_mods(letter_mod_types)
-        for match in seq.protein_matches[:None if all_matches else 1]
-    )
-
-
 class Motif:
     """
     Contains a motif that may match to one or more protein sequences.
@@ -224,6 +182,48 @@ class Motif:
         bool
         """
         return bool(self._re.match(other))
+
+
+def generate_n_mers(
+    sequences, n=15,
+    all_matches=True,
+    fill_left="A",
+    fill_right="A",
+    letter_mod_types=None,
+):
+    """
+    Generate n-mers around all sites of modification in sequences.
+
+    Parameters
+    ----------
+    sequences : list of :class:`Sequence<pyproteome.sequence.Sequence>`
+    n : int, optional
+    all_matches : bool, optional
+        Generate n-mers for all protein matches else just the first match.
+    fill_left : str, optional
+    fill_right : str, optional
+    """
+    # Check n is odd
+    assert n % 2 == 1
+
+    def _n_mer_from_sequence(full_seq, abs_pos):
+        return (
+            fill_left * (n // 2 - abs_pos) +
+            full_seq[max([abs_pos - n // 2, 0]):abs_pos] +
+            full_seq[abs_pos].lower() +
+            full_seq[abs_pos + 1:abs_pos + n // 2 + 1] +
+            fill_right * (abs_pos - len(full_seq) + n // 2 + 1)
+        )
+
+    return set(
+        _n_mer_from_sequence(
+            match.protein.full_sequence,
+            mod.rel_pos + match.rel_pos,
+        )
+        for seq in sequences
+        for mod in seq.modifications.get_mods(letter_mod_types)
+        for match in seq.protein_matches[:None if all_matches else 1]
+    )
 
 
 def _motif_sig(fore_hits, fore_size, back_hits, back_size):
