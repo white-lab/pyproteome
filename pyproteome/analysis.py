@@ -253,6 +253,7 @@ def volcano_plot(
     group_a=None,
     group_b=None,
     pval_cutoff=0.05, fold_cutoff=1.25,
+    xminmax=None, yminmax=None,
     options=None,
     folder_name=None, title=None,
     figsize=(12, 10),
@@ -378,10 +379,19 @@ def volcano_plot(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    ax.set_xlim(
-        xmin=np.floor(min(changes) * 2) / 2,
-        xmax=np.ceil(max(changes) * 2) / 2,
-    )
+    if xminmax:
+        ax.set_xlim(xmin=xminmax[0], xmax=xminmax[1])
+    else:
+        ax.set_xlim(
+            xmin=np.floor(min(changes) * 2) / 2,
+            xmax=np.ceil(max(changes) * 2) / 2,
+        )
+
+    if yminmax:
+        ax.set_ylim(bottom=yminmax[0], top=yminmax[1])
+    else:
+        ax.set_ylim(bottom=-0.1)
+
     ax.set_xticks(
         list(sorted(list(ax.get_xticks()) + [lower_fold, upper_fold]))
     )
@@ -393,7 +403,7 @@ def volcano_plot(
                     for tick in ax.get_yticks()
                     if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
                     ["1", "5"] and
-                    tick != 0
+                    tick > 0
                 ] + [log_pval_cutoff]
             )
         )
@@ -426,7 +436,6 @@ def volcano_plot(
         "p-value",
         fontsize=20,
     )
-    ax.set_ylim(bottom=-0.1)
 
     if not np.isnan(log_pval_cutoff):
         ax.axhline(
@@ -1381,10 +1390,6 @@ def plot_volcano_filtered(data, f, **kwargs):
 
     d = data.filter(**f)
 
-    f, ax = volcano_plot(
-        d, **kwargs
-    )
-
     changes = []
     pvals = []
 
@@ -1403,44 +1408,17 @@ def plot_volcano_filtered(data, f, **kwargs):
         pvals.append(row_pval)
         changes.append(row_change)
 
+    f, ax = volcano_plot(
+        d,
+        xminmax=(
+            np.floor(min(changes) * 2) / 2,
+            np.ceil(max(changes) * 2) / 2,
+        ),
+        yminmax=(-0.1, np.ceil(max(pvals))),
+        **kwargs
+    )
+
     ax.scatter(changes, pvals, c="lightblue", zorder=0, alpha=0.3)
-    ax.set_xlim(
-        xmin=np.floor(min(changes) * 2) / 2,
-        xmax=np.ceil(max(changes) * 2) / 2,
-    )
-#     ax.set_xticks(np.log)
-    ax.set_xticks(
-        np.linspace(start=ax.get_xlim()[0], stop=ax.get_xlim()[1], num=8)
-    )
-    ax.set_ylim(bottom=-0.1, top=np.ceil(max(pvals)))
-    ax.set_yticks(np.arange(start=1, stop=np.ceil(max(pvals) + 1), step=1))
-#     ax.set_yticks(
-#         list(
-#             sorted(
-#                 [
-#                     tick
-#                     for tick in ax.get_yticks()
-#                     if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
-#                     ["1", "5"] and
-#                     tick != 0
-#                 ]
-#             )
-#         )
-#     )
-    ax.set_xticklabels(
-        [
-            "{:.3}".format(i)
-            for i in np.exp2(ax.get_xticks())
-        ],
-        fontsize=20,
-    )
-    ax.set_yticklabels(
-        [
-            "{:.3}".format(i)
-            for i in np.power(1/10, ax.get_yticks())
-        ],
-        fontsize=20,
-    )
 
     f.savefig(
         os.path.join(
