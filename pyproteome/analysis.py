@@ -1383,7 +1383,6 @@ def plot_volcano_filtered(data, f, **kwargs):
 
     f, ax = volcano_plot(
         d,
-        figsize=(18, 14),
         **kwargs,
     )
 
