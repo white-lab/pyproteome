@@ -243,7 +243,7 @@ class MotifEnrichmentFullTest(TestCase):
     def test_motif_enrichment(self):
         hits = motif.motif_enrichment(
             self.foreground, self.background,
-        )
+        )[0]
 
         true_positives = list(self.output["Motif"])
         true_hits = list(hits["Motif"])
