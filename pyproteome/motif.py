@@ -325,7 +325,40 @@ def _pp_sig(p_value, pp_dist):
     return len([i for i in pp_dist if i < p_value]) / len(pp_dist)
 
 
+# Taken from https://stackoverflow.com/questions/1023038/
+def lowpriority():
+    """ Set the priority of the process to below-normal."""
+
+    import sys
+    try:
+        sys.getwindowsversion()
+    except AttributeError:
+        isWindows = False
+    else:
+        isWindows = True
+
+    if isWindows:
+        # Based on:
+        #   "Recipe 496767: Set Process Priority In Windows" on ActiveState
+        #   http://code.activestate.com/recipes/496767/
+        import win32api
+        import win32process
+        import win32con
+
+        pid = win32api.GetCurrentProcessId()
+        handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, True, pid)
+        win32process.SetPriorityClass(
+            handle, win32process.BELOW_NORMAL_PRIORITY_CLASS,
+        )
+    else:
+        import os
+
+        os.nice(1)
+
+
 def _random_pdist(x, background, fore_size, kwargs):
+    lowpriority()
+
     return motif_enrichment(
         random.sample(background, fore_size),
         background,
@@ -362,7 +395,9 @@ def _generate_ppdist(
         ),
         range(pp_iterations),
     ):
-        pp_dist += p_dist
+        pp_dist.append(
+            min(p_dist + [kwargs.get("sig_cutoff")])
+        )
 
     return pp_dist
 
@@ -373,6 +408,7 @@ def motif_enrichment(
     start_letters=None, letter_mod_types=None,
     motif_length=15,
     pp_value=False, pp_iterations=100,
+    cpu_count=None,
 ):
     """
     Calculate motifs significantly enriched in a list of sequences.
@@ -388,6 +424,9 @@ def motif_enrichment(
     motif_length : int, optional
     pp_value : bool, optional
     pp_iterations : int, optional
+    cpu_count : int, optional
+        Number of CPUs to use when calculating pp-values, does not apply to
+        a single motif-enrichment process.
 
     Returns
     -------
@@ -586,6 +625,7 @@ def motif_enrichment(
         sig_cutoff=sig_cutoff, min_fore_hits=min_fore_hits,
         start_letters=start_letters, letter_mod_types=letter_mod_types,
         motif_length=motif_length,
+        cpu_count=cpu_count,
     ) if pp_value else None
 
     # Finally prepare the output as a sorted list with the motifs and their
