@@ -37,7 +37,7 @@ def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
     ]
     return icelogo(
         fore, back,
-        **kwargs,
+        **kwargs
     )
 
 
