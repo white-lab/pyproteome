@@ -8,7 +8,10 @@ from __future__ import division
 
 # Built-ins
 from collections import defaultdict
+from functools import partial
 import logging
+import multiprocessing
+import random
 import re
 
 # Core data analysis libraries
@@ -226,6 +229,90 @@ def generate_n_mers(
     )
 
 
+def _motif_stats(motif, fore_size, back_size, done, pp_dist=None):
+    fore_hits, back_hits = done[motif]
+
+    # Re-calculate the P enrichment score associated with this motif
+    p_value = _motif_sig(fore_hits, fore_size, back_hits, back_size)
+
+    ppvalue = _pp_sig(p_value, pp_dist) if pp_dist else None
+
+    return (
+        motif,
+        fore_hits, fore_size,
+        back_hits, back_size,
+        p_value, ppvalue,
+    )
+
+
+def _is_a_submotif_with_same_size(submotif, fore_hits, done):
+    """
+    Test whether the 'submotif' is an ancestor of any known motif, and
+    matches the same number of foreground sequences.
+    """
+    # We want to know if this "submotif" contains any completed motifs
+    return any(
+        checked in submotif
+        for checked, checked_hits in done.items()
+        if fore_hits == checked_hits[0] and checked != submotif
+    )
+
+
+def _make_nmers(lst, motif_length, letter_mod_types):
+    if isinstance(next(iter(lst)), sequence.Sequence):
+        return list(
+            generate_n_mers(
+                lst,
+                n=motif_length,
+                letter_mod_types=letter_mod_types,
+            )
+        )
+
+    assert all(len(i) == motif_length for i in lst)
+    return lst
+
+
+def _filter_less_specific(prev_pass, done):
+    return set(
+        motif
+        for motif in prev_pass
+        if not any(
+            # other in motif: other is +more+ specific than motif
+            other in motif and done[other][0] >= done[motif][0]
+            for other in prev_pass
+            if other != motif
+        )
+    )
+
+
+def _check_anchestry(motif, parent, done):
+    motif_length = len(motif.motif)
+
+    for index, char in enumerate(motif.motif):
+        if index == motif_length // 2 or char != ".":
+            continue
+
+        new_motif = Motif(
+            motif.motif[:index] + "." + motif.motif[index + 1:]
+        )
+
+        if new_motif != parent and new_motif in done:
+            return True
+
+    return False
+
+
+def _count_occurences(motif, parent, hit_list):
+    hits = [
+        i
+        for i in hit_list[parent]
+        if motif.match(i)
+    ]
+    hit_list[motif] = hits
+
+    return len(hits)
+
+
 def _motif_sig(fore_hits, fore_size, back_hits, back_size):
     return (
         1 -
@@ -234,11 +321,58 @@ def _motif_sig(fore_hits, fore_size, back_hits, back_size):
     )
 
 
+def _pp_sig(p_value, pp_dist):
+    return len([i for i in pp_dist if i < p_value]) / len(pp_dist)
+
+
+def _random_pdist(x, background, fore_size, kwargs):
+    return motif_enrichment(
+        random.sample(background, fore_size),
+        background,
+        **kwargs
+    )[1]
+
+
+def _generate_ppdist(
+    background, fore_size, pp_iterations,
+    cpu_count=None,
+    **kwargs
+):
+    if cpu_count is None:
+        try:
+            cpu_count = multiprocessing.cpu_count()
+        except NotImplementedError:
+            cpu_count = 2
+
+    kwargs = kwargs.copy()
+    kwargs["pp_value"] = False
+
+    pp_dist = []
+
+    pool = multiprocessing.Pool(
+        processes=cpu_count,
+    )
+
+    for p_dist in pool.imap_unordered(
+        partial(
+            _random_pdist,
+            background=background,
+            fore_size=fore_size,
+            kwargs=kwargs,
+        ),
+        range(pp_iterations),
+    ):
+        pp_dist += p_dist
+
+    return pp_dist
+
+
 def motif_enrichment(
     foreground, background,
     sig_cutoff=0.01, min_fore_hits=0,
     start_letters=None, letter_mod_types=None,
     motif_length=15,
+    pp_value=False, pp_iterations=100,
 ):
     """
     Calculate motifs significantly enriched in a list of sequences.
@@ -252,10 +386,14 @@ def motif_enrichment(
     start_letters : list of str, optional
     letter_mod_types : list of tuple of str, str
     motif_length : int, optional
+    pp_value : bool, optional
+    pp_iterations : int, optional
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
+    p_dist : list of float
+    pp_dist : list of float
 
     Notes
     -----
@@ -264,53 +402,7 @@ def motif_enrichment(
            Upregulated in EGFRvIII-Expressing Glioblastoma Cells." Molecular
            bioSystems 5.1 (2009): 59-67.
     """
-    def _motif_stats(motif):
-        fore_hits, back_hits = done[motif]
-
-        # Re-calculate the P enrichment score associated with this motif
-        p_value = _motif_sig(fore_hits, fore_size, back_hits, back_size)
-
-        return (
-            motif,
-            fore_hits, fore_size,
-            back_hits, back_size,
-            p_value,
-        )
-
-    def _count_occurences(motif, parent, hit_list):
-        hits = [
-            i
-            for i in hit_list[parent]
-            if motif.match(i)
-        ]
-        hit_list[motif] = hits
-        return len(hits)
-
-    def _check_anchestry(motif, parent):
-        for index, char in enumerate(motif.motif):
-            if index == motif_length // 2 or char != ".":
-                continue
-
-            new_motif = Motif(
-                motif.motif[:index] + "." + motif.motif[index + 1:]
-            )
-
-            if new_motif != parent and new_motif in done:
-                return True
-
-        return False
-
-    def _is_a_submotif_with_same_size(submotif, fore_hits):
-        """
-        Test whether the 'submotif' is an ancestor of any known motif, and
-        matches the same number of foreground sequences.
-        """
-        # We want to know if this "submotif" contains any completed motifs
-        return any(
-            checked in submotif
-            for checked, checked_hits in done.items()
-            if fore_hits == checked_hits[0] and checked != submotif
-        )
+    p_dist = []
 
     def _search_children(children, parent=None):
         """
@@ -340,7 +432,7 @@ def motif_enrichment(
 
             # Check if we've already completed the search for a parent of this
             # motif
-            if parent and _check_anchestry(motif, parent):
+            if parent and _check_anchestry(motif, parent, done):
                 failed["anchestry"] += 1
                 del fg_hit_list[motif]
                 continue
@@ -352,7 +444,7 @@ def motif_enrichment(
                 del fg_hit_list[motif]
                 continue
 
-            if _is_a_submotif_with_same_size(motif, fore_hits):
+            if _is_a_submotif_with_same_size(motif, fore_hits, done):
                 failed["sub"] += 1
                 del fg_hit_list[motif]
                 continue
@@ -362,6 +454,8 @@ def motif_enrichment(
 
             # Check the signifiance of the motif
             p_value = _motif_sig(fore_hits, fore_size, back_hits, back_size)
+            p_dist.append(p_value)
+
             if p_value > sig_cutoff:
                 failed["sig"] += 1
                 del fg_hit_list[motif]
@@ -393,31 +487,6 @@ def motif_enrichment(
 
         return motif_hits
 
-    def _filter_less_specific(prev_pass):
-        return set(
-            motif
-            for motif in prev_pass
-            if not any(
-                # other in motif: other is +more+ specific than motif
-                other in motif and done[other][0] >= done[motif][0]
-                for other in prev_pass
-                if other != motif
-            )
-        )
-
-    def _make_nmers(lst):
-        if isinstance(next(iter(lst)), sequence.Sequence):
-            return list(
-                generate_n_mers(
-                    lst,
-                    n=motif_length,
-                    letter_mod_types=letter_mod_types,
-                )
-            )
-
-        assert all(len(i) == motif_length for i in lst)
-        return lst
-
     fore_size = len(foreground)
     back_size = len(background)
 
@@ -428,8 +497,8 @@ def motif_enrichment(
     if letter_mod_types is None:
         letter_mod_types = [(None, "Phospho")]
 
-    foreground = _make_nmers(foreground)
-    background = _make_nmers(background)
+    foreground = _make_nmers(foreground, motif_length, letter_mod_types)
+    background = _make_nmers(background, motif_length, letter_mod_types)
     fore_size = len(foreground)
     back_size = len(background)
 
@@ -494,7 +563,7 @@ def motif_enrichment(
     finally:
         # Output some debugging information to compare with Brian's output
         LOGGER.info(
-            "\n" + "\n".join(
+            "\n".join(
                 "FAIL_{}: {}".format(key.upper(), failed[key])
                 for key in [
                     "done", "sub", "count", "sig", "bestsig",
@@ -505,17 +574,27 @@ def motif_enrichment(
 
     LOGGER.info("First pass: {} motifs".format(len(first_pass)))
 
-    second_pass = _filter_less_specific(first_pass)
+    second_pass = _filter_less_specific(first_pass, done)
 
     LOGGER.info(
         "Second pass (less specific motifs removed): {} motifs"
         .format(len(second_pass))
     )
 
+    pp_dist = _generate_ppdist(
+        background, fore_size, pp_iterations,
+        sig_cutoff=sig_cutoff, min_fore_hits=min_fore_hits,
+        start_letters=start_letters, letter_mod_types=letter_mod_types,
+        motif_length=motif_length,
+    ) if pp_value else None
+
     # Finally prepare the output as a sorted list with the motifs and their
     # associated statistics.
     df = pd.DataFrame(
-        data=[_motif_stats(motif) for motif in second_pass],
+        data=[
+            _motif_stats(motif, fore_size, back_size, done, pp_dist=pp_dist)
+            for motif in second_pass
+        ],
         columns=[
             "Motif",
             "Foreground Hits",
@@ -523,9 +602,10 @@ def motif_enrichment(
             "Background Hits",
             "Background Size",
             "p-value",
+            "pp-value",
         ],
     )
-    df.sort_values(by=["p-value", "Motif"], inplace=True)
-    df.reset_index(drop=True)
+    df.sort_values(by=["pp-value", "p-value", "Motif"], inplace=True)
+    df.reset_index(drop=True, inplace=True)
 
-    return df
+    return df, p_dist, pp_dist
