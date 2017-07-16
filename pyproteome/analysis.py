@@ -403,7 +403,7 @@ def volcano_plot(
                     for tick in ax.get_yticks()
                     if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
                     ["1", "5"] and
-                    tick > 0
+                    tick > log_pval_cutoff
                 ] + [log_pval_cutoff]
             )
         )
