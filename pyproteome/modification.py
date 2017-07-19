@@ -32,11 +32,6 @@ class Modifications:
     def __iter__(self):
         return iter(self.mods)
 
-    def __hash__(self):
-        return hash(
-            tuple(self.mods),
-        )
-
     def __len__(self):
         return len(self.mods)
 
@@ -83,20 +78,29 @@ class Modifications:
             ]
         )
 
+    def __hash__(self):
+        return hash(
+            tuple(
+                sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple())
+            ),
+        )
+
     def __eq__(self, other):
         if not isinstance(other, Modifications):
             raise TypeError()
 
-        # XXX: Incorrect if modifications are sorted differently
         return len(self.mods) == len(other.mods) and all(
             i == j
-            for i, j in zip(self.mods, other.mods)
+            for i, j in zip(
+                sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple()),
+                sorted(other.skip_labels_iter(), key=lambda x: x.to_tuple()),
+            )
         )
 
     def __repr__(self, absolute=True, skip_labels=True):
         return self.__str__(absolute=absolute, skip_labels=skip_labels)
 
-    def __str__(self, absolute=True, skip_labels=True):
+    def __str__(self, absolute=True, skip_labels=True, prot_index=None):
         if len(self.mods) == 0:
             return ""
 
@@ -108,8 +112,8 @@ class Modifications:
         if not lst:
             return ""
 
-        return " / ".join(
-            ", ".join(
+        def _mod_prot(i):
+            return ", ".join(
                 "{}{}{}{}".format(
                     mod.display_mod_type(),
                     mod.letter.upper(),
@@ -118,8 +122,14 @@ class Modifications:
                 )
                 for mod in lst
             )
-            for i in range(len(lst[0].exact))
-        )
+
+        if prot_index is None:
+            return " / ".join(
+                _mod_prot(i)
+                for i in range(len(lst[0].exact))
+            )
+        else:
+            return _mod_prot(prot_index)
 
 
 class Modification:
