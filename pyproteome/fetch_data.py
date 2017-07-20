@@ -158,4 +158,4 @@ def get_uniprot_data(accession):
     if accession not in UNIPROT_DATA:
         fetch_uniprot_data([accession])
 
-    return UNIPROT_DATA[accession]
+    return UNIPROT_DATA.get(accession, {})

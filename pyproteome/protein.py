@@ -2,8 +2,12 @@
 This module provides functionality for interfacing with protein data.
 """
 
+import logging
+
 from . import fetch_data
 
+
+LOGGER = logging.getLogger("pyproteome.protein")
 
 class Proteins:
     """
@@ -74,11 +78,14 @@ class Protein:
 
         if "gene" in up_data:
             self.gene = up_data["gene"]
-        else:
+        elif "id" in up_data:
             self.gene = up_data["id"]
+        else:
+            LOGGER.warning("Unable to find {} in uniprot db".format(accession))
+            self.gene = accession
 
-        self.description = up_data["descriptions"][0]
-        self.full_sequence = up_data["sequence"]
+        self.description = up_data.get("descriptions", [""])[0]
+        self.full_sequence = up_data.get("sequence", None)
 
     def __hash__(self):
         return hash(self.accession)

@@ -121,6 +121,10 @@ def extract_sequence(proteins, sequence_string):
 
     def _get_rel_pos(protein, pep_seq):
         seq = protein.full_sequence
+
+        if not seq:
+            return 0, False
+
         pep_pos = seq.find(pep_seq)
         exact = True
 
