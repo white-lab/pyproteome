@@ -559,6 +559,8 @@ class DataSet:
 
     def filter(
         self,
+        group_a=None,
+        group_b=None,
         ion_score_cutoff=None,
         isolation_cutoff=None,
         confidence_cutoff=None,
@@ -600,6 +602,9 @@ class DataSet:
 
         if not inplace:
             new = new.copy()
+
+        if group_a or group_b:
+            new.update_group_changes(group_a=group_a, group_b=group_b)
 
         confidence_levels = []
 
