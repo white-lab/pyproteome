@@ -248,6 +248,10 @@ def _remove_lesser_dups(pvals, changes, labels, colors):
     return new_pvals, new_changes, new_labels, new_colors
 
 
+def _get_color(txt, x, y):
+    return "lightgreen" if x > 0 else "pink"
+
+
 def volcano_plot(
     data,
     group_a=None,
@@ -258,6 +262,7 @@ def volcano_plot(
     folder_name=None, title=None,
     figsize=(12, 10),
     compress_dups=True,
+    full_site_labels=False,
 ):
     """
     Display a volcano plot of data.
@@ -277,6 +282,7 @@ def volcano_plot(
     title : str, optional
     figsize : tuple of float, float
     compress_dups : bool, optional
+    full_site_labels : bool, optional
     """
     (channels_a, channels_b), (label_a, label_b), _ = data.get_groups(
         group_a=group_a,
@@ -333,7 +339,30 @@ def volcano_plot(
         row_change = np.log2(row["Fold Change"])
 
         row_label = " / ".join(sorted(row["Proteins"].genes))
+        old_row_label = None
+
+        if (
+            full_site_labels and
+            len(list(row["Modifications"].skip_labels_iter())) > 0
+        ):
+            old_row_label = row_label
+            row_label = " / ".join(
+                sorted(
+                    "{} {}".format(
+                        gene,
+                        row["Modifications"].__str__(prot_index=index),
+                    )
+                    for index, gene in enumerate(row["Proteins"].genes)
+                )
+            )
+
         re_row_label = rename.get(row_label, row_label)
+        edgecolor = edgecolors.get(
+            re_row_label, edgecolors.get(
+                row_label,
+                edgecolors.get(old_row_label, None),
+            )
+        )
 
         if (
             np.isnan(row_pval) or
@@ -360,11 +389,7 @@ def volcano_plot(
                 sig_pvals.append(row_pval)
                 sig_changes.append(row_change)
                 sig_labels.append(re_row_label)
-                sig_colors.append(
-                    edgecolors.get(
-                        re_row_label, edgecolors.get(row_label, None)
-                    )
-                )
+                sig_colors.append(edgecolor)
 
         colors.append(color)
 
@@ -449,13 +474,14 @@ def volcano_plot(
 
     # Position the labels
     texts = []
+    txt_lim = 100 if full_site_labels else 20
 
     for x, y, txt, edgecolor in zip(
         sig_changes, sig_pvals, sig_labels, sig_colors,
     ):
         text = ax.text(
             x, y,
-            txt[:20] + ("..." if len(txt) > 20 else ""),
+            txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
         )
 
         if txt in highlight:
@@ -463,7 +489,7 @@ def volcano_plot(
 
         text.set_bbox(
             dict(
-                facecolor="lightgreen" if x > 0 else "pink",
+                facecolor=_get_color(txt, x, y),
                 alpha=1,
                 linewidth=0.5 if not edgecolor else 3,
                 edgecolor=edgecolor or "black",
@@ -716,7 +742,7 @@ def write_lists(
 
 
 def plot_sequence_between(
-    data, sequences,
+    data, sequences, cmp_groups=None,
 ):
     """
     Plot the levels of a sequence across each group.
@@ -747,19 +773,28 @@ def plot_sequence_between(
         row[~np.isnan(row)]
         for row in values
     ]
-    labels = [
-        label
+    values, labels = zip(*[
+        (value, label)
         for label, value in zip(data.groups.keys(), values)
-        if value.any()
-    ]
-    values = [
-        value
-        for value in values
-        if value.any()
-    ]
+        if value.any() and
+        (cmp_groups is None or any(label in i for i in cmp_groups))
+    ])
 
     means = np.array([row.mean() for row in values])
     errs = np.array([row.std() for row in values])
+
+    if cmp_groups:
+        div = np.array([
+            means[[
+                labels.index(group[0])
+                for group in cmp_groups
+                if label in group
+            ][0]]
+            for label in labels
+        ])
+
+        means /= div
+        errs /= div
 
     f, ax = plt.subplots()
 
@@ -774,8 +809,8 @@ def plot_sequence_between(
     )
 
     ax.set_ylabel(
-        "Cumulative Channel Signal{}".format(
-            " (Normalized)" if data.intra_normalized else ""
+        "{} Signal".format(
+            "Relative" if cmp_groups else "Cumulative",
         ),
         fontsize=20,
     )
@@ -787,8 +822,9 @@ def plot_sequence_between(
     ax.set_xticks(indices + bar_width * 1.5)
     ax.set_xticklabels(labels, fontsize=16)
 
-    title = "{}".format(
+    title = "{} - {}".format(
         " / ".join(sequences),
+        " / ".join(sorted(gene for row in psms["Proteins"] for gene in row.genes))
     )
     ax.set_title(title, fontsize=20)
     ax.xaxis.grid(False)
@@ -813,8 +849,15 @@ def plot_sequence_between(
     offset = 0
 
     for (
-        (index_a, values_a), (index_b, values_b)
-    ) in itertools.combinations(zip(indices, values), 2):
+        (index_a, values_a, label_a), (index_b, values_b, label_b),
+    ) in itertools.combinations(zip(indices, values, labels), 2):
+        if cmp_groups and not any(
+            label_a in group and
+            label_b in group
+            for group in cmp_groups
+        ):
+            continue
+
         pval = ttest_ind(values_a, values_b).pvalue
 
         if pval < 0.05:
@@ -1317,7 +1360,7 @@ def correlate_signal(
 
 def plot_all(
     datas, seqs=None, protein=None, figsize=(16, 8),
-    individual=True, between=False,
+    individual=True, between=False, cmp_groups=None,
 ):
     assert seqs is not None or protein is not None
 
@@ -1365,7 +1408,7 @@ def plot_all(
                 )
 
             if between:
-                f = plot_sequence_between(data, [seq])
+                f = plot_sequence_between(data, [seq], cmp_groups=cmp_groups)
                 f.savefig(
                     re.sub(
                         "[?/]",
