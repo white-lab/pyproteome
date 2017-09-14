@@ -10,9 +10,10 @@ except ImportError:
 from . import motif
 
 
-def motif_logo(
-    data, letter_mod_types=None,
+def make_logo(
+    data, f,
     folder_name=None, filename="Motif.svg",
+    **kwargs
 ):
     """
     Create a sequence logo figure.
@@ -22,20 +23,21 @@ def motif_logo(
     Parameters
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    letter_mod_types : list of tuple of str, str
     folder_name : str, optional
     filename : str, optional
     """
     if folder_name and filename:
         filename = os.path.join(folder_name, filename)
 
+    nmer_args = motif.get_nmer_args(kwargs)
+
     alpha = Bio.Alphabet.IUPAC.protein
     m = Bio.motifs.create(
         [
             Bio.Seq.Seq(seq.upper(), alphabet=alpha)
             for seq in motif.generate_n_mers(
-                data.psms["Sequence"],
-                letter_mod_types=letter_mod_types,
+                data.filter(**f).psms["Sequence"],
+                **nmer_args
             )
         ],
         alphabet=alpha,

@@ -16,14 +16,13 @@ ICELOGO_BASE = "http://iomics.ugent.be/icelogoserver"
 
 
 def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
-    if letter_mod_types is None:
-        letter_mod_types = [(None, "Phospho")]
+    nmer_args = motif.get_nmer_args(kwargs)
 
     fore = [
         n
         for n in motif.generate_n_mers(
             data.filter(**f)["Sequence"],
-            letter_mod_types=letter_mod_types,
+            **nmer_args,
         )
         if not m or m.match(n)
     ]
@@ -32,7 +31,7 @@ def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
         n
         for n in motif.generate_n_mers(
             data["Sequence"],
-            letter_mod_types=letter_mod_types,
+            **nmer_args,
         )
     ]
     return icelogo(

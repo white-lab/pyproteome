@@ -187,12 +187,28 @@ class Motif:
         return bool(self._re.match(other))
 
 
+def get_nmer_args(kwargs):
+    nmer_args = {}
+
+    nmer_args["letter_mod_types"] = kwargs.pop(
+        "letter_mod_types", [(None, "Phospho")],
+    )
+    nmer_args["use_ptms"] = kwargs.pop("use_ptms", True)
+    nmer_args["use_nterms"] = kwargs.pop("use_nterms", False)
+    nmer_args["use_cterms"] = kwargs.pop("use_cterms", False)
+
+    return nmer_args
+
+
 def generate_n_mers(
     sequences, n=15,
     all_matches=True,
     fill_left="A",
     fill_right="A",
     letter_mod_types=None,
+    use_ptms=True,
+    use_nterms=False,
+    use_cterms=False,
 ):
     """
     Generate n-mers around all sites of modification in sequences.
@@ -205,6 +221,10 @@ def generate_n_mers(
         Generate n-mers for all protein matches else just the first match.
     fill_left : str, optional
     fill_right : str, optional
+    letter_mod_types : list of tuple of str, str, optional
+    use_ptms : bool, optional
+    use_nterms : bool, optional
+    use_cterms : bool, optional
     """
     # Check n is odd
     assert n % 2 == 1
@@ -218,14 +238,25 @@ def generate_n_mers(
             fill_right * (abs_pos - len(full_seq) + n // 2 + 1)
         )
 
+    def _get_seqs(seq):
+        for match in seq.protein_matches[:None if all_matches else 1]:
+            if use_ptms:
+                for mod in seq.modifications.get_mods(letter_mod_types):
+                    yield match.rel_pos + mod.rel_pos, match
+
+            if use_nterms:
+                yield match.rel_pos, match
+
+            if use_cterms:
+                yield match.rel_pos + len(seq.pep_seq) - 1, match
+
     return set(
         _n_mer_from_sequence(
             match.protein.full_sequence,
-            mod.rel_pos + match.rel_pos,
+            pos,
         )
         for seq in sequences
-        for mod in seq.modifications.get_mods(letter_mod_types)
-        for match in seq.protein_matches[:None if all_matches else 1]
+        for pos, match in _get_seqs(seq)
     )
 
 
