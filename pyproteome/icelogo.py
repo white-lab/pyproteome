@@ -22,7 +22,7 @@ def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
         n
         for n in motif.generate_n_mers(
             data.filter(**f)["Sequence"],
-            **nmer_args,
+            **nmer_args
         )
         if not m or m.match(n)
     ]
@@ -31,7 +31,7 @@ def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
         n
         for n in motif.generate_n_mers(
             data["Sequence"],
-            **nmer_args,
+            **nmer_args
         )
     ]
     return icelogo(
