@@ -216,40 +216,37 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     writer.save()
 
 
-def _remove_lesser_dups(pvals, changes, labels, colors):
-    new_pvals, new_changes, new_labels, new_colors = [], [], [], []
+def _remove_lesser_dups(labels, compress_sym=False):
+    new_labels = []
 
-    for index, (p, change, label, color) in enumerate(
-        zip(pvals, changes, labels, colors)
-    ):
-        for o_index, o_label in enumerate(labels):
+    for index, (p, change, label, color, highlight) in enumerate(labels):
+        for o_index, (o_p, o_change, o_label, _, _) in enumerate(labels):
             if index == o_index:
                 continue
             if label != o_label:
                 continue
-            if (change < 0) != (changes[o_index] < 0):
+            if not compress_sym and (change < 0) != (o_change < 0):
                 continue
 
             mul = 1 if change >= 0 else -1
 
             if (
-                p + mul * change < pvals[o_index] + mul * changes[o_index]
+                p + mul * change < o_p + mul * o_change
             ) or (
-                p + mul * change <= pvals[o_index] + mul * changes[o_index] and
+                (
+                    p + mul * change <= o_p + mul * o_change
+                ) and
                 index < o_index
             ):
                 break
         else:
-            new_pvals.append(p)
-            new_changes.append(change)
-            new_labels.append(label)
-            new_colors.append(color)
+            new_labels.append((p, change, label, color, highlight))
 
-    return new_pvals, new_changes, new_labels, new_colors
+    return new_labels
 
 
 def _get_color(txt, x, y):
-    return "lightgreen" if x > 0 else "pink"
+    return "#BFEE90" if x > 0 else "#FFC1C1"
 
 
 def volcano_plot(
@@ -261,7 +258,9 @@ def volcano_plot(
     options=None,
     folder_name=None, title=None,
     figsize=(12, 10),
+    adjust=True,
     compress_dups=True,
+    compress_sym=False,
     full_site_labels=False,
 ):
     """
@@ -281,6 +280,7 @@ def volcano_plot(
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
+    adjust : bool, optional
     compress_dups : bool, optional
     full_site_labels : bool, optional
     """
@@ -325,11 +325,8 @@ def volcano_plot(
     # Calculate the Fold-Change / p-values
     pvals = []
     changes = []
-    sig_pvals = []
-    sig_changes = []
-    sig_labels = []
-    sig_colors = []
     colors = []
+    labels = []
 
     for _, row in data.psms.dropna(
         subset=["p-value", "Fold Change"],
@@ -339,13 +336,14 @@ def volcano_plot(
         row_change = np.log2(row["Fold Change"])
 
         row_label = " / ".join(sorted(row["Proteins"].genes))
-        old_row_label = None
+        old_row_label, old_re_row_label = None, None
 
         if (
             full_site_labels and
             len(list(row["Modifications"].skip_labels_iter())) > 0
         ):
             old_row_label = row_label
+            old_re_row_label = rename.get(old_row_label, old_row_label)
             row_label = " / ".join(
                 sorted(
                     "{} {}".format(
@@ -375,28 +373,32 @@ def volcano_plot(
         pvals.append(row_pval)
         changes.append(row_change)
 
+        names = [
+            row_label, re_row_label, old_row_label, old_re_row_label,
+        ]
+
         if (
-            row_label in show or
-            re_row_label in show or
-            (
+            any(
+                i in show
+                for i in names
+            ) or (
                 row_pval > log_pval_cutoff and
                 (row_change > upper_fold or row_change < lower_fold)
             )
         ):
             color = "blue"
+            highlight_label = any(i in highlight for i in names)
 
             if row_label not in hide and re_row_label not in hide:
-                sig_pvals.append(row_pval)
-                sig_changes.append(row_change)
-                sig_labels.append(re_row_label)
-                sig_colors.append(edgecolor)
+                labels.append((
+                    row_pval, row_change,
+                    re_row_label, edgecolor, highlight_label,
+                ))
 
         colors.append(color)
 
     if compress_dups:
-        sig_pvals, sig_changes, sig_labels, sig_colors = _remove_lesser_dups(
-            sig_pvals, sig_changes, sig_labels, sig_colors
-        )
+        labels = _remove_lesser_dups(labels, compress_sym=compress_sym)
 
     # Draw the figure
     fig, ax = plt.subplots(figsize=figsize)
@@ -418,7 +420,13 @@ def volcano_plot(
         ax.set_ylim(bottom=-0.1)
 
     ax.set_xticks(
-        list(sorted(list(ax.get_xticks()) + [lower_fold, upper_fold]))
+        list(
+            sorted(
+                tick
+                for tick in ax.get_xticks()
+                if tick < lower_fold or tick > upper_fold
+            ) + [lower_fold, upper_fold]
+        )
     )
     ax.set_yticks(
         list(
@@ -476,15 +484,13 @@ def volcano_plot(
     texts = []
     txt_lim = 100 if full_site_labels else 20
 
-    for x, y, txt, edgecolor in zip(
-        sig_changes, sig_pvals, sig_labels, sig_colors,
-    ):
+    for y, x, txt, edgecolor, highlight_label in labels:
         text = ax.text(
             x, y,
             txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
         )
 
-        if txt in highlight:
+        if highlight_label:
             text.set_fontsize(20)
 
         text.set_bbox(
@@ -499,20 +505,21 @@ def volcano_plot(
 
         texts.append(text)
 
-    adjust_text(
-        x=sig_changes,
-        y=sig_pvals,
-        texts=texts,
-        ax=ax,
-        lim=500,
-        force_text=0.5,
-        force_points=0.01,
-        arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-        only_move={
-            "points": "y",
-            "text": "xy",
-        }
-    )
+    if adjust:
+        adjust_text(
+            x=[i[0] for i in labels],
+            y=[i[1] for i in labels],
+            texts=texts,
+            ax=ax,
+            lim=500,
+            force_text=0.5,
+            force_points=0.01,
+            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            only_move={
+                "points": "y",
+                "text": "xy",
+            }
+        )
 
     if title:
         ax.set_title(
@@ -824,7 +831,11 @@ def plot_sequence_between(
 
     title = "{} - {}".format(
         " / ".join(sequences),
-        " / ".join(sorted(gene for row in psms["Proteins"] for gene in row.genes))
+        " / ".join(sorted(
+            gene
+            for row in psms["Proteins"]
+            for gene in row.genes
+        ))
     )
     ax.set_title(title, fontsize=20)
     ax.xaxis.grid(False)
@@ -1451,15 +1462,31 @@ def plot_volcano_filtered(data, f, **kwargs):
         pvals.append(row_pval)
         changes.append(row_change)
 
-    f, ax = volcano_plot(
-        d,
-        xminmax=(
+    xminmax = kwargs.pop(
+        "xminmax",
+        (
             np.floor(min(changes) * 2) / 2,
             np.ceil(max(changes) * 2) / 2,
         ),
-        yminmax=(-0.1, np.ceil(max(pvals))),
-        **kwargs
     )
+    yminmax = kwargs.pop(
+        "yminmax",
+        (-0.1, np.ceil(max(pvals))),
+    )
+
+    f, ax = volcano_plot(
+        d,
+        xminmax=xminmax,
+        yminmax=yminmax,
+        **kwargs,
+    )
+
+    changes, pvals = zip(*[
+        (x, y)
+        for x, y in zip(changes, pvals)
+        if x > xminmax[0] and x < xminmax[1] and
+        y > yminmax[0] and y < yminmax[1]
+    ])
 
     ax.scatter(changes, pvals, c="lightblue", zorder=0, alpha=0.3)
 
