@@ -1499,3 +1499,4 @@ def plot_volcano_filtered(data, f, **kwargs):
         bbox_inches="tight", dpi=300,
         transparent=True,
     )
+    return f, ax
