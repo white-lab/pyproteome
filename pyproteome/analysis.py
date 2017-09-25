@@ -261,6 +261,8 @@ def volcano_plot(
     adjust=True,
     compress_dups=True,
     compress_sym=False,
+    show_xlabel=True,
+    show_ylabel=True,
     full_site_labels=False,
 ):
     """
@@ -450,25 +452,28 @@ def volcano_plot(
     )
     ax.set_yticklabels(
         [
-            "{:.3}".format(i)
+            ("{:.3}" if i > 0.005 else "{:.0e}").format(i)
             for i in np.power(1/10, ax.get_yticks())
         ],
         fontsize=20,
     )
 
-    ax.set_xlabel(
-        "Fold Change {} (n={}) / {} (n={})".format(
-            label_a,
-            len(channels_a),
-            label_b,
-            len(channels_b),
-        ),
-        fontsize=20,
-    )
-    ax.set_ylabel(
-        "p-value",
-        fontsize=20,
-    )
+    if show_xlabel:
+        ax.set_xlabel(
+            "Fold Change {} (n={}) / {} (n={})".format(
+                label_a,
+                len(channels_a),
+                label_b,
+                len(channels_b),
+            ),
+            fontsize=20,
+        )
+
+    if show_ylabel:
+        ax.set_ylabel(
+            "p-value",
+            fontsize=20,
+        )
 
     if not np.isnan(log_pval_cutoff):
         ax.axhline(
@@ -1478,7 +1483,7 @@ def plot_volcano_filtered(data, f, **kwargs):
         d,
         xminmax=xminmax,
         yminmax=yminmax,
-        **kwargs,
+        **kwargs
     )
 
     changes, pvals = zip(*[
