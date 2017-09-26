@@ -229,12 +229,13 @@ def _remove_lesser_dups(labels, compress_sym=False):
                 continue
 
             mul = 1 if change >= 0 else -1
+            o_mul = 1 if o_change >= 0 else -1
 
             if (
-                p + mul * change < o_p + mul * o_change
+                p + mul * change < o_p + o_mul * o_change
             ) or (
                 (
-                    p + mul * change <= o_p + mul * o_change
+                    p + mul * change <= o_p + o_mul * o_change
                 ) and
                 index < o_index
             ):
