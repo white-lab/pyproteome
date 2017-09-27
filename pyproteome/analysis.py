@@ -264,6 +264,7 @@ def volcano_plot(
     compress_sym=False,
     show_xlabel=True,
     show_ylabel=True,
+    show_title=True,
     full_site_labels=False,
 ):
     """
@@ -392,7 +393,10 @@ def volcano_plot(
             color = "blue"
             highlight_label = any(i in highlight for i in names)
 
-            if row_label not in hide and re_row_label not in hide:
+            if (
+                not any(i.strip() in hide for i in row_label.split("/")) and
+                re_row_label not in hide
+            ):
                 labels.append((
                     row_pval, row_change,
                     re_row_label, edgecolor, highlight_label,
@@ -528,10 +532,12 @@ def volcano_plot(
         )
 
     if title:
-        ax.set_title(
-            title,
-            fontsize=20,
-        )
+        if show_title:
+            ax.set_title(
+                title,
+                fontsize=20,
+            )
+
         fig.savefig(
             file_name,
             bbox_inches="tight", dpi=300,
@@ -1259,7 +1265,7 @@ def correlate_signal(
 
     texts = []
     for xs, ys, txt in zip(sig_x, sig_y, sig_labels):
-        if txt in hide:
+        if any(i.strip() in hide for i in txt.split("/")):
             continue
 
         txt = rename.get(txt, txt)
