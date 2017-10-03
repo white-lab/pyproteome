@@ -661,16 +661,19 @@ class DataSet:
             ]
 
         if motif is not None:
-            f = pd.Series([
-                any(
-                    motif.match(nmer)
-                    for nmer in pymotif.generate_n_mers(
-                        [i["Sequence"]],
-                        letter_mod_types=mod_types,
+            f = pd.Series(
+                [
+                    any(
+                        motif.match(nmer)
+                        for nmer in pymotif.generate_n_mers(
+                            [i["Sequence"]],
+                            letter_mod_types=mod_types,
+                        )
                     )
-                )
-                for _, i in new.psms.iterrows()
-            ])
+                    for _, i in new.psms.iterrows()
+                ],
+                index=new.psms.index,
+            )
 
             assert f.shape[0] == new.psms.shape[0]
             new.psms = new.psms[f]
