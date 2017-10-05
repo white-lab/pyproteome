@@ -19,7 +19,9 @@ from . import fetch_data, modification, paths, protein
 LOGGER = logging.getLogger("pyproteome.discoverer")
 RE_GENE = re.compile("^>.* GN=(.+) PE=")
 RE_GENE_BACKUP = re.compile("^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) ")
-RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
+RE_DESCRIPTION = re.compile(
+    r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*) (OS=|GN=|PE=|SV=)"
+)
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
 

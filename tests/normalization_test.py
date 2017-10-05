@@ -15,7 +15,20 @@ class NormalizationTest(TestCase):
         self.prots = protein.Proteins(
             proteins=[
                 protein.Protein(
-                    accession="P03995"  # GFAP_MOUSE
+                    accession="P03995",
+                    gene="Gfap",
+                    description="Glial fibrillary acidic protein",
+                    full_sequence=(
+                        "MERRRITSARRSYASETVVRGLGPSRQLGTMPRFSLSRMTPPLPARVDFSLAG"
+                        "ALNAGFKETRASERAEMMELNDRFASYIEKVRFLEQQNKALAAELNQLRAKEP"
+                        "TKLADVYQAELRELRLRLDQLTANSARLEVERDNFAQDLGTLRQKLQDETNLR"
+                        "LEAENNLAAYRQEADEATLARVDLERKVESLEEEIQFLRKIYEEEVRELREQL"
+                        "AQQQVHVEMDVAKPDLTAALREIRTQYEAVATSNMQETEEWYRSKFADLTDAA"
+                        "SRNAELLRQAKHEANDYRRQLQALTCDLESLRGTNESLERQMREQEERHARES"
+                        "ASYQEALARLEEEGQSLKEEMARHLQEYQDLLNVKLALDIEIATYRKLLEGEE"
+                        "NRITIPVQTFSNLQIRETSLDTKSVSEGHLKRNIVVKTVEMRDGEVIKDSKQE"
+                        "HKDVVM"
+                    ),
                 )
             ],
         )
