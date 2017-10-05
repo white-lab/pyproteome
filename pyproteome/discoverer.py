@@ -17,6 +17,7 @@ from . import fetch_data, modification, paths, protein
 
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
+RE_GENE = re.compile("^>.* GN=(.+) PE=")
 RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
@@ -99,31 +100,42 @@ def _get_proteins(df, cursor):
         """
         SELECT
         Peptides.PeptideID,
-        ProteinAnnotations.Description
+        ProteinAnnotations.Description,
+        Proteins.Sequence
         FROM Peptides
         JOIN PeptidesProteins
         ON Peptides.PeptideID=PeptidesProteins.PeptideID
         JOIN ProteinAnnotations
         ON ProteinAnnotations.ProteinID=PeptidesProteins.ProteinID
+        JOIN Proteins
+        ON Proteins.ProteinID=PeptidesProteins.ProteinID
         """,
     )
 
     accessions = defaultdict(list)
+    genes = defaultdict(list)
     descriptions = defaultdict(list)
+    sequences = defaultdict(list)
 
-    for protein_id, prot_string in prots:
+    for protein_id, prot_string, seq in prots:
         accessions[protein_id].append(
             fetch_data.RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
         )
 
+        gene = RE_GENE.match(prot_string)
+
+        genes[protein_id].append(
+            gene.group(1) if gene else None
+        )
         descriptions[protein_id].append(
             RE_DESCRIPTION.match(prot_string).group(1)
         )
+        sequences[protein_id].append(seq)
 
     # Pre-fetch UniProt data to speed up later queries
-    fetch_data.fetch_uniprot_data(
-        [i for lst in accessions.values() for i in lst]
-    )
+    # fetch_data.fetch_uniprot_data(
+    #     [i for lst in accessions.values() for i in lst]
+    # )
 
     df["Protein Descriptions"] = df.index.map(
         lambda peptide_id:
@@ -141,8 +153,16 @@ def _get_proteins(df, cursor):
             proteins=[
                 protein.Protein(
                     accession=accession,
+                    gene=gene,
+                    full_sequence=seq,
+                    description=desc,
                 )
-                for accession in accessions[peptide_id]
+                for accession, gene, seq, desc in zip(
+                    accessions[peptide_id],
+                    genes[protein_id],
+                    sequences[protein_id],
+                    descriptions[protein_id],
+                )
             ]
         )
     )

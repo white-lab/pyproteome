@@ -9,6 +9,7 @@ from . import fetch_data
 
 LOGGER = logging.getLogger("pyproteome.protein")
 
+
 class Proteins:
     """
     Wraps a list of proteins.
@@ -71,21 +72,30 @@ class Protein:
     full_sequence : str
     """
 
-    def __init__(self, accession):
+    def __init__(
+        self, accession,
+        gene=None, description=None, full_sequence=None
+    ):
         self.accession = accession
+        self.gene = gene
+        self.description = description
+        self.full_sequence = full_sequence
 
-        up_data = fetch_data.get_uniprot_data(accession)
+        if any(i is None for i in [gene, description, full_sequence]):
+            up_data = fetch_data.get_uniprot_data(accession)
 
-        if "gene" in up_data:
-            self.gene = up_data["gene"]
-        elif "id" in up_data:
-            self.gene = up_data["id"]
-        else:
-            LOGGER.warning("Unable to find {} in uniprot db".format(accession))
-            self.gene = accession
+            if "gene" in up_data:
+                self.gene = up_data["gene"]
+            elif "id" in up_data:
+                self.gene = up_data["id"]
+            else:
+                LOGGER.warning(
+                    "Unable to find {} in uniprot db".format(accession)
+                )
+                self.gene = accession
 
-        self.description = up_data.get("descriptions", [""])[0]
-        self.full_sequence = up_data.get("sequence", None)
+            self.description = up_data.get("descriptions", [""])[0]
+            self.full_sequence = up_data.get("sequence", None)
 
     def __hash__(self):
         return hash(self.accession)
