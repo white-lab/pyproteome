@@ -18,6 +18,7 @@ from . import fetch_data, modification, paths, protein
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
 RE_GENE = re.compile("^>.* GN=(.+) PE=")
+RE_GENE_BACKUP = re.compile("^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) ")
 RE_DESCRIPTION = re.compile(r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*)$")
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
@@ -117,20 +118,23 @@ def _get_proteins(df, cursor):
     descriptions = defaultdict(list)
     sequences = defaultdict(list)
 
-    for protein_id, prot_string, seq in prots:
-        accessions[protein_id].append(
+    for peptide_id, prot_string, seq in prots:
+        accessions[peptide_id].append(
             fetch_data.RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
         )
 
         gene = RE_GENE.match(prot_string)
 
-        genes[protein_id].append(
-            gene.group(1) if gene else None
+        if not gene:
+            gene = RE_GENE_BACKUP.match(prot_string)
+
+        genes[peptide_id].append(
+            gene.group(1)
         )
-        descriptions[protein_id].append(
+        descriptions[peptide_id].append(
             RE_DESCRIPTION.match(prot_string).group(1)
         )
-        sequences[protein_id].append(seq)
+        sequences[peptide_id].append(seq)
 
     # Pre-fetch UniProt data to speed up later queries
     # fetch_data.fetch_uniprot_data(
@@ -159,9 +163,9 @@ def _get_proteins(df, cursor):
                 )
                 for accession, gene, seq, desc in zip(
                     accessions[peptide_id],
-                    genes[protein_id],
-                    sequences[protein_id],
-                    descriptions[protein_id],
+                    genes[peptide_id],
+                    sequences[peptide_id],
+                    descriptions[peptide_id],
                 )
             ]
         )
