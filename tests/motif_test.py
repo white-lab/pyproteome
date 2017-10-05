@@ -56,6 +56,19 @@ class GenerateNMersTest(TestCase):
                 sequence.ProteinMatch(
                     protein=protein.Protein(
                         accession="Q9WV60",
+                        gene="Gsk3b",
+                        description="Glycogen synthase kinase-3 beta",
+                        full_sequence=(
+                            "MSGRPRTTSFAESCKPVQQPSAFGSMKVSRDKDGSKVTTVVATPGQGPD"
+                            "RPQEVSYTDTKVIGNGSFGVVYQAKLCDSGELVAIKKVLQDKRFKNREL"
+                            "QIMRKLDHCNIVRLRYFFYSSGEKKDEVYLNLVLDYVPETVYRVARHYS"
+                            "RAKQTLPVIYVKLYMYQLFRSLAYIHSFGICHRDIKPQNLLLDPDTAVL"
+                            "KLCDFGSAKQLVRGEPNVSYICSRYYRAPELIFGATDYTSSIDVWSAGC"
+                            "VLAELLLGQPIFPGDSGVDQLVEIIKVLGTPTREQIREMNPNYTEFKFP"
+                            "QIKAHPWTKVFRPRTPPEAIALCSRLLEYTPTARLTPLEACAHSFFDEL"
+                            "RDPNVKLPNGRDTPALFNFTTQELSSNPPLATILIPPHARIQAAASPPA"
+                            "NATAASDTNAGDRGQTNNAASASASNST"
+                        ),
                     ),
                     rel_pos=209,
                     exact=True,
