@@ -127,7 +127,7 @@ def plot_permutations(sorted_set, gene_sets, cols=1):
                 "p-value={:.3f}, FDR q-value={:.3f}"
             ).format("gene_set", p_value, q_value)
         )
-        ax.set_xlabel("NES(S, $\pi$)")
+        ax.set_xlabel(r"NES(S, $\pi$)")
 
         if index % cols == 0:
             ax.set_ylabel("Frequency")

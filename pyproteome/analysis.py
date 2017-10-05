@@ -1505,7 +1505,7 @@ def plot_volcano_filtered(data, f, **kwargs):
     f.savefig(
         os.path.join(
             data.name,
-            re.sub("[ ></\?]", "_", kwargs.get("title", "Filtered")) +
+            re.sub(r"[ ></\?]", "_", kwargs.get("title", "Filtered")) +
             "_Volcano.png",
         ),
         bbox_inches="tight", dpi=300,

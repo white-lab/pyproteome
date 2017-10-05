@@ -68,7 +68,7 @@ def get_channel_levels(
 
         ax.hist(points, bins=40)
         ax.set_title(
-            "{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
+            r"{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
                 "{} ({})".format(col_name, col)
                 if isinstance(data.channels, dict) else
                 col,

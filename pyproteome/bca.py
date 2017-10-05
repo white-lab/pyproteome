@@ -20,7 +20,7 @@ from . import paths
 from .utils import DefaultOrderedDict
 
 LOGGER = logging.getLogger("pyproteome.bca")
-RE_ROW_COL = re.compile("([A-Z]+)(\d+)")
+RE_ROW_COL = re.compile(r"([A-Z]+)(\d+)")
 
 
 def _interpret_pos(pos):
