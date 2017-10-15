@@ -255,6 +255,7 @@ def volcano_plot(
     group_a=None,
     group_b=None,
     pval_cutoff=0.05, fold_cutoff=1.25,
+    fold_and_p=True,
     xminmax=None, yminmax=None,
     options=None,
     folder_name=None, title=None,
@@ -366,6 +367,14 @@ def volcano_plot(
             )
         )
 
+        if edgecolor is None:
+            gene_colors = [
+                edgecolors.get(gene, None)
+                for gene in row["Proteins"].genes
+            ]
+            if len(set(gene_colors)) == 1:
+                edgecolor = gene_colors[0]
+
         if (
             np.isnan(row_pval) or
             np.isnan(row_change) or
@@ -385,10 +394,13 @@ def volcano_plot(
             any(
                 i in show
                 for i in names
-            ) or (
+            ) or ((
                 row_pval > log_pval_cutoff and
                 (row_change > upper_fold or row_change < lower_fold)
-            )
+            ) if fold_and_p else (
+                row_pval > log_pval_cutoff or
+                (row_change > upper_fold or row_change < lower_fold)
+            ))
         ):
             color = "blue"
             highlight_label = any(i in highlight for i in names)
