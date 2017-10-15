@@ -18,7 +18,7 @@ LOGGER = logging.getLogger("pyproteome.plogo")
 PLOGO_BASE = "https://plogo.uconn.edu/main"
 
 
-def _format_title(data, f):
+def format_title(data, f):
     title = []
 
     if 'fold_cutoff' in f:
@@ -63,7 +63,7 @@ def make_logo(data, f, m=None, **kwargs):
     ]
     return plogo(
         fore, back,
-        title=_format_title(data, f),
+        title=format_title(data, f),
         **kwargs
     )
 
