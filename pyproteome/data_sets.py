@@ -154,7 +154,7 @@ class DataSet:
         self.phenotypes = phenotypes
         self.name = name
         self.enrichments = enrichments
-        self.tissues = tissues
+        self.tissues = tissues or []
 
         self.intra_normalized = False
         self.sets = 1
@@ -633,11 +633,13 @@ class DataSet:
             ]
 
         if p_cutoff:
+            new.psms.dropna(subset=("p-value",), inplace=True)
             new.psms = new.psms[
                 new.psms["p-value"] <= p_cutoff
             ]
 
         if asym_fold_cutoff:
+            new.psms.dropna(subset=("Fold Change",), inplace=True)
             if asym_fold_cutoff > 1:
                 new.psms = new.psms[
                     new.psms["Fold Change"] >= asym_fold_cutoff
@@ -648,6 +650,7 @@ class DataSet:
                 ]
 
         if fold_cutoff:
+            new.psms.dropna(subset=("Fold Change",), inplace=True)
             if fold_cutoff < 1:
                 fold_cutoff = 1 / fold_cutoff
 
