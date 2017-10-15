@@ -48,15 +48,24 @@ COLORS_SCHEME.update({
 })
 
 
-def letterAt(letter, x, y, xscale=1, yscale=1, ax=None):
+def letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
     text = LETTERS[letter]
 
     t = mpl.transforms.Affine2D().scale(
         xscale * GLOBSCALE, yscale * GLOBSCALE
     ) + mpl.transforms.Affine2D().translate(x, y) + ax.transData
-    p = PathPatch(text, lw=0, fc=COLORS_SCHEME[letter],  transform=t)
+
+    p = PathPatch(
+        text,
+        lw=0,
+        fc=COLORS_SCHEME[letter],
+        alpha=alpha,
+        transform=t
+    )
+
     if ax is not None:
         ax.add_artist(p)
+
     return p
 
 
@@ -120,6 +129,8 @@ def _calc_hline(back_counts):
 
 def make_logo(data, f, **kwargs):
     nmer_args = motif.get_nmer_args(kwargs)
+    low_res_cutoff = kwargs.get("low_res_cutoff", None)
+
     fore = [
         n.upper()
         for n in motif.generate_n_mers(
@@ -155,12 +166,24 @@ def make_logo(data, f, **kwargs):
             sorted([i for i in scores if i[1] < 0], key=lambda t: -t[1]) +
             sorted([i for i in scores if i[1] >= 0], key=lambda t: -t[1])
         )
+        if low_res_cutoff:
+            scores = [
+                i
+                for i in scores
+                if abs(i[1]) >= p_line * low_res_cutoff
+            ]
 
         y = sum(i[1] for i in scores if i[1] < 0)
         miny = min(miny, y)
 
         for base, score in scores:
-            letterAt(base, x, y, xscale=1.2, yscale=abs(score), ax=ax)
+            letterAt(
+                base, x, y,
+                alpha=min([1, abs(score / p_line)]),
+                xscale=1.2,
+                yscale=abs(score),
+                ax=ax,
+            )
             y += abs(score)
 
         x += 1

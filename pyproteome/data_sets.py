@@ -153,6 +153,8 @@ class DataSet:
         self.psms = psms
         self.phenotypes = phenotypes
         self.name = name
+        self.mascot_name = mascot_name
+        self.camv_name = camv_name
         self.enrichments = enrichments
         self.tissues = tissues or []
 
