@@ -117,10 +117,12 @@ def output_scan_list(
     dict of str, list of int
         Dictionary listing the file names and scans segmented into each file.
     """
-    filtered = modification.filter_mod_types(
-        psms,
-        letter_mod_types=letter_mod_types,
-    )
+    filtered = psms[
+        modification.filter_mod_types(
+            psms,
+            letter_mod_types=letter_mod_types,
+        )
+    ]
 
     scan_lists = OrderedDict()
 

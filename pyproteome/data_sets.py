@@ -570,11 +570,13 @@ class DataSet:
         fold_cutoff=None,
         asym_fold_cutoff=None,
         sequence=None,
+        sequences=None,
         proteins=None,
         mod_types=None,
         only_validated=False,
         scan_paths=None,
         motif=None,
+        inverse=False,
         inplace=False,
     ):
         """
@@ -618,93 +620,119 @@ class DataSet:
         if confidence_levels in ["Low"]:
             confidence_levels += ["Medium"]
 
+        def filter_psms(new, array):
+            assert array.shape[0] == new.psms.shape[0]
+            return new.psms.ix[array] if not inverse else new.psms.ix[~array]
+
         if confidence_levels:
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 new.psms["Confidence Level"].isin(confidence_levels)
-            ]
+            )
 
         # MASCOT ion scores
         if ion_score_cutoff:
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 new.psms["IonScore"] >= ion_score_cutoff
-            ]
+            )
 
         if isolation_cutoff:
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 ~(new.psms["Isolation Interference"] > isolation_cutoff)
-            ]
+            )
 
         if p_cutoff:
             new.psms.dropna(subset=("p-value",), inplace=True)
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 new.psms["p-value"] <= p_cutoff
-            ]
+            )
 
         if asym_fold_cutoff:
             new.psms.dropna(subset=("Fold Change",), inplace=True)
             if asym_fold_cutoff > 1:
-                new.psms = new.psms[
+                new.psms = filter_psms(
+                    new,
                     new.psms["Fold Change"] >= asym_fold_cutoff
-                ]
+                )
             else:
-                new.psms = new.psms[
+                new.psms = filter_psms(
+                    new,
                     new.psms["Fold Change"] <= asym_fold_cutoff
-                ]
+                )
 
         if fold_cutoff:
             new.psms.dropna(subset=("Fold Change",), inplace=True)
             if fold_cutoff < 1:
                 fold_cutoff = 1 / fold_cutoff
 
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 np.maximum.reduce(
                     [
                         new.psms["Fold Change"],
                         1 / new.psms["Fold Change"],
                     ]
                 ) >= fold_cutoff
-            ]
-
-        if motif is not None:
-            f = pd.Series(
-                [
-                    any(
-                        motif.match(nmer)
-                        for nmer in pymotif.generate_n_mers(
-                            [i["Sequence"]],
-                            letter_mod_types=mod_types,
-                        )
-                    )
-                    for _, i in new.psms.iterrows()
-                ],
-                index=new.psms.index,
             )
 
-            assert f.shape[0] == new.psms.shape[0]
-            new.psms = new.psms[f]
+        if motif is not None:
+            new.psms = filter_psms(
+                new,
+                pd.Series(
+                    [
+                        any(
+                            motif.match(nmer)
+                            for nmer in pymotif.generate_n_mers(
+                                [i["Sequence"]],
+                                letter_mod_types=mod_types,
+                            )
+                        )
+                        for _, i in new.psms.iterrows()
+                    ],
+                    index=new.psms.index,
+                )
+            )
 
         if proteins is not None:
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 new.psms["Proteins"]
                 .apply(lambda x: any(i in proteins for i in x.genes))
-            ]
+            )
 
         if sequence is not None:
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 new.psms["Sequence"] == sequence
-            ]
+            )
+
+        if sequences is not None:
+            new.psms = filter_psms(
+                new,
+                new.psms["Sequence"].isin(sequences)
+            )
 
         if mod_types is not None:
-            new.psms = modification.filter_mod_types(new.psms, mod_types)
+            new.psms = filter_psms(
+                new,
+                modification.filter_mod_types(new.psms, mod_types)
+            )
 
         if only_validated:
-            new.psms = new.psms[new.psms["Validated"]]
+            new.psms = filter_psms(
+                new,
+                new.psms["Validated"]
+            )
 
         if scan_paths is not None:
-            new.psms = new.psms[
+            new.psms = filter_psms(
+                new,
                 new.psms["Scan Paths"]
                 .apply(lambda x: any(i in scan_paths for i in x))
-            ]
+            )
 
         new.psms.reset_index(inplace=True, drop=True)
 
@@ -882,7 +910,9 @@ def merge_data(
     -------
     :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
-    new = DataSet()
+    new = DataSet(
+        name=name,
+    )
 
     if len(data_sets) < 1:
         return new

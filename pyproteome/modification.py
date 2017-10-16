@@ -261,10 +261,10 @@ def filter_mod_types(psms, letter_mod_types=None):
     :class:`pandas.DataFrame`
     """
     if psms.shape[0] < 1:
-        return psms
-
-    return psms[
-        psms["Modifications"].apply(
-            lambda x: bool(x.get_mods(letter_mod_types).mods)
+        return psms["Modifications"].apply(
+            lambda x: True
         )
-    ]
+
+    return psms["Modifications"].apply(
+        lambda x: bool(x.get_mods(letter_mod_types).mods)
+    )
