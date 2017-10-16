@@ -267,6 +267,7 @@ def volcano_plot(
     show_ylabel=True,
     show_title=True,
     full_site_labels=False,
+    sequence_labels=False,
 ):
     """
     Display a volcano plot of data.
@@ -340,7 +341,10 @@ def volcano_plot(
         row_pval = -np.log10(row["p-value"])
         row_change = np.log2(row["Fold Change"])
 
-        row_label = " / ".join(sorted(row["Proteins"].genes))
+        if sequence_labels:
+            row_label = row["Sequence"].__str__()
+        else:
+            row_label = " / ".join(sorted(row["Proteins"].genes))
         old_row_label, old_re_row_label = None, None
 
         if (
