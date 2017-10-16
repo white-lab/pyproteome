@@ -1,47 +1,52 @@
 
 
 from collections import Counter
-import scipy.stats as ss
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
+
+from matplotlib import transforms
+from matplotlib import pyplot as plt
 from matplotlib.text import TextPath
 from matplotlib.patches import PathPatch
 from matplotlib.font_manager import FontProperties
+import numpy as np
+from scipy import stats
 
 from . import motif, plogo
 
 
-bases = list("ACDEFGHIKLMNPQRSTVWY")
-fp = FontProperties(family="monospace", weight="bold")
+BASES = list("ACDEFGHIKLMNPQRSTVWY")
 GLOBSCALE = 1.4
 LETTERS = {
-    base: TextPath((-0.303, 0), base, size=1, prop=fp)
-    for base in bases
+    base: TextPath(
+        (-0.303, 0),
+        base,
+        size=1,
+        prop=FontProperties(family="monospace", weight="bold"),
+    )
+    for base in BASES
 }
 
 COLORS_SCHEME = {
     i: "black"
-    for i in bases
+    for i in BASES
 }
 COLORS_SCHEME.update({
-    "A": "#000000",
     "C": "#BEB86B",
     "D": "#800000",
     "E": "#800000",
     "F": "#6F6F6F",
     "G": "#155939",
     "H": "#142B4F",
-    "I": "#000000",
     "K": "#142B4F",
-    "L": "#000000",
-    "M": "#000000",
+    "R": "#142B4F",
     "N": "#A97C50",
     "P": "#1C5E3F",
     "Q": "#A97C50",
-    "R": "#142B4F",
     "S": "#4A79A5",
     "T": "#4A79A5",
+    "L": "#000000",
+    "A": "#000000",
+    "I": "#000000",
+    "M": "#000000",
     "V": "#000000",
     "W": "#000000",
     "Y": "#6F6F6F",
@@ -51,9 +56,9 @@ COLORS_SCHEME.update({
 def letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
     text = LETTERS[letter]
 
-    t = mpl.transforms.Affine2D().scale(
+    t = transforms.Affine2D().scale(
         xscale * GLOBSCALE, yscale * GLOBSCALE
-    ) + mpl.transforms.Affine2D().translate(x, y) + ax.transData
+    ) + transforms.Affine2D().translate(x, y) + ax.transData
 
     p = PathPatch(
         text,
@@ -77,7 +82,7 @@ def _calc_score(fore_hit_size, fore_size, back_hit_size, back_size, base, pos):
     K = fore_hit_size
     N = fore_size
 
-    binomial = ss.binom(N, p)
+    binomial = stats.binom(N, p)
 
     pr_gt_k = binomial.sf(K)
     pr_lt_k = binomial.cdf(K)
@@ -127,9 +132,8 @@ def _calc_hline(back_counts):
     return abs(np.log(alpha / (1 - alpha)))
 
 
-def make_logo(data, f, **kwargs):
+def make_logo(data, f, m=None, **kwargs):
     nmer_args = motif.get_nmer_args(kwargs)
-    low_res_cutoff = kwargs.get("low_res_cutoff", None)
 
     fore = [
         n.upper()
@@ -137,7 +141,9 @@ def make_logo(data, f, **kwargs):
             data.filter(**f)["Sequence"],
             **nmer_args
         )
+        if not m or m.match(n)
     ]
+
     back = [
         n.upper()
         for n in motif.generate_n_mers(
@@ -145,13 +151,20 @@ def make_logo(data, f, **kwargs):
             **nmer_args
         )
     ]
+    return logo(
+        fore, back,
+        title=plogo.format_title(data, f),
+        **kwargs
+    )
 
+
+def logo(fore, back, title="", low_res_cutoff=None):
     length = len(back[0])
     assert length > 0
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    rel_info, p_line = _calc_scores(bases, fore, back)
+    rel_info, p_line = _calc_scores(BASES, fore, back)
 
     ax.axhline(0, color="black")
     ax.axhline(p_line, color="red")
@@ -161,7 +174,7 @@ def make_logo(data, f, **kwargs):
     x = 1
 
     for i in range(0, length):
-        scores = [(b, rel_info[b][i]) for b in bases]
+        scores = [(b, rel_info[b][i]) for b in BASES]
         scores = (
             sorted([i for i in scores if i[1] < 0], key=lambda t: -t[1]) +
             sorted([i for i in scores if i[1] >= 0], key=lambda t: -t[1])
@@ -189,17 +202,31 @@ def make_logo(data, f, **kwargs):
         x += 1
         maxy = max(maxy, y)
 
-    ax.set_xlim((0, x))
-    ax.set_ylim((miny * 1.05, maxy * 1.05))
+    ax.set_xlim(
+        xmin=0,
+        xmax=x,
+    )
+    ax.set_ylim(
+        ymin=miny * 1.05,
+        ymax=maxy * 1.05,
+    )
 
-    ax.set_xticks(range(1, x))
-    ax.set_yticklabels(ax.get_yticks(), fontsize=16)
-    ax.set_xticklabels([
-        "{:+d}".format(i) if i != 0 else "0"
-        for i in range(-int(np.floor(length / 2)), int(np.ceil(length / 2)))
-    ], fontsize=16)
+    ax.set_xticks(
+        range(1, x),
+    )
+    ax.set_yticklabels(
+        ax.get_yticks(),
+        fontsize=16,
+    )
+    ax.set_xticklabels(
+        [
+            "{:+d}".format(i) if i != 0 else "0"
+            for i in range(-(length - 1) // 2, (length - 1) // 2)
+        ],
+        fontsize=16,
+    )
     ax.set_ylabel("log odds of the binomial probability", fontsize=20)
 
-    ax.set_title(plogo.format_title(data, f), fontsize=32)
+    ax.set_title(title, fontsize=32)
 
     return fig, ax
