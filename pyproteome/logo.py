@@ -159,7 +159,8 @@ def make_logo(data, f, m=None, **kwargs):
 
 def logo(
     fore, back,
-    title="", width=12, height=8, p_cutoff=0.05, low_res_cutoff=None,
+    title="", width=12, height=8, p_cutoff=0.05,
+    fade_power=1, low_res_cutoff=0,
 ):
     """
     Generate a sequence logo locally using pLogo's enrichment score.
@@ -167,12 +168,16 @@ def logo(
     Parameters
     ----------
     fore : list of str
-    back list of str
+    back : list of str
     title : str, optional
     p_cutoff : float, optional
+        p-value to use for residue significance cutoff. This value is corrected
+        for multiple-hypothesis testing before being used.
+    fade_power : float, optional
+        Set transparency of residues with scores below p_cutoff to:
+        (score / p_cutoff) ** fade_power.
     low_res_cutoff : float, optional
-        Fraction of p-value cutoff score to display residues for (i.e. 1.0 ->
-        all residues p < 0.05)
+        Hide residues with scores below p_cutoff * low_res_cutoff.
     """
     length = len(back[0])
     assert length > 0
@@ -245,12 +250,11 @@ def logo(
             sorted([i for i in scores if i[1] < 0], key=lambda t: -t[1]) +
             sorted([i for i in scores if i[1] >= 0], key=lambda t: -t[1])
         )
-        if low_res_cutoff is not None:
-            scores = [
-                i
-                for i in scores
-                if abs(i[1]) >= p_line * low_res_cutoff
-            ]
+        scores = [
+            i
+            for i in scores
+            if abs(i[1]) >= p_line * low_res_cutoff
+        ]
 
         y = sum(i[1] for i in scores if i[1] < 0)
         miny = min(miny, y)
@@ -258,7 +262,7 @@ def logo(
         for base, score in scores:
             letterAt(
                 base, x, y,
-                alpha=min([1, abs(score / p_line)]),
+                alpha=min([1, abs(score / p_line)]) ** fade_power,
                 xscale=1.2,
                 yscale=abs(score),
                 ax=axes[1 if score < 0 else 0],
