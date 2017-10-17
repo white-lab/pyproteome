@@ -92,12 +92,11 @@ def _calc_score(fore_hit_size, fore_size, back_hit_size, back_size, base, pos):
     elif pr_gt_k <= 0:
         return 200
     else:
-        return -np.log(pr_gt_k / pr_lt_k)
+        return -np.log10(pr_gt_k / pr_lt_k)
 
 
-def _calc_scores(bases, fore, back):
+def _calc_scores(bases, fore, back, p_cutoff=0.05):
     length = len(back[0])
-    # print(fore, len(fore))
     fore_counts = [
         Counter(i[pos] for i in fore)
         for pos in range(length)
@@ -118,10 +117,10 @@ def _calc_scores(bases, fore, back):
             for pos in range(length)
         ]
         for base in bases
-    }, _calc_hline(back_counts)
+    }, _calc_hline(back_counts, p_cutoff=p_cutoff)
 
 
-def _calc_hline(back_counts):
+def _calc_hline(back_counts, p_cutoff=0.05):
     num_calc = sum(
         1
         for counts in back_counts
@@ -129,7 +128,7 @@ def _calc_hline(back_counts):
         if count > 0
     )
     alpha = 0.05 / num_calc
-    return abs(np.log(alpha / (1 - alpha)))
+    return abs(np.log10(alpha / (1 - alpha)))
 
 
 def make_logo(data, f, m=None, **kwargs):
@@ -158,13 +157,30 @@ def make_logo(data, f, m=None, **kwargs):
     )
 
 
-def logo(fore, back, title="", low_res_cutoff=None):
+def logo(fore, back, title="", p_cutoff=0.05, low_res_cutoff=None):
+    """
+    Generate a sequence logo locally using pLogo's enrichment score.
+
+    Parameters
+    ----------
+    fore : list of str
+    back list of str
+    title : str, optional
+    p_cutoff : float, optional
+    low_res_cutoff : float, optional
+        Fraction of p-value cutoff score to display residues for (i.e. 1.0 ->
+        all residues p < 0.05)
+    """
     length = len(back[0])
     assert length > 0
+    assert (
+        all(len(i) == len(back[0]) for i in fore) and
+        all(len(i) == len(back[0]) for i in back)
+    )
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
-    rel_info, p_line = _calc_scores(BASES, fore, back)
+    rel_info, p_line = _calc_scores(BASES, fore, back, p_cutoff=p_cutoff)
 
     ax.axhline(0, color="black")
     ax.axhline(p_line, color="red")
@@ -179,7 +195,7 @@ def logo(fore, back, title="", low_res_cutoff=None):
             sorted([i for i in scores if i[1] < 0], key=lambda t: -t[1]) +
             sorted([i for i in scores if i[1] >= 0], key=lambda t: -t[1])
         )
-        if low_res_cutoff:
+        if low_res_cutoff is not None:
             scores = [
                 i
                 for i in scores
