@@ -53,7 +53,7 @@ COLORS_SCHEME.update({
 })
 
 
-def letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
+def _letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
     text = LETTERS[letter]
 
     t = transforms.Affine2D().scale(
@@ -121,17 +121,47 @@ def _calc_scores(bases, fore, back, p_cutoff=0.05):
 
 
 def _calc_hline(back_counts, p_cutoff=0.05):
+    """
+    Calculate the significance cutoff using multiple-hypothesis correction.
+
+    Parameters
+    ----------
+    back_counts : collections.Counter of str, int
+        Frequency of residues found in the background set.
+    p_cutoff : float, optional
+
+    Returns
+    -------
+    float
+        Signficance cutoff in log-odds space.
+    """
     num_calc = sum(
         1
         for counts in back_counts
         for _, count in counts.items()
         if count > 0
     )
-    alpha = 0.05 / num_calc
+    alpha = p_cutoff / num_calc
     return abs(np.log10(alpha / (1 - alpha)))
 
 
-def make_logo(data, f, m=None, **kwargs):
+def make_logo(data, f, **kwargs):
+    """
+    Create a logo from a pyproteome data set using a given filter to define
+    the foreground set.
+
+    Parameters
+    ----------
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    f : dict
+        Filter passed to data.filter() to define the foreground set.
+    kwargs
+        Arguments passed on to logo()
+
+    Returns
+    -------
+    fig, axes
+    """
     nmer_args = motif.get_nmer_args(kwargs)
 
     fore = [
@@ -140,7 +170,6 @@ def make_logo(data, f, m=None, **kwargs):
             data.filter(**f)["Sequence"],
             **nmer_args
         )
-        if not m or m.match(n)
     ]
 
     back = [
@@ -178,6 +207,10 @@ def logo(
         (score / p_cutoff) ** fade_power.
     low_res_cutoff : float, optional
         Hide residues with scores below p_cutoff * low_res_cutoff.
+
+    Returns
+    -------
+    fig, axes
     """
     length = len(back[0])
     assert length > 0
@@ -193,12 +226,12 @@ def logo(
     )
     axes = (
         fig.add_axes([
-            left_margin, .04,
-            1 - left_margin, .46,
+            left_margin, .02,
+            1 - left_margin, .48,
         ]),
         fig.add_axes([
             left_margin, -.5,
-            1 - left_margin, .46,
+            1 - left_margin, .48,
         ])
     )
     yax = fig.add_axes([
@@ -260,7 +293,7 @@ def logo(
         miny = min(miny, y)
 
         for base, score in scores:
-            letterAt(
+            _letterAt(
                 base, x, y,
                 alpha=min([1, abs(score / p_line)]) ** fade_power,
                 xscale=1.2,
@@ -272,15 +305,25 @@ def logo(
         x += 1
         maxy = max(maxy, y)
 
+    minmaxy = max(abs(i) for i in [miny, maxy])
+    axes[1].text(
+        length + .5,
+        -minmaxy,
+        "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
+        color="darkred",
+        fontsize=32,
+        horizontalalignment="right",
+        verticalalignment="bottom",
+    )
+
     for ind, ax in enumerate(axes):
         ax.set_xlim(
             xmin=.5,
             xmax=x - .5,
         )
-        minmaxy = max(abs(i) for i in [miny, maxy])
         ax.set_ylim(
-            ymin=minmaxy * 1.05 * (-1 if ind == 1 else 0),
-            ymax=minmaxy * 1.05 * (0 if ind == 1 else 1),
+            ymin=-1.05 * minmaxy if ind == 1 else -1,
+            ymax=1.05 * minmaxy if ind == 0 else 1,
         )
         ax.set_xticks([])
 
@@ -302,4 +345,4 @@ def logo(
             fontsize=24,
         )
 
-    return fig, ax
+    return fig, (yax, xax,) + axes
