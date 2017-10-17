@@ -184,32 +184,33 @@ def logo(
     fig = plt.figure(figsize=(width, height))
 
     left_margin = (
-        .12 / width
+        .15 / width * 5
     )
-    print(left_margin)
-    # axes = fig.add_subplot(211), fig.add_subplot(212)
     axes = (
         fig.add_axes([
-            left_margin * 5, 0,
-            1 - left_margin, .45,
+            left_margin, .04,
+            1 - left_margin, .46,
         ]),
         fig.add_axes([
-            left_margin * 5, -.5,
-            1 - left_margin, .45,
+            left_margin, -.5,
+            1 - left_margin, .46,
         ])
     )
-    # fig.subplots_adjust(bottom=0.1, left=-0, right=5, top=0.9)
-    # yax = fig.add_subplot(111)
     yax = fig.add_axes([
         0, -.5,
-        left_margin, .95,
+        1, 1,
+    ])
+    xwidth = (1 - left_margin) / length
+    xpad = xwidth / 2
+    xax = fig.add_axes([
+        left_margin + xpad, 0.02,
+        xwidth * (length - 1), .11,
     ])
     yax.patch.set_alpha(0)
-    # yax = fig.add_axes([0.85, 0.1, 0.075, 0.8])
+    xax.patch.set_alpha(0)
 
     rel_info, p_line = _calc_scores(BASES, fore, back, p_cutoff=p_cutoff)
 
-    # axes[0].axhline(0, color="black")
     axes[0].axhline(p_line, color="red")
     axes[1].axhline(-p_line, color="red")
 
@@ -218,13 +219,25 @@ def logo(
 
     yax.xaxis.set_ticks([])
     yax.yaxis.set_ticks([])
-    for ax in (yax,) + axes:
+    xax.yaxis.set_ticks([])
+
+    for ax in (yax, xax) + axes:
         ax.spines['top'].set_color('none')
         ax.spines['bottom'].set_color('none')
         ax.spines['left'].set_color('none')
         ax.spines['right'].set_color('none')
-    # axes[0].tick_params(axis="x", labelcolor="b", pad=20)
-    # axes[0].tick_params(axis="y", labelcolor="b", pad=20)
+
+    yax.set_title(title, fontsize=32)
+    xax.set_xticks(
+        range(0, length),
+    )
+    xax.set_xticklabels(
+        [
+            "{:+d}".format(i) if i != 0 else "0"
+            for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
+        ],
+        fontsize=16,
+    )
 
     for i in range(0, length):
         scores = [(b, rel_info[b][i]) for b in BASES]
@@ -257,43 +270,32 @@ def logo(
 
     for ind, ax in enumerate(axes):
         ax.set_xlim(
-            xmin=.25,
-            xmax=x - .25,
+            xmin=.5,
+            xmax=x - .5,
         )
+        minmaxy = max(abs(i) for i in [miny, maxy])
         ax.set_ylim(
-            ymin=miny * 1.05 * (1 if ind == 1 else 0),
-            ymax=maxy * 1.05 * (0 if ind == 1 else 1),
+            ymin=minmaxy * 1.05 * (-1 if ind == 1 else 0),
+            ymax=minmaxy * 1.05 * (0 if ind == 1 else 1),
         )
+        ax.set_xticks([])
 
-        ax.set_xticks(
-            range(1, x) if ind == 0 else [],
-        )
-
+        spacing = minmaxy // 3
         ax.set_yticks(
-            ax.get_yticks()[
-                0 if ind == 0 else -1::2 if ind == 0 else -2
-            ],
+            np.arange(
+                spacing if ind == 0 else -spacing,
+                (spacing + 1) * (3 if ind == 0 else -3),
+                spacing * (1 if ind == 0 else -1)
+            ),
         )
 
         ax.set_yticklabels(
             ax.get_yticks(),
             fontsize=16,
         )
-        ax.set_xticklabels(
-            [
-                "{:+d}".format(i) if i != 0 else "0"
-                for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
-            ],
-            fontsize=16,
-        )
         yax.set_ylabel(
             "log odds of the binomial probability",
             fontsize=24,
         )
-
-        if ind == 0:
-            ax.set_title(title, fontsize=32)
-
-    # fig.tight_layout()
 
     return fig, ax
