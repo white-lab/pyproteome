@@ -157,7 +157,10 @@ def make_logo(data, f, m=None, **kwargs):
     )
 
 
-def logo(fore, back, title="", p_cutoff=0.05, low_res_cutoff=None):
+def logo(
+    fore, back,
+    title="", width=12, height=8, p_cutoff=0.05, low_res_cutoff=None,
+):
     """
     Generate a sequence logo locally using pLogo's enrichment score.
 
@@ -178,16 +181,50 @@ def logo(fore, back, title="", p_cutoff=0.05, low_res_cutoff=None):
         all(len(i) == len(back[0]) for i in back)
     )
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig = plt.figure(figsize=(width, height))
+
+    left_margin = (
+        .12 / width
+    )
+    print(left_margin)
+    # axes = fig.add_subplot(211), fig.add_subplot(212)
+    axes = (
+        fig.add_axes([
+            left_margin * 5, 0,
+            1 - left_margin, .45,
+        ]),
+        fig.add_axes([
+            left_margin * 5, -.5,
+            1 - left_margin, .45,
+        ])
+    )
+    # fig.subplots_adjust(bottom=0.1, left=-0, right=5, top=0.9)
+    # yax = fig.add_subplot(111)
+    yax = fig.add_axes([
+        0, -.5,
+        left_margin, .95,
+    ])
+    yax.patch.set_alpha(0)
+    # yax = fig.add_axes([0.85, 0.1, 0.075, 0.8])
 
     rel_info, p_line = _calc_scores(BASES, fore, back, p_cutoff=p_cutoff)
 
-    ax.axhline(0, color="black")
-    ax.axhline(p_line, color="red")
-    ax.axhline(-p_line, color="red")
+    # axes[0].axhline(0, color="black")
+    axes[0].axhline(p_line, color="red")
+    axes[1].axhline(-p_line, color="red")
 
     miny, maxy = -p_line, p_line
     x = 1
+
+    yax.xaxis.set_ticks([])
+    yax.yaxis.set_ticks([])
+    for ax in (yax,) + axes:
+        ax.spines['top'].set_color('none')
+        ax.spines['bottom'].set_color('none')
+        ax.spines['left'].set_color('none')
+        ax.spines['right'].set_color('none')
+    # axes[0].tick_params(axis="x", labelcolor="b", pad=20)
+    # axes[0].tick_params(axis="y", labelcolor="b", pad=20)
 
     for i in range(0, length):
         scores = [(b, rel_info[b][i]) for b in BASES]
@@ -211,38 +248,52 @@ def logo(fore, back, title="", p_cutoff=0.05, low_res_cutoff=None):
                 alpha=min([1, abs(score / p_line)]),
                 xscale=1.2,
                 yscale=abs(score),
-                ax=ax,
+                ax=axes[1 if score < 0 else 0],
             )
             y += abs(score)
 
         x += 1
         maxy = max(maxy, y)
 
-    ax.set_xlim(
-        xmin=0,
-        xmax=x,
-    )
-    ax.set_ylim(
-        ymin=miny * 1.05,
-        ymax=maxy * 1.05,
-    )
+    for ind, ax in enumerate(axes):
+        ax.set_xlim(
+            xmin=.25,
+            xmax=x - .25,
+        )
+        ax.set_ylim(
+            ymin=miny * 1.05 * (1 if ind == 1 else 0),
+            ymax=maxy * 1.05 * (0 if ind == 1 else 1),
+        )
 
-    ax.set_xticks(
-        range(1, x),
-    )
-    ax.set_yticklabels(
-        ax.get_yticks(),
-        fontsize=16,
-    )
-    ax.set_xticklabels(
-        [
-            "{:+d}".format(i) if i != 0 else "0"
-            for i in range(-(length - 1) // 2, (length - 1) // 2)
-        ],
-        fontsize=16,
-    )
-    ax.set_ylabel("log odds of the binomial probability", fontsize=20)
+        ax.set_xticks(
+            range(1, x) if ind == 0 else [],
+        )
 
-    ax.set_title(title, fontsize=32)
+        ax.set_yticks(
+            ax.get_yticks()[
+                0 if ind == 0 else -1::2 if ind == 0 else -2
+            ],
+        )
+
+        ax.set_yticklabels(
+            ax.get_yticks(),
+            fontsize=16,
+        )
+        ax.set_xticklabels(
+            [
+                "{:+d}".format(i) if i != 0 else "0"
+                for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
+            ],
+            fontsize=16,
+        )
+        yax.set_ylabel(
+            "log odds of the binomial probability",
+            fontsize=24,
+        )
+
+        if ind == 0:
+            ax.set_title(title, fontsize=32)
+
+    # fig.tight_layout()
 
     return fig, ax
