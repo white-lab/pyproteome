@@ -193,6 +193,9 @@ def get_nmer_args(kwargs):
     nmer_args["letter_mod_types"] = kwargs.pop(
         "letter_mod_types", [(None, "Phospho")],
     )
+    nmer_args["n"] = kwargs.pop(
+        "n", 15,
+    )
     nmer_args["use_ptms"] = kwargs.pop("use_ptms", True)
     nmer_args["use_nterms"] = kwargs.pop("use_nterms", False)
     nmer_args["use_cterms"] = kwargs.pop("use_cterms", False)
