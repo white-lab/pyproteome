@@ -74,18 +74,31 @@ def _letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
     return p
 
 
-def _calc_score(fore_hit_size, fore_size, back_hit_size, back_size, base, pos):
+def _calc_score(
+    fore_hit_size, fore_size, back_hit_size, back_size,
+    prob_fn=None,
+):
+    if prob_fn is None:
+        prob_fn = "hypergeom"
+
+    assert prob_fn in ["hypergeom", "binom"]
+
     if back_hit_size <= 0:
         return 0
 
-    p = back_hit_size / back_size
-    K = fore_hit_size
-    N = fore_size
+    k = fore_hit_size
+    n = fore_size
+    K = back_hit_size
+    N = back_size
+    p = K / N
 
-    binomial = stats.binom(N, p)
+    if prob_fn == "hypergeom":
+        binomial = stats.hypergeom(N, K, n)
+    else:
+        binomial = stats.binom(n, p)
 
-    pr_gt_k = binomial.sf(K)
-    pr_lt_k = binomial.cdf(K)
+    pr_gt_k = binomial.sf(k - 1)
+    pr_lt_k = binomial.cdf(k)
 
     if pr_lt_k <= 0:
         return -200
@@ -95,7 +108,7 @@ def _calc_score(fore_hit_size, fore_size, back_hit_size, back_size, base, pos):
         return -np.log10(pr_gt_k / pr_lt_k)
 
 
-def _calc_scores(bases, fore, back, p_cutoff=0.05):
+def _calc_scores(bases, fore, back, p_cutoff=0.05, prob_fn=None):
     length = len(back[0])
     fore_counts = [
         Counter(i[pos] for i in fore)
@@ -112,7 +125,7 @@ def _calc_scores(bases, fore, back, p_cutoff=0.05):
                 len(fore),
                 back_counts[pos][base],
                 len(back),
-                base, pos,
+                prob_fn=prob_fn,
             )
             for pos in range(length)
         ]
@@ -189,7 +202,7 @@ def make_logo(data, f, **kwargs):
 def logo(
     fore, back,
     title="", width=12, height=8, p_cutoff=0.05,
-    fade_power=1, low_res_cutoff=0,
+    fade_power=1, low_res_cutoff=0, prob_fn=None
 ):
     """
     Generate a sequence logo locally using pLogo's enrichment score.
@@ -207,6 +220,10 @@ def logo(
         (score / p_cutoff) ** fade_power.
     low_res_cutoff : float, optional
         Hide residues with scores below p_cutoff * low_res_cutoff.
+    prob_fn : str, optional
+        Probability function to use for calculating enrichment. Either
+        "hypergeom" or "binom". The default, hypergeom, is more accurate but
+        more computationally expensive.
 
     Returns
     -------
@@ -247,7 +264,11 @@ def logo(
     yax.patch.set_alpha(0)
     xax.patch.set_alpha(0)
 
-    rel_info, p_line = _calc_scores(BASES, fore, back, p_cutoff=p_cutoff)
+    rel_info, p_line = _calc_scores(
+        BASES, fore, back,
+        p_cutoff=p_cutoff,
+        prob_fn=prob_fn,
+    )
 
     axes[0].axhline(p_line, color="red")
     axes[1].axhline(-p_line, color="red")
