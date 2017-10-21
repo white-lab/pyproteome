@@ -454,7 +454,7 @@ def _get_cache(args):
                 _make_index(args),
                 None,
             )
-    except OSError:
+    except (OSError, EOFError, pickle.UnpicklingError):
         return None
 
 
@@ -463,7 +463,7 @@ def _add_cache(args, ret):
     try:
         with open(".motif_cache.pickle", "rb") as f:
             cache = pickle.load(f)
-    except OSError:
+    except (OSError, EOFError, pickle.UnpicklingError):
         cache = {}
 
     try:
