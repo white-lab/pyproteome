@@ -7,10 +7,11 @@ Functionality includes n-mer generation.
 from __future__ import division
 
 # Built-ins
-from collections import defaultdict
+from collections import defaultdict, Iterable
 from functools import partial
 import logging
 import multiprocessing
+import pickle
 import random
 import re
 
@@ -18,7 +19,7 @@ import re
 import pandas as pd
 from scipy.stats import hypergeom
 
-from . import sequence
+from pyproteome import sequence
 
 
 LOGGER = logging.getLogger("pyproteome.motif")
@@ -436,13 +437,52 @@ def _generate_ppdist(
     return pp_dist
 
 
+def _make_index(args):
+    def _to_tuple(i):
+        if not isinstance(i, str) and isinstance(i, Iterable):
+            return tuple(_to_tuple(j) for j in i)
+        return i
+
+    return _to_tuple(sorted(args.items(), key=lambda x: x[0]))
+
+
+def _get_cache(args):
+    try:
+        with open(".motif_cache.pickle", "rb") as f:
+            cache = pickle.load(f)
+            return cache.get(
+                _make_index(args),
+                None,
+            )
+    except OSError:
+        return None
+
+
+def _add_cache(args, ret):
+    LOGGER.info("Adding motifs to cache")
+    try:
+        with open(".motif_cache.pickle", "rb") as f:
+            cache = pickle.load(f)
+    except OSError:
+        cache = {}
+
+    try:
+        cache[_make_index(args)] = ret
+
+        with open(".motif_cache.pickle", "wb") as f:
+            pickle.dump(cache, f)
+            return ret
+    except OSError:
+        return ret
+
+
 def motif_enrichment(
     foreground, background,
     sig_cutoff=0.01, min_fore_hits=0,
     start_letters=None, letter_mod_types=None,
     motif_length=15,
     pp_value=False, pp_iterations=100,
-    cpu_count=None,
+    cpu_count=None, force=False
 ):
     """
     Calculate motifs significantly enriched in a list of sequences.
@@ -475,6 +515,7 @@ def motif_enrichment(
            Upregulated in EGFRvIII-Expressing Glioblastoma Cells." Molecular
            bioSystems 5.1 (2009): 59-67.
     """
+
     p_dist = []
 
     def _search_children(children, parent=None):
@@ -574,6 +615,26 @@ def motif_enrichment(
     background = _make_nmers(background, motif_length, letter_mod_types)
     fore_size = len(foreground)
     back_size = len(background)
+
+    # Cache motif analyses
+    cache_args = dict(
+        foreground=foreground,
+        background=background,
+        sig_cutoff=sig_cutoff,
+        min_fore_hits=min_fore_hits,
+        start_letters=start_letters,
+        letter_mod_types=letter_mod_types,
+        motif_length=motif_length,
+        pp_value=pp_value,
+        pp_iterations=pp_iterations,
+    )
+    if not force:
+        cache = _get_cache(
+            cache_args
+        )
+        if cache is not None:
+            LOGGER.info("Loading motifs from cache")
+            return cache
 
     LOGGER.info(
         "Starting analysis, n={}, N={}".format(
@@ -682,4 +743,4 @@ def motif_enrichment(
     df.sort_values(by=["pp-value", "p-value", "Motif"], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
-    return df, p_dist, pp_dist
+    return _add_cache(cache_args, (df, p_dist, pp_dist))

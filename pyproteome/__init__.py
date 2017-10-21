@@ -9,9 +9,12 @@ and CAMV.
 from .version import __version__
 
 from . import (
-    analysis, bca, data_sets, discoverer, icelogo, levels, loading, logo,
-    modification, motif, paths, plogo, pride, protein, sequence, utils,
-    version, volcano, weblogo,
+    analysis, bca, data_sets, discoverer, levels, loading,
+    modification, paths, pride, protein, sequence, utils,
+    version, volcano,
+)
+from .motifs import (
+    logo, icelogo, motif, plogo, weblogo,
 )
 
 __all__ = [

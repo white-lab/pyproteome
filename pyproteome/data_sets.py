@@ -19,7 +19,7 @@ import numpy.ma as ma
 from scipy.stats import ttest_ind
 
 from . import loading, modification, utils
-from . import motif as pymotif
+from .motifs import motif as pymotif
 
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
