@@ -8,6 +8,7 @@ Functions include volcano plots, sorted tables, and plotting sequence levels.
 from __future__ import division
 
 # Built-ins
+from collections import Iterable
 import itertools
 import logging
 import os
@@ -33,12 +34,9 @@ from scipy.stats import pearsonr, spearmanr, ttest_ind
 
 # Misc extras
 from adjustText.adjustText import adjust_text
-# import fastcluster
-# import somoclu
-# import uniprot
 
 from . import fetch_data, utils
-from .volcano import volcano_plot, plot_volcano_filtered
+# from .volcano import volcano_plot, plot_volcano_filtered
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
@@ -1086,6 +1084,9 @@ def plot_all(
 ):
     assert seqs is not None or protein is not None
 
+    if not isinstance(datas, Iterable):
+        datas = [datas]
+
     if protein:
         seqs = list(
             set(
@@ -1094,6 +1095,10 @@ def plot_all(
                 for seq in data[data["Proteins"] == protein]["Sequence"]
             )
         )
+        datas = [
+            i.filter(proteins=[protein])
+            for i in datas
+        ]
 
     if isinstance(seqs, str):
         seqs = [seqs]
