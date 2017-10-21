@@ -446,29 +446,26 @@ def _make_index(args):
     return _to_tuple(sorted(args.items(), key=lambda x: x[0]))
 
 
-def _get_cache(args):
+def _open_cache():
     try:
         with open(".motif_cache.pickle", "rb") as f:
-            cache = pickle.load(f)
-            return cache.get(
-                _make_index(args),
-                None,
-            )
-    except (OSError, EOFError, pickle.UnpicklingError):
-        return None
+            return pickle.load(f)
+    except (
+        OSError, EOFError, pickle.UnpicklingError, KeyError, IOError,
+    ):
+        return {}
+
+
+def _get_cache(args):
+    _open_cache().get(_make_index(args), None)
 
 
 def _add_cache(args, ret):
     LOGGER.info("Adding motifs to cache")
-    try:
-        with open(".motif_cache.pickle", "rb") as f:
-            cache = pickle.load(f)
-    except (OSError, EOFError, pickle.UnpicklingError):
-        cache = {}
+    cache = _open_cache()
+    cache[_make_index(args)] = ret
 
     try:
-        cache[_make_index(args)] = ret
-
         with open(".motif_cache.pickle", "wb") as f:
             pickle.dump(cache, f)
             return ret
