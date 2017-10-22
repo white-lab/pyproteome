@@ -40,6 +40,7 @@ from . import fetch_data, utils
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
+DEFAULT_DPI = 300
 
 
 def snr_table(
@@ -307,7 +308,11 @@ def venn2(data_a, data_b, folder_name=None, filename=None):
             label.set_fontsize(20)
 
     if filename:
-        f.savefig(filename, transparent=True, dpi=500)
+        f.savefig(
+            filename,
+            transparent=True,
+            dpi=DEFAULT_DPI,
+        )
 
 
 def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
@@ -354,7 +359,11 @@ def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
             label.set_fontsize(20)
 
     if filename:
-        f.savefig(filename, transparent=True, dpi=500)
+        f.savefig(
+            filename,
+            transparent=True,
+            dpi=DEFAULT_DPI,
+        )
 
 
 def write_lists(
@@ -801,7 +810,11 @@ def correlate_data_sets(
     )
 
     if filename:
-        f.savefig(filename, transparent=True, dpi=500)
+        f.savefig(
+            filename,
+            transparent=True,
+            dpi=DEFAULT_DPI,
+        )
 
 
 def find_tfs(data, folder_name=None, csv_name=None):
@@ -1105,6 +1118,11 @@ def plot_all(
 
     for seq in seqs:
         for data in datas:
+            try:
+                os.makedirs(data.name)
+            except:
+                pass
+
             prot = " / ".join(
                 gene
                 for i in data[data["Sequence"] == seq]["Proteins"]
@@ -1121,16 +1139,20 @@ def plot_all(
                     figsize=figsize,
                 )
                 f.savefig(
-                    re.sub(
-                        "[?/]",
-                        "_",
-                        "{}-{}-{}.png".format(
-                            prot,
-                            ",".join(data.tissues),
-                            data.name,
+                    os.path.join(
+                        data.name,
+                        re.sub(
+                            "[?/]",
+                            "_",
+                            "{}-{}-{}.png".format(
+                                prot,
+                                ",".join(data.tissues),
+                                data.name,
+                            ),
                         ),
                     ),
-                    bbox_inches="tight", dpi=300,
+                    bbox_inches="tight",
+                    dpi=DEFAULT_DPI,
                     transparent=True,
                 )
 
@@ -1140,16 +1162,20 @@ def plot_all(
                     cmp_groups=cmp_groups,
                 )
                 f.savefig(
-                    re.sub(
-                        "[?/]",
-                        "_",
-                        "{}-{}-{}-between.png".format(
-                            prot,
-                            ",".join(data.tissues),
-                            data.name,
+                    os.path.join(
+                        data.name,
+                        re.sub(
+                            "[?/]",
+                            "_",
+                            "{}-{}-{}-between.png".format(
+                                prot,
+                                ",".join(data.tissues),
+                                data.name,
+                            ),
                         ),
                     ),
-                    bbox_inches="tight", dpi=300,
+                    bbox_inches="tight",
+                    dpi=DEFAULT_DPI,
                     transparent=True,
                 )
 
@@ -1183,6 +1209,11 @@ def plot_all_together(
         seqs = [seqs]
 
     for data in datas:
+        try:
+            os.makedirs(data.name)
+        except:
+            pass
+
         prot = " / ".join(
             gene
             for i in data[data["Sequence"] == seqs[0]]["Proteins"]
@@ -1193,16 +1224,20 @@ def plot_all_together(
             **kwargs
         )
         f.savefig(
-            re.sub(
-                "[?/]",
-                "_",
-                "{}-{}-{}-between.png".format(
-                    prot,
-                    ",".join(data.tissues),
-                    data.name,
+            os.path.join(
+                data.name,
+                re.sub(
+                    "[?/]",
+                    "_",
+                    "{}-{}-{}-between.png".format(
+                        prot,
+                        ",".join(data.tissues),
+                        data.name,
+                    ),
                 ),
             ),
-            bbox_inches="tight", dpi=300,
+            bbox_inches="tight",
+            dpi=DEFAULT_DPI,
             transparent=True,
         )
 
