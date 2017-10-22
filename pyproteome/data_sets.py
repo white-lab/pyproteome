@@ -872,6 +872,34 @@ class DataSet:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
 
+    def print_stats(self):
+        print(self.name, self.tissue, self.enrichment)
+        data = self.dropna(how="all")
+
+        data_p = self.filter(mod_types=[(None, "Phospho")])
+        data_pst = self.filter(mod_types=[("S", "Phospho"), ("T", "Phospho")])
+        data_py = self.filter(mod_types=[("Y", "Phospho")])
+        print(
+            "{} pY, {} pST ({:.0%} Specificity)\n{} total, {} proteins".format(
+                len(data_py.psms),
+                len(data_pst.psms),
+                len(data_p.psms) / len(self.psms),
+                len(data.psms),
+                len(data.genes),
+            )
+        )
+        print()
+
+    @property
+    def genes(self):
+        return sorted(
+            set(
+                gene
+                for i in self.psms["Proteins"]
+                for gene in i.genes
+            )
+        )
+
     @property
     def data(self):
         """
