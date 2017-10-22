@@ -397,6 +397,7 @@ def _random_pdist(x, background, fore_size, kwargs):
     return motif_enrichment(
         random.sample(background, fore_size),
         background,
+        force=True,
         **kwargs
     )[1]
 
@@ -443,21 +444,22 @@ def _make_index(args):
             return tuple(_to_tuple(j) for j in i)
         return i
 
-    return _to_tuple(sorted(args.items(), key=lambda x: x[0]))
+    return _to_tuple(args)
 
 
 def _open_cache():
     try:
         with open(".motif_cache.pickle", "rb") as f:
             return pickle.load(f)
-    except (
-        OSError, EOFError, pickle.UnpicklingError, KeyError, IOError,
-    ):
+    except (OSError, IOError):
+        return {}
+    except (EOFError, pickle.UnpicklingError, KeyError, TypeError):
+        LOGGER.warning("Unable to open motif cache")
         return {}
 
 
 def _get_cache(args):
-    _open_cache().get(_make_index(args), None)
+    return _open_cache().get(_make_index(args), None)
 
 
 def _add_cache(args, ret):
@@ -479,7 +481,8 @@ def motif_enrichment(
     start_letters=None, letter_mod_types=None,
     motif_length=15,
     pp_value=False, pp_iterations=100,
-    cpu_count=None, force=False
+    cpu_count=None,
+    force=False,
 ):
     """
     Calculate motifs significantly enriched in a list of sequences.
@@ -614,21 +617,19 @@ def motif_enrichment(
     back_size = len(background)
 
     # Cache motif analyses
-    cache_args = dict(
-        foreground=foreground,
-        background=background,
-        sig_cutoff=sig_cutoff,
-        min_fore_hits=min_fore_hits,
-        start_letters=start_letters,
-        letter_mod_types=letter_mod_types,
-        motif_length=motif_length,
-        pp_value=pp_value,
-        pp_iterations=pp_iterations,
+    cache_args = (
+        foreground,
+        background,
+        sig_cutoff,
+        min_fore_hits,
+        start_letters,
+        letter_mod_types,
+        motif_length,
+        pp_value,
+        pp_iterations,
     )
     if not force:
-        cache = _get_cache(
-            cache_args
-        )
+        cache = _get_cache(cache_args)
         if cache is not None:
             LOGGER.info("Loading motifs from cache")
             return cache
@@ -740,4 +741,6 @@ def motif_enrichment(
     df.sort_values(by=["pp-value", "p-value", "Motif"], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
-    return _add_cache(cache_args, (df, p_dist, pp_dist))
+    ret = (df, p_dist, pp_dist)
+
+    return ret if force else _add_cache(cache_args, ret)
