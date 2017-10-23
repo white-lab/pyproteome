@@ -14,7 +14,7 @@ from . import (
     version, volcano,
 )
 from .motifs import (
-    logo, icelogo, motif, plogo, phosphosite, weblogo,
+    logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
 )
 
 __all__ = [
@@ -25,7 +25,6 @@ __all__ = [
     "levels",
     "loading",
     "modification",
-    "motif",
     "paths",
     "pride",
     "protein",
@@ -37,6 +36,8 @@ __all__ = [
 
     "icelogo",
     "logo",
+    "motif",
+    "neighborhood",
     "plogo",
     "phosphosite",
     "weblogo",
