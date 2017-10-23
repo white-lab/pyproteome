@@ -243,22 +243,22 @@ def logo(
     )
     axes = (
         fig.add_axes([
-            left_margin, .02,
+            left_margin, .52,
             1 - left_margin, .48,
         ]),
         fig.add_axes([
-            left_margin, -.5,
+            left_margin, 0,
             1 - left_margin, .48,
         ])
     )
     yax = fig.add_axes([
-        0, -.5,
+        0, 0,
         1, 1,
     ])
     xwidth = (1 - left_margin) / length
     xpad = xwidth / 2
     xax = fig.add_axes([
-        left_margin + xpad, 0.02,
+        left_margin + xpad, 0.52,
         xwidth * (length - 1), .11,
     ])
     yax.patch.set_alpha(0)
