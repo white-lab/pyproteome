@@ -457,7 +457,6 @@ def plot_sequence_between(
     psms["Seq Str"] = psms["Sequence"].apply(str)
     psms = psms[psms["Seq Str"].isin(sequences)]
     psms["Sort Ind"] = psms["Seq Str"].apply(lambda x: sequences.index(x))
-    # psms["Sort Ind"] = psms["Sequence"].apply(lambda x: min(i.rel_pos for i in x.protein_matches))
     psms = psms.sort_values("Sort Ind")
 
     values = np.array([
