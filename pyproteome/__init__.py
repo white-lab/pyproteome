@@ -14,7 +14,7 @@ from . import (
     version, volcano,
 )
 from .motifs import (
-    logo, icelogo, motif, plogo, weblogo,
+    logo, icelogo, motif, plogo, phosphosite, weblogo,
 )
 
 __all__ = [
@@ -22,20 +22,22 @@ __all__ = [
     "bca",
     "data_sets",
     "discoverer",
-    "icelogo",
     "levels",
     "loading",
-    "logo",
     "modification",
     "motif",
     "paths",
-    "plogo",
     "pride",
     "protein",
     "sequence",
     "utils",
     "version",
     "volcano",
-    "weblogo",
     "__version__",
+
+    "icelogo",
+    "logo",
+    "plogo",
+    "phosphosite",
+    "weblogo",
 ]
