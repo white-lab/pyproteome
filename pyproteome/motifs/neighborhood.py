@@ -34,21 +34,16 @@ def enriched_neighborhood(
         for i in foreground
         if sum(i.count(j) for j in residues) >= count_cutoff
     ])
+    pval = stats.hypergeom(
+        N,
+        K,
+        n,
+    ).sf(
+        min([k, n]) - 1
+    )
 
-    print(
-        "K={}, N={}, k={}, n={}".format(K, N, k, n)
-    )
-    print(
-        "p-value={:.3e}".format(
-            stats.hypergeom(
-                N,
-                K,
-                n,
-            ).sf(
-                min([k, n]) - 1
-            )
-        )
-    )
+    print("K={}, N={}, k={}, n={}".format(K, N, k, n))
+    print("p-value={:.3e}".format(pval))
 
     fig, ax = plt.subplots(figsize=(4, 4))
 
@@ -88,3 +83,5 @@ def enriched_neighborhood(
     )
     ax.set_ylabel("Freuency")
     ax.legend()
+
+    return f, ax, pval
