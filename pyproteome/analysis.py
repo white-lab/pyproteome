@@ -1181,7 +1181,7 @@ def plot_all(
 
 
 def plot_all_together(
-    datas, seqs=None, protein=None, proteins=None, **kwargs
+    datas, seqs=None, protein=None, proteins=None, only=True, **kwargs
 ):
     assert seqs is not None or protein is not None or proteins is not None
 
@@ -1190,7 +1190,14 @@ def plot_all_together(
             set(
                 str(seq)
                 for data in datas
-                for seq in data[data["Proteins"] == protein]["Sequence"]
+                for seq in data[
+                    data["Proteins"].apply(
+                        lambda x:
+                        all(gene == protein for gene in x.genes)
+                    )
+                    if only else
+                    data["Proteins"] == protein
+                ]["Sequence"]
             )
         )
     elif proteins:
