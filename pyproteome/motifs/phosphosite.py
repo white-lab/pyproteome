@@ -87,4 +87,8 @@ def enriched(data, species=None):
                 letter_mod_types=[(None, "Phospho")],
             )
         )
-    ]
+    ].style.set_table_styles(
+        [
+            {"selector": "th:first-child", "props": [("display", "none")]},
+        ]
+    )
