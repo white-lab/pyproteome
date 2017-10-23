@@ -721,6 +721,9 @@ def motif_enrichment(
         cpu_count=cpu_count,
     ) if pp_value else None
 
+    if pp_dist is not None and len(pp_dist) != len(background):
+        return
+
     # Finally prepare the output as a sorted list with the motifs and their
     # associated statistics.
     df = pd.DataFrame(
