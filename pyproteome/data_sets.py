@@ -171,6 +171,7 @@ class DataSet:
                 ion_score_cutoff=15,
                 isolation_cutoff=50,
                 inplace=True,
+                median_quant_signal=1000,
             )
 
         if pick_best_ptm and (
@@ -569,6 +570,7 @@ class DataSet:
         p_cutoff=None,
         fold_cutoff=None,
         asym_fold_cutoff=None,
+        median_quant_signal=None,
         sequence=None,
         sequences=None,
         proteins=None,
@@ -642,6 +644,22 @@ class DataSet:
                 new,
                 ~(new.psms["Isolation Interference"] > isolation_cutoff)
             )
+
+        if median_quant_signal is not None:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    'ignore',
+                    r'All-NaN (slice|axis) encountered',
+                )
+                new.psms = filter_psms(
+                    new,
+                    np.nan_to_num(
+                        np.nanmedian(
+                            new.psms[[val for _, val in new.channels.items()]],
+                            axis=1,
+                        )
+                    ) >= median_quant_signal
+                )
 
         if p_cutoff:
             new.psms.dropna(subset=("p-value",), inplace=True)
