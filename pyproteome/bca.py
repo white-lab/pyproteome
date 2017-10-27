@@ -184,7 +184,7 @@ def interpret_bca_assay(
         while row <= row_end:
             for col in range(col_start, col_end + 1):
                 std_x.append(x)
-                std_y.append(xls.ix[row][col])
+                std_y.append(xls.loc[row][col])
 
             row = _next_chr(row)
 

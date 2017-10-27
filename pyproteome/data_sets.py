@@ -624,7 +624,7 @@ class DataSet:
 
         def filter_psms(new, array):
             assert array.shape[0] == new.psms.shape[0]
-            return new.psms.ix[array] if not inverse else new.psms.ix[~array]
+            return new.psms.loc[array] if not inverse else new.psms.loc[~array]
 
         if confidence_levels:
             new.psms = filter_psms(
