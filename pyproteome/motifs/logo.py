@@ -24,6 +24,22 @@ LETTERS = {
     )
     for base in BASES
 }
+LETTERS["Q"] = TextPath(
+    (-0.303, .11),
+    "Q",
+    size=1,
+    prop=FontProperties(family="monospace", weight="bold"),
+)
+LETTERS["G"] = TextPath(
+    (-0.303, .01),
+    "G",
+    size=1,
+    prop=FontProperties(family="monospace", weight="bold"),
+)
+LETTER_YSCALE = {
+    "Q": .84,
+    "G": .95,
+}
 
 COLORS_SCHEME = {
     i: "black"
@@ -56,6 +72,8 @@ COLORS_SCHEME.update({
 def _letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
     text = LETTERS[letter]
 
+    yscale *= LETTER_YSCALE.get(letter, .98)
+
     t = transforms.Affine2D().scale(
         xscale * GLOBSCALE, yscale * GLOBSCALE
     ) + transforms.Affine2D().translate(x, y) + ax.transData
@@ -65,7 +83,7 @@ def _letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
         lw=0,
         fc=COLORS_SCHEME[letter],
         alpha=alpha,
-        transform=t
+        transform=t,
     )
 
     if ax is not None:
@@ -243,12 +261,12 @@ def logo(
     )
     axes = (
         fig.add_axes([
-            left_margin, .52,
-            1 - left_margin, .48,
+            left_margin, .54,
+            1 - left_margin, .46,
         ]),
         fig.add_axes([
             left_margin, 0,
-            1 - left_margin, .48,
+            1 - left_margin, .46,
         ])
     )
     yax = fig.add_axes([
@@ -343,8 +361,8 @@ def logo(
             xmax=x - .5,
         )
         ax.set_ylim(
-            ymin=-1.05 * minmaxy if ind == 1 else -1,
-            ymax=1.05 * minmaxy if ind == 0 else 1,
+            ymin=-1.05 * minmaxy if ind == 1 else 0,
+            ymax=1.05 * minmaxy if ind == 0 else 0,
         )
         ax.set_xticks([])
 
