@@ -441,7 +441,9 @@ def _generate_ppdist(
 def _make_index(args):
     def _to_tuple(i):
         if not isinstance(i, str) and isinstance(i, Iterable):
-            return tuple(_to_tuple(j) for j in sorted(i))
+            if isinstance(i, list) or isinstance(i, set):
+                i = sorted(i)
+            return tuple(_to_tuple(j) for j in i)
         return i
 
     return _to_tuple(args)
