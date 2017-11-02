@@ -210,9 +210,10 @@ def make_logo(data, f, **kwargs):
             **nmer_args
         )
     ]
+    title = kwargs.pop("title", plogo.format_title(data, f))
     return logo(
         fore, back,
-        title=plogo.format_title(data, f),
+        title=title,
         **kwargs
     )
 
