@@ -36,88 +36,12 @@ from scipy.stats import pearsonr, spearmanr, ttest_ind
 from adjustText.adjustText import adjust_text
 
 from . import fetch_data, utils
+from .tables import snr_table
 # from .volcano import volcano_plot, plot_volcano_filtered
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
 DEFAULT_DPI = 300
-
-
-def snr_table(
-    data,
-    sort="p-value",
-    folder_name=None, csv_name=None,
-):
-    """
-    Show a table of fold changes and p-values.
-
-    Parameters
-    ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    sort : str, optional
-    folder_name : str, optional
-    csv_name : str, optional
-    """
-    if folder_name is None:
-        folder_name = data.name
-
-    if csv_name is None:
-        csv_name = "{}-{}.csv".format(
-            re.sub("[ ></]", "_", data.name),
-            re.sub("[ ></]", "_", data.enrichment),
-        )
-
-    utils.make_folder(folder_name)
-
-    csv_name = os.path.join(folder_name, csv_name)
-
-    psms = data.psms[
-        [
-            "Proteins", "Sequence", "Modifications",
-            "Fold Change", "p-value", "Validated",
-        ]
-    ].copy()
-    psms["Sequence"] = [
-        "{} ({})".format(row["Sequence"], row["Modifications"])
-        for _, row in psms.iterrows()
-    ]
-    if sort == "Fold Change":
-        psms["Fold Change-Sort"] = psms["Fold Change"].apply(
-            lambda x: max([x, 1 / x])
-        )
-        psms.sort_values("Fold Change-Sort", inplace=True, ascending=False)
-        psms.drop("Fold Change-Sort", axis=1, inplace=True)
-    else:
-        psms.sort_values(sort, inplace=True, ascending=True)
-
-    psms.drop("Modifications", axis=1, inplace=True)
-
-    if csv_name:
-        psms.to_csv(csv_name)
-
-    # back_colors = {
-    #     True: "#BBFFBB",  # light green
-    #     False: "#FFBBBB",  # light red
-    # }
-
-    if psms.empty:
-        return psms
-
-    # return psms.style.apply(  # Color validated rows
-    #     lambda row: [
-    #         "background-color: " + back_colors[row["Validated"]]
-    #         for _ in row
-    #     ],
-    #     axis=1,
-    # )
-    return psms.style.set_table_styles(  # Hide index and "Validated" columns
-        [
-            {"selector": "th:first-child", "props": [("display", "none")]},
-            {"selector": "td:last-child", "props": [("display", "none")]},
-            {"selector": "th:last-child", "props": [("display", "none")]},
-            {"selector": "*", "props": [("text-align", "left")]},
-        ]
-    )
 
 
 def _rewrite_enrichments(lst):
@@ -136,84 +60,6 @@ def _rewrite_enrichments(lst):
             )
         )
     )
-
-
-def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
-    """
-    Write a full list of data sets to a single .xlsx file.
-
-    Parameters
-    ----------
-    datas : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
-    folder_name : str, optional
-    out_name : str, optional
-    """
-
-    utils.make_folder(folder_name)
-
-    if folder_name is not None:
-        out_name = os.path.join(folder_name, out_name)
-
-    writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
-
-    for data in datas:
-        channels = [
-            (name, data.channels[name])
-            for group in data.groups.values()
-            for name in group
-            if name in data.channels and
-            data.channels[name] in data.psms.columns
-        ]
-        df = data.psms[
-            [
-                "Proteins", "Sequence",
-                "Fold Change", "p-value", "Validated",
-            ] + [
-                chan
-                for _, chan in channels
-            ]
-        ].copy()
-
-        df.rename(
-            columns={
-                chan: name
-                for name, chan in channels
-            },
-            inplace=True,
-        )
-        df.insert(
-            2, "Modifications",
-            df["Sequence"].apply(
-                lambda x: str(x.modifications)
-            ),
-        )
-        df["Sequence"] = df["Sequence"].apply(str)
-        df.sort_values("p-value", inplace=True, ascending=True)
-
-        ws_name = re.sub(
-            "/",
-            "+",
-            "{} - {} - {}".format(
-                data.name,
-                data.tissue,
-                _rewrite_enrichments(data.enrichments),
-            ),
-        )
-        df.to_excel(
-            writer,
-            sheet_name=ws_name,
-            index=False,
-        )
-
-        ws = writer.sheets[ws_name]
-        ws.freeze_panes(1, 0)
-        ws.set_column(0, 0, 60)
-        ws.set_column(1, 1, 30)
-        ws.set_column(2, 2, 20)
-        ws.set_column(3, 3, 12)
-        ws.set_column(4, 4, 12)
-
-    writer.save()
 
 
 def hierarchical_heatmap(

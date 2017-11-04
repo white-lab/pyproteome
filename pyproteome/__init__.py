@@ -10,7 +10,7 @@ from .version import __version__
 
 from . import (
     analysis, bca, data_sets, discoverer, levels, loading,
-    modification, paths, pride, protein, sequence, utils,
+    modification, paths, pride, protein, sequence, tables, utils,
     version, volcano,
 )
 from .motifs import (
@@ -29,6 +29,7 @@ __all__ = [
     "pride",
     "protein",
     "sequence",
+    "tables",
     "utils",
     "version",
     "volcano",
