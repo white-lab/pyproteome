@@ -8,33 +8,84 @@ from . import utils
 from .motifs import motif
 
 
+def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):
+    data_name = getattr(data, "name", "Data")
+    if folder_name is None:
+        folder_name = data_name
+
+    if csv_name is None:
+        csv_name = "{}-{}-{}.csv".format(
+            re.sub("[ ></]", "_", data_name),
+            re.sub("[ ></]", "_", data.enrichment),
+            postfix,
+        )
+
+    utils.make_folder(folder_name)
+
+    return os.path.join(folder_name, csv_name)
+
+
+def _get_table_title(f=None, running_title=None):
+    if running_title is None:
+        running_title = []
+
+    if f is not None:
+        if 'asym_fold_cutoff' in f:
+            running_title.append(
+                "Upregulated" if f["asym_fold_cutoff"] > 1 else "Downregulated"
+            )
+
+        if "group_a" in f or "group_b" in f:
+            running_title.append(
+                "{}vs{}".format(
+                    f.get("group_a", ""),
+                    f.get("group_b", ""),
+                )
+            )
+
+    return "-".join(running_title)
+
+
 def motif_table(
     data, f,
     p_cutoff=0.05,
     sort="p-value",
+    folder_name=None, csv_name=None,
     **kwargs
 ):
+    csv_name = _prep_csv(
+        data,
+        folder_name=folder_name,
+        csv_name=csv_name,
+        postfix=_get_table_title(f=f, running_title=["motifs"]),
+    )
+
     hits = motif.motif_enrichment(
         data.filter(**f)["Sequence"], data["Sequence"],
         **kwargs
     )[0]
+
+    hits = hits.sort_values(
+        sort,
+        ascending=True if sort == "p-value" else False,
+    )
+
+    if csv_name:
+        hits.to_csv(csv_name)
 
     hits = hits[
         hits[
             "pp-value" if kwargs.get("pp-value", False) else "p-value"
         ] < p_cutoff
     ]
-    hits = hits.sort_values(
-        sort,
-        ascending=True if sort == "p-value" else False,
-    )
+
     return hits.style.set_table_styles([
         {"selector": "*", "props": [("font-family", "monospace")]},
         {"selector": "th:first-child", "props": [("display", "none")]},
     ])
 
 
-def snr_table(
+def changes_table(
     data,
     sort="p-value",
     folder_name=None, csv_name=None,
@@ -49,20 +100,12 @@ def snr_table(
     folder_name : str, optional
     csv_name : str, optional
     """
-    # data_name = getattr(data, "name", "Data")
-    # if folder_name is None:
-    #     folder_name = data_name
-    #
-    # if csv_name is None:
-    #     csv_name = "{}-{}.csv".format(
-    #         re.sub("[ ></]", "_", data_name),
-    #         re.sub("[ ></]", "_", data.enrichment),
-    #     )
-
-    # utils.make_folder(folder_name)
-    #
-    # csv_name = os.path.join(folder_name, csv_name)
-
+    csv_name = _prep_csv(
+        data,
+        folder_name=folder_name,
+        csv_name=csv_name,
+        postfix=_get_table_title(running_title=["changes"]),
+    )
     psms = getattr(data, "psms", data)
 
     psms = psms[
@@ -86,8 +129,8 @@ def snr_table(
 
     psms.drop("Modifications", axis=1, inplace=True)
 
-    # if csv_name:
-    #     psms.to_csv(csv_name)
+    if csv_name:
+        psms.to_csv(csv_name)
 
     # back_colors = {
     #     True: "#BBFFBB",  # light green

@@ -36,30 +36,12 @@ from scipy.stats import pearsonr, spearmanr, ttest_ind
 from adjustText.adjustText import adjust_text
 
 from . import fetch_data, utils
-from .tables import snr_table
+from .tables import changes_table as snr_table
 # from .volcano import volcano_plot, plot_volcano_filtered
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
 DEFAULT_DPI = 300
-
-
-def _rewrite_enrichments(lst):
-    mapping = {
-        "MPM2": "pST",
-        "MAPK / CDK": "pST",
-        "MAPK + CDK": "pST",
-        "NTA": "pST",
-        "IMAC": "pST",
-    }
-    return "+".join(
-        sorted(
-            set(
-                mapping.get(i, i)
-                for i in lst
-            )
-        )
-    )
 
 
 def hierarchical_heatmap(
