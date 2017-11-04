@@ -58,12 +58,13 @@ def generate_logos(species, kinases=None, dirname="logos", min_foreground=10):
         f = logo.logo(
             fore=fore,
             back=list(df["SITE_+/-7_AA"]),
+            title=kinase,
         )[0]
         f.savefig(
             os.path.join(dirname, "{}.png".format(kinase)),
             dpi=f.dpi,
             bbox_inches="tight",
-            pad_inches=1,
+            pad_inches=.1,
         )
 
 
