@@ -35,6 +35,11 @@ def _get_table_title(f=None, running_title=None):
                 "Upregulated" if f["asym_fold_cutoff"] > 1 else "Downregulated"
             )
 
+        if "p_cutoff" in f:
+            running_title.append(
+                "p<{:.3e}".format(f["p_cutoff"])
+            )
+
         if "group_a" in f or "group_b" in f:
             running_title.append(
                 "{}vs{}".format(
