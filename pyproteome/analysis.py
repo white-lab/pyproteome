@@ -732,6 +732,9 @@ def correlate_signal(
     scatter_colors = options.get('scatter_colors', {})
     scatter_symbols = options.get('scatter_symbols', {})
 
+    if title is None:
+        title = data.name
+
     cp = data.copy()
 
     signal_groups = [
@@ -854,6 +857,9 @@ def correlate_signal(
         "p-value",
         fontsize=20,
     )
+
+    if title:
+        ax.set_title(title, fontsize=32)
 
     cp.psms = cp.psms[cp.psms["corr p-value"] < pval_cutoff]
 
