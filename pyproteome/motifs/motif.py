@@ -614,8 +614,26 @@ def motif_enrichment(
     fore_size = len(foreground)
     back_size = len(background)
 
-    assert fore_size > 0
     assert back_size > 0
+
+    if fore_size == 0:
+        return (
+            pd.DataFrame(
+                columns=[
+                    "Motif",
+                    "Foreground Hits",
+                    "Foreground Size",
+                    "Background Hits",
+                    "Background Size",
+                    "p-value",
+                    "pp-value",
+                ],
+            ),
+            [],
+            [],
+        )
+
+    assert fore_size > 0
     assert motif_length % 2 == 1
 
     if letter_mod_types is None:
@@ -701,6 +719,7 @@ def motif_enrichment(
             del fg_hit_list[start]
             del bg_hit_list[start]
     except KeyboardInterrupt:
+        LOGGER.info("Keyboard interrupted motif search")
         return
     finally:
         # Output some debugging information to compare with Brian's output
@@ -731,7 +750,8 @@ def motif_enrichment(
         cpu_count=cpu_count,
     ) if pp_value else None
 
-    if pp_dist is not None and len(pp_dist) != len(background):
+    if pp_dist is not None and len(pp_dist) != pp_iterations:
+        LOGGER.info("pp-dist size mismatch")
         return
 
     # Finally prepare the output as a sorted list with the motifs and their
