@@ -80,7 +80,7 @@ def motif_table(
 
     hits = hits[
         hits[
-            "pp-value" if kwargs.get("pp-value", False) else "p-value"
+            "pp-value" if kwargs.get("pp_value", False) else "p-value"
         ] < p_cutoff
     ]
 
