@@ -477,6 +477,14 @@ def _add_cache(args, ret):
         return ret
 
 
+def run_motif_enrichment(data, f, **kwargs):
+    return motif_enrichment(
+        data.filter(**f)["Sequence"],
+        data["Sequence"],
+        **kwargs
+    )
+
+
 def motif_enrichment(
     foreground, background,
     sig_cutoff=0.01, min_fore_hits=0,
@@ -628,7 +636,7 @@ def motif_enrichment(
         letter_mod_types,
         motif_length,
         pp_value,
-        pp_iterations,
+        pp_iterations if pp_value else None,
     )
     if not force:
         cache = _get_cache(cache_args)
