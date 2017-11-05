@@ -65,8 +65,8 @@ def motif_table(
         postfix=_get_table_title(f=f, running_title=["motifs"]),
     )
 
-    hits = motif.motif_enrichment(
-        data.filter(**f)["Sequence"], data["Sequence"],
+    hits = motif.run_motif_enrichment(
+        data, f,
         **kwargs
     )[0]
 
