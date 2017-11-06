@@ -624,7 +624,9 @@ class DataSet:
 
         def filter_psms(new, array):
             assert array.shape[0] == new.psms.shape[0]
-            return new.psms.loc[array] if not inverse else new.psms.loc[~array]
+            return (
+                new.psms.loc[array] if not inverse else new.psms.loc[~array]
+            ).reset_index(drop=True)
 
         if confidence_levels:
             new.psms = filter_psms(
@@ -662,14 +664,19 @@ class DataSet:
                 )
 
         if p_cutoff:
-            new.psms.dropna(subset=("p-value",), inplace=True)
+            new.psms = new.psms.dropna(
+                subset=("p-value",)
+            ).reset_index(drop=True)
             new.psms = filter_psms(
                 new,
                 new.psms["p-value"] <= p_cutoff
             )
 
         if asym_fold_cutoff:
-            new.psms.dropna(subset=("Fold Change",), inplace=True)
+            new.psms = new.psms.dropna(
+                subset=("Fold Change",)
+            ).reset_index(drop=True)
+
             if asym_fold_cutoff > 1:
                 new.psms = filter_psms(
                     new,
@@ -682,7 +689,10 @@ class DataSet:
                 )
 
         if fold_cutoff:
-            new.psms.dropna(subset=("Fold Change",), inplace=True)
+            new.psms = new.psms.dropna(
+                subset=("Fold Change",)
+            ).reset_index(drop=True)
+
             if fold_cutoff < 1:
                 fold_cutoff = 1 / fold_cutoff
 
