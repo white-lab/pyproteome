@@ -539,7 +539,7 @@ def correlate_data_sets(
     merged = pd.merge(
         data1.psms, data2.psms,
         on="Sequence",
-    ).dropna()
+    ).dropna(subset=("Fold Change_x", "Fold Change_y"))
 
     f, ax = plt.subplots()
     ax.scatter(
