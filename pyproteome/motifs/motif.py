@@ -19,8 +19,6 @@ import re
 import pandas as pd
 from scipy.stats import hypergeom
 
-from pyproteome import sequence
-
 
 LOGGER = logging.getLogger("pyproteome.motif")
 
