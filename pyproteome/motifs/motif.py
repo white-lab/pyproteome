@@ -191,6 +191,8 @@ class Motif:
 def get_nmer_args(kwargs):
     nmer_args = {}
 
+    nmer_args["all_matches"] = kwargs.pop("all_matches", False)
+
     nmer_args["letter_mod_types"] = kwargs.pop(
         "letter_mod_types", [(None, "Phospho")],
     )
@@ -291,20 +293,6 @@ def _is_a_submotif_with_same_size(submotif, fore_hits, done):
         for checked, checked_hits in done.items()
         if fore_hits == checked_hits[0] and checked != submotif
     )
-
-
-def _make_nmers(lst, motif_length, letter_mod_types):
-    if isinstance(next(iter(lst)), sequence.Sequence):
-        return list(
-            generate_n_mers(
-                lst,
-                n=motif_length,
-                letter_mod_types=letter_mod_types,
-            )
-        )
-
-    assert all(len(i) == motif_length for i in lst)
-    return lst
 
 
 def _filter_less_specific(prev_pass, done):
@@ -478,19 +466,28 @@ def _add_cache(args, ret):
 
 
 def run_motif_enrichment(data, f, **kwargs):
+    nmer_args = get_nmer_args(kwargs)
+    foreground = sorted(
+        generate_n_mers(data.filter(**f)["Sequence"], **nmer_args)
+    )
+    background = sorted(
+        generate_n_mers(data["Sequence"], **nmer_args)
+    )
+
     return motif_enrichment(
-        data.filter(**f)["Sequence"],
-        data["Sequence"],
+        foreground,
+        background,
         **kwargs
     )
 
 
 def motif_enrichment(
     foreground, background,
-    sig_cutoff=0.01, min_fore_hits=0,
-    start_letters=None, letter_mod_types=None,
-    motif_length=15,
-    pp_value=False, pp_iterations=100,
+    sig_cutoff=0.01,
+    min_fore_hits=0,
+    start_letters=None,
+    pp_value=False,
+    pp_iterations=100,
     cpu_count=None,
     force=False,
 ):
@@ -499,13 +496,11 @@ def motif_enrichment(
 
     Parameters
     ----------
-    foreground : list of :class:`Sequence<pyproteome.sequence.Sequence>`
-    background : list of :class:`Sequence<pyproteome.sequence.Sequence>`
+    foreground : list of str
+    background : list of str
     sig_cutoff : float, optional
     min_fore_hits : int, optional
     start_letters : list of str, optional
-    letter_mod_types : list of tuple of str, str
-    motif_length : int, optional
     pp_value : bool, optional
     pp_iterations : int, optional
     cpu_count : int, optional
@@ -633,16 +628,14 @@ def motif_enrichment(
             [],
         )
 
-    assert fore_size > 0
-    assert motif_length % 2 == 1
-
-    if letter_mod_types is None:
-        letter_mod_types = [(None, "Phospho")]
-
-    foreground = _make_nmers(foreground, motif_length, letter_mod_types)
-    background = _make_nmers(background, motif_length, letter_mod_types)
     fore_size = len(foreground)
     back_size = len(background)
+
+    assert back_size > 0
+    motif_length = len(background[0])
+    assert motif_length % 2 == 1
+    assert all(len(i) == motif_length for i in foreground)
+    assert all(len(i) == motif_length for i in background)
 
     # Cache motif analyses
     cache_args = (
@@ -651,8 +644,6 @@ def motif_enrichment(
         sig_cutoff,
         min_fore_hits,
         start_letters,
-        letter_mod_types,
-        motif_length,
         pp_value,
         pp_iterations if pp_value else None,
     )
@@ -744,9 +735,9 @@ def motif_enrichment(
 
     pp_dist = _generate_ppdist(
         background, fore_size, pp_iterations,
-        sig_cutoff=sig_cutoff, min_fore_hits=min_fore_hits,
-        start_letters=start_letters, letter_mod_types=letter_mod_types,
-        motif_length=motif_length,
+        sig_cutoff=sig_cutoff,
+        min_fore_hits=min_fore_hits,
+        start_letters=start_letters,
         cpu_count=cpu_count,
     ) if pp_value else None
 
