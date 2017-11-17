@@ -168,7 +168,7 @@ class MotifEnrichmentTest(TestCase):
                 ),
             ],
         )
-        self.sequences = motif.generate_n_mers([self.sequence])
+        self.sequences = list(motif.generate_n_mers([self.sequence]))
         self.foreground = self.sequences
         self.background = self.sequences
 
