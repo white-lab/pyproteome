@@ -124,7 +124,7 @@ class GenerateNMersTest(TestCase):
 class MotifEnrichmentTest(TestCase):
     """
     Test that the motif_enrichment function runs without error on a simple
-    set of Sequence objects.
+    list of sequences.
     """
     def setUp(self):
         self.sequence = sequence.Sequence(
@@ -168,7 +168,7 @@ class MotifEnrichmentTest(TestCase):
                 ),
             ],
         )
-        self.sequences = [self.sequence]
+        self.sequences = motif.generate_n_mers([self.sequence])
         self.foreground = self.sequences
         self.background = self.sequences
 
