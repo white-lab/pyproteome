@@ -34,6 +34,7 @@ def _read_peptides(conn, pick_best_ptm=False):
         Peptides.Sequence,
         Peptides.SearchEngineRank AS "Rank",
         Peptides.ConfidenceLevel AS "Confidence Level",
+        Peptides.MissedCleavages AS "Missed Cleavages",
         PeptideScores.ScoreValue AS "IonScore",
         SpectrumHeaders.FirstScan AS "First Scan",
         SpectrumHeaders.LastScan AS "Last Scan",

@@ -147,6 +147,7 @@ class DataSet:
                     "IonScore",
                     "Isolation Interference",
                     "Scan Paths",
+                    "Missed Cleavages",
                 ] + list(self.channels.values()),
             )
 
@@ -296,6 +297,7 @@ class DataSet:
 
             agg_dict[channel] = _nan_sum
 
+        agg_dict["Missed Cleavages"] = max
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
@@ -571,6 +573,7 @@ class DataSet:
         fold_cutoff=None,
         asym_fold_cutoff=None,
         median_quant_signal=None,
+        missed_cleavage_cutoff=None,
         sequence=None,
         sequences=None,
         proteins=None,
@@ -645,6 +648,12 @@ class DataSet:
             new.psms = filter_psms(
                 new,
                 ~(new.psms["Isolation Interference"] > isolation_cutoff)
+            )
+
+        if missed_cleavage_cutoff is not None:
+            new.psms = filter_psms(
+                new,
+                new.psms["Missed Cleavages"] <= missed_cleavage_cutoff,
             )
 
         if median_quant_signal is not None:
