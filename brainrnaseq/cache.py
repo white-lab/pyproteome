@@ -9,7 +9,7 @@ import zlib
 import pandas as pd
 
 # Taken from
-LOGGER = logging.getLogger("brainrnaseq")
+LOGGER = logging.getLogger("brainrnaseq.cache")
 DIR = os.path.abspath(os.path.split(__file__)[0])
 CACHE_DIR = os.path.join(DIR, "cache")
 
@@ -68,6 +68,8 @@ MAPPING_DATA = None
 
 
 def fetch_mapping_data(url):
+    LOGGER.info("Fetching mapping data from {}".format(url))
+
     response = requests.get(url, stream=True)
     response.raise_for_status()
 
@@ -81,6 +83,9 @@ def fetch_mapping_data(url):
         io.StringIO(csv.decode("utf-8")),
         sep="\t",
     )
+
+    LOGGER.info("Read mapping info for {} genes".format(df.shape[0]))
+
     return df
 
 
