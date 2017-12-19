@@ -5,13 +5,17 @@ from . import cache
 def get_mapping(gene, species="Mouse"):
     data = cache.get_mapping_data(species=species)
 
-    try:
-        row = data[
-            data["Symbol"] == gene
-        ].iloc[0]
-    except IndexError:
-        row = data[
-            data["Synonyms"].apply(lambda x: gene in x.split("|"))
-        ].iloc[0]
+    rows = data[
+        data["Symbol"] == gene
+    ]
 
-    return row["Symbol"]
+    if rows.shape[0] > 0:
+        return rows.iloc[0]["Symbol"]
+
+    rows = data[
+        data["Synonyms"].apply(lambda x: gene in x.split("|"))
+    ]
+    if rows.shape[0] > 0:
+        return rows.iloc[0]["Symbol"]
+
+    return None
