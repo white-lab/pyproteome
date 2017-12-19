@@ -8,7 +8,7 @@ Functions include volcano plots, sorted tables, and plotting sequence levels.
 from __future__ import division
 
 # Built-ins
-from collections import Iterable
+from collections import Iterable, OrderedDict
 import itertools
 import logging
 import os
@@ -36,7 +36,7 @@ from scipy.stats import pearsonr, spearmanr, ttest_ind
 from adjustText.adjustText import adjust_text
 
 from . import fetch_data, utils
-from .tables import changes_table as snr_table
+# from .tables import changes_table as snr_table
 # from .volcano import volcano_plot, plot_volcano_filtered
 
 
@@ -474,6 +474,7 @@ def plot_sequence(
         for channel_name in group
         if channel_name in data.channels
     ]
+    channel_names = list(OrderedDict.fromkeys(channel_names))
     channels = [
         data.channels[channel_name]
         for channel_name in channel_names
