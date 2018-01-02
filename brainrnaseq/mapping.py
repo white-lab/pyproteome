@@ -2,20 +2,19 @@
 from . import cache
 
 
-def get_mapping(gene, species="Mouse"):
-    data = cache.get_mapping_data(species=species)
+def get_mapping(gene, species="Mouse", force=False):
+    data = cache.get_mapping_data(species=species, force=force)
 
-    rows = data[
-        data["Symbol"] == gene
-    ]
-
-    if rows.shape[0] > 0:
-        return rows.iloc[0]["Symbol"]
+    try:
+        data.loc[gene]
+        return gene
+    except KeyError:
+        pass
 
     rows = data[
         data["Synonyms"].apply(lambda x: gene in x.split("|"))
     ]
     if rows.shape[0] > 0:
-        return rows.iloc[0]["Symbol"]
+        return rows.index[0]
 
     return None

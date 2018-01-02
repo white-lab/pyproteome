@@ -148,14 +148,14 @@ def get_enrichments(species, add_mappings=True, cutoff=2.5, **kwargs):
         if val[1] >= cutoff
     }
 
-    for _, row in cache.get_mapping_data().iterrows():
-        if row["Symbol"] not in enrichments:
+    for index, row in cache.get_mapping_data().iterrows():
+        if index not in enrichments:
             continue
 
         for syn in row["Synonyms"].split("|"):
             if syn in enrichments or syn == "-":
                 continue
 
-            enrichments[syn] = enrichments[row["Symbol"]]
+            enrichments[syn] = enrichments[index]
 
     return enrichments

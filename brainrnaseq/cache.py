@@ -86,6 +86,8 @@ def fetch_mapping_data(url):
 
     LOGGER.info("Read mapping info for {} genes".format(df.shape[0]))
 
+    df = df.set_index("Symbol")
+
     return df
 
 
@@ -93,11 +95,14 @@ def get_mapping_data(species="Mouse", force=False):
     global MAPPING_DATA
     global MAPPING_CACHE
 
-    if MAPPING_DATA is None and not force:
-        try:
-            with open(MAPPING_CACHE, "rb") as f:
-                MAPPING_DATA = pickle.load(f)
-        except:
+    if MAPPING_DATA is None:
+        if not force:
+            try:
+                with open(MAPPING_CACHE, "rb") as f:
+                    MAPPING_DATA = pickle.load(f)
+            except:
+                MAPPING_DATA = {}
+        else:
             MAPPING_DATA = {}
 
     assert species in MAPPING_URLS
@@ -108,5 +113,8 @@ def get_mapping_data(species="Mouse", force=False):
     MAPPING_DATA[species] = fetch_mapping_data(
         MAPPING_URLS[species]
     )
+
     with open(MAPPING_CACHE, "wb") as f:
         pickle.dump(MAPPING_DATA, f)
+
+    return MAPPING_DATA[species]
