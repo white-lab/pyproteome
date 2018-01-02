@@ -105,7 +105,7 @@ class DataSet:
             estimate of relative abundances.
         merge_subsets : bool, optional
             Merge peptides that are subsets of one another (i.e. "RLK" => "LK")
-        filter_bad : bool, optional
+        filter_bad : bool or dict, optional
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
         """
@@ -114,6 +114,13 @@ class DataSet:
 
         if enrichments is None:
             enrichments = []
+
+        if filter_bad is True:
+            filter_bad = dict(
+                ion_score_cutoff=15,
+                isolation_cutoff=50,
+                median_quant_signal=1000,
+            )
 
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
@@ -169,10 +176,8 @@ class DataSet:
         if filter_bad:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self.filter(
-                ion_score_cutoff=15,
-                isolation_cutoff=50,
                 inplace=True,
-                median_quant_signal=1000,
+                **filter_bad
             )
 
         if pick_best_ptm and (
@@ -441,7 +446,10 @@ class DataSet:
             weight = "{}_weight".format(channel)
 
             if weight not in new.psms.columns:
-                new.psms[weight] = new.psms[channel]
+                new.psms[weight] = (
+                    new.psms[channel] *
+                    (100 - new.psms["Isolation Interference"]) / 100
+                )
 
         # Calculate the mean normalization signal from each shared channel
         new_mean = new.psms[norm_channels].mean(axis=1)
