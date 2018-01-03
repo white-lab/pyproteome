@@ -77,6 +77,7 @@ class NormalizationTest(TestCase):
             "First Scan": {17015},
             "Scan Paths": {"blank"},
             "IonScore": 100,
+            "Isolation Interference": 0,
         }
 
         self.data = data_sets.DataSet(
