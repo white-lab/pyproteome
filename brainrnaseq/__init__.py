@@ -4,7 +4,7 @@ import pickle
 
 import numpy as np
 
-from . import cache, mapping
+from . import cache
 
 # Taken from
 LOGGER = logging.getLogger("brainrnaseq")
@@ -104,7 +104,7 @@ def build_enrichment_table(cell_types=None, force=False):
     LOGGER.info("Calculating cell type enrichment")
     enriched = {}
 
-    for species, data in SPECIES_DATA.items():
+    for species, data in cache.SPECIES_DATA.items():
         enriched[species] = {}
 
         for col in data.columns:
