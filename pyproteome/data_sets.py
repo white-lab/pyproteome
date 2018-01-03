@@ -302,6 +302,19 @@ class DataSet:
 
             agg_dict[channel] = _nan_sum
 
+        def _first(x):
+            if not all(i == x.values[0] for i in x.values):
+                LOGGER.warning(
+                    "Mismatch between peptide data: '{}' not in {}".format(
+                        x.values[0],
+                        [str(i) for i in x.values[1:]],
+                    )
+                )
+
+            return x.values[0]
+
+        agg_dict["Proteins"] = _first
+        agg_dict["Modifications"] = _first
         agg_dict["Missed Cleavages"] = max
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
@@ -311,9 +324,7 @@ class DataSet:
 
         self.psms = self.psms.groupby(
             by=[
-                "Proteins",
                 "Sequence",
-                "Modifications",
             ],
             sort=False,
             as_index=False,
