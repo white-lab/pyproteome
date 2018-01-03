@@ -119,10 +119,10 @@ def changes_table(
             "Fold Change", "p-value", "Validated",
         ]
     ].copy()
-    psms["Sequence"] = [
-        "{} ({})".format(row["Sequence"], row["Modifications"])
-        for _, row in psms.iterrows()
-    ]
+    psms["Sequence"] = psms["Sequence"].apply(
+        lambda x: "{} ({})".format(x, x.modifications)
+    )
+
     if sort == "Fold Change":
         psms["Fold Change-Sort"] = psms["Fold Change"].apply(
             lambda x: max([x, 1 / x])
