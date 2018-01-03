@@ -737,19 +737,16 @@ class DataSet:
         if motif is not None:
             new.psms = filter_psms(
                 new,
-                pd.Series(
-                    [
-                        any(
-                            motif.match(nmer)
-                            for nmer in pymotif.generate_n_mers(
-                                [i["Sequence"]],
-                                letter_mod_types=mod_types,
-                            )
+                new.psms["Sequence"].apply(
+                    lambda x:
+                    any(
+                        motif.match(nmer)
+                        for nmer in pymotif.generate_n_mers(
+                            [x],
+                            letter_mod_types=mod_types,
                         )
-                        for _, i in new.psms.iterrows()
-                    ],
-                    index=new.psms.index,
-                )
+                    )
+                ),
             )
 
         if proteins is not None:
