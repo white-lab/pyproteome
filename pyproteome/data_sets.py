@@ -555,13 +555,15 @@ class DataSet:
 
         return new
 
-    def dropna(self, how="any", inplace=False):
+    def dropna(self, how="any", groups=None, inplace=False):
         """
         Drop any channels with NaN values.
 
         Parameters
         ----------
         how : str, optional
+        groups : list of str, optional
+            Only drop rows with NaN in columns within groups.
         inplace : bool, optional
 
         Returns
@@ -573,10 +575,19 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
+        columns = list(new.channels.values())
+
+        if groups is not None:
+            columns = [
+                col
+                for col in columns
+                if any(col in new.groups[i] for i in groups)
+            ]
+
         new.psms = new.psms.dropna(
             axis=0,
             how=how,
-            subset=list(new.channels.values()),
+            subset=columns,
         ).reset_index(drop=True)
 
         return new

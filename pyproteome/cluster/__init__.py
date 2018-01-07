@@ -11,21 +11,28 @@ import sklearn.cluster
 from . import plot
 
 
-def get_data(ds):
-    ds = ds.filter(ion_score_cutoff=20)
-    ds = ds.dropna(how="any")
+def get_data(ds, dropna=True, groups=None):
+    ds = ds.copy()
+
+    if groups is None:
+        groups = list(ds.groups.keys())
+
+    if dropna:
+        ds = ds.dropna(how="any", groups=groups)
+
     data = ds.data
     data = data.loc[:, ~data.columns.duplicated()]
-    print(data.shape, data.columns)
+    data = data.loc[
+        :,
+        data.columns.isin([col for i in groups for col in ds.groups[i]])
+    ]
 
-    data = data.dropna(how="any")
     names = data.columns
     c = np.corrcoef(data.as_matrix())
     z = zscore(data, axis=1)
 
-    groups = list(enumerate(ds.groups.values()))
     classes = np.array([
-        [x for x in groups if col in x[1]][0][0]
+        [groups.index(i) for i in groups if col in ds.groups[i]][0]
         for col in data.columns
     ])
 
@@ -35,6 +42,7 @@ def get_data(ds):
         "z": z,
         "c": c,
         "names": names,
+        "labels": groups,
         "classes": classes,
     }
 
@@ -47,8 +55,12 @@ def pca(data):
     f, ax = plt.subplots(1, 1, figsize=(6, 6))
     x = sklearn.decomposition.PCA().fit_transform(z.T)
 
-    ax.scatter(x[classes == 1, 0], x[classes == 1, 1], color="k", label="AD")
-    ax.scatter(x[classes == 0, 0], x[classes == 0, 1], color="r", label="Ctrl")
+    for ind, label in enumerate(data["labels"]):
+        ax.scatter(
+            x[classes == ind, 0],
+            x[classes == ind, 1],
+            label=label,
+        )
 
     offset = 0
     for ind, column in enumerate(names):
