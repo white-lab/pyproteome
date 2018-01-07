@@ -6,10 +6,8 @@ spectometry. Currently it only supports data produced by MASCOT / Discoverer
 and CAMV.
 """
 
-from .version import __version__
-
 from . import (
-    analysis, bca, data_sets, discoverer, levels, loading,
+    analysis, bca, cluster, data_sets, discoverer, levels, loading,
     modification, paths, pride, protein, sequence, tables, utils,
     version, volcano,
 )
@@ -20,6 +18,7 @@ from .motifs import (
 __all__ = [
     "analysis",
     "bca",
+    "cluster",
     "data_sets",
     "discoverer",
     "levels",
@@ -33,7 +32,6 @@ __all__ = [
     "utils",
     "version",
     "volcano",
-    "__version__",
 
     "icelogo",
     "logo",

@@ -4,7 +4,7 @@ from pip.req import parse_requirements
 from pip.download import PipSession
 from setuptools import setup, find_packages
 
-from pyproteome import __version__
+from pyproteome import version
 
 
 REQUIREMENTS_PATH = os.path.abspath(
@@ -16,7 +16,7 @@ REQUIREMENTS_PATH = os.path.abspath(
 
 setup(
     name="pyproteome",
-    version=__version__,
+    version=version.__version__,
     description="Package for managing proteomics data",
     url="https://github.com/white-lab/pyproteome",
     author="Nader Morshed",
