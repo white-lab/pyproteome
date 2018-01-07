@@ -35,6 +35,7 @@ def get_data(ds, dropna=True, groups=None):
         [groups.index(i) for i in groups if col in ds.groups[i]][0]
         for col in data.columns
     ])
+    print(data.shape)
 
     return {
         "ds": ds,
