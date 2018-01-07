@@ -15,7 +15,6 @@ from fastcluster import linkage
 def cluster_clusters(data, y_pred):
     ds = data["ds"]
     z = data["z"]
-    c = data["c"]
 
     ss = sorted(
         set(y_pred),
@@ -23,7 +22,8 @@ def cluster_clusters(data, y_pred):
         (
             lambda x, y:
             np.corrcoef(
-                ds[y_pred == x].mean(axis=0), ds[y_pred == y].mean(axis=0)
+                ds[y_pred == x].mean(axis=0),
+                ds[y_pred == y].mean(axis=0),
             )[0, 1]
         )
     )
@@ -52,7 +52,7 @@ def cluster_clusters(data, y_pred):
     }
 
     new_ind = np.argsort(np.vectorize(lambda x: mapping[x])(y_pred))
-    cn = c[new_ind][:, new_ind]
+    cn = np.corrcoef(data["data"].as_matrix()[new_ind])
 
     cmapping = {
         cluster_n: index
@@ -79,9 +79,9 @@ def cluster_corrmap(data, y_pred, colorbar=True, f=None, ax=None):
     elif f is None:
         f = ax.get_figure()
 
-    mapping, new_ind, cmapping, cn = cluster_clusters(data, y_pred)
+    div_scale = max([data["data"].shape[0] // 1000, 5])
 
-    div_scale = 5
+    mapping, new_ind, cmapping, cn = cluster_clusters(data, y_pred)
 
     mesh = ax.pcolormesh(
         cn[::div_scale, ::div_scale],
