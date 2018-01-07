@@ -79,7 +79,7 @@ def cluster_range(data, min_clusters=2, max_clusters=20, cols=3):
             n_clusters=n,
         )
 
-        plot.show_clusters(
+        plot.cluster_corrmap(
             data, y_pred,
             ax=ax,
             colorbar=False,

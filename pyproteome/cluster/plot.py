@@ -66,7 +66,7 @@ def cluster_clusters(data, y_pred):
 
 def _get_folder(data):
     folder_name = os.path.join(
-        data, "Clusters",
+        data["ds"].name, "Clusters",
     )
     utils.make_folder(folder_name)
     return folder_name
