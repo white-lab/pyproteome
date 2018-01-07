@@ -49,6 +49,12 @@ def _get_color(txt, x, y):
     return "#BFEE90" if x > 0 else "#FFC1C1"
 
 
+def _get_folder(data):
+    folder_name = os.path.join(data.name, "Volcano")
+    utils.make_folder(folder_name)
+    return folder_name
+
+
 def volcano_plot(
     data,
     group_a=None,
@@ -100,7 +106,7 @@ def volcano_plot(
         data.update_group_changes(group_a=group_a, group_b=group_b)
 
     if not folder_name:
-        folder_name = data.name
+        folder_name = _get_folder(data)
 
     options = options or {}
 
@@ -111,8 +117,6 @@ def volcano_plot(
     rename = options.get('rename', {})
 
     log_pval_cutoff = -np.log10(pval_cutoff)
-
-    utils.make_folder(folder_name)
 
     if not title:
         title = "{} - {}".format(

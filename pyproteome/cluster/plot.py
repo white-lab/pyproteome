@@ -1,6 +1,9 @@
 
 from math import ceil, sqrt
 from functools import cmp_to_key
+import os
+
+from pyproteome import utils
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -61,7 +64,16 @@ def cluster_clusters(data, y_pred):
     return mapping, new_ind, cmapping, cn
 
 
-def show_clusters(data, y_pred, colorbar=True, f=None, ax=None):
+def _get_folder(data):
+    folder_name = os.path.join(
+        data, "Clusters",
+    )
+    utils.make_folder(folder_name)
+    return folder_name
+
+
+def cluster_corrmap(data, y_pred, colorbar=True, f=None, ax=None):
+    folder_name = _get_folder(data)
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))
     elif f is None:
@@ -97,7 +109,7 @@ def show_clusters(data, y_pred, colorbar=True, f=None, ax=None):
         f.colorbar(mesh)
 
     f.savefig(
-        "HAD-Cluster.png",
+        os.path.join(folder_name, "Cluster-Corrmap.png"),
         bbox_inches="tight", dpi=300,
         transparent=True,
     )
@@ -133,6 +145,7 @@ def plot_cluster(data, y_pred, cluster_n, ax, title=None):
 
 
 def plot_all_clusters(data, y_pred):
+    folder_name = _get_folder(data)
     width = 5
     clusters = sorted(set(y_pred))
     f, axes = plt.subplots(
@@ -140,7 +153,7 @@ def plot_all_clusters(data, y_pred):
         width,
         figsize=(width * 3, int(np.ceil(len(clusters) / width)) * 3),
         sharey=True,
-        # sharex=True,
+        sharex=True,
     )
 
     for cluster_n, ax in zip(sorted(set(y_pred)), axes.ravel()):
@@ -149,13 +162,15 @@ def plot_all_clusters(data, y_pred):
     f.tight_layout(h_pad=1)
 
     f.savefig(
-        "Clusters.png",
+        os.path.join(folder_name, "Clusters.png"),
         bbox_inches="tight", dpi=300,
         transparent=True,
     )
 
 
 def show_cluster(data, y_pred, seq=None, protein=None, f=None, ax=None):
+    folder_name = _get_folder(data)
+
     if ax is None:
         f, ax = plt.subplots(figsize=(6, 6))
     elif f is None:
@@ -198,7 +213,7 @@ def show_cluster(data, y_pred, seq=None, protein=None, f=None, ax=None):
         )
 
     f.savefig(
-        "Cluster-{}.png".format(cluster),
+        os.path.join(folder_name, "Cluster-{}.png".format(cluster)),
         bbox_inches="tight", dpi=300,
         transparent=True,
     )
@@ -210,6 +225,8 @@ def show_cluster(data, y_pred, seq=None, protein=None, f=None, ax=None):
 
 
 def show_peptide_clusters(data, y_pred, filters, cols=4):
+    folder_name = _get_folder(data)
+
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(
         cols, rows,
@@ -224,5 +241,11 @@ def show_peptide_clusters(data, y_pred, filters, cols=4):
 
     for ax in ax_iter:
         ax.axis('off')
+
+    f.savefig(
+        os.path.join(folder_name, "PeptideClusters.png"),
+        bbox_inches="tight", dpi=300,
+        transparent=True,
+    )
 
     return f, axes

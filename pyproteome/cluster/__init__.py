@@ -50,7 +50,7 @@ def pca(data):
     ax.scatter(x[classes == 1, 0], x[classes == 1, 1], color="k", label="AD")
     ax.scatter(x[classes == 0, 0], x[classes == 0, 1], color="r", label="Ctrl")
 
-    offset = 5
+    offset = 0
     for ind, column in enumerate(names):
         ax.text(
             x=x[ind, 0] + offset,
