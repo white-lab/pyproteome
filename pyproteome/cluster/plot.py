@@ -116,11 +116,12 @@ def cluster_corrmap(data, y_pred, colorbar=True, f=None, ax=None):
     return f
 
 
-def plot_cluster(data, y_pred, cluster_n, ax, title=None):
+def plot_cluster(data, y_pred, cluster_n, ax, ylabel=True, title=None):
     z = data["z"]
     names = data["names"]
 
     dad = z[y_pred.as_matrix() == cluster_n]
+    n = dad.shape[0]
     div_scale = max([dad.shape[0] // 100, 1])
     print(dad.shape, div_scale)
     dad = dad[::div_scale]
@@ -137,32 +138,35 @@ def plot_cluster(data, y_pred, cluster_n, ax, title=None):
         color='k',
     )
 
-    ax.set_ylabel("Z-scored Change")
+    if ylabel:
+        ax.set_ylabel("Z-scored Change")
     ax.set_xticks(range(dad.shape[1]))
     ax.set_xticklabels(names, rotation=45, horizontalalignment="right")
     ax.set_title(
-        "Cluster #{}, N={}".format(cluster_n, dad.shape[0])
+        "Cluster #{}, N={}".format(cluster_n, n)
         if title is None else
         title
     )
 
 
-def plot_all_clusters(data, y_pred):
+def plot_all_clusters(data, y_pred, cols=4):
     folder_name = _get_folder(data)
-    width = 5
     clusters = sorted(set(y_pred))
     f, axes = plt.subplots(
-        int(np.ceil(len(clusters) / width)),
-        width,
-        figsize=(width * 3, int(np.ceil(len(clusters) / width)) * 3),
+        int(np.ceil(len(clusters) / cols)),
+        cols,
+        figsize=(cols * 3, int(np.ceil(len(clusters) / cols)) * 3),
         sharey=True,
         sharex=True,
     )
 
     ax_iter = iter(axes.ravel())
 
-    for cluster_n, ax in zip(sorted(set(y_pred)), ax_iter):
-        plot_cluster(data, y_pred, cluster_n, ax)
+    for ind, (cluster_n, ax) in enumerate(zip(sorted(set(y_pred)), ax_iter)):
+        plot_cluster(
+            data, y_pred, cluster_n, ax,
+            ylabel=ind % cols == 0,
+        )
 
     for ax in ax_iter:
         ax.axis('off')
@@ -176,7 +180,10 @@ def plot_all_clusters(data, y_pred):
     )
 
 
-def show_cluster(data, y_pred, seq=None, protein=None, f=None, ax=None):
+def show_cluster(
+    data, y_pred,
+    seq=None, protein=None, f=None, ylabel=True, ax=None,
+):
     folder_name = _get_folder(data)
 
     if ax is None:
@@ -203,7 +210,7 @@ def show_cluster(data, y_pred, seq=None, protein=None, f=None, ax=None):
         (dp[y_pred == cluster]).shape[0],
         protein,
     )
-    plot_cluster(data, y_pred, cluster, ax, title=title)
+    plot_cluster(data, y_pred, cluster, ax, ylabel=ylabel, title=title)
 
     if seq is not None:
         ax.plot(
@@ -244,8 +251,13 @@ def show_peptide_clusters(data, y_pred, filters, cols=4):
     )
     ax_iter = iter(axes.ravel())
 
-    for fil in filters:
-        show_cluster(data, y_pred, ax=next(ax_iter), **fil)
+    for ind, (fil, ax) in enumerate(zip(filters, ax_iter)):
+        show_cluster(
+            data, y_pred,
+            ax=ax,
+            ylabel=ind % cols == 0,
+            **fil
+        )
 
     for ax in ax_iter:
         ax.axis('off')
