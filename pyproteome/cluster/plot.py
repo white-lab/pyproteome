@@ -121,6 +121,9 @@ def plot_cluster(data, y_pred, cluster_n, ax, title=None):
     names = data["names"]
 
     dad = z[y_pred.as_matrix() == cluster_n]
+    div_scale = max([dad.shape[0] // 100, 1])
+    print(dad.shape, div_scale)
+    dad = dad[::div_scale]
 
     for i in range(dad.shape[0]):
         ax.plot(
@@ -156,8 +159,13 @@ def plot_all_clusters(data, y_pred):
         sharex=True,
     )
 
-    for cluster_n, ax in zip(sorted(set(y_pred)), axes.ravel()):
+    ax_iter = iter(axes.ravel())
+
+    for cluster_n, ax in zip(sorted(set(y_pred)), ax_iter):
         plot_cluster(data, y_pred, cluster_n, ax)
+
+    for ax in ax_iter:
+        ax.axis('off')
 
     f.tight_layout(h_pad=1)
 
@@ -229,7 +237,7 @@ def show_peptide_clusters(data, y_pred, filters, cols=4):
 
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(
-        cols, rows,
+        rows, cols,
         figsize=(cols * 4, rows * 4),
         sharex=True,
         sharey=True,
