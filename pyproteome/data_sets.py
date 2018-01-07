@@ -611,6 +611,7 @@ class DataSet:
         only_validated=False,
         scan_paths=None,
         motif=None,
+        series=None,
         inverse=False,
         inplace=False,
     ):
@@ -631,6 +632,7 @@ class DataSet:
         only_validated : bool, optional
         scan_paths : list of str, optional
         motif : :class:`pyproteome.motif.Motif`, optional
+        series : :class:`pd.Series`, optional
         inplace : bool, optional
 
         Returns
@@ -758,6 +760,12 @@ class DataSet:
                         )
                     )
                 ),
+            )
+
+        if series is not None:
+            new.psms = filter_psms(
+                new,
+                series,
             )
 
         if proteins is not None:
