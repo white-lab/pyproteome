@@ -40,7 +40,7 @@ normalizing the phosphotyrosine run to the media channel levels in a supernatant
 dilution.
 
 ```
->>> from pyproteome import analysis, data_sets, levels,
+>>> from pyproteome import *
 >>> from collections import OrderedDict
 >>> ck_channels = OrderedDict([
 ...     ("3130 CK",     "126"),
@@ -56,7 +56,7 @@ dilution.
 ... ])
 >>> ck_name = "CK-p25 vs. CK, 2 weeks"
 >>> ck_h1_py = data_sets.DataSet(
-...     mascot_name="2015-09-11-CKH1-pY-imac14-elute-pre35-colAaron250",
+...     mascot_name="2015-09-11-CKH1-pY",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
 ...     name="CKH1",
@@ -64,17 +64,15 @@ dilution.
 ...     tissues=["Hippocampus"],
 ... )
 ... ck_h1_global = data_sets.DataSet(
-...     mascot_name="2015-09-18-CKH1-pY-2-sup-10-preRaven-colAaron250",
+...     mascot_name="2015-09-18-CKH1-pY-sup",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
 ...     name="CKH1",
 ...     tissues=["Hippocampus"],
-...     merge_duplicates=False,
-...     merge_subsets=False,
 ... )
->>> ck_h1_channel_levels = levels.get_channel_levels(ck_h1_global.filter(ion_score_cutoff=20))
+>>> ck_h1_channel_levels = levels.get_channel_levels(ck_h1_global)
 >>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_channel_levels)
->>> analysis.snr_table(ck_h1_py_norm.filter(p_cutoff=0.05), sort="Fold Change"))
+>>> tables.changes_table(ck_h1_py_norm.filter(p_cutoff=0.05), sort="Fold Change"))
 ```
 
 ## Directory Hierarchy

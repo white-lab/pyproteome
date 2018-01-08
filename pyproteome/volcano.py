@@ -59,7 +59,8 @@ def volcano_plot(
     data,
     group_a=None,
     group_b=None,
-    pval_cutoff=0.05, fold_cutoff=1.25,
+    p_cutoff=0.05,
+    fold_cutoff=1.25,
     fold_and_p=True,
     xminmax=None, yminmax=None,
     options=None,
@@ -116,7 +117,7 @@ def volcano_plot(
     edgecolors = options.get('edgecolors', {})
     rename = options.get('rename', {})
 
-    log_pval_cutoff = -np.log10(pval_cutoff)
+    log_p_cutoff = -np.log10(p_cutoff)
 
     if not title:
         title = "{} - {}".format(
@@ -147,8 +148,8 @@ def volcano_plot(
     ]
 
     if bonferoni:
-        pval_cutoff = pval_cutoff / len(rows)
-        log_pval_cutoff = -np.log10(pval_cutoff)
+        p_cutoff = p_cutoff / len(rows)
+        log_p_cutoff = -np.log10(p_cutoff)
 
     # Calculate the Fold-Change / p-values
     pvals = []
@@ -214,10 +215,10 @@ def volcano_plot(
                 i in show
                 for i in names
             ) or ((
-                row_pval > log_pval_cutoff and
+                row_pval > log_p_cutoff and
                 (row_change > upper_fold or row_change < lower_fold)
             ) if fold_and_p else (
-                row_pval > log_pval_cutoff or
+                row_pval > log_p_cutoff or
                 (row_change > upper_fold or row_change < lower_fold)
             ))
         ):
@@ -274,8 +275,8 @@ def volcano_plot(
                     for tick in ax.get_yticks()
                     if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
                     ["1", "5"] and
-                    tick > log_pval_cutoff
-                ] + [log_pval_cutoff]
+                    tick > log_p_cutoff
+                ] + [log_p_cutoff]
             )
         )
     )
@@ -311,9 +312,9 @@ def volcano_plot(
             fontsize=20,
         )
 
-    if not np.isnan(log_pval_cutoff):
+    if not np.isnan(log_p_cutoff):
         ax.axhline(
-            log_pval_cutoff,
+            log_p_cutoff,
             color="r", linestyle="dashed", linewidth=0.5,
         )
 
