@@ -315,12 +315,12 @@ class DataSet:
 
         agg_dict["Proteins"] = _first
         agg_dict["Modifications"] = _first
-        agg_dict["Missed Cleavages"] = max
+        agg_dict["Missed Cleavages"] = _first
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
         agg_dict["IonScore"] = max
-        agg_dict["Isolation Interference"] = max
+        agg_dict["Isolation Interference"] = min
 
         self.psms = self.psms.groupby(
             by=[
@@ -423,7 +423,7 @@ class DataSet:
 
         Parameters
         ----------
-        other_channels : list of str, optional
+        norm_channels : list of str, optional
         other : :class:`DataSet<pyproteome.data_sets.DataSet>`, optional
         inplace : bool, optional
             Modify this data set in place.
@@ -446,6 +446,9 @@ class DataSet:
 
         if norm_channels is None:
             norm_channels = set(new.channels).intersection(other.channels)
+
+        if len(norm_channels) == 0:
+            return new
 
         # Filter norm channels to include only those in other data set
         norm_channels = [
@@ -591,6 +594,22 @@ class DataSet:
         ).reset_index(drop=True)
 
         return new
+
+    def add_peptide(self, insert):
+        defaults = {
+            "Validated": False,
+            "First Scan": set(),
+            "Scan Paths": set(),
+            "IonScore": 100,
+            "Isolation Interference": 0,
+            "Missed Cleavages": 0,
+        }
+
+        for key, val in defaults.items():
+            if key not in insert:
+                insert[key] = val
+
+        self.psms = self.psms.append(pd.Series(insert), ignore_index=True)
 
     def filter(
         self,
@@ -936,7 +955,7 @@ class DataSet:
                 )[1]
 
                 if ma.is_masked(pvals):
-                    pvals = np.nan
+                    pvals = ma.fix_invalid(pvals, fill_value=np.nan)
                 elif pvals.shape == ():
                     pvals = [pvals]
 

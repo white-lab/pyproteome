@@ -5,7 +5,6 @@ from unittest import TestCase
 
 from pyproteome import data_sets, loading, modification, protein
 
-import pandas as pd
 import numpy as np
 from collections import OrderedDict
 
@@ -73,11 +72,6 @@ class NormalizationTest(TestCase):
             "129": 4e4,
             "130": 4e4,
             "131": 1e4,
-            "Validated": True,
-            "First Scan": {17015},
-            "Scan Paths": {"blank"},
-            "IonScore": 100,
-            "Isolation Interference": 0,
         }
 
         self.data = data_sets.DataSet(
@@ -85,10 +79,7 @@ class NormalizationTest(TestCase):
             groups=self.groups,
         )
 
-        self.data.psms = self.data.psms.append(
-            pd.Series(insert),
-            ignore_index=True,
-        )
+        self.data.add_peptide(insert)
 
     def test_dropna(self):
         psms = self.data.dropna()
