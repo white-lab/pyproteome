@@ -924,7 +924,8 @@ class DataSet:
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 self.psms["Fold Change"] = pd.Series(
                     np.nanmean(self.psms[channels_a], axis=1) /
-                    np.nanmean(self.psms[channels_b], axis=1)
+                    np.nanmean(self.psms[channels_b], axis=1),
+                    index=self.psms.index,
                 )
 
                 pvals = ttest_ind(
@@ -934,12 +935,12 @@ class DataSet:
                     nan_policy="omit",
                 )[1]
 
-                if pvals is ma.masked:
+                if ma.is_masked(pvals):
                     pvals = np.nan
                 elif pvals.shape == ():
                     pvals = [pvals]
 
-                self.psms["p-value"] = pd.Series(pvals)
+                self.psms["p-value"] = pd.Series(pvals, index=self.psms.index)
         else:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
