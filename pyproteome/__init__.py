@@ -16,52 +16,51 @@ from .motifs import (
 )
 
 from IPython import get_ipython
-from IPython.core.magic import (
-    register_line_magic
-)
+from IPython.core.magic import register_line_magic
 
 
-@register_line_magic
-def import_all(line=None):
-    ip = get_ipython()
-    ip.run_line_magic(
-        "config",
-        "InlineBackend.figure_formats = ['retina']",
-    )
-    ip.run_line_magic("load_ext", "autoreload")
-    ip.run_line_magic("autoreload", "2")
-    ip.run_line_magic("aimport", "pyproteome")
-    ip.run_line_magic("aimport", "brainrnaseq")
-    ip.run_line_magic("pylab", "inline")
+if get_ipython() is not None:
+    @register_line_magic
+    def import_all(line=None):
+        ip = get_ipython()
+        ip.run_line_magic(
+            "config",
+            "InlineBackend.figure_formats = ['retina']",
+        )
+        ip.run_line_magic("load_ext", "autoreload")
+        ip.run_line_magic("autoreload", "2")
+        ip.run_line_magic("aimport", "pyproteome")
+        ip.run_line_magic("aimport", "brainrnaseq")
+        ip.run_line_magic("pylab", "inline")
 
-    ip.ex(
-        "\n".join([
-            "from collections import OrderedDict, Counter",
-            "import os",
-            "import pickle",
-            "from IPython.display import display",
+        ip.ex(
+            "\n".join([
+                "from collections import OrderedDict, Counter",
+                "import os",
+                "import pickle",
+                "from IPython.display import display",
 
-            "import numpy as np",
-            "import pandas as pd",
-            "import seaborn as sns",
-            "import sklearn",
+                "import numpy as np",
+                "import pandas as pd",
+                "import seaborn as sns",
+                "import sklearn",
 
-            "pylab.rcParams['figure.figsize'] = (12, 8)",
-            "pylab.rcParams['mathtext.default'] = 'regular'",
-            "pylab.rcParams['figure.max_open_warning'] = 0",
+                "pylab.rcParams['figure.figsize'] = (12, 8)",
+                "pylab.rcParams['mathtext.default'] = 'regular'",
+                "pylab.rcParams['figure.max_open_warning'] = 0",
 
-            "sns.set_style('white')",
-            "sns.set_context('notebook')",
+                "sns.set_style('white')",
+                "sns.set_context('notebook')",
 
-            'pd.set_option("display.max_colwidth", 500)',
-            'pd.set_option("display.max_rows", 500)',
+                'pd.set_option("display.max_colwidth", 500)',
+                'pd.set_option("display.max_rows", 500)',
 
-            "import logging",
-            "root = logging.getLogger()",
-            "if not root.handlers: root.addHandler(logging.StreamHandler())",
-            "logging.getLogger().setLevel(logging.INFO)",
-        ])
-    )
+                "import logging",
+                "root = logging.getLogger()",
+                "if not root.handlers: root.addHandler(logging.StreamHandler())",
+                "logging.getLogger().setLevel(logging.INFO)",
+            ])
+        )
 
 
 __all__ = [
