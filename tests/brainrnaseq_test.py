@@ -1,0 +1,56 @@
+from unittest import TestCase
+
+import brainrnaseq as brs
+
+
+class BrainRNASeqTest(TestCase):
+    def test_mapping_data(self):
+        for species in ["Human", "Mouse"]:
+            for attempt in range(3):
+                map = brs.cache.get_mapping_data(
+                    species=species,
+                )
+
+                self.assertInstance(
+                    map,
+                    dict,
+                )
+
+    def test_mapping(self):
+        for attempt in range(3):
+            self.assertEqual(
+                brs.mapping.get_mapping(
+                    gene="Jak2",
+                    species="Mouse",
+                ),
+                "Jak2",
+            )
+
+            self.assertEqual(
+                brs.mapping.get_mapping(
+                    gene="JAK2",
+                    species="Human",
+                ),
+                "JAK2",
+            )
+
+    def test_enrichment_table(self):
+        for attempt in range(3):
+            tab = brs.enrichments.build_enrichment_table()
+
+            self.assertInstance(
+                tab,
+                dict,
+            )
+
+    def test_enrichments(self):
+        for species in ["Human", "Mouse"]:
+            for attempt in range(3):
+                enrich = brs.enrichments.get_enrichments(
+                    species=species,
+                )
+
+                self.assertInstance(
+                    enrich,
+                    dict,
+                )

@@ -3,4 +3,7 @@ from unittest import TestCase
 
 class ImportTest(TestCase):
     def test_imports(self):
-        from pyproteome import *
+        import pyproteome
+        import pyproteome.cluster
+        import pyproteome.motif
+        import brainrnaseq
