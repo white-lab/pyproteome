@@ -2,6 +2,8 @@ from unittest import TestCase
 
 import brainrnaseq as brs
 
+import pandas as pd
+
 
 class BrainRNASeqTest(TestCase):
     def test_mapping_data(self):
@@ -13,7 +15,7 @@ class BrainRNASeqTest(TestCase):
 
                 self.assertIsInstance(
                     map,
-                    dict,
+                    pd.DataFrame,
                 )
 
     def test_mapping(self):
