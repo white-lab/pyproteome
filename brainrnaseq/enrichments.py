@@ -4,7 +4,8 @@ import logging
 
 import numpy as np
 
-from . import cache, DEFAULT_CELL_TYPES, CELL_TYPE_COLS
+import brainrnaseq as brs
+from . import cache
 
 LOGGER = logging.getLogger("brainrnaseq.enrichments")
 
@@ -18,7 +19,7 @@ def build_enrichment_table(cell_types=None, force=False):
             pass
 
     if cell_types is None:
-        cell_types = DEFAULT_CELL_TYPES
+        cell_types = brs.DEFAULT_CELL_TYPES
 
     cache.get_barres_seq_data(force=force)
 
@@ -38,14 +39,14 @@ def build_enrichment_table(cell_types=None, force=False):
         for _, row in data.iterrows():
             if any(
                 isinstance(row[col], str)
-                for cols in CELL_TYPE_COLS[species].values()
+                for cols in brs.CELL_TYPE_COLS[species].values()
                 for col in cols
             ):
                 continue
 
             means = {
                 cell_type: np.nanmean(np.array(row[cols].values, dtype=float))
-                for cell_type, cols in CELL_TYPE_COLS[species].items()
+                for cell_type, cols in brs.CELL_TYPE_COLS[species].items()
                 if cell_type in cell_types
             }
             max_cell, max_mean = max(means.items(), key=lambda x: x[1])
