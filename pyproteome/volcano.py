@@ -121,7 +121,7 @@ def volcano_plot(
 
     if not title:
         title = "{} - {}".format(
-            data.tissue,
+            data.name,
             data.enrichment,
         )
 
