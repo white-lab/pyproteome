@@ -44,11 +44,13 @@ def get_barres_seq_data(force=False):
     LOGGER.info("Reading Barres RNA Seq Data")
     SPECIES_DATA = {
         "Human": pd.read_excel(
-            BARRES_SEQ_PATH, sheetname="Human data only",
+            BARRES_SEQ_PATH,
+            sheet_name="Human data only",
             skiprows=[0],
         ),
         "Mouse": pd.read_excel(
-            BARRES_SEQ_PATH, sheetname="Mouse data only",
+            BARRES_SEQ_PATH,
+            sheet_name="Mouse data only",
             skiprows=[0],
         ),
     }

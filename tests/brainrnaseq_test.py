@@ -11,7 +11,7 @@ class BrainRNASeqTest(TestCase):
                     species=species,
                 )
 
-                self.assertInstance(
+                self.assertIsInstance(
                     map,
                     dict,
                 )
@@ -38,7 +38,7 @@ class BrainRNASeqTest(TestCase):
         for attempt in range(3):
             tab = brs.enrichments.build_enrichment_table()
 
-            self.assertInstance(
+            self.assertIsInstance(
                 tab,
                 dict,
             )
@@ -50,7 +50,7 @@ class BrainRNASeqTest(TestCase):
                     species=species,
                 )
 
-                self.assertInstance(
+                self.assertIsInstance(
                     enrich,
                     dict,
                 )
