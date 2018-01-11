@@ -161,6 +161,12 @@ class IntegrationTest(TestCase):
         for _, data in self.data.items():
             volcano.volcano_plot(data)
 
+    def test_plot_volcano_filtered(self):
+        self.test_normalize_data()
+
+        for _, data in self.data.items():
+            volcano.plot_volcano_filtered(data, {"asym_fold_cutoff": 1.25})
+
     def test_write_full_tables(self):
         merge = self.test_merge_data()
 
