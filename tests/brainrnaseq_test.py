@@ -22,11 +22,11 @@ class BrainRNASeqTest(TestCase):
                     pd.DataFrame,
                 )
                 self.assertEqual(
-                    map.iloc[0],
+                    map.iloc[0]["Gene"],
                     items[species][0],
                 )
                 self.assertEqual(
-                    map.iloc[-1],
+                    map.iloc[-1]["Gene"],
                     items[species][1],
                 )
 
