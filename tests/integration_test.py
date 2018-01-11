@@ -4,6 +4,8 @@ import os
 import requests
 from unittest import TestCase
 
+import pylab
+
 from pyproteome import (
     analysis, data_sets, levels, logo, paths, tables, volcano,
 )
@@ -37,6 +39,8 @@ class IntegrationTest(TestCase):
                     f.write(block)
 
     def setUp(self):
+        pylab.rcParams['figure.max_open_warning'] = 0
+
         paths.set_base_dir(os.path.abspath("."))
         self._fetch_data()
 
