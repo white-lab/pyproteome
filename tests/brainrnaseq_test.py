@@ -8,8 +8,8 @@ import pandas as pd
 class BrainRNASeqTest(TestCase):
     def test_mapping_data(self):
         items = {
-            "Human": ["1/2-SBSRNA4", "ZZZ3"],
-            "Mouse": ["0610005C13Rik", "Zzz3"],
+            "Human": ["Gene", "1/2-SBSRNA4", "ZZZ3"],
+            "Mouse": ["gene", "0610005C13Rik", "Zzz3"],
         }
         for species in ["Human", "Mouse"]:
             for attempt in range(3):
@@ -17,17 +17,20 @@ class BrainRNASeqTest(TestCase):
                     species=species,
                 )
 
+                print(map.iloc[0])
+                print(map.iloc[-1])
+
                 self.assertIsInstance(
                     map,
                     pd.DataFrame,
                 )
                 self.assertEqual(
-                    map.iloc[0]["Gene"],
-                    items[species][0],
+                    map.iloc[0][items[species][0]],
+                    items[species][1],
                 )
                 self.assertEqual(
-                    map.iloc[-1]["Gene"],
-                    items[species][1],
+                    map.iloc[-1][items[species][0]],
+                    items[species][2],
                 )
 
     def test_mapping(self):
