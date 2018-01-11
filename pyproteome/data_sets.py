@@ -34,6 +34,7 @@ class DataSet:
 
     Attributes
     ----------
+    mascot_name : str, optional
     psms : :class:`pandas.DataFrame`
         Contains at least "Proteins", "Sequence", and "Modifications" columns.
     channels : dict of str, str
@@ -54,9 +55,9 @@ class DataSet:
     """
     def __init__(
         self,
+        mascot_name=None,
         channels=None,
         psms=None,
-        mascot_name=None,
         camv_name=None,
         groups=None,
         phenotypes=None,
