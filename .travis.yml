@@ -14,6 +14,7 @@ python:
 - '3.6'
 
 before_install:
+# Install miniconda packages to speed up / resolve install issuesa
 - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
   -O miniconda.sh ; else wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
   -O miniconda.sh ; fi
@@ -21,6 +22,9 @@ before_install:
 - export PATH=/home/travis/mc/bin:$PATH
 - export CONDA_PACKAGES="numpy scipy matplotlib pandas scikit-learn seaborn
   biopython pyzmq"
+# Start X server for matplotlib
+- "export DISPLAY=:99.0"
+- "sh -e /etc/init.d/xvfb start"
 
 install:
 - conda config --set always_yes yes --set changeps1 no
