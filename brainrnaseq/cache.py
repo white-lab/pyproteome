@@ -13,15 +13,37 @@ LOGGER = logging.getLogger("brainrnaseq.cache")
 DIR = os.path.abspath(os.path.split(__file__)[0])
 CACHE_DIR = os.path.join(DIR, "cache")
 
+# BARRES_SEQ_URL = (
+#     "https://web.stanford.edu/group/barres_lab/brainseq2/"
+#     "TableS4-HumanMouseMasterFPKMList.xlsx"
+# )
 BARRES_SEQ_URL = (
-    "https://web.stanford.edu/group/barres_lab/brainseq2/"
-    "TableS4-HumanMouseMasterFPKMList.xlsx"
+    "https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/"
+    "TableS4-HumanMouseMasterFPKMList.xlsx?raw=true"
 )
 BARRES_DATA_NAME = "TableS4-HumanMouseMasterFPKMList.xlsx"
 
 BARRES_SEQ_PATH = os.path.join(CACHE_DIR, BARRES_DATA_NAME)
+
+# MAPPING_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/"
+# HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz"
+# MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz"
+MAPPING_URL = (
+    "https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/"
+)
+HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz?raw=true"
+MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz?raw=true"
+
+MAPPING_URLS = {
+    "Human": HUMAN_MAPPING_URL,
+    "Mouse": MOUSE_MAPPING_URL
+}
+
 ENRICHMENT_CACHE = os.path.join(CACHE_DIR, "enrichment_cache.pickle")
+MAPPING_CACHE = os.path.join(CACHE_DIR, "mapping_cache.pickle")
 SPECIES_DATA = {}
+MAPPING_DATA = None
+
 
 try:
     os.makedirs(CACHE_DIR)
@@ -54,19 +76,6 @@ def get_barres_seq_data(force=False):
             skiprows=[0],
         ),
     }
-
-
-MAPPING_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/"
-HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz"
-MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz"
-MAPPING_CACHE = os.path.join(CACHE_DIR, "mapping_cache.pickle")
-
-MAPPING_URLS = {
-    "Human": HUMAN_MAPPING_URL,
-    "Mouse": MOUSE_MAPPING_URL
-}
-
-MAPPING_DATA = None
 
 
 def fetch_mapping_data(url):
