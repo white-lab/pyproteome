@@ -82,7 +82,7 @@ class BrainRNASeqTest(TestCase):
                     gene="AP-1",
                     species="Human",
                 ),
-                "JUN",
+                "FOS",
             )
 
     def test_barres_seq_data(self):
