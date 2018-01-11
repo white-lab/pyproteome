@@ -116,7 +116,13 @@ def get_mapping_data(species="Mouse", force=False):
         MAPPING_URLS[species]
     )
 
-    with open(MAPPING_CACHE, "wb") as f:
-        pickle.dump(MAPPING_DATA, f)
+    try:
+        with open(MAPPING_CACHE, "wb") as f:
+            pickle.dump(MAPPING_DATA, f)
+    except Exception as e:
+        LOGGER.warning(
+            "Unable to save mapping information to cache: {}"
+            .format(e)
+        )
 
     return MAPPING_DATA[species]

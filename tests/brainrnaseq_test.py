@@ -13,7 +13,7 @@ class BrainRNASeqTest(TestCase):
         }
 
         for species in ["Human", "Mouse"]:
-            for attempt in range(2):
+            for _ in range(2):
                 map = brs.cache.get_mapping_data(
                     species=species,
                 )
@@ -39,22 +39,50 @@ class BrainRNASeqTest(TestCase):
                     items[species][3],
                 )
 
-    def test_mapping(self):
-        for attempt in range(2):
-            self.assertEqual(
-                brs.mapping.get_mapping(
-                    gene="Jak2",
-                    species="Mouse",
-                ),
-                "Jak2",
+            map = brs.cache.get_mapping_data(
+                species=species,
+                force=True,
             )
+            self.assertIsInstance(
+                map,
+                pd.DataFrame,
+            )
+
+    def test_mapping(self):
+        for _ in range(2):
+            for gene in ["Jak2", "Fd17"]:
+                self.assertEqual(
+                    brs.mapping.get_mapping(
+                        gene=gene,
+                        species="Mouse",
+                    ),
+                    "Jak2",
+                )
 
             self.assertEqual(
                 brs.mapping.get_mapping(
-                    gene="JAK2",
+                    gene="NaNNaNNaN",
+                    species="Mouse",
+                ),
+                None,
+            )
+
+            for gene in ["JAK2", "JTK10", "THCYT3"]:
+                self.assertEqual(
+                    brs.mapping.get_mapping(
+                        gene=gene,
+                        species="Human",
+                    ),
+                    "JAK2",
+                )
+
+            # Ambiguous gene
+            self.assertEqual(
+                brs.mapping.get_mapping(
+                    gene="AP-1",
                     species="Human",
                 ),
-                "JAK2",
+                "JUN",
             )
 
     def test_barres_seq_data(self):
@@ -76,7 +104,7 @@ class BrainRNASeqTest(TestCase):
             )
 
     def test_enrichment_table(self):
-        for attempt in range(2):
+        for _ in range(2):
             tab = brs.enrichments.build_enrichment_table()
 
             self.assertIsInstance(
@@ -125,7 +153,7 @@ class BrainRNASeqTest(TestCase):
             },
         }
         for species in ["Human", "Mouse"]:
-            for attempt in range(2):
+            for _ in range(2):
                 enrich = brs.enrichments.get_enrichments(
                     species=species,
                 )

@@ -37,29 +37,6 @@ def build_enrichment_table(cell_types=None, force=False):
         data = data.drop_duplicates(subset=gene_col_name)
 
         for _, row in data.iterrows():
-            if any(
-                isinstance(row[col], str)
-                for cols in brs.CELL_TYPE_COLS[species].values()
-                for col in cols
-            ):
-                continue
-
-            try:
-                means = {
-                    cell_type: np.nanmean(
-                        np.array(row[cols].values, dtype=float)
-                    )
-                    for cell_type, cols in brs.CELL_TYPE_COLS[species].items()
-                    if cell_type in cell_types
-                }
-            except:
-                print(row)
-                print([
-                    row[cols].values
-                    for cell_type, cols in brs.CELL_TYPE_COLS[species].items()
-                    if cell_type in cell_types
-                ])
-
             means = {
                 cell_type: np.nanmean(np.array(row[cols].values, dtype=float))
                 for cell_type, cols in brs.CELL_TYPE_COLS[species].items()
@@ -73,8 +50,11 @@ def build_enrichment_table(cell_types=None, force=False):
     try:
         with open(cache.ENRICHMENT_CACHE, "wb") as f:
             pickle.dump(enriched, f)
-    except:
-        pass
+    except Exception as e:
+        LOGGER.warning(
+            "Unable to save enrichment information to cache: {}"
+            .format(e)
+        )
 
     return enriched
 
