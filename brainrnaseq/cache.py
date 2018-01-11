@@ -47,7 +47,7 @@ def get_barres_seq_data(force=False):
             BARRES_SEQ_PATH,
             sheet_name="Human data only",
             skiprows=[0],
-        ),
+        ).iloc[1:],
         "Mouse": pd.read_excel(
             BARRES_SEQ_PATH,
             sheet_name="Mouse data only",

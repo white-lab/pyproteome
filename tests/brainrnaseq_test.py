@@ -7,6 +7,10 @@ import pandas as pd
 
 class BrainRNASeqTest(TestCase):
     def test_mapping_data(self):
+        items = {
+            "Human": ["1/2-SBSRNA4", "ZZZ3"],
+            "Mouse": ["0610005C13Rik", "Zzz3"],
+        }
         for species in ["Human", "Mouse"]:
             for attempt in range(3):
                 map = brs.cache.get_mapping_data(
@@ -16,6 +20,14 @@ class BrainRNASeqTest(TestCase):
                 self.assertIsInstance(
                     map,
                     pd.DataFrame,
+                )
+                self.assertEqual(
+                    map.iloc[0],
+                    items[species][0],
+                )
+                self.assertEqual(
+                    map.iloc[-1],
+                    items[species][1],
                 )
 
     def test_mapping(self):
