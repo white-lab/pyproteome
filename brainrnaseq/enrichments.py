@@ -46,7 +46,9 @@ def build_enrichment_table(cell_types=None, force=False):
 
             try:
                 means = {
-                    cell_type: np.nanmean(np.array(row[cols].values, dtype=float))
+                    cell_type: np.nanmean(
+                        np.array(row[cols].values, dtype=float)
+                    )
                     for cell_type, cols in brs.CELL_TYPE_COLS[species].items()
                     if cell_type in cell_types
                 }
