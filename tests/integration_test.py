@@ -115,7 +115,7 @@ class IntegrationTest(TestCase):
 
         self.data = {
             name: data.normalize(self.levels[name])
-            for data, name in self.data.items()
+            for name, data in self.data.items()
         }
 
     def test_merge_data(self):
