@@ -88,13 +88,13 @@ class IntegrationTest(TestCase):
                 ),
             ]
         )
-        self.ck_groups.update([
+        self.groups.update([
             (
                 "{} {}".format(key, tissue),
                 ["{} {}".format(i, tissue) for i in val],
             )
             for tissue in ["Hip", "Cortex", "Cere"]
-            for key, val in self.ck_groups.items()
+            for key, val in self.groups.items()
         ])
 
         self.data = {
@@ -102,7 +102,7 @@ class IntegrationTest(TestCase):
                 os.path.splitext(filename)[0],
                 name=name,
                 channels=self.channels[name],
-                groups=self.ck_groups,
+                groups=self.groups,
             )
             for name, filename in DATAS.items()
         }

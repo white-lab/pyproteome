@@ -11,7 +11,7 @@ Features
   - Added individual sample quantitations to write_full_tables()
   - Automatically apply inter-normalization when merging multiple data sets.
   - Filter by several new parameters.
-  - Added motifs, cluster modules.
+  - Added motifs, cluster, brainrnaseq modules.
   - Added integration tests.
   - Reorganized several analysis functions.
   - Removed unused / untested enrichment module.
