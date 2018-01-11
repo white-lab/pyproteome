@@ -22,6 +22,9 @@ class BrainRNASeqTest(TestCase):
                     map,
                     pd.DataFrame,
                 )
+                print(map.iloc[0].index)
+                print(items[species][0])
+                print(map.iloc[0]["Synonyms"])
                 self.assertEqual(
                     map.iloc[0].index,
                     items[species][0],
