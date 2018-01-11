@@ -20,6 +20,11 @@ DATAS = {
 
 class IntegrationTest(TestCase):
     def _fetch_data(self):
+        try:
+            os.makedirs(paths.MS_SEARCHED_DIR)
+        except:
+            pass
+
         for _, filename in DATAS.items():
             url = DATA_URL + filename
             response = requests.get(url, stream=True)

@@ -29,10 +29,10 @@ BARRES_SEQ_PATH = os.path.join(CACHE_DIR, BARRES_DATA_NAME)
 # HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz"
 # MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz"
 MAPPING_URL = (
-    "https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/"
+    "https://github.com/white-lab/pyproteome-data/raw/master/brainrnaseq/"
 )
-HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz?raw=true"
-MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz?raw=true"
+HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz"
+MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz"
 
 MAPPING_URLS = {
     "Human": HUMAN_MAPPING_URL,
