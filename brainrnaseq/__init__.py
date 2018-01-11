@@ -34,8 +34,8 @@ CELL_TYPE_COLS = {
     },
     "Mouse": {
         "Astrocyte": [
-            "FACS - p69",
-            "FACS p70",
+            # "FACS - p69",
+            # "FACS p70",
             "1 month",
             "4 months",
             "7 months",
