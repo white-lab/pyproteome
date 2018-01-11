@@ -99,7 +99,7 @@ class IntegrationTest(TestCase):
 
         self.data = {
             name: data_sets.DataSet(
-                os.path.splitext(filename)[0],
+                mascot_name=os.path.splitext(filename)[0],
                 name=name,
                 channels=self.channels[name],
                 groups=self.groups,
