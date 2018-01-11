@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.4.0 (2017-\*-\*)
+## 0.4.0 (2018-\*-\*)
 
 Features
 
@@ -8,14 +8,17 @@ Features
     only the peptide with the best PTM assignment to be used for each scan. It
     is recommended to disable this feature on large pS/T data sets.
   - Sequence.\_\_contains\_\_ supports string arguments now.
-  - Added individual sample quantitations to analysis.write_full_tables
+  - Added individual sample quantitations to write_full_tables()
   - Automatically apply inter-normalization when merging multiple data sets.
-  - Filter by isolation interference.
-  - Added plogo and icelogo wrappers.
+  - Filter by several new parameters.
+  - Added motifs, cluster modules.
+  - Added integration tests.
+  - Reorganized several analysis functions.
+  - Removed unused / untested enrichment module.
 
 Bugfixes
 
-  - Fixed several runtime warnings from matplotlib / numpy.
+  - Fixed several runtime warnings from matplotlib / numpy / pandas.
 
 ## 0.3.2 (2017-03-10)
 
