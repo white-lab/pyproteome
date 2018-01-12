@@ -218,6 +218,143 @@ def make_logo(data, f, **kwargs):
     )
 
 
+def _draw_logo(
+    scores, p_line=None, title=None, ytitle=None, width=12, height=8,
+    fade_power=1, low_res_cutoff=0,
+):
+    length = len(list(scores.values())[0])
+    fig = plt.figure(figsize=(width, height))
+
+    left_margin = (
+        .15 / width * 5
+    )
+    axes = (
+        fig.add_axes([
+            left_margin, .54,
+            1 - left_margin, .46,
+        ]),
+        fig.add_axes([
+            left_margin, 0,
+            1 - left_margin, .46,
+        ])
+    )
+    yax = fig.add_axes([
+        0, 0,
+        1, 1,
+    ])
+    xwidth = (1 - left_margin) / length
+    xpad = xwidth / 2
+    xax = fig.add_axes([
+        left_margin + xpad, 0.52,
+        xwidth * (length - 1), .11,
+    ])
+    yax.patch.set_alpha(0)
+    xax.patch.set_alpha(0)
+
+    if p_line is not None:
+        axes[0].axhline(p_line, color="red")
+        axes[1].axhline(-p_line, color="red")
+
+        miny, maxy = -p_line, p_line
+    else:
+        miny, maxy = 0, 0
+
+    x = 1
+
+    yax.xaxis.set_ticks([])
+    yax.yaxis.set_ticks([])
+    xax.yaxis.set_ticks([])
+
+    for ax in (yax, xax) + axes:
+        ax.spines['top'].set_color('none')
+        ax.spines['bottom'].set_color('none')
+        ax.spines['left'].set_color('none')
+        ax.spines['right'].set_color('none')
+
+    yax.set_title(title, fontsize=32)
+    xax.set_xticks(
+        range(0, length),
+    )
+    xax.set_xticklabels(
+        [
+            "{:+d}".format(i) if i != 0 else "0"
+            for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
+        ],
+        fontsize=16,
+    )
+
+    for i in range(0, length):
+        base_scores = [(b, scores[b][i]) for b in BASES]
+        base_scores = (
+            sorted([i for i in base_scores if i[1] < 0], key=lambda t: -t[1]) +
+            sorted([i for i in base_scores if i[1] >= 0], key=lambda t: -t[1])
+        )
+        base_scores = [
+            i
+            for i in base_scores
+            if abs(i[1]) >= (p_line or 0) * low_res_cutoff
+        ]
+
+        y = sum(i[1] for i in base_scores if i[1] < 0)
+        miny = min(miny, y)
+
+        for base, score in base_scores:
+            _letterAt(
+                base, x, y,
+                alpha=min([1, abs(score / (p_line or 1))]) ** fade_power,
+                xscale=1.2,
+                yscale=abs(score),
+                ax=axes[1 if score < 0 else 0],
+            )
+            y += abs(score)
+
+        x += 1
+        maxy = max(maxy, y)
+
+    minmaxy = max(abs(i) for i in [miny, maxy])
+
+    for ind, ax in enumerate(axes):
+        ax.set_xlim(
+            xmin=.5,
+            xmax=x - .5,
+        )
+        ax.set_ylim(
+            ymin=-1.05 * minmaxy if ind == 1 else 0,
+            ymax=1.05 * minmaxy if ind == 0 else 0,
+        )
+        ax.set_xticks([])
+
+        spacing = minmaxy // 3
+        if spacing != 0:
+            ax.set_yticks(
+                np.arange(
+                    spacing if ind == 0 else -spacing,
+                    (spacing + 1) * (3 if ind == 0 else -3),
+                    spacing * (1 if ind == 0 else -1)
+                ),
+            )
+        else:
+            ax.set_yticks(
+                np.arange(
+                    0,
+                    minmaxy if ind == 0 else -minmaxy,
+                    1 if ind == 0 else -1,
+                )
+            )
+
+        ax.set_yticklabels(
+            ax.get_yticks(),
+            fontsize=16,
+        )
+        if ytitle:
+            yax.set_ylabel(
+                ytitle,
+                fontsize=24,
+            )
+
+    return fig, (yax, xax,) + axes, minmaxy
+
+
 def logo(
     fore, back,
     title="", width=12, height=8, p_cutoff=0.05,
@@ -255,98 +392,23 @@ def logo(
         all(len(i) == len(back[0]) for i in back)
     )
 
-    fig = plt.figure(figsize=(width, height))
-
-    left_margin = (
-        .15 / width * 5
-    )
-    axes = (
-        fig.add_axes([
-            left_margin, .54,
-            1 - left_margin, .46,
-        ]),
-        fig.add_axes([
-            left_margin, 0,
-            1 - left_margin, .46,
-        ])
-    )
-    yax = fig.add_axes([
-        0, 0,
-        1, 1,
-    ])
-    xwidth = (1 - left_margin) / length
-    xpad = xwidth / 2
-    xax = fig.add_axes([
-        left_margin + xpad, 0.52,
-        xwidth * (length - 1), .11,
-    ])
-    yax.patch.set_alpha(0)
-    xax.patch.set_alpha(0)
-
     rel_info, p_line = _calc_scores(
         BASES, fore, back,
         p_cutoff=p_cutoff,
         prob_fn=prob_fn,
     )
 
-    axes[0].axhline(p_line, color="red")
-    axes[1].axhline(-p_line, color="red")
-
-    miny, maxy = -p_line, p_line
-    x = 1
-
-    yax.xaxis.set_ticks([])
-    yax.yaxis.set_ticks([])
-    xax.yaxis.set_ticks([])
-
-    for ax in (yax, xax) + axes:
-        ax.spines['top'].set_color('none')
-        ax.spines['bottom'].set_color('none')
-        ax.spines['left'].set_color('none')
-        ax.spines['right'].set_color('none')
-
-    yax.set_title(title, fontsize=32)
-    xax.set_xticks(
-        range(0, length),
+    fig, axes, minmaxy = _draw_logo(
+        scores=rel_info,
+        p_line=p_line,
+        title=title,
+        ytitle="log odds of the binomial probability",
+        width=width,
+        height=height,
+        fade_power=fade_power,
+        low_res_cutoff=low_res_cutoff,
     )
-    xax.set_xticklabels(
-        [
-            "{:+d}".format(i) if i != 0 else "0"
-            for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
-        ],
-        fontsize=16,
-    )
-
-    for i in range(0, length):
-        scores = [(b, rel_info[b][i]) for b in BASES]
-        scores = (
-            sorted([i for i in scores if i[1] < 0], key=lambda t: -t[1]) +
-            sorted([i for i in scores if i[1] >= 0], key=lambda t: -t[1])
-        )
-        scores = [
-            i
-            for i in scores
-            if abs(i[1]) >= p_line * low_res_cutoff
-        ]
-
-        y = sum(i[1] for i in scores if i[1] < 0)
-        miny = min(miny, y)
-
-        for base, score in scores:
-            _letterAt(
-                base, x, y,
-                alpha=min([1, abs(score / p_line)]) ** fade_power,
-                xscale=1.2,
-                yscale=abs(score),
-                ax=axes[1 if score < 0 else 0],
-            )
-            y += abs(score)
-
-        x += 1
-        maxy = max(maxy, y)
-
-    minmaxy = max(abs(i) for i in [miny, maxy])
-    axes[1].text(
+    axes[3].text(
         length + .5,
         -minmaxy,
         "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
@@ -355,34 +417,85 @@ def logo(
         horizontalalignment="right",
         verticalalignment="bottom",
     )
+    return fig, axes
 
-    for ind, ax in enumerate(axes):
-        ax.set_xlim(
-            xmin=.5,
-            xmax=x - .5,
-        )
-        ax.set_ylim(
-            ymin=-1.05 * minmaxy if ind == 1 else 0,
-            ymax=1.05 * minmaxy if ind == 0 else 0,
-        )
-        ax.set_xticks([])
 
-        spacing = minmaxy // 3
-        ax.set_yticks(
-            np.arange(
-                spacing if ind == 0 else -spacing,
-                (spacing + 1) * (3 if ind == 0 else -3),
-                spacing * (1 if ind == 0 else -1)
-            ),
-        )
+def _calc_correlation_scores(bases, peptides, correlations):
+    length = len(peptides[0])
+    scores = {
+        base: [
+            np.nan_to_num(
+                np.nanmedian(
+                    [
+                        corr
+                        for peptide, corr in zip(peptides, correlations)
+                        if peptide[pos] == base
+                    ]
+                )
+            )
+            for pos in range(length)
+        ]
+        for base in bases
+    }
+    print(scores)
+    cutoff = None
+    return scores, cutoff
 
-        ax.set_yticklabels(
-            ax.get_yticks(),
-            fontsize=16,
-        )
-        yax.set_ylabel(
-            "log odds of the binomial probability",
-            fontsize=24,
-        )
 
-    return fig, (yax, xax,) + axes
+def correlation_logo(
+    peptides, correlations,
+    title="", width=12, height=8, p_cutoff=0.05,
+    fade_power=1, low_res_cutoff=0,
+):
+    """
+    Generate a sequence logo locally using pLogo's enrichment score.
+
+    Parameters
+    ----------
+    peptides : list of str
+    correlations : list of float
+    title : str, optional
+    p_cutoff : float, optional
+        p-value to use for residue significance cutoff. This value is corrected
+        for multiple-hypothesis testing before being used.
+    fade_power : float, optional
+        Set transparency of residues with scores below p_cutoff to:
+        (score / p_cutoff) ** fade_power.
+    low_res_cutoff : float, optional
+        Hide residues with scores below p_cutoff * low_res_cutoff.
+
+    Returns
+    -------
+    fig, axes
+    """
+    length = len(peptides[0])
+    assert length > 0
+    assert (
+        all(len(i) == len(peptides[0]) for i in peptides)
+    )
+    assert len(peptides) == len(correlations)
+
+    rel_info, p_line = _calc_correlation_scores(
+        BASES, peptides, correlations,
+    )
+
+    fig, axes, minmaxy = _draw_logo(
+        scores=rel_info,
+        p_line=p_line,
+        title=title,
+        ytitle="Correlation",
+        width=width,
+        height=height,
+        fade_power=fade_power,
+        low_res_cutoff=low_res_cutoff,
+    )
+    axes[3].text(
+        length + .5,
+        -minmaxy,
+        "n(peptides) = {}".format(len(peptides)),
+        color="darkred",
+        fontsize=32,
+        horizontalalignment="right",
+        verticalalignment="bottom",
+    )
+    return fig, axes
