@@ -7,6 +7,7 @@ import pylab
 
 from pyproteome import (
     analysis, cluster, data_sets, levels, logo, paths, tables, volcano,
+    plogo, icelogo, weblogo, phosphosite,
 )
 
 from . import utils
@@ -178,6 +179,30 @@ class IntegrationTest(TestCase):
 
         for _, data in self.data.items():
             logo.make_logo(data, {"asym_fold_cutoff": 1.25})
+
+    def test_plogo(self):
+        self.test_normalize_data()
+
+        for _, data in self.data.items():
+            plogo.make_logo(data, {"asym_fold_cutoff": 1.25})
+
+    def test_icelogo(self):
+        self.test_normalize_data()
+
+        for _, data in self.data.items():
+            icelogo.make_logo(data, {"asym_fold_cutoff": 1.25})
+
+    def test_weblogo(self):
+        self.test_normalize_data()
+
+        for _, data in self.data.items():
+            weblogo.make_logo(data, {})
+
+    def test_phosphosite_enriched(self):
+        phosphosite.enriched(
+            self.data,
+            species="Mouse",
+        )
 
     def test_cluster(self):
         merge = self.test_merge_data()
