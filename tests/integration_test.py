@@ -28,11 +28,14 @@ class IntegrationTest(TestCase):
             pass
 
         for _, filename in DATAS.items():
+            out_path = os.path.join(paths.MS_SEARCHED_DIR, filename)
+
+            if os.path.exists(out_path):
+                continue
+
             url = DATA_URL + filename
             response = requests.get(url, stream=True)
             response.raise_for_status()
-
-            out_path = os.path.join(paths.MS_SEARCHED_DIR, filename)
 
             with open(out_path, mode="wb") as f:
                 for block in response.iter_content(1024):
@@ -134,7 +137,7 @@ class IntegrationTest(TestCase):
             name="CK-p25",
         )
 
-        print(merge.shape[0])
+        print(merge.psms.shape[0])
 
         for data in [
             self.data["CKH1"],
@@ -153,7 +156,7 @@ class IntegrationTest(TestCase):
     def test_correlate_data(self):
         self.test_normalize_data()
 
-        analysis.correlate_data_set(
+        analysis.correlate_data_sets(
             self.data["CKH1"],
             self.data["CKX2"],
         )
