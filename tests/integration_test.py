@@ -1,7 +1,6 @@
 
 from collections import OrderedDict
 import os
-import requests
 from unittest import TestCase
 
 import pylab
@@ -9,6 +8,8 @@ import pylab
 from pyproteome import (
     analysis, cluster, data_sets, levels, logo, paths, tables, volcano,
 )
+
+from . import utils
 
 
 DATA_URL = "https://github.com/white-lab/pyproteome-data/raw/master/test_data/"
@@ -21,31 +22,17 @@ DATAS = {
 
 
 class IntegrationTest(TestCase):
-    def _fetch_data(self):
-        try:
-            os.makedirs(paths.MS_SEARCHED_DIR)
-        except:
-            pass
-
-        for _, filename in DATAS.items():
-            out_path = os.path.join(paths.MS_SEARCHED_DIR, filename)
-
-            if os.path.exists(out_path):
-                continue
-
-            url = DATA_URL + filename
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-
-            with open(out_path, mode="wb") as f:
-                for block in response.iter_content(1024):
-                    f.write(block)
 
     def setUp(self):
-        pylab.rcParams['figure.max_open_warning'] = 0
-
         paths.set_base_dir(os.path.abspath("."))
-        self._fetch_data()
+
+        utils.fetch_data(
+            dir=paths.MS_SEARCHED_DIR,
+            datas=DATAS,
+            base_url=DATA_URL,
+        )
+
+        pylab.rcParams['figure.max_open_warning'] = 0
 
         ck_channels = OrderedDict(
             [

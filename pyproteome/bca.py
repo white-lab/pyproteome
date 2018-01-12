@@ -231,7 +231,7 @@ def interpret_bca_assay(
 
         while row <= row_end:
             for col in range(col_start, col_end + 1):
-                absorbance = xls.ix[row][col]
+                absorbance = xls.loc[row][col]
                 concentration = (absorbance - intercept) / slope
                 concentrations[name].append(concentration * dilution)
                 absorbances[(name, dilution)].append(absorbance)

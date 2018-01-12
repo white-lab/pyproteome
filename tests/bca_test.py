@@ -1,11 +1,12 @@
 
 import os
-import requests
 from unittest import TestCase
 
 import pylab
 
 from pyproteome import bca, paths
+
+from . import utils
 
 
 DATA_URL = "https://github.com/white-lab/pyproteome-data/raw/master/test_data/"
@@ -16,31 +17,16 @@ DATAS = {
 
 
 class BCATest(TestCase):
-    def _fetch_data(self):
-        try:
-            os.makedirs(paths.BCA_ASSAY_DIR)
-        except:
-            pass
-
-        for _, filename in DATAS.items():
-            out_path = os.path.join(paths.BCA_ASSAY_DIR, filename)
-
-            if os.path.exists(out_path):
-                continue
-
-            url = DATA_URL + filename
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-
-            with open(out_path, mode="wb") as f:
-                for block in response.iter_content(1024):
-                    f.write(block)
-
     def setUp(self):
-        pylab.rcParams['figure.max_open_warning'] = 0
-
         paths.set_base_dir(os.path.abspath("."))
-        self._fetch_data()
+
+        utils.fetch_data(
+            dir=paths.BCA_ASSAY_DIR,
+            datas=DATAS,
+            base_url=DATA_URL,
+        )
+
+        pylab.rcParams['figure.max_open_warning'] = 0
 
     def test_bca_assay(self):
         total_protein, _ = bca.interpret_bca_assay(
@@ -58,30 +44,30 @@ class BCATest(TestCase):
         )
 
         self.assertLess(
-            abs(total_protein["3146 Cortex"] - 8000),
+            abs(total_protein["3146 Cortex"][0] - 8000),
             500,
         )
         self.assertLess(
-            abs(total_protein["3131 Cortex"] - 9000),
+            abs(total_protein["3131 Cortex"][0] - 9000),
             500,
         )
         self.assertLess(
-            abs(total_protein["3131 Hippocampus"] - 1500),
+            abs(total_protein["3131 Hippocampus"][0] - 1500),
             500,
         )
         self.assertLess(
-            abs(total_protein["3131 Cerebellum"] - 3500),
+            abs(total_protein["3131 Cerebellum"][0] - 3500),
             500,
         )
         self.assertLess(
-            abs(total_protein["3145 Cerebellum"] - 3000),
+            abs(total_protein["3145 Cerebellum"][0] - 3000),
             500,
         )
         self.assertLess(
-            abs(total_protein["3145 Hippocampus"] - 1500),
+            abs(total_protein["3145 Hippocampus"][0] - 1500),
             500,
         )
         self.assertLess(
-            abs(total_protein["3145 Cortex"] - 8500),
+            abs(total_protein["3145 Cortex"][0] - 8500),
             500,
         )
