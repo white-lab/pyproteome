@@ -218,6 +218,11 @@ class IntegrationTest(TestCase):
 
         cluster.plot.plot_all_clusters(data, y_pred)
 
+        cluster.plot.show_cluster(
+            data, y_pred,
+            protein="Pkm",
+        )
+
         cluster.plot.show_peptide_clusters(
             data, y_pred,
             [
