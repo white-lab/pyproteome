@@ -385,6 +385,9 @@ def logo(
     -------
     fig, axes
     """
+    if len(back) == 0:
+        return None, None
+
     length = len(back[0])
     assert length > 0
     assert (
