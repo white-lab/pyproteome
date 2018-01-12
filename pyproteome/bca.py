@@ -3,6 +3,8 @@
 This module provides functionality for interpreting BCA assays.
 """
 
+from __future__ import division
+
 # Built-ins
 from collections import OrderedDict
 import logging

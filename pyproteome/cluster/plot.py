@@ -1,4 +1,6 @@
 
+from __future__ import division
+
 from math import ceil, sqrt
 from functools import cmp_to_key
 import os
