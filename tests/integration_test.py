@@ -7,7 +7,7 @@ from unittest import TestCase
 import pylab
 
 from pyproteome import (
-    analysis, data_sets, levels, logo, paths, tables, volcano,
+    analysis, cluster, data_sets, levels, logo, paths, tables, volcano,
 )
 
 
@@ -191,3 +191,19 @@ class IntegrationTest(TestCase):
 
         for _, data in self.data.items():
             logo.make_logo(data, {"asym_fold_cutoff": 1.25})
+
+    def test_cluster(self):
+        merge = self.test_merge_data()
+
+        data = cluster.get_data(merge)
+
+        cluster.pca(data)
+
+        _, y_pred = cluster.cluster(
+            data,
+            n_clusters=6,
+        )
+
+        cluster.plot.cluster_corrmap(data, y_pred)
+
+        cluster.plot.plot_all_clusters(data, y_pred)

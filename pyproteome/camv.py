@@ -22,7 +22,7 @@ from . import modification, paths, utils
 try:
     FileNotFoundError
 except NameError:
-    FileNotFoundError = IOError
+    FileNotFoundError = (IOError, OSError)
 
 LOGGER = logging.getLogger("pyproteome.camv")
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
