@@ -180,21 +180,21 @@ class IntegrationTest(TestCase):
         for _, data in self.data.items():
             logo.make_logo(data, {"asym_fold_cutoff": 1.05})
 
-    def test_plogo(self):
-        self.test_normalize_data()
-
-        plogo.make_logo(self.data["CKH1"], {"asym_fold_cutoff": 1.05})
+    # def test_plogo(self):
+    #     self.test_normalize_data()
+    #
+    #     plogo.make_logo(self.data["CKH1"], {"asym_fold_cutoff": 1.05})
 
     def test_icelogo(self):
         self.test_normalize_data()
 
         icelogo.make_logo(self.data["CKH1"], {"asym_fold_cutoff": 1.05})
 
-    def test_weblogo(self):
-        self.test_normalize_data()
-
-        for _, data in self.data.items():
-            weblogo.make_logo(data, {})
+    # def test_weblogo(self):
+    #     self.test_normalize_data()
+    #
+    #     for _, data in self.data.items():
+    #         weblogo.make_logo(data, {})
 
     def test_phosphosite_enriched(self):
         phosphosite.enriched(
