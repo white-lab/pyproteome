@@ -49,7 +49,6 @@ class DataSet:
         sample names to that phenotype's value.
     name : str
     enrichments : list of str
-    tissues : list of str
     sets : int
         Number of sets merged into this data set.
     sources : list of str
@@ -65,7 +64,6 @@ class DataSet:
         phenotypes=None,
         name="",
         enrichments=None,
-        tissues=None,
         dropna=False,
         camv_slices=None,
         pick_best_ptm=True,
@@ -93,7 +91,6 @@ class DataSet:
         phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
         enrichments : list of str, optional
-        tissues : list of str, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
             values.
@@ -167,7 +164,6 @@ class DataSet:
         self.mascot_name = mascot_name
         self.camv_name = camv_name
         self.enrichments = enrichments
-        self.tissues = tissues or []
 
         self.intra_normalized = False
         self.sets = 1
@@ -231,17 +227,6 @@ class DataSet:
         str
         """
         return "+".join(self.enrichments)
-
-    @property
-    def tissue(self):
-        """
-        The str version of self.tissues
-
-        Returns
-        -------
-        str
-        """
-        return "+".join(self.tissues)
 
     def __str__(self):
         return (
@@ -968,7 +953,7 @@ class DataSet:
             self.psms["p-value"] = np.nan
 
     def print_stats(self):
-        print(self.name, self.tissue, self.enrichment)
+        print(self.name, self.enrichment)
         data = self.dropna(how="all")
 
         data_p = self.filter(mod_types=[(None, "Phospho")])
@@ -1102,15 +1087,6 @@ def merge_data(
             for data in data_sets
             if data.enrichments
             for enrichment in data.enrichments
-        )
-    )
-
-    new.tissues = sorted(
-        set(
-            tissue
-            for data in data_sets
-            if data.tissues
-            for tissue in data.tissues
         )
     )
 

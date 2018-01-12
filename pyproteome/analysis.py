@@ -19,25 +19,15 @@ import re
 
 # Core data analysis libraries
 from matplotlib import pyplot as plt
-# import matplotlib.patches as patches
-import matplotlib_venn as mv
 import numpy as np
 import pandas as pd
 import seaborn as sns
-# import scipy
 from scipy.stats import pearsonr, spearmanr, ttest_ind
-# from scipy.stats.mstats import mquantiles
-# from scipy.spatial import distance
-# from scipy.cluster import hierarchy
-# import sklearn
-# from sklearn.cluster import KMeans, MiniBatchKMeans
 
 # Misc extras
 from adjustText.adjustText import adjust_text
 
 from . import fetch_data, utils
-# from .tables import changes_table as snr_table
-# from .volcano import volcano_plot, plot_volcano_filtered
 
 
 LOGGER = logging.getLogger("pyproteome.analysis")
@@ -95,103 +85,6 @@ def hierarchical_heatmap(
         xticklabels=channel_names,
         yticklabels=False,
     )
-
-
-def venn2(data_a, data_b, folder_name=None, filename=None):
-    """
-    Display a three-way venn diagram between data set sequences.
-
-    Parameters
-    ----------
-    data_a : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    data_b : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    data_c : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    folder_name : str, optional
-    filename : str, optional
-    """
-    utils.make_folder(folder_name)
-
-    if folder_name and filename:
-        filename = os.path.join(folder_name, filename)
-
-    group_a = set(data_a["Sequence"])
-    group_b = set(data_b["Sequence"])
-
-    f = plt.figure(figsize=(12, 12))
-    v = mv.venn2(
-        subsets=(
-            len(group_a.difference(group_b)),
-            len(group_b.difference(group_a)),
-            len(group_a.intersection(group_b)),
-        ),
-        set_labels=(data_a.tissue, data_b.tissue),
-    )
-
-    for label in v.set_labels:
-        if label:
-            label.set_fontsize(32)
-
-    for label in v.subset_labels:
-        if label:
-            label.set_fontsize(20)
-
-    if filename:
-        f.savefig(
-            filename,
-            transparent=True,
-            dpi=DEFAULT_DPI,
-        )
-
-
-def venn3(data_a, data_b, data_c, folder_name=None, filename=None):
-    """
-    Display a three-way venn diagram between data set sequences.
-
-    Parameters
-    ----------
-    data_a : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    data_b : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    data_c : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    folder_name : str, optional
-    filename : str, optional
-    """
-    utils.make_folder(folder_name)
-
-    if folder_name and filename:
-        filename = os.path.join(folder_name, filename)
-
-    group_a = set(data_a["Sequence"])
-    group_b = set(data_b["Sequence"])
-    group_c = set(data_c["Sequence"])
-
-    f = plt.figure(figsize=(12, 12))
-    v = mv.venn3(
-        subsets=(
-            len(group_a.difference(group_b).difference(group_c)),
-            len(group_b.difference(group_a).difference(group_c)),
-            len(group_a.intersection(group_b).difference(group_c)),
-            len(group_c.difference(group_a).difference(group_b)),
-            len(group_a.intersection(group_c).difference(group_b)),
-            len(group_b.intersection(group_c).difference(group_a)),
-            len(group_a.intersection(group_b).intersection(group_c)),
-        ),
-        set_labels=(data_a.tissue, data_b.tissue, data_c.tissue),
-    )
-
-    for label in v.set_labels:
-        if label:
-            label.set_fontsize(32)
-
-    for label in v.subset_labels:
-        if label:
-            label.set_fontsize(20)
-
-    if filename:
-        f.savefig(
-            filename,
-            transparent=True,
-            dpi=DEFAULT_DPI,
-        )
 
 
 def write_lists(
@@ -621,8 +514,8 @@ def correlate_data_sets(
         linestyle=":",
     )
 
-    name1 = "{} - {}".format(data1.name, ", ".join(sorted(data1.tissues)))
-    name2 = "{} - {}".format(data2.name, ", ".join(sorted(data2.tissues)))
+    name1 = data1.name
+    name2 = data2.name
 
     ax.set_xlabel("$log_2$ Fold Change -- {}".format(name1))
     ax.set_ylabel("$log_2$ Fold Change -- {}".format(name2))
@@ -969,7 +862,6 @@ def plot_all(
                     title="{}-{}".format(
                         prot,
                         data.name,
-                        ":".join(data.tissues),
                     ),
                     figsize=figsize,
                 )
@@ -979,9 +871,8 @@ def plot_all(
                         re.sub(
                             "[?/]",
                             "_",
-                            "{}-{}-{}.png".format(
+                            "{}-{}.png".format(
                                 prot,
-                                ",".join(data.tissues),
                                 data.name,
                             ),
                         ),
@@ -1002,9 +893,8 @@ def plot_all(
                         re.sub(
                             "[?/]",
                             "_",
-                            "{}-{}-{}-between.png".format(
+                            "{}-{}-between.png".format(
                                 prot,
-                                ",".join(data.tissues),
                                 data.name,
                             ),
                         ),
@@ -1071,9 +961,8 @@ def plot_all_together(
                 re.sub(
                     "[?/]",
                     "_",
-                    "{}-{}-{}-between.png".format(
+                    "{}-{}-between.png".format(
                         prot,
-                        ",".join(data.tissues),
                         data.name,
                     ),
                 ),

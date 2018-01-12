@@ -237,9 +237,8 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
         ws_name = re.sub(
             "/",
             "+",
-            "{} - {} - {}".format(
+            "{} - {}".format(
                 data.name,
-                data.tissue,
                 _rewrite_enrichments(data.enrichments),
             ),
         )
