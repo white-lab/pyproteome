@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import sqlite3
+import sys
 import xml.etree.ElementTree as ET
 
 import numpy as np
@@ -350,7 +351,12 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         ).fetchone()
 
         if quantification:
-            root = ET.fromstring(quantification[0])
+            quantification = quantification[0]
+
+            if sys.version_info.major < 3:
+                quantification = quantification.encode("utf-8")
+
+            root = ET.fromstring(quantification)
             quant_tags = root.findall(
                 "MethodPart/MethodPart/Parameter[@name='TagName']",
             )
