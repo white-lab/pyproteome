@@ -222,6 +222,6 @@ class IntegrationTest(TestCase):
             data, y_pred,
             [
                 {"seq": "AVDSLVPIGR"},
-                {"seq": "QMVETELK"},
+                {"protein": "Pkm"},
             ],
         )
