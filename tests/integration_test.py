@@ -219,3 +219,11 @@ class IntegrationTest(TestCase):
         cluster.plot.cluster_corrmap(data, y_pred)
 
         cluster.plot.plot_all_clusters(data, y_pred)
+
+        cluster.plot.show_peptide_clusters(
+            data, y_pred,
+            [
+                {"seq": "AVDSLVPIGR"},
+                {"seq": "QMVETELK"},
+            ],
+        )
