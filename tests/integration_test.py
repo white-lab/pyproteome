@@ -216,6 +216,9 @@ class IntegrationTest(TestCase):
 
         cluster.plot.cluster_corrmap(data, y_pred)
 
+        f, ax = pylab.subplots()
+        cluster.plot.cluster_corrmap(data, y_pred, ax=ax)
+
         cluster.plot.plot_all_clusters(data, y_pred)
 
         cluster.plot.plot_cluster(
