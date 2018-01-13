@@ -136,30 +136,31 @@ def cluster(data, fn=None, kwargs=None, n_clusters=20):
     return clr, y_pred
 
 
-def cluster_clusters(data, y_pred, corr_cutoff=4):
+def cluster_clusters(data, y_pred, corr_cutoff=4, iterations=3):
     y_pred = y_pred.copy()
 
-    ss = sorted(set(y_pred))
+    for _ in range(iterations):
+        ss = sorted(set(y_pred))
 
-    for ind, i in enumerate(ss):
-        corrs = [
-            (
-                o,
-                np.correlate(
-                    data["z"][y_pred == i].mean(axis=0),
-                    data["z"][y_pred == o].mean(axis=0),
-                )[0],
-            )
-            for o in sorted(set(y_pred))
-            if o < i
-        ]
-        if not corrs:
-            continue
+        for ind, i in enumerate(ss):
+            corrs = [
+                (
+                    o,
+                    np.correlate(
+                        data["z"][y_pred == i].mean(axis=0),
+                        data["z"][y_pred == o].mean(axis=0),
+                    )[0],
+                )
+                for o in sorted(set(y_pred))
+                if o < i
+            ]
+            if not corrs:
+                continue
 
-        o, m = max(corrs, key=lambda x: x[1])
+            o, m = max(corrs, key=lambda x: x[1])
 
-        if m > corr_cutoff:
-            y_pred[y_pred == i] = o
+            if m > corr_cutoff:
+                y_pred[y_pred == i] = o
 
     y_pred_old = y_pred.copy()
 
