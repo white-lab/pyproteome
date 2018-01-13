@@ -141,12 +141,39 @@ class IntegrationTest(TestCase):
         # )
         return merge
 
+    def test_plot_all(self):
+        merge = self.test_merge_data()
+
+        analysis.plot_all(
+            [merge],
+            seqs="AVDSLVPIGR",
+            individual=True,
+            between=True,
+        )
+
+        analysis.plot_all(
+            [merge],
+            protein="Pkm",
+            individual=True,
+            between=True,
+        )
+
+        analysis.plot_all_together(
+            [merge],
+            protein="Pkm",
+        )
+
     def test_correlate_data(self):
         self.test_normalize_data()
 
         analysis.correlate_data_sets(
             self.data["CKH1"],
             self.data["CKX2"],
+        )
+
+        analysis.correlate_signal(
+            self.data["CKH1"],
+            self.data["CKH1"][self.data["CKH1"]["Sequence"] == "AVDSLVPIGR"]
         )
 
     def test_changes_table(self):

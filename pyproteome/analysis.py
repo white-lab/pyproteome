@@ -87,72 +87,6 @@ def hierarchical_heatmap(
     )
 
 
-def write_lists(
-    data,
-    folder_name=None, sorted_name="sorted_list.txt",
-    hits_name="hits_list.txt", background_name="back_list.txt",
-):
-    """
-    Write a list of peptides to files.
-
-    Includes peptides sorted by fold change, significantly changing peptides,
-    and background peptides with little change.
-
-    Parameters
-    ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    folder_name : str, optional
-    sorted_name : str, optional
-    hits_name : str, optional
-    background_name : str, optional
-    """
-    if folder_name is None:
-        folder_name = data.name
-
-    utils.make_folder(folder_name)
-
-    if folder_name:
-        sorted_name = os.path.join(folder_name, sorted_name)
-        hits_name = os.path.join(folder_name, hits_name)
-        background_name = os.path.join(folder_name, background_name)
-
-    change_psms = data.psms.copy()
-    change_psms["Fold Change"] = np.maximum.reduce(
-        [
-            change_psms["Fold Change"],
-            1 / change_psms["Fold Change"],
-        ]
-    )
-
-    with open(sorted_name, "w") as f:
-        f.write(
-            "\n".join(
-                i.accessions[0]
-                for i in change_psms.sort(
-                    "Fold Change",
-                    ascending=False,
-                )["Proteins"].drop_duplicates(keep="first")
-            )
-        )
-    with open(hits_name, "w") as f:
-        f.write(
-            "\n".join(
-                i.accessions[0]
-                for i in data.filter(
-                    fold_cutoff=1.3,
-                ).psms["Proteins"].drop_duplicates(keep="first")
-            )
-        )
-
-    with open(background_name, "w") as f:
-        f.write(
-            "\n".join(
-                i.accessions[0]
-                for i in data.psms["Proteins"].drop_duplicates(keep="first")
-            )
-        )
-
-
 def plot_sequence_between(
     data, sequences, cmp_groups=None,
     figsize=(12, 8),
@@ -486,17 +420,6 @@ def correlate_data_sets(
                 "text": "xy",
             }
         )
-    else:
-        for j, text in enumerate(texts):
-            a = ax.annotate(
-                text.get_text(),
-                xy=text.get_position(),
-                xytext=text.get_position(),
-                arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-            )
-            a.__dict__.update(text.__dict__)
-            a.draggable()
-            texts[j].remove()
 
     min_x = min(np.log2(merged["Fold Change_x"]))
     max_x = max(np.log2(merged["Fold Change_x"]))
