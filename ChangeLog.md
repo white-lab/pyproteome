@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.4.0 (2018-\*-\*)
+## 0.4.0 (2018-01-13)
 
 Features
 
@@ -19,6 +19,7 @@ Features
 Bugfixes
 
   - Fixed several runtime warnings from matplotlib / numpy / pandas.
+  - Fixed many py2 issues.
 
 ## 0.3.2 (2017-03-10)
 
