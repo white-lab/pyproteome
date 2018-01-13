@@ -620,6 +620,7 @@ class DataSet:
         motif=None,
         series=None,
         inverse=False,
+        drop=True,
         inplace=False,
     ):
         """
@@ -666,9 +667,10 @@ class DataSet:
 
         def filter_psms(new, array):
             assert array.shape[0] == new.psms.shape[0]
+            # print(new.psms.loc[array].shape, array.shape)
             return (
                 new.psms.loc[array] if not inverse else new.psms.loc[~array]
-            ).reset_index(drop=True)
+            ).reset_index(drop=drop)
 
         if confidence_levels:
             new.psms = filter_psms(
