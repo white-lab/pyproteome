@@ -53,7 +53,7 @@ def pca(data):
     z = data["z"]
     names = data["names"]
 
-    f, ax = plt.subplots(1, 1, figsize=(6, 6))
+    f, ax = plt.subplots(1, 1, figsize=(4, 4))
     x = sklearn.decomposition.PCA().fit_transform(z.T)
 
     for ind, label in enumerate(data["labels"]):
@@ -72,6 +72,9 @@ def pca(data):
         )
 
     ax.legend()
+    ax.set_title("PCA {}".format(data["ds"].name))
+    ax.set_xlabel("Component 1")
+    ax.set_ylabel("Component 2")
 
 
 def cluster_range(data, min_clusters=2, max_clusters=20, cols=3):
@@ -131,3 +134,37 @@ def cluster(data, fn=None, kwargs=None, n_clusters=20):
     y_pred = pd.Series(y_pred_spec, index=ds.psms.index)
 
     return clr, y_pred
+
+
+def cluster_clusters(data, y_pred, corr_cutoff=4):
+    y_pred = y_pred.copy()
+
+    ss = sorted(set(y_pred))
+
+    for ind, i in enumerate(ss):
+        corrs = [
+            (
+                o,
+                np.correlate(
+                    data["z"][y_pred == i].mean(axis=0),
+                    data["z"][y_pred == o].mean(axis=0),
+                )[0],
+            )
+            for o in sorted(set(y_pred))
+            if o < i
+        ]
+        if not corrs:
+            continue
+
+        o, m = max(corrs, key=lambda x: x[1])
+
+        if m > corr_cutoff:
+            y_pred[y_pred == i] = o
+
+    y_pred_old = y_pred.copy()
+
+    for ind, i in enumerate(sorted(set(y_pred))):
+        y_pred[y_pred_old == i] = ind
+
+    print(sorted(set(y_pred)))
+    return y_pred

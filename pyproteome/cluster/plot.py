@@ -14,7 +14,7 @@ from scipy.cluster.hierarchy import dendrogram
 from fastcluster import linkage
 
 
-def cluster_clusters(data, y_pred):
+def hierarchical_clusters(data, y_pred):
     ds = data["ds"]
     z = data["z"]
 
@@ -88,7 +88,7 @@ def cluster_corrmap(
 
     div_scale = max([data["data"].shape[0] // 1000, 5])
 
-    mapping, new_ind, cmapping, cn = cluster_clusters(data, y_pred)
+    mapping, new_ind, cmapping, cn = hierarchical_clusters(data, y_pred)
 
     mesh = ax.pcolormesh(
         cn[::div_scale, ::div_scale],
@@ -129,6 +129,7 @@ def plot_cluster(
     ax=None,
     ylabel=True,
     title=None,
+    color=None,
 ):
     if ax is None:
         f, ax = plt.subplots()
@@ -141,14 +142,13 @@ def plot_cluster(
     dad = z[y_pred.as_matrix() == cluster_n]
     n = dad.shape[0]
     div_scale = max([dad.shape[0] // 100, 1])
-    print(dad.shape, div_scale)
     dad = dad[::div_scale]
 
     for i in range(dad.shape[0]):
         ax.plot(
             dad[i, :],
             alpha=min([1 / dad.shape[0] * 50 / 2, 1]),
-            color=plt.cm.rainbow(cluster_n / max(y_pred)),
+            color=color or plt.cm.rainbow(cluster_n / max(y_pred)),
         )
 
     ax.plot(
@@ -220,6 +220,7 @@ def show_cluster(
     ylabel=True,
     f=None,
     ax=None,
+    color=None,
 ):
     folder_name = _get_folder(data)
 
@@ -231,9 +232,11 @@ def show_cluster(
     ds = data["ds"]
     z = data["z"]
     dp = ds.copy()
+    mod = ""
 
     if seq is not None:
         cluster = list(set([i for i in y_pred[dp["Sequence"] == seq]]))[0]
+        mod = dp[dp["Sequence"] == seq].iloc[0]["Modifications"]
         protein = " / ".join(
             gene
             for prot in dp[dp["Sequence"] == seq]["Proteins"]
@@ -242,12 +245,19 @@ def show_cluster(
     elif protein is not None:
         cluster = list(set([i for i in y_pred[dp["Proteins"] == protein]]))[0]
 
-    title = "Cluster #{} N={} ({})".format(
+    title = "Cluster #{} N={}\n({}{})".format(
         cluster,
         (dp[y_pred == cluster]).shape[0],
         protein,
+        " {}".format(mod.__str__(prot_index=0)) if mod else "",
     )
-    plot_cluster(data, y_pred, cluster, ax=ax, ylabel=ylabel, title=title)
+    plot_cluster(
+        data, y_pred, cluster,
+        ax=ax,
+        color=color,
+        ylabel=ylabel,
+        title=title,
+    )
 
     if seq is not None:
         ax.plot(
@@ -269,7 +279,6 @@ def show_cluster(
         bbox_inches="tight", dpi=300,
         transparent=True,
     )
-    print(cluster, dp[y_pred == cluster].shape[0])
 
     dp.psms = dp[y_pred == cluster]
 
@@ -279,6 +288,7 @@ def show_cluster(
 def show_peptide_clusters(
     data, y_pred,
     filters,
+    new_colors=True,
     cols=4,
 ):
     folder_name = _get_folder(data)
@@ -292,11 +302,34 @@ def show_peptide_clusters(
     )
     ax_iter = iter(axes.ravel())
 
-    for ind, (fil, ax) in enumerate(zip(filters, ax_iter)):
+    clusters = [
+        sorted(
+            set(
+                y_pred[
+                    data["ds"]["Sequence"] == fil["seq"]
+                    if "seq" in fil else
+                    data["ds"]["Proteins"] == fil["protein"]
+                ]
+            )
+        )[0]
+        for fil in filters
+    ]
+
+    ss = sorted(set(clusters))
+
+    colors = [
+        plt.cm.rainbow(ss.index(cluster_n) / len(ss))
+        if new_colors else
+        plt.cm.rainbow(cluster_n / max(y_pred))
+        for cluster_n in clusters
+    ]
+
+    for ind, (fil, color, ax) in enumerate(zip(filters, colors, ax_iter)):
         show_cluster(
             data, y_pred,
             ax=ax,
             ylabel=ind % cols == 0,
+            color=color,
             **fil
         )
 
