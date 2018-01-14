@@ -133,5 +133,3 @@ def find_tfs(data, folder_name=None, csv_name=None):
             {"selector": "*", "props": [("text-align", "left")]},
         ]
     )
-
-
