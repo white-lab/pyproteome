@@ -122,7 +122,7 @@ class DataSet:
             filter_bad = dict(
                 ion_score=15,
                 isolation=50,
-                median_quant_signal=1000,
+                median_quant=1000,
             )
 
         self.channels = channels or OrderedDict()
@@ -179,8 +179,8 @@ class DataSet:
         if filter_bad:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
             self.filter(
+                filter_bad,
                 inplace=True,
-                **filter_bad
             )
 
         if pick_best_ptm and (
@@ -679,7 +679,7 @@ class DataSet:
         if filters is None:
             filters = []
 
-        if filters and not isinstance(filters, Iterable):
+        if filters and not isinstance(filters, (list, tuple)):
             filters = [filters]
 
         if kwargs:
@@ -721,10 +721,11 @@ class DataSet:
             # MASCOT confidence levels
             if "confidence" in f:
                 confidence_levels += [f["confidence"]]
-            if f["confidence"] in ["Medium", "Low"]:
-                confidence_levels += ["High"]
-            if f["confidence"] in ["Low"]:
-                confidence_levels += ["Medium"]
+
+                if f["confidence"] in ["Medium", "Low"]:
+                    confidence_levels += ["High"]
+                if f["confidence"] in ["Low"]:
+                    confidence_levels += ["Medium"]
 
             if confidence_levels:
                 new.psms = filter_psms(
