@@ -103,13 +103,8 @@ class IntegrationTest(TestCase):
         }
 
     def test_normalize_data(self):
-        self.levels = {
-            name: levels.get_channel_levels(data)
-            for name, data in self.data.items()
-        }
-
         self.data = {
-            name: data.normalize(self.levels[name])
+            name: data.normalize(data)
             for name, data in self.data.items()
         }
 
