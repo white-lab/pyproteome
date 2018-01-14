@@ -22,6 +22,14 @@ from IPython.core.magic import register_line_magic
 if get_ipython() is not None:
     @register_line_magic
     def import_all(line=None):
+        """
+        Inialize and import many packages using IPython Notebooks magic.
+
+        Examples
+        --------
+            >>> from pyproteome import *
+            >>> %import_all
+        """
         ip = get_ipython()
         ip.run_line_magic(
             "config",
@@ -38,7 +46,7 @@ if get_ipython() is not None:
                 "from collections import OrderedDict, Counter",
                 "import os",
                 "import pickle",
-                "from IPython.display import display",
+                "from IPython.display import display, SVG, Image",
 
                 "import numpy as np",
                 "import pandas as pd",
@@ -57,7 +65,8 @@ if get_ipython() is not None:
 
                 "import logging",
                 "root = logging.getLogger()",
-                "if not root.handlers: root.addHandler(logging.StreamHandler())",
+                "if not root.handlers: "
+                "root.addHandler(logging.StreamHandler())",
                 "logging.getLogger().setLevel(logging.INFO)",
             ])
         )
