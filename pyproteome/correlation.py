@@ -146,7 +146,7 @@ def correlate_data_sets(
         )
 
 
-def spearmanr_nan(a, b, min_length=5):
+def _spearmanr_nan(a, b, min_length=5):
     mask = ~np.array(
         [np.isnan(i) or np.isnan(j) for i, j in zip(a, b)],
         dtype=bool,
@@ -161,7 +161,6 @@ def spearmanr_nan(a, b, min_length=5):
 def correlate_signal(
     data, signal,
     p=0.05,
-    fold=1.25,
     options=None,
     folder_name=None, title=None,
     scatter_colors=None,
@@ -205,7 +204,7 @@ def correlate_signal(
     ]
 
     corr = [
-        spearmanr_nan(
+        _spearmanr_nan(
             row[data_chans].as_matrix().ravel(),
             signal[signal_chans].as_matrix().ravel(),
         )
