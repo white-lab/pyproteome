@@ -6,8 +6,8 @@ from unittest import TestCase
 import pylab
 
 from pyproteome import (
-    analysis, cluster, data_sets, levels, logo, paths, plot, tables, volcano,
-    plogo, icelogo, weblogo, phosphosite,
+    analysis, cluster, correlation, data_sets, levels, logo, paths, plot,
+    tables, volcano, plogo, icelogo, weblogo, phosphosite,
 )
 
 from . import utils
@@ -161,12 +161,12 @@ class IntegrationTest(TestCase):
     def test_correlate_data(self):
         self.test_normalize_data()
 
-        analysis.correlate_data_sets(
+        correlation.correlate_data_sets(
             self.data["CKH1"],
             self.data["CKX2"],
         )
 
-        analysis.correlate_signal(
+        correlation.correlate_signal(
             self.data["CKH1"],
             self.data["CKH1"][self.data["CKH1"]["Sequence"] == "AVDSLVPIGR"]
         )

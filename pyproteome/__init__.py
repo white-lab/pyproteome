@@ -7,9 +7,9 @@ and CAMV.
 """
 
 from . import (
-    analysis, bca, cluster, data_sets, discoverer, levels, loading,
-    modification, paths, pride, protein, sequence, tables, utils,
-    version, volcano,
+    analysis, bca, cluster, correlation, data_sets, discoverer, levels,
+    loading, modification, paths, plot, pride, protein, sequence, tables,
+    utils, version, volcano,
 )
 from .motifs import (
     logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
@@ -77,12 +77,14 @@ __all__ = [
     "analysis",
     "bca",
     "cluster",
+    "correlation",
     "data_sets",
     "discoverer",
     "levels",
     "loading",
     "modification",
     "paths",
+    "plot",
     "pride",
     "protein",
     "sequence",
