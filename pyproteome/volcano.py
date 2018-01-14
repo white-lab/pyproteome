@@ -11,6 +11,7 @@ import numpy as np
 # Misc extras
 from adjustText.adjustText import adjust_text
 
+import pyproteome
 from . import utils
 
 
@@ -374,12 +375,14 @@ def volcano_plot(
 
         fig.savefig(
             file_name,
-            bbox_inches="tight", dpi=300,
+            bbox_inches="tight",
+            dpi=pyproteome.DEFAULT_DPI,
             transparent=True,
         )
         fig.savefig(
             os.path.splitext(file_name)[0] + ".svg",
-            bbox_inches="tight", dpi=300,
+            bbox_inches="tight",
+            dpi=pyproteome.DEFAULT_DPI,
             transparent=True,
         )
 
@@ -447,7 +450,8 @@ def plot_volcano_filtered(data, f, **kwargs):
             re.sub(r"[ ></\?]", "_", kwargs.get("title", "Filtered")) +
             "_Volcano.png",
         ),
-        bbox_inches="tight", dpi=300,
+        bbox_inches="tight",
+        dpi=pyproteome.DEFAULT_DPI,
         transparent=True,
     )
     return f, ax

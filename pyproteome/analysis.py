@@ -27,6 +27,7 @@ from scipy.stats import pearsonr, spearmanr, ttest_ind
 # Misc extras
 from adjustText.adjustText import adjust_text
 
+import pyproteome
 from . import fetch_data, utils
 
 
@@ -457,7 +458,7 @@ def correlate_data_sets(
         f.savefig(
             filename,
             transparent=True,
-            dpi=DEFAULT_DPI,
+            dpi=pyproteome.DEFAULT_DPI,
         )
 
 
@@ -823,7 +824,7 @@ def plot_all(
                         ),
                     ),
                     bbox_inches="tight",
-                    dpi=DEFAULT_DPI,
+                    dpi=pyproteome.DEFAULT_DPI,
                     transparent=True,
                 )
 
@@ -891,7 +892,7 @@ def plot_all_together(
                 ),
             ),
             bbox_inches="tight",
-            dpi=DEFAULT_DPI,
+            dpi=pyproteome.DEFAULT_DPI,
             transparent=True,
         )
 

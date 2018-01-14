@@ -71,6 +71,7 @@ if get_ipython() is not None:
             ])
         )
 
+DEFAULT_DPI = 300
 
 __all__ = [
     "analysis",
@@ -89,7 +90,9 @@ __all__ = [
     "utils",
     "version",
     "volcano",
+
     "import_all",
+    "DEFAULT_DPI",
 
     "icelogo",
     "logo",

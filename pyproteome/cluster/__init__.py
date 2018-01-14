@@ -8,6 +8,7 @@ import sklearn
 import sklearn.decomposition
 import sklearn.cluster
 
+import pyproteome
 from . import plot
 
 
@@ -108,7 +109,8 @@ def cluster_range(data, min_clusters=2, max_clusters=20, cols=3):
 
     f.savefig(
         "Cluster-Range-Scan.png",
-        bbox_inches="tight", dpi=300,
+        bbox_inches="tight",
+        dpi=pyproteome.DEFAULT_DPI,
         transparent=True,
     )
 

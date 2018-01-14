@@ -5,6 +5,7 @@ from math import ceil, sqrt
 from functools import cmp_to_key
 import os
 
+import pyproteome
 from pyproteome import utils
 
 from matplotlib import pyplot as plt
@@ -117,7 +118,8 @@ def cluster_corrmap(
 
     f.savefig(
         os.path.join(folder_name, "Cluster-Corrmap.png"),
-        bbox_inches="tight", dpi=300,
+        bbox_inches="tight",
+        dpi=pyproteome.DEFAULT_DPI,
         transparent=True,
     )
     return f
@@ -208,7 +210,8 @@ def plot_all_clusters(
 
     f.savefig(
         os.path.join(folder_name, "Clusters.png"),
-        bbox_inches="tight", dpi=300,
+        bbox_inches="tight",
+        dpi=pyproteome.DEFAULT_DPI,
         transparent=True,
     )
 
@@ -276,7 +279,8 @@ def show_cluster(
 
     f.savefig(
         os.path.join(folder_name, "Cluster-{}.png".format(cluster)),
-        bbox_inches="tight", dpi=300,
+        bbox_inches="tight",
+        dpi=pyproteome.DEFAULT_DPI,
         transparent=True,
     )
 
@@ -338,7 +342,8 @@ def show_peptide_clusters(
 
     f.savefig(
         os.path.join(folder_name, "PeptideClusters.png"),
-        bbox_inches="tight", dpi=300,
+        bbox_inches="tight",
+        dpi=pyproteome.DEFAULT_DPI,
         transparent=True,
     )
 

@@ -15,6 +15,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 import numpy as np
 
+import pyproteome
 from . import utils
 
 
@@ -86,7 +87,8 @@ def get_channel_levels(
     if file_name:
         f.savefig(
             file_name,
-            bbox_inches="tight", dpi=300,
+            bbox_inches="tight",
+            dpi=pyproteome.DEFAULT_DPI,
             transparent=True,
         )
 
