@@ -7,16 +7,22 @@ and CAMV.
 """
 
 from . import (
-    analysis, bca, cluster, correlation, data_sets, discoverer, levels,
-    loading, modification, paths, plot, pride, protein, sequence, tables,
-    utils, version, volcano,
+    analysis, bca, cluster, data_sets, discoverer, levels,
+    loading, modification, paths, pride, protein, sequence,
+    utils, version,
+)
+from .analysis import (
+    correlation, plot, tables, volcano,
 )
 from .motifs import (
     logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
 )
 
-from IPython import get_ipython
-from IPython.core.magic import register_line_magic
+try:
+    from IPython import get_ipython
+    from IPython.core.magic import register_line_magic
+except ImportError:
+    get_ipython = None
 
 
 if get_ipython() is not None:
