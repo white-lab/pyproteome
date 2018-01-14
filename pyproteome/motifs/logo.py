@@ -126,7 +126,7 @@ def _calc_score(
         return -np.log10(pr_gt_k / pr_lt_k)
 
 
-def _calc_scores(bases, fore, back, p_cutoff=0.05, prob_fn=None):
+def _calc_scores(bases, fore, back, p=0.05, prob_fn=None):
     length = len(back[0])
     fore_counts = [
         Counter(i[pos] for i in fore)
@@ -148,10 +148,10 @@ def _calc_scores(bases, fore, back, p_cutoff=0.05, prob_fn=None):
             for pos in range(length)
         ]
         for base in bases
-    }, _calc_hline(back_counts, p_cutoff=p_cutoff)
+    }, _calc_hline(back_counts, p=p)
 
 
-def _calc_hline(back_counts, p_cutoff=0.05):
+def _calc_hline(back_counts, p=0.05):
     """
     Calculate the significance cutoff using multiple-hypothesis correction.
 
@@ -159,7 +159,7 @@ def _calc_hline(back_counts, p_cutoff=0.05):
     ----------
     back_counts : collections.Counter of str, int
         Frequency of residues found in the background set.
-    p_cutoff : float, optional
+    p : float, optional
 
     Returns
     -------
@@ -172,7 +172,7 @@ def _calc_hline(back_counts, p_cutoff=0.05):
         for _, count in counts.items()
         if count > 0
     )
-    alpha = p_cutoff / num_calc
+    alpha = p / num_calc
     return abs(np.log10(alpha / (1 - alpha)))
 
 
@@ -357,7 +357,7 @@ def _draw_logo(
 
 def logo(
     fore, back,
-    title="", width=12, height=8, p_cutoff=0.05,
+    title="", width=12, height=8, p=0.05,
     fade_power=1, low_res_cutoff=0, prob_fn=None
 ):
     """
@@ -368,14 +368,14 @@ def logo(
     fore : list of str
     back : list of str
     title : str, optional
-    p_cutoff : float, optional
+    p : float, optional
         p-value to use for residue significance cutoff. This value is corrected
         for multiple-hypothesis testing before being used.
     fade_power : float, optional
-        Set transparency of residues with scores below p_cutoff to:
-        (score / p_cutoff) ** fade_power.
+        Set transparency of residues with scores below p to:
+        (score / p) ** fade_power.
     low_res_cutoff : float, optional
-        Hide residues with scores below p_cutoff * low_res_cutoff.
+        Hide residues with scores below p * low_res_cutoff.
     prob_fn : str, optional
         Probability function to use for calculating enrichment. Either
         "hypergeom" or "binom". The default, hypergeom, is more accurate but
@@ -397,7 +397,7 @@ def logo(
 
     rel_info, p_line = _calc_scores(
         BASES, fore, back,
-        p_cutoff=p_cutoff,
+        p=p,
         prob_fn=prob_fn,
     )
 
@@ -447,7 +447,7 @@ def _calc_correlation_scores(bases, peptides, correlations):
 
 def correlation_logo(
     peptides, correlations,
-    title="", width=12, height=8, p_cutoff=0.05,
+    title="", width=12, height=8, p=0.05,
     fade_power=1, low_res_cutoff=0,
 ):
     """
@@ -458,14 +458,14 @@ def correlation_logo(
     peptides : list of str
     correlations : list of float
     title : str, optional
-    p_cutoff : float, optional
+    p : float, optional
         p-value to use for residue significance cutoff. This value is corrected
         for multiple-hypothesis testing before being used.
     fade_power : float, optional
-        Set transparency of residues with scores below p_cutoff to:
-        (score / p_cutoff) ** fade_power.
+        Set transparency of residues with scores below p to:
+        (score / p) ** fade_power.
     low_res_cutoff : float, optional
-        Hide residues with scores below p_cutoff * low_res_cutoff.
+        Hide residues with scores below p * low_res_cutoff.
 
     Returns
     -------

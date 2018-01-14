@@ -18,28 +18,33 @@ LOGGER = logging.getLogger("pyproteome.plogo")
 PLOGO_BASE = "https://plogo.uconn.edu/main"
 
 
-def format_title(data, f):
+def format_title(data=None, f=None):
     title = []
 
-    if 'fold_cutoff' in f:
+    if 'fold' in f:
         title.append(
-            "abs(FC) > {:.2f}".format(f['fold_cutoff'])
+            "abs(FC) > {:.2f}".format(f['fold'])
         )
 
-    if 'asym_fold_cutoff' in f:
+    if 'asym_fold' in f:
         title.append(
             "FC {} {:.2f}".format(
-                ">" if f["asym_fold_cutoff"] > 1 else "<",
-                f['asym_fold_cutoff'],
+                ">" if f["asym_fold"] > 1 else "<",
+                f['asym_fold'],
             )
         )
 
-    if 'p_cutoff' in f:
+    if 'p' in f:
         title.append(
-            "p < {:.2f}".format(f['p_cutoff'])
+            "p < {:.2f}".format(f['p'])
         )
 
-    return "{} - {}".format(data.name, ", ".join(title))
+    title = ", ".join(title)
+
+    if data:
+        title = "{} - {}".format(data.name, title)
+
+    return title
 
 
 def make_logo(data, f, m=None, **kwargs):
@@ -48,7 +53,7 @@ def make_logo(data, f, m=None, **kwargs):
     fore = [
         n
         for n in motif.generate_n_mers(
-            data.filter(**f)["Sequence"],
+            data.filter(f)["Sequence"],
             **nmer_args
         )
         if not m or m.match(n)

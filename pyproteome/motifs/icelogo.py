@@ -21,7 +21,7 @@ def make_logo(data, f, m=None, letter_mod_types=None, **kwargs):
     fore = [
         n
         for n in motif.generate_n_mers(
-            data.filter(**f)["Sequence"],
+            data.filter(f)["Sequence"],
             **nmer_args
         )
         if not m or m.match(n)

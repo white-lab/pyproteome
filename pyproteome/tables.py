@@ -32,14 +32,14 @@ def _get_table_title(f=None, running_title=None):
         running_title = []
 
     if f is not None:
-        if 'asym_fold_cutoff' in f:
+        if 'asym_fold' in f:
             running_title.append(
-                "Upregulated" if f["asym_fold_cutoff"] > 1 else "Downregulated"
+                "Upregulated" if f["asym_fold"] > 1 else "Downregulated"
             )
 
-        if "p_cutoff" in f:
+        if "p" in f:
             running_title.append(
-                "p-{:.3e}".format(f["p_cutoff"])
+                "p-{:.3e}".format(f["p"])
             )
 
         if "group_a" in f or "group_b" in f:
@@ -55,7 +55,7 @@ def _get_table_title(f=None, running_title=None):
 
 def motif_table(
     data, f,
-    p_cutoff=0.05,
+    p=0.05,
     sort="p-value",
     folder_name=None, csv_name=None,
     **kwargs
@@ -83,7 +83,7 @@ def motif_table(
     hits = hits[
         hits[
             "pp-value" if kwargs.get("pp_value", False) else "p-value"
-        ] < p_cutoff
+        ] < p
     ]
 
     return hits.style.set_table_styles([

@@ -61,8 +61,8 @@ def volcano_plot(
     data,
     group_a=None,
     group_b=None,
-    p_cutoff=0.05,
-    fold_cutoff=1.25,
+    p=0.05,
+    fold=1.25,
     fold_and_p=True,
     xminmax=None, yminmax=None,
     options=None,
@@ -91,7 +91,7 @@ def volcano_plot(
     group_a : str or list of str, optional
     group_b : str or list of str, optional
     pval_cutoff : float, optional
-    fold_cutoff : float, optional
+    fold : float, optional
     options: dict of (str, list), optional
     folder_name : str, optional
     title : str, optional
@@ -119,7 +119,7 @@ def volcano_plot(
     edgecolors = options.get('edgecolors', {})
     rename = options.get('rename', {})
 
-    log_p_cutoff = -np.log10(p_cutoff)
+    log_p = -np.log10(p)
 
     if not title:
         title = "{} - {}".format(
@@ -133,7 +133,7 @@ def volcano_plot(
         if folder_name:
             file_name = os.path.join(folder_name, file_name)
 
-    upper_fold = np.log2(fold_cutoff)
+    upper_fold = np.log2(fold)
     lower_fold = -upper_fold
 
     rows = [
@@ -150,8 +150,8 @@ def volcano_plot(
     ]
 
     if bonferoni:
-        p_cutoff = p_cutoff / len(rows)
-        log_p_cutoff = -np.log10(p_cutoff)
+        p = p / len(rows)
+        log_p = -np.log10(p)
 
     # Calculate the Fold-Change / p-values
     pvals = []
@@ -217,10 +217,10 @@ def volcano_plot(
                 i in show
                 for i in names
             ) or ((
-                row_pval > log_p_cutoff and
+                row_pval > log_p and
                 (row_change > upper_fold or row_change < lower_fold)
             ) if fold_and_p else (
-                row_pval > log_p_cutoff or
+                row_pval > log_p or
                 (row_change > upper_fold or row_change < lower_fold)
             ))
         ):
@@ -277,8 +277,8 @@ def volcano_plot(
                     for tick in ax.get_yticks()
                     if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
                     ["1", "5"] and
-                    tick > log_p_cutoff
-                ] + [log_p_cutoff]
+                    tick > log_p
+                ] + [log_p]
             )
         )
     )
@@ -314,13 +314,13 @@ def volcano_plot(
             fontsize=20,
         )
 
-    if not np.isnan(log_p_cutoff):
+    if not np.isnan(log_p):
         ax.axhline(
-            log_p_cutoff,
+            log_p,
             color="r", linestyle="dashed", linewidth=0.5,
         )
 
-    if abs(fold_cutoff - 1) > 0.01:
+    if abs(fold - 1) > 0.01:
         ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
         ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
 
@@ -393,7 +393,7 @@ def plot_volcano_filtered(data, f, **kwargs):
         group_b=kwargs.get("group_b", None),
     )
 
-    d = data.filter(**f)
+    d = data.filter(f)
 
     changes = []
     pvals = []

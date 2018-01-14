@@ -531,8 +531,8 @@ def spearmanr_nan(a, b, min_length=5):
 
 def correlate_signal(
     data, signal,
-    p_cutoff=0.05,
-    fold_cutoff=1.25,
+    p=0.05,
+    fold=1.25,
     options=None,
     folder_name=None, title=None,
     scatter_colors=None,
@@ -604,14 +604,14 @@ def correlate_signal(
         x.append(row["Correlation"])
         y.append(-np.log10(row["corr p-value"]))
 
-        if row["corr p-value"] < p_cutoff:
+        if row["corr p-value"] < p:
             sig_x.append(row["Correlation"])
             sig_y.append(-np.log10(row["corr p-value"]))
             sig_labels.append(" / ".join(sorted(row["Proteins"].genes)))
 
         colors.append(
             "blue"
-            if row["corr p-value"] < p_cutoff else
+            if row["corr p-value"] < p else
             "{:.2f}".format(
                 max([len(row[data_chans].dropna()) / len(data_chans) - .25, 0])
             )
@@ -679,7 +679,7 @@ def correlate_signal(
     if title:
         ax.set_title(title, fontsize=32)
 
-    cp.psms = cp.psms[cp.psms["corr p-value"] < p_cutoff]
+    cp.psms = cp.psms[cp.psms["corr p-value"] < p]
 
     f_scatter, axes = plt.subplots(
         int(np.ceil(cp.psms.shape[0] / 3)), 3,

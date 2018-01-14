@@ -72,7 +72,7 @@ dilution.
 ... )
 >>> ck_h1_channel_levels = levels.get_channel_levels(ck_h1_global)
 >>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_channel_levels)
->>> tables.changes_table(ck_h1_py_norm.filter(p_cutoff=0.05), sort="Fold Change"))
+>>> tables.changes_table(ck_h1_py_norm.filter(p=0.05), sort="Fold Change"))
 ```
 
 ## Directory Hierarchy

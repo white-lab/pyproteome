@@ -2,7 +2,7 @@
 from matplotlib import pyplot as plt
 from scipy import stats
 
-from . import motif
+from . import motif, plogo
 
 
 def enriched_neighborhood(
@@ -16,7 +16,7 @@ def enriched_neighborhood(
         all_matches=False,
     )
     foreground = motif.generate_n_mers(
-        data.filter(**f)["Sequence"],
+        data.filter(f)["Sequence"],
         letter_mod_types=[(None, "Phospho")],
         n=nmer_length,
         all_matches=False,
@@ -65,7 +65,7 @@ def enriched_neighborhood(
         [
             sum(i.count(j) for j in residues)
             for i in motif.generate_n_mers(
-                data.filter(**f)["Sequence"],
+                data.filter(f)["Sequence"],
                 letter_mod_types=[(None, "Phospho")],
                 n=nmer_length,
                 all_matches=False,
@@ -73,10 +73,10 @@ def enriched_neighborhood(
         ],
         normed=True, alpha=0.7, color="orange",
         bins=range(0, nmer_length, 1),
-        label="foreground",
+        label=plogo.format_title(f),
     )
 
-    ax.set_title("SFK Substrate Enrichment")
+    ax.set_title("SFK Substrate Enrichment\np = {:.2e}".format(pval))
     ax.set_xlabel(
         "# of acidic residues within {} residues of pY"
         .format(nmer_length // 2)

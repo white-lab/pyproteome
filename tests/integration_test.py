@@ -192,7 +192,7 @@ class IntegrationTest(TestCase):
         self.test_normalize_data()
 
         for _, data in self.data.items():
-            volcano.plot_volcano_filtered(data, {"asym_fold_cutoff": 1.25})
+            volcano.plot_volcano_filtered(data, {"asym_fold": 1.25})
 
     def test_write_full_tables(self):
         merge = self.test_merge_data()
@@ -205,17 +205,17 @@ class IntegrationTest(TestCase):
         self.test_normalize_data()
 
         for _, data in self.data.items():
-            logo.make_logo(data, {"asym_fold_cutoff": 1.05})
+            logo.make_logo(data, {"asym_fold": 1.05})
 
     # def test_plogo(self):
     #     self.test_normalize_data()
     #
-    #     plogo.make_logo(self.data["CKH1"], {"asym_fold_cutoff": 1.05})
+    #     plogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
 
     def test_icelogo(self):
         self.test_normalize_data()
 
-        icelogo.make_logo(self.data["CKH1"], {"asym_fold_cutoff": 1.05})
+        icelogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
 
     # def test_weblogo(self):
     #     self.test_normalize_data()
