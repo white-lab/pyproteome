@@ -5,26 +5,43 @@ import pyproteome
 from pyproteome import cluster, volcano, motifs, tables
 
 
-def auto_clusterer(data, n=100, folder_name="Clusters"):
+def auto_clusterer(
+    data,
+    get_data_kwargs=None,
+    cluster_kwargs=None,
+    cluster_cluster_kwargs=None,
+    folder_name="Clusters",
+):
     """
     Cluster and generate plots for a data set.
 
     Parameters
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    n : int, optional
-        Number of clusters to initially generate before down-clustering.
     """
-    data = cluster.get_data(data)
+    get_data_kwargs = get_data_kwargs or {}
+    cluster_kwargs = cluster_kwargs or {}
+    cluster_cluster_kwargs = cluster_cluster_kwargs or {}
+
+    data = cluster.get_data(
+        data,
+        **get_data_kwargs
+    )
 
     cluster.pca(data)
 
+    if "n_clusters" not in cluster_kwargs:
+        cluster_kwargs["n_clusters"] = 100
+
     _, y_pred_old = cluster.cluster(
         data,
-        n_clusters=6,
+        **cluster_kwargs
     )
 
-    y_pred = cluster.cluster_clusters(data, y_pred_old)
+    y_pred = cluster.cluster_clusters(
+        data, y_pred_old,
+        **cluster_cluster_kwargs
+    )
 
     cluster.plot.cluster_corrmap(data, y_pred_old)
     cluster.plot.cluster_corrmap(data, y_pred)
