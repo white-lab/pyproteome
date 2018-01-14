@@ -72,6 +72,9 @@ if get_ipython() is not None:
         )
 
 DEFAULT_DPI = 300
+"""
+The DPI to use when generating all image figures.
+"""
 
 __all__ = [
     "analysis",
