@@ -6,7 +6,7 @@ from unittest import TestCase
 import pylab
 
 from pyproteome import (
-    analysis, cluster, data_sets, levels, logo, paths, tables, volcano,
+    analysis, cluster, data_sets, levels, logo, paths, plot, tables, volcano,
     plogo, icelogo, weblogo, phosphosite,
 )
 
@@ -139,21 +139,21 @@ class IntegrationTest(TestCase):
     def test_plot_all(self):
         merge = self.test_merge_data()
 
-        analysis.plot_all(
+        plot.plot_all(
             [merge],
             seqs="AVDSLVPIGR",
             individual=True,
             between=True,
         )
 
-        analysis.plot_all(
+        plot.plot_all(
             [merge],
             protein="Pkm",
             individual=True,
             between=True,
         )
 
-        analysis.plot_all_together(
+        plot.plot_together(
             [merge],
             protein="Pkm",
         )
