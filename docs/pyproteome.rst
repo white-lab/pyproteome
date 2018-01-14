@@ -36,6 +36,14 @@ pyproteome.camv module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.correlation module
+-----------------------------
+
+.. automodule:: pyproteome.correlation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.data_sets module
 ---------------------------
 
@@ -88,6 +96,14 @@ pyproteome.paths module
 -----------------------
 
 .. automodule:: pyproteome.paths
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.plot module
+----------------------
+
+.. automodule:: pyproteome.plot
     :members:
     :undoc-members:
     :show-inheritance:

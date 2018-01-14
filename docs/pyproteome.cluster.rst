@@ -4,6 +4,14 @@ pyproteome.cluster package
 Submodules
 ----------
 
+pyproteome.cluster.auto module
+------------------------------
+
+.. automodule:: pyproteome.cluster.auto
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.cluster.plot module
 ------------------------------
 
