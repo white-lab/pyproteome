@@ -3,12 +3,10 @@ This module provides functionality for accessing public proteome data through
 PRIDE / Proteome Xchange.
 """
 
-from io import BytesIO
 import os
 # XXX: This should be a safer alternative package. Otherwise users could be
 # DOS-d by a MITM attack
 import xml.etree.ElementTree as ET
-from zipfile import ZipFile
 
 import requests
 
