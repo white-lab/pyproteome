@@ -1,15 +1,13 @@
 pyproteome package
 ==================
 
+Subpackages
+-----------
 
-Module contents
----------------
+.. toctree::
 
-.. automodule:: pyproteome
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+    pyproteome.cluster
+    pyproteome.motifs
 
 Submodules
 ----------
@@ -23,7 +21,7 @@ pyproteome.analysis module
     :show-inheritance:
 
 pyproteome.bca module
---------------------------
+---------------------
 
 .. automodule:: pyproteome.bca
     :members:
@@ -47,17 +45,9 @@ pyproteome.data_sets module
     :show-inheritance:
 
 pyproteome.discoverer module
-----------------------
+----------------------------
 
 .. automodule:: pyproteome.discoverer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.enrichment module
--------------------------------------
-
-.. automodule:: pyproteome.enrichment
     :members:
     :undoc-members:
     :show-inheritance:
@@ -86,26 +76,26 @@ pyproteome.loading module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.logo module
-----------------------
-
-.. automodule:: pyproteome.logo
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.modification module
--------------------------------
+------------------------------
 
 .. automodule:: pyproteome.modification
     :members:
     :undoc-members:
     :show-inheritance:
 
-pyproteome.motif module
+pyproteome.paths module
 -----------------------
 
-.. automodule:: pyproteome.motif
+.. automodule:: pyproteome.paths
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.pride module
+-----------------------
+
+.. automodule:: pyproteome.pride
     :members:
     :undoc-members:
     :show-inheritance:
@@ -126,6 +116,14 @@ pyproteome.sequence module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.tables module
+------------------------
+
+.. automodule:: pyproteome.tables
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.utils module
 -----------------------
 
@@ -138,6 +136,23 @@ pyproteome.version module
 -------------------------
 
 .. automodule:: pyproteome.version
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.volcano module
+-------------------------
+
+.. automodule:: pyproteome.volcano
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: pyproteome
     :members:
     :undoc-members:
     :show-inheritance:
