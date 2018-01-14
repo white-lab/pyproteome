@@ -99,7 +99,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyproteome'
-copyright = u'2016, Nader Morshed'
+copyright = u'2016-2018, Nader Morshed'
 author = u'Nader Morshed'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -325,7 +325,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   (master_doc, 'pyproteome', u'pyproteome Documentation',
-   author, 'pyproteome', 'One line description of project.',
+   author, 'pyproteome',
+   'Python library for analyzing mass spectrometry proteomics data..',
    'Miscellaneous'),
 ]
 
