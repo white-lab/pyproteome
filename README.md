@@ -56,7 +56,7 @@ dilution.
 ... ])
 >>> ck_name = "CK-p25 vs. CK, 2 weeks"
 >>> ck_h1_py = data_sets.DataSet(
-...     mascot_name="2015-09-11-CKH1-pY",
+...     mascot_name="CKH1-pY",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
 ...     name="CKH1",
@@ -64,14 +64,13 @@ dilution.
 ...     tissues=["Hippocampus"],
 ... )
 ... ck_h1_global = data_sets.DataSet(
-...     mascot_name="2015-09-18-CKH1-pY-sup",
+...     mascot_name="CKH1-pY-sup",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
 ...     name="CKH1",
 ...     tissues=["Hippocampus"],
 ... )
->>> ck_h1_channel_levels = levels.get_channel_levels(ck_h1_global)
->>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_channel_levels)
+>>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_global)
 >>> tables.changes_table(ck_h1_py_norm.filter(p=0.05), sort="Fold Change"))
 ```
 

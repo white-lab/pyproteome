@@ -198,7 +198,7 @@ def make_logo(data, f, **kwargs):
     fore = [
         n.upper()
         for n in motif.generate_n_mers(
-            data.filter(**f)["Sequence"],
+            data.filter(f)["Sequence"],
             **nmer_args
         )
     ]

@@ -466,7 +466,7 @@ def _add_cache(args, ret):
 def run_motif_enrichment(data, f, **kwargs):
     nmer_args = get_nmer_args(kwargs)
     foreground = sorted(
-        generate_n_mers(data.filter(**f)["Sequence"], **nmer_args)
+        generate_n_mers(data.filter(f)["Sequence"], **nmer_args)
     )
     background = sorted(
         generate_n_mers(data["Sequence"], **nmer_args)

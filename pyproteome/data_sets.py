@@ -8,7 +8,7 @@ structured format.
 # Built-ins
 from __future__ import division, print_function
 
-from collections import OrderedDict
+from collections import OrderedDict, Iterable
 import copy
 import logging
 import os
@@ -20,7 +20,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy.stats import ttest_ind
 
-from . import loading, modification, utils
+from . import levels, loading, modification, utils
 from .motifs import motif as pymotif
 
 
@@ -48,6 +48,7 @@ class DataSet:
         Primary key is the phenotype and its value is a dictionary mapping
         sample names to that phenotype's value.
     name : str
+    levels : dict or str, float, optional
     enrichments : list of str
     sets : int
         Number of sets merged into this data set.
@@ -63,6 +64,7 @@ class DataSet:
         groups=None,
         phenotypes=None,
         name="",
+        lvls=None,
         enrichments=None,
         dropna=False,
         camv_slices=None,
@@ -90,6 +92,7 @@ class DataSet:
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
         phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
+        lvls : dict or str, float, optional
         enrichments : list of str, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
@@ -117,8 +120,8 @@ class DataSet:
 
         if filter_bad is True:
             filter_bad = dict(
-                ion_score_cutoff=15,
-                isolation_cutoff=50,
+                ion_score=15,
+                isolation=50,
                 median_quant_signal=1000,
             )
 
@@ -161,6 +164,7 @@ class DataSet:
         self.psms = psms
         self.phenotypes = phenotypes
         self.name = name
+        self.levels = lvls
         self.mascot_name = mascot_name
         self.camv_name = camv_name
         self.enrichments = enrichments
@@ -504,7 +508,7 @@ class DataSet:
 
         return new
 
-    def normalize(self, levels, inplace=False):
+    def normalize(self, lvls, inplace=False):
         """
         Normalize channels to given levels for intra-run comparisons.
 
@@ -512,8 +516,11 @@ class DataSet:
 
         Parameters
         ----------
-        levels : dict of str, float
-            Mapping of channel names to normalized levels.
+        lvls : dict of str, float or
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
+            Mapping of channel names to normalized levels. Alternatively,
+            a data set to pass to levels.get_channel_levels() or use
+            pre-calculated levels from.
         inplace : bool, optional
             Modify this data set in place.
 
@@ -528,6 +535,12 @@ class DataSet:
 
         if not inplace:
             new = new.copy()
+
+        if isinstance(lvls, DataSet):
+            if not lvls.levels:
+                lvls.levels = levels.get_channel_levels(lvls)
+
+            lvls = levels.levels
 
         new_channels = utils.norm(self.channels)
 
@@ -601,47 +614,61 @@ class DataSet:
 
     def filter(
         self,
-        group_a=None,
-        group_b=None,
-        ion_score_cutoff=None,
-        isolation_cutoff=None,
-        confidence_cutoff=None,
-        p_cutoff=None,
-        fold_cutoff=None,
-        asym_fold_cutoff=None,
-        median_quant_signal=None,
-        missed_cleavage_cutoff=None,
-        sequence=None,
-        sequences=None,
-        proteins=None,
-        mod_types=None,
-        only_validated=False,
-        scan_paths=None,
-        motif=None,
-        series=None,
-        inverse=False,
-        drop=True,
+        filters=None,
         inplace=False,
+        **kwargs
     ):
         """
         Filters a data set.
 
         Parameters
         ----------
-        ion_score_cutoff : int, optional
-        isolation_cutoff : float, optional
-        confidence_cutoff : {"High", "Medium", "Low"}, optional
-        p_cutoff : float, optional
-        fold_cutoff : float, optional
-        asym_fold_cutoff : float, optional
-        sequence : str, optional
-        proteins : list of str, optional
-        mod_types : list of tuple of str, str, optional
-        only_validated : bool, optional
-        scan_paths : list of str, optional
-        motif : :class:`pyproteome.motif.Motif`, optional
-        series : :class:`pd.Series`, optional
+        filters : list of dict or dict, optional
+            List of filters to apply to data set. Filters are also pulled from
+            **kwargs (see below).
         inplace : bool, optional
+            Perform the filter on self, other create a copy and return the
+            new object.
+
+        Filter Parameters
+        =================
+        These parameters filter your data set to only include peptides that
+        match a given attribute. For example:
+
+            # Filter for all peptides with p-value < 0.01, and a fold change
+            # greater than 2x or less than 0.5x
+            >>> data.filter(p=0.01, fold=2)
+
+        This function interprets both the argument filter and python's **kwargs
+        magic. The three functions are all equivalent:
+
+            >>> data.filter(p=0.01)
+            >>> data.filter([{"p": 0.01}])
+            >>> data.filter({"p": 0.01})
+
+        Filter parameters can be one of any below:
+
+        ================    ===========
+        Name                Description
+        ================    ===========
+        seies               Use a pandas series (data.psms[series]).
+        fn                  Use data.psms.apply(fn).
+        group_a             Calculate p / fold change values from group_a.
+        group_b             Calculate p / fold change values from group_b.
+        confidence          Discoverer's peptide confidence (High|Medium|Low).
+        ion_score           MASCOT's ion score.
+        isolation           Discoverer's isolation inference.
+        missed_cleavage     Missed cleaves <= cutoff.
+        median_quant        Median quantification signal > cutoff.
+        p                   p-value < cutoff.
+        asym_fold           Change > val if cutoff > 1 else Change < val.
+        fold                Change > cutoff or Change < 1 / cutoff.
+        motif               Filter for motif.
+        protein             Filter for protein or list of proteins.
+        seq                 Filter for sequence or list of sequences.
+        mod_types           Filter for modifications.
+        only_validated      Use rows validated by CAMV.
+        inverse             Use all rows that are rejected by a filter.
 
         Returns
         -------
@@ -649,171 +676,194 @@ class DataSet:
         """
         new = self
 
+        if filters is None:
+            filters = []
+
+        if filters and not isinstance(filters, Iterable):
+            filters = [filters]
+
+        if kwargs:
+            filters += [kwargs]
+
         if not inplace:
             new = new.copy()
 
-        if group_a or group_b:
-            new.update_group_changes(group_a=group_a, group_b=group_b)
-
-        confidence_levels = []
-
-        # MASCOT confidence levels
-        if confidence_cutoff:
-            confidence_levels += [confidence_cutoff]
-        if confidence_cutoff in ["Medium", "Low"]:
-            confidence_levels += ["High"]
-        if confidence_levels in ["Low"]:
-            confidence_levels += ["Medium"]
-
         def filter_psms(new, array):
             assert array.shape[0] == new.psms.shape[0]
-            # print(new.psms.loc[array].shape, array.shape)
             return (
-                new.psms.loc[array] if not inverse else new.psms.loc[~array]
-            ).reset_index(drop=drop)
-
-        if confidence_levels:
-            new.psms = filter_psms(
-                new,
-                new.psms["Confidence Level"].isin(confidence_levels)
-            )
-
-        # MASCOT ion scores
-        if ion_score_cutoff:
-            new.psms = filter_psms(
-                new,
-                new.psms["IonScore"] >= ion_score_cutoff
-            )
-
-        if isolation_cutoff:
-            new.psms = filter_psms(
-                new,
-                ~(new.psms["Isolation Interference"] > isolation_cutoff)
-            )
-
-        if missed_cleavage_cutoff is not None:
-            new.psms = filter_psms(
-                new,
-                new.psms["Missed Cleavages"] <= missed_cleavage_cutoff,
-            )
-
-        if median_quant_signal is not None:
-            with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    'ignore',
-                    r'All-NaN (slice|axis) encountered',
-                )
-                new.psms = filter_psms(
-                    new,
-                    np.nan_to_num(
-                        np.nanmedian(
-                            new.psms[[val for _, val in new.channels.items()]],
-                            axis=1,
-                        )
-                    ) >= median_quant_signal
-                )
-
-        if p_cutoff:
-            new.psms = new.psms.dropna(
-                subset=("p-value",)
-            ).reset_index(drop=True)
-            new.psms = filter_psms(
-                new,
-                new.psms["p-value"] <= p_cutoff
-            )
-
-        if asym_fold_cutoff:
-            new.psms = new.psms.dropna(
-                subset=("Fold Change",)
+                new.psms.loc[array]
+                if not f["inverse"] else
+                new.psms.loc[~array]
             ).reset_index(drop=True)
 
-            if asym_fold_cutoff > 1:
+        for f in filters:
+            # Do series first to avoid potential row index bugs
+            if "series" in f:
                 new.psms = filter_psms(
                     new,
-                    new.psms["Fold Change"] >= asym_fold_cutoff
+                    f["series"],
                 )
-            else:
+
+            if "fn" in f:
                 new.psms = filter_psms(
                     new,
-                    new.psms["Fold Change"] <= asym_fold_cutoff
+                    new.psms.apply(f["fn"]),
                 )
 
-        if fold_cutoff:
-            new.psms = new.psms.dropna(
-                subset=("Fold Change",)
-            ).reset_index(drop=True)
+            if "group_a" in f or "group_b" in f:
+                new.update_group_changes(
+                    group_a=f.get("group_a", None),
+                    group_b=f.get("group_b", None),
+                )
 
-            if fold_cutoff < 1:
-                fold_cutoff = 1 / fold_cutoff
+            confidence_levels = []
 
-            new.psms = filter_psms(
-                new,
-                np.maximum.reduce(
-                    [
-                        new.psms["Fold Change"],
-                        1 / new.psms["Fold Change"],
-                    ]
-                ) >= fold_cutoff
-            )
+            # MASCOT confidence levels
+            if "confidence" in f:
+                confidence_levels += [f["confidence"]]
+            if f["confidence"] in ["Medium", "Low"]:
+                confidence_levels += ["High"]
+            if f["confidence"] in ["Low"]:
+                confidence_levels += ["Medium"]
 
-        if motif is not None:
-            new.psms = filter_psms(
-                new,
-                new.psms["Sequence"].apply(
-                    lambda x:
-                    any(
-                        motif.match(nmer)
-                        for nmer in pymotif.generate_n_mers(
-                            [x],
-                            letter_mod_types=mod_types,
-                        )
+            if confidence_levels:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Confidence Level"].isin(confidence_levels)
+                )
+
+            # MASCOT ion scores
+            if "ion_score" in f:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["IonScore"] >= f["ion_score"]
+                )
+
+            if "isolation" in f:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Isolation Interference"] <= f["isolation"]
+                )
+
+            if "missed_cleavage" in f:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Missed Cleavages"] <= f["missed_cleavage"]
+                )
+
+            if "median_quant" in f:
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        'ignore',
+                        r'All-NaN (slice|axis) encountered',
                     )
-                ),
-            )
+                    new.psms = filter_psms(
+                        new,
+                        np.nan_to_num(
+                            np.nanmedian(
+                                new.psms[
+                                    [val for val in new.channels.values()]
+                                ],
+                                axis=1,
+                            )
+                        ) >= f["median_quant"]
+                    )
 
-        if series is not None:
-            new.psms = filter_psms(
-                new,
-                series,
-            )
+            if "p" in f:
+                new.psms = new.psms.dropna(
+                    subset=("p-value",)
+                ).reset_index(drop=True)
+                new.psms = filter_psms(
+                    new,
+                    new.psms["p-value"] <= f["p"]
+                )
 
-        if proteins is not None:
-            new.psms = filter_psms(
-                new,
-                new.psms["Proteins"]
-                .apply(lambda x: any(i in proteins for i in x.genes))
-            )
+            if "asym_fold" in f:
+                new.psms = new.psms.dropna(
+                    subset=("Fold Change",)
+                ).reset_index(drop=True)
 
-        if sequence is not None:
-            new.psms = filter_psms(
-                new,
-                new.psms["Sequence"] == sequence
-            )
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Fold Change"] >= f["asym_fold"]
+                    if f["asym_fold"] > 1 else
+                    new.psms["Fold Change"] <= f["asym_fold"]
+                )
 
-        if sequences is not None:
-            new.psms = filter_psms(
-                new,
-                new.psms["Sequence"].isin(sequences)
-            )
+            if "fold" in f:
+                new.psms = new.psms.dropna(
+                    subset=("Fold Change",)
+                ).reset_index(drop=True)
 
-        if mod_types is not None:
-            new.psms = filter_psms(
-                new,
-                modification.filter_mod_types(new.psms, mod_types)
-            )
+                if f["fold"] < 1:
+                    f["fold"] = 1 / f["fold"]
 
-        if only_validated:
-            new.psms = filter_psms(
-                new,
-                new.psms["Validated"]
-            )
+                new.psms = filter_psms(
+                    new,
+                    np.maximum.reduce(
+                        [
+                            new.psms["Fold Change"],
+                            1 / new.psms["Fold Change"],
+                        ]
+                    ) >= f["fold"]
+                )
 
-        if scan_paths is not None:
-            new.psms = filter_psms(
-                new,
-                new.psms["Scan Paths"]
-                .apply(lambda x: any(i in scan_paths for i in x))
-            )
+            if "motif" in f:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Sequence"].apply(
+                        lambda x:
+                        any(
+                            f["motif"].match(nmer)
+                            for nmer in pymotif.generate_n_mers(
+                                [x],
+                                letter_mod_types=f.get("mod_types", None),
+                            )
+                        )
+                    ),
+                )
+
+            if "protein" in f:
+                proteins = (
+                    f["protein"]
+                    if isinstance(f["protein"], Iterable) else
+                    [f["protein"]]
+                )
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Proteins"]
+                    .apply(lambda x: any(i in proteins for i in x.genes))
+                )
+
+            if "sequence" in f:
+                seqs = (
+                    f["sequence"]
+                    if isinstance(f["sequence"], Iterable) else
+                    [f["sequence"]]
+                )
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Sequence"].isin(seqs)
+                )
+
+            if "mod_types" in f:
+                new.psms = filter_psms(
+                    new,
+                    modification.filter_mod_types(new.psms, f["mod_types"])
+                )
+
+            if "only_validated" in f:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Validated"]
+                )
+
+            if "scan_paths" in f:
+                new.psms = filter_psms(
+                    new,
+                    new.psms["Scan Paths"]
+                    .apply(lambda x: any(i in f["scan_paths"] for i in x))
+                )
 
         new.psms.reset_index(inplace=True, drop=True)
 

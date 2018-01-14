@@ -104,6 +104,22 @@ def which(program):
 
 
 def flatten_set(lst):
+    """
+    Flattens an Iterable with arbitrary nesting into a single set.
+
+    Examples
+    --------
+        >>> utils.flatten_set([0, [1, 2], [[3]], "string"])
+        set([0, 1, 2, 3, "string"])
+
+    Parameters
+    ----------
+    lst : Iterable
+
+    Returns
+    -------
+    set
+    """
     if isinstance(lst, (list, tuple, set, pd.Series, np.ndarray)):
         ret = set()
 

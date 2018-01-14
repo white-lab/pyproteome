@@ -36,7 +36,7 @@ def make_logo(
         [
             Bio.Seq.Seq(seq.upper(), alphabet=alpha)
             for seq in motif.generate_n_mers(
-                data.filter(**f).psms["Sequence"],
+                data.filter(f).psms["Sequence"],
                 **nmer_args
             )
         ],
