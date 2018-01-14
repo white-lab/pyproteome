@@ -45,7 +45,7 @@ def list_data_set(accession):
     return root.findall("DatasetFileList/DatasetFile")
 
 
-def fetch_data_set(accession, unzip=None):
+def fetch_data_set(accession, files=None):
     """
     Fetches files from a deposition on PRIDE.
 
@@ -53,38 +53,47 @@ def fetch_data_set(accession, unzip=None):
     ----------
     accession : str
         A PRIDE accession ID. i.e. "PXD001038"
-    unzip : dict of str, str, optional
-        Maps zip files to the directories they should be extracted into. In
-        unset, all zip files for a project will be downloaded and extracted
-        into the current working directory.
+    files : dict of str, str
+
+    Returns
+    -------
+    list of str
 
     Examples
     --------
     >>> from pyproteome import pride
     >>> pride.fetch_data_set(
     ...     "PXD001038",
-    ...     unzip={"HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip": "."},
+    ...     files={"HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip": "."},
     ... )
     """
-    files = list_data_set(accession)
+    ds = list_data_set(accession)
+    ret = []
 
-    for file_root in files:
-        if unzip and file_root.get("name") not in unzip:
+    for file_root in ds:
+        name = file_root.get("name")
+        if files and name not in files:
             continue
 
-        folder = unzip[file_root.get("name")] if unzip else os.getcwd()
+        if isinstance(files, dict) and name in files:
+            folder = files[name]
+        else:
+            folder = os.getcwd()
 
+        out_path = os.path.join(folder, name)
         file_url = file_root.find("cvParam").get("value")
-
-        if not file_url.endswith(".zip"):
-            raise Exception("Unknown file type: {}".format(file_url))
 
         # Requests cannot fetch FTP files
         if file_url.startswith("ftp://"):
             file_url = "http://{}".format(file_url[len("ftp://"):])
 
-        zip_file = requests.get(file_url, stream=True)
-        zip_contents = ZipFile(BytesIO(zip_file.content))
+        response = requests.get(file_url, stream=True)
+        response.raise_for_status()
 
-        for name in zip_contents.namelist():
-            zip_contents.extract(name, folder)
+        with open(out_path, mode="wb") as f:
+            for block in response.iter_content(1024):
+                f.write(block)
+
+        ret.append(name)
+
+    return ret
