@@ -6,19 +6,12 @@ Subpackages
 
 .. toctree::
 
+    pyproteome.analysis
     pyproteome.cluster
     pyproteome.motifs
 
 Submodules
 ----------
-
-pyproteome.analysis module
---------------------------
-
-.. automodule:: pyproteome.analysis
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 pyproteome.bca module
 ---------------------
@@ -32,14 +25,6 @@ pyproteome.camv module
 ----------------------
 
 .. automodule:: pyproteome.camv
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.correlation module
------------------------------
-
-.. automodule:: pyproteome.correlation
     :members:
     :undoc-members:
     :show-inheritance:
@@ -100,14 +85,6 @@ pyproteome.paths module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.plot module
-----------------------
-
-.. automodule:: pyproteome.plot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.pride module
 -----------------------
 
@@ -132,14 +109,6 @@ pyproteome.sequence module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.tables module
-------------------------
-
-.. automodule:: pyproteome.tables
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.utils module
 -----------------------
 
@@ -152,14 +121,6 @@ pyproteome.version module
 -------------------------
 
 .. automodule:: pyproteome.version
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.volcano module
--------------------------
-
-.. automodule:: pyproteome.volcano
     :members:
     :undoc-members:
     :show-inheritance:
