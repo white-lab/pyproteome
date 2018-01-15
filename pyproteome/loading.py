@@ -106,7 +106,6 @@ def load_mascot_psms(basename, pick_best_ptm=False):
     Parameters
     ----------
     basenme : str
-    camv_slices : int, optional
 
     Returns
     -------
@@ -130,4 +129,4 @@ def load_mascot_psms(basename, pick_best_ptm=False):
     psms = _calculate_rejected(psms, accepted, maybed, rejected)
     psms = _calculate_accepted(psms, accepted)
 
-    return psms, scan_lists, lst
+    return psms, lst

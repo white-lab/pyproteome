@@ -67,7 +67,6 @@ class DataSet:
         lvls=None,
         enrichments=None,
         dropna=False,
-        camv_slices=None,
         pick_best_ptm=True,
         merge_duplicates=True,
         merge_subsets=False,
@@ -95,7 +94,6 @@ class DataSet:
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
             values.
-        camv_slices : int, optional
         pick_best_ptm : bool, optional
             Select the peptide sequence for each scan that has the highest
             MASCOT ion score. (i.e. ["pSTY": 5, "SpTY": 10, "STpY": 20] =>
@@ -133,7 +131,6 @@ class DataSet:
         if mascot_name:
             psms, self.scan_lists, lst = loading.load_mascot_psms(
                 mascot_name,
-                camv_slices=camv_slices,
                 pick_best_ptm=pick_best_ptm,
             )
             self.sources = ["MASCOT"]
