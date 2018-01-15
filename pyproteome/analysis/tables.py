@@ -6,8 +6,8 @@ import re
 
 import pandas as pd
 
-from . import utils
-from .motifs import motif
+from .. import utils
+from ..motifs import motif
 
 
 def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):

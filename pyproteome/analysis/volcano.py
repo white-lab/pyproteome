@@ -12,7 +12,7 @@ import numpy as np
 from adjustText.adjustText import adjust_text
 
 import pyproteome
-from . import utils
+from .. import utils
 
 
 LOGGER = logging.getLogger("pyproteome.volcano")
