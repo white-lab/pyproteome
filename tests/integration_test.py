@@ -107,6 +107,18 @@ class IntegrationTest(TestCase):
             for name, filename in DATAS.items()
         }
 
+    def test_merge_subsets(self):
+        self.data = {
+            name: data_sets.DataSet(
+                mascot_name=os.path.splitext(filename)[0],
+                name=name,
+                channels=self.channels[name],
+                groups=self.groups,
+                merge_subsets=True,
+            )
+            for name, filename in DATAS.items()
+        }
+
     def test_normalize_data(self):
         self.data = {
             name: data.normalize(data)
