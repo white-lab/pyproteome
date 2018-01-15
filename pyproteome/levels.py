@@ -5,7 +5,7 @@ Levels can be extracted from supernatant or phosphotyrosine runs using median
 or mean peptide levels across multiple channels.
 """
 
-from __future__ import division
+from __future__ import absolute_import, division
 
 # Built-ins
 import os

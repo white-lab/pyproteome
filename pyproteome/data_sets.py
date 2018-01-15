@@ -6,13 +6,14 @@ structured format.
 """
 
 # Built-ins
-from __future__ import division, print_function
+from __future__ import absolute_import, division
 
 from collections import OrderedDict, Iterable
 import copy
 import logging
 import os
 import warnings
+import sys
 
 # Core data analysis libraries
 import pandas as pd
@@ -1005,15 +1006,23 @@ class DataSet:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
 
-    def print_stats(self):
-        print(self.name, self.enrichment)
+    def print_stats(self, out=sys.stdout):
         data = self.dropna(how="all")
 
         data_p = self.filter(mod_types=[(None, "Phospho")])
         data_pst = self.filter(mod_types=[("S", "Phospho"), ("T", "Phospho")])
         data_py = self.filter(mod_types=[("Y", "Phospho")])
-        print(
-            "{} pY, {} pST ({:.0%} Specificity)\n{} total, {} proteins".format(
+
+        out.write(
+            "{} {}\n"
+            .format(
+                self.name,
+                self.enrichment,
+            )
+        )
+        out.write(
+            "{} pY, {} pST ({:.0%} Specificity)\n{} total, {} proteins\n"
+            .format(
                 len(data_py.psms),
                 len(data_pst.psms),
                 len(data_p.psms) / len(self.psms),
@@ -1021,7 +1030,6 @@ class DataSet:
                 len(data.genes),
             )
         )
-        print()
 
     @property
     def genes(self):

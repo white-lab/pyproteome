@@ -300,4 +300,7 @@ class IntegrationTest(TestCase):
     def test_auto_cluster(self):
         merge = self.test_merge_data()
 
-        cluster.auto.auto_clusterer(merge)
+        cluster.auto.auto_clusterer(
+            merge,
+            cluster_kwargs={"n_clusters": 10},
+        )

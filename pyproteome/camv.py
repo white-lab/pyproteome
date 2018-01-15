@@ -5,7 +5,7 @@ Currently limited to importing and outputing scan lists.
 """
 
 # Built-ins
-from __future__ import division
+from __future__ import absolute_import, division
 
 from collections import OrderedDict
 import logging

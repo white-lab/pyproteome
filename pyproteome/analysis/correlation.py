@@ -5,7 +5,7 @@ This module provides functionality for data set analysis.
 Functions include volcano plots, sorted tables, and plotting sequence levels.
 """
 
-from __future__ import division
+from __future__ import absolute_import, division
 
 # Built-ins
 import logging
