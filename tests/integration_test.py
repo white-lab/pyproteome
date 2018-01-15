@@ -267,3 +267,8 @@ class IntegrationTest(TestCase):
                 {"protein": "Pkm"},
             ],
         )
+
+    def test_auto_cluster(self):
+        merge = self.test_merge_data()
+
+        cluster.auto.auto_clusterer(merge)

@@ -79,3 +79,5 @@ def auto_clusterer(
         slices,
         folder_name="Clusters",
     )
+
+    return data, y_pred
