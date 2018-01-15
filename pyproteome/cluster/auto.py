@@ -62,7 +62,7 @@ def auto_clusterer(
             title="Cluster {}".format(ind),
             folder_name=folder_name,
         )
-        f = pyp.motifs.logo.make_logo(
+        f, _ = pyp.motifs.logo.make_logo(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
         )

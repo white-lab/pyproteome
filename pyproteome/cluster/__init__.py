@@ -170,5 +170,4 @@ def cluster_clusters(data, y_pred, corr_cutoff=4, iterations=3):
     for ind, i in enumerate(sorted(set(y_pred))):
         y_pred[y_pred_old == i] = ind
 
-    print(sorted(set(y_pred)))
     return y_pred
