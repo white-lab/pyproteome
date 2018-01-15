@@ -82,12 +82,13 @@ def pca(data):
 def cluster_range(data, min_clusters=2, max_clusters=20, cols=3):
     clusters = range(min_clusters, max_clusters + 1)
 
+    rows = int(np.ceil(len(clusters) / cols))
+
     f, axes = plt.subplots(
-        int(np.ceil((max_clusters - 1) / cols)),
+        rows,
         cols,
-        figsize=(4 * cols, 4 * int(np.ceil((max_clusters - 1) / 2))),
+        figsize=(4 * cols, 4 * rows),
     )
-    # axes = np.array([None] * max_clusters)
 
     for n, ax in zip(clusters, axes.ravel()):
         print(n)

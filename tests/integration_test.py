@@ -289,6 +289,8 @@ class IntegrationTest(TestCase):
             n_clusters=6,
         )
 
+        cluster.cluster_range(merge, max_clusters=5)
+
         cluster.plot.cluster_corrmap(data, y_pred)
 
         y_pred = cluster.cluster_clusters(data, y_pred)
