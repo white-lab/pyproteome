@@ -72,7 +72,7 @@ def hierarchical_heatmap(
         method=method,
         metric=metric,
         row_cluster=row_cluster,
-        col_cluster=col_cluster and False,
+        col_cluster=col_cluster,
     )
     map.ax_heatmap.set_xticklabels(
         map.ax_heatmap.get_xticklabels(),
