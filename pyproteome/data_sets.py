@@ -147,7 +147,7 @@ class DataSet:
                     "Validated",
                     "First Scan",
                     "Confidence Level",
-                    "IonScore",
+                    "Ion Score",
                     "Isolation Interference",
                     "Scan Paths",
                     "Missed Cleavages",
@@ -261,7 +261,7 @@ class DataSet:
             if "Rank" in self.psms.columns:
                 better = self.psms["Rank"] < row["Rank"]
             else:
-                better = self.psms["IonScore"] > row["IonScore"]
+                better = self.psms["Ion Score"] > row["Ion Score"]
 
             hits = np.logical_and(hits, better)
 
@@ -303,7 +303,7 @@ class DataSet:
         agg_dict["Validated"] = all
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
-        agg_dict["IonScore"] = max
+        agg_dict["Ion Score"] = max
         agg_dict["Isolation Interference"] = min
 
         self.psms = self.psms.groupby(
@@ -597,7 +597,7 @@ class DataSet:
             "Validated": False,
             "First Scan": set(),
             "Scan Paths": set(),
-            "IonScore": 100,
+            "Ion Score": 100,
             "Isolation Interference": 0,
             "Missed Cleavages": 0,
         }
@@ -733,7 +733,7 @@ class DataSet:
             if "ion_score" in f:
                 new.psms = filter_psms(
                     new,
-                    new.psms["IonScore"] >= f["ion_score"]
+                    new.psms["Ion Score"] >= f["ion_score"]
                 )
 
             if "isolation" in f:
