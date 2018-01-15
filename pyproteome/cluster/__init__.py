@@ -9,7 +9,7 @@ import sklearn.decomposition
 import sklearn.cluster
 
 import pyproteome
-from . import plot
+from . import plot, auto
 
 
 def get_data(ds, dropna=True, groups=None):

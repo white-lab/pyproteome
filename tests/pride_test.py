@@ -31,7 +31,7 @@ class PrideTest(TestCase):
         )
 
     def test_fetch_data(self):
-        files = {"E2point5R1.dat-pride.pride.mztab.gz": "."}
+        files = {"E10R3.dat-pride.xml.gz": "."}
         pride.fetch_data_set(
             "PXD003660",
             files=files,
