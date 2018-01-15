@@ -154,13 +154,14 @@ class IntegrationTest(TestCase):
             name="CK-p25",
         )
 
-        for data in [
-            self.data["CKH1"],
-            self.data["CKX2"],
-            self.data["CKC1"],
-            merge,
-        ]:
-            data.print_stats()
+        with open(os.devnull, 'w') as f:
+            for data in [
+                self.data["CKH1"],
+                self.data["CKX2"],
+                self.data["CKC1"],
+                merge,
+            ]:
+                data.print_stats(out=f)
 
         # self.assertEqual(
         #     merge.shape[0],
