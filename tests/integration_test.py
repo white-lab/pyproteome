@@ -119,6 +119,11 @@ class IntegrationTest(TestCase):
             for name, filename in DATAS.items()
         }
 
+    def test_add_data(self):
+        data = self.data["CKH1"]
+        data += self.data["CKX2"]
+        data += self.data["CKC1"]
+
     def test_normalize_data(self):
         self.data = {
             name: data.normalize(data)
