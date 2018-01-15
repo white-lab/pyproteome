@@ -62,16 +62,19 @@ def auto_clusterer(
             title="Cluster {}".format(ind),
             folder_name=folder_name,
         )
+
         f, _ = pyp.motifs.logo.make_logo(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
         )
-        f.savefig(
-            os.path.join(folder_name, "Logo - Cluster {}.png".format(ind)),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
+
+        if f:
+            f.savefig(
+                os.path.join(folder_name, "Logo - Cluster {}.png".format(ind)),
+                bbox_inches="tight",
+                dpi=pyp.DEFAULT_DPI,
+                transparent=True,
+            )
 
     slices = [
         data["ds"].filter({"series": y_pred == ind})
