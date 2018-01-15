@@ -347,8 +347,12 @@ class DataSet:
             ].iterrows():
                 # If that other peptide is a subset of this peptide, rename it
                 if o_row["Sequence"] in seq:
-                    psms.set_value(o_index, "Sequence", seq)
-                    psms.set_value(o_index, "Modifications", seq.modifications)
+                    cols = [
+                        "Sequence",
+                        "Modifications",
+                        "Missed Cleavages",
+                    ]
+                    psms.at[o_index, cols] = row[cols]
 
         # And finally group together peptides that were renamed
         self._merge_duplicates()
