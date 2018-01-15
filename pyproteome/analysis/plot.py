@@ -14,6 +14,7 @@ import re
 # Core data analysis libraries
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 from scipy.stats import ttest_ind
 
 import pyproteome
@@ -57,26 +58,23 @@ def plot(
     for _, row in data.psms.iterrows():
         seq = str(row["Sequence"])
 
-        values = row[channels].as_matrix()
-
-        print(values)
-        mask = ~np.isnan(values).all(axis=0)
-        channel_names = list(np.array(channel_names)[mask])
-        values = values[:, mask]
+        values = row[channels]
+        mask = ~pd.isnull(row[channels])
+        values = values[mask]
+        names = pd.Series(channel_names)[mask]
 
         fig, ax = plt.subplots(figsize=figsize)
 
-        for i in range(values.shape[0]):
-            indices = np.arange(len(values[i]))
-            bar_width = .35
-            ax.bar(indices, values[i], bar_width)
-            ax.set_xticks(indices)
-            ax.set_xticklabels(
-                channel_names,
-                fontsize=20,
-                rotation=45,
-                horizontalalignment="right",
-            )
+        indices = np.arange(len(values))
+        bar_width = .35
+        ax.bar(indices, values.as_matrix(), bar_width)
+        ax.set_xticks(indices)
+        ax.set_xticklabels(
+            names,
+            fontsize=20,
+            rotation=45,
+            horizontalalignment="right",
+        )
 
         ax.set_title(seq + (" - {}".format(title) if title else ""))
 
@@ -95,7 +93,7 @@ def plot(
                     "[?/]",
                     "_",
                     "{}-{}.png".format(
-                        " / ".join(row["Protein"].genes),
+                        " / ".join(row["Proteins"].genes),
                         data.name,
                     ),
                 ),
