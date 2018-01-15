@@ -60,8 +60,9 @@ def plot(
 
         values = row[channels]
         mask = ~pd.isnull(row[channels])
+
+        names = pd.Series(channel_names, index=values.index)[mask]
         values = values[mask]
-        names = pd.Series(channel_names)[mask]
 
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -122,14 +123,19 @@ def plot_group(
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequences : list of str
     """
-    groups = sum(cmp_groups or [], ()) or data.groups.keys()
+    if cmp_groups is None:
+        cmp_groups = [list(data.groups.keys())]
+
     channels = [
         [
-            data.channels[channel_name]
-            for channel_name in data.groups[label]
-            if channel_name in data.channels
+            [
+                data.channels[channel_name]
+                for channel_name in data.groups[label]
+                if channel_name in data.channels
+            ]
+            for label in groups
         ]
-        for label in groups
+        for groups in cmp_groups
     ]
 
     if f:
@@ -138,82 +144,80 @@ def plot_group(
     figures = []
 
     for _, row in data.psms.iterrows():
-        print(
-            np.nanmean(row[channels[1]].as_matrix()),
-            np.nanmean(row[channels[0]].as_matrix())
+        names, values = [], []
 
-        )
-        values = np.array([
-            (
-                np.nanmean(row[channel].as_matrix()) /
-                np.nanmean(row[channels[0]].as_matrix())
-            )
-            for channel in channels
-        ])
-        means = values
+        for groups in cmp_groups:
+            group_vals = [
+                data[[
+                    data.channels[name]
+                    for name in data.groups[group]
+                    if name in data.channels
+                ]]
+                for group in groups
+            ]
 
-        errs = [
-            np.nanstd(row[channel].as_matrix()) /
-            np.nanmean(row[channels[0]].as_matrix())
-            for channel in channels
-        ]
-        # if psms.shape[0] <= 1:
-        #     means = [[i] for i in values]
-        #     errs = [[i] for i in errs]
-
-        values, labels = zip(*[
-            (value, label)
-            for label, value in zip(groups, values)
-            if (
-                cmp_groups is None or
-                any(label in i for i in cmp_groups)
-            )
-        ])
-
-        if cmp_groups:
-            div = np.array([
-                means[[
-                    labels.index(
-                        min(
-                            [i for i in enumerate(group) if i[1] in labels],
-                            key=lambda x: x[0],
-                        )[1]
-                    )
-                    for group in cmp_groups
-                    if label in group
-                ][0]]
-                for label in labels
+            groups, group_vals = zip(*[
+                (group, vals.mean(axis=0))
+                for group, vals in zip(groups, group_vals)
+                if vals.shape[1] > 0
             ])
 
-            means /= div
-            errs /= div
+            # Check normalization channel is not null or all other channels
+            # are not null
+            if len(cmp_groups) > 1 and (
+                pd.isnull(group_vals[0]).all() or all(
+                    pd.isnull(vals) for vals in group_vals[1:]
+                )
+            ):
+                continue
+
+            groups, group_vals = zip(*[
+                (group, vals[~pd.isnull(vals)])
+                for group, vals in zip(groups, group_vals)
+                if not pd.isnull(vals).all()
+            ])
+
+            if not groups:
+                continue
+
+            group_vals = [
+                vals / group_vals[0].mean()
+                for vals in group_vals
+            ]
+
+            names.append(groups)
+            values.append(group_vals)
+
+        labels = [
+            name
+            for group in names
+            for name in group
+        ]
+
+        means = [
+            i.mean()
+            for vals in values
+            for i in vals
+        ]
+
+        errs = [
+            i.std()
+            for vals in values
+            for i in vals
+        ]
 
         fig, ax = plt.subplots(figsize=figsize)
 
-        means, labels = zip(*[
-            (mean, label)
-            for mean, label in zip(means, labels)
-            if not np.isnan(mean).all()
-        ])
-
         indices = np.arange(len(means))
         width = .75
-        bar_width = width / len(means[0])
-
-        for ind in range(len(means[0])):
-            print(
-                        bar_width * ind - width / 2 + indices,
-                        [i[ind] for i in means],
-                        bar_width,
-
-            )
-            ax.bar(
-                bar_width * ind - width / 2 + indices,
-                [i[ind] for i in means],
-                bar_width,
-                # yerr=[i[ind] for i in errs],
-                # error_kw=dict(ecolor='k', lw=.25, capsize=.25, capthick=.25),
-            )
+        ind = 0
+        ax.bar(
+            width * ind - width / 2 + indices,
+            means,
+            width=width,
+            yerr=errs,
+            # error_kw=dict(ecolor='k', lw=.25, capsize=.25, capthick=.25),
+        )
 
         ax.set_ylabel(
             "{} Signal".format(
@@ -226,7 +230,7 @@ def plot_group(
         for label in ax.get_yticklabels():
             label.set_fontsize(20)
 
-        ax.set_xticks(indices - bar_width / 2)
+        ax.set_xticks(indices - width / 2)
         ax.set_xticklabels(labels, fontsize=20)
 
         title = "{}".format(
@@ -241,19 +245,19 @@ def plot_group(
         # if not means[0].any():
         #     return f
 
-        if len(means[0]) > 1:
-            pep_seqs = row["Sequence"]
-            ax.legend([
-                "{} ({} - {})".format(
-                    str(seq),
-                    seq.protein_matches[0].rel_pos,
-                    seq.protein_matches[0].rel_pos + len(seq.pep_seq),
-                )
-                for seq in pep_seqs
-            ])
-            return f, ax
+        # if len(means[0]) > 1:
+        #     pep_seqs = row["Sequence"]
+        #     ax.legend([
+        #         "{} ({} - {})".format(
+        #             str(seq),
+        #             seq.protein_matches[0].rel_pos,
+        #             seq.protein_matches[0].rel_pos + len(seq.pep_seq),
+        #         )
+        #         for seq in pep_seqs
+        #     ])
+        #     return f, ax
 
-        y_max = np.max([max(i) + max(j) for i, j in zip(means, errs)])
+        y_max = max(means) + max(errs)
 
         def stars(p):
             if p < 0.0001:
@@ -292,11 +296,11 @@ def plot_group(
                 ax.annotate(
                     "",
                     xy=(
-                        index_a + bar_width * 1.5,
+                        index_a + width * 1.5,
                         y_max * (1.05 + offset * 0.1)
                     ),
                     xytext=(
-                        index_b + bar_width * 1.5,
+                        index_b + width * 1.5,
                         y_max * (1.05 + offset * 0.1)
                     ),
                     xycoords='data',
@@ -307,7 +311,7 @@ def plot_group(
                     ),
                 )
                 ax.text(
-                    x=np.mean([index_a, index_b]) + bar_width * 1.5,
+                    x=np.mean([index_a, index_b]) + width * 1.5,
                     y=y_max * (1.07 + offset * 0.1),
                     s=stars(pval),
                     horizontalalignment='center',
