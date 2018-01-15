@@ -56,7 +56,7 @@ def hierarchical_heatmap(
         cmp_groups = [list(data.groups.keys())]
 
     channels = [
-        channel
+        data.channels[channel]
         for groups in cmp_groups
         for group in groups
         for channel in data.groups[group]

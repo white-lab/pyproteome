@@ -10,10 +10,63 @@ import logging
 # Core data analysis libraries
 import numpy as np
 
-from . import camv, discoverer
+from . import camv, discoverer, protein, sequence, utils
 
 
 LOGGER = logging.getLogger("pyproteome.loading")
+
+
+def extract_sequence(proteins, sequence_string):
+    """
+    Extract a Sequence object from a list of proteins and sequence string.
+
+    Does not set the Sequence.modifications attribute.
+
+    Parameters
+    ----------
+    proteins : list of :class:`Protein<pyproteome.protein.Protein>`
+    sequence_string : str
+
+    Returns
+    -------
+    list of :class:`Sequence<pyproteome.sequence.Sequence>`
+    """
+    prot_matches = []
+
+    # Skip peptides with no protein matches
+    if not isinstance(proteins, protein.Proteins):
+        proteins = []
+
+    def _get_rel_pos(protein, pep_seq):
+        seq = protein.full_sequence
+
+        if not seq:
+            return 0, False
+
+        pep_pos = seq.find(pep_seq)
+        exact = True
+
+        if pep_pos < 0:
+            pep_pos = utils.fuzzy_find(pep_seq, seq)
+            exact = False
+
+        return pep_pos, exact
+
+    for prot in proteins:
+        rel_pos, exact = _get_rel_pos(prot, sequence_string.upper())
+
+        prot_matches.append(
+            sequence.ProteinMatch(
+                protein=prot,
+                rel_pos=rel_pos,
+                exact=exact,
+            )
+        )
+
+    return sequence.Sequence(
+        pep_seq=sequence_string,
+        protein_matches=prot_matches,
+    )
 
 
 def _calculate_rejected(psms, accepted, maybed, rejected):
