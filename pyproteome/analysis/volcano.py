@@ -123,10 +123,7 @@ def volcano_plot(
     log_p = -np.log10(p)
 
     if not title:
-        title = "{} - {}".format(
-            data.name,
-            data.enrichment,
-        )
+        title = data.name
 
     if title:
         file_name = re.sub("[ ></?]", "_", title) + "_Volcano.png"

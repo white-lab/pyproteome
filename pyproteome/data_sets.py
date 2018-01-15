@@ -50,7 +50,6 @@ class DataSet:
         sample names to that phenotype's value.
     name : str
     levels : dict or str, float, optional
-    enrichments : list of str
     sets : int
         Number of sets merged into this data set.
     sources : list of str
@@ -65,7 +64,6 @@ class DataSet:
         phenotypes=None,
         name="",
         lvls=None,
-        enrichments=None,
         dropna=False,
         pick_best_ptm=True,
         merge_duplicates=True,
@@ -90,7 +88,6 @@ class DataSet:
         phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
         lvls : dict or str, float, optional
-        enrichments : list of str, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
             values.
@@ -110,9 +107,6 @@ class DataSet:
         """
         if mascot_name and os.path.splitext(mascot_name)[1] == "":
             mascot_name += ".msf"
-
-        if enrichments is None:
-            enrichments = []
 
         if filter_bad is True:
             filter_bad = dict(
@@ -155,7 +149,6 @@ class DataSet:
         self.name = name
         self.levels = lvls
         self.mascot_name = mascot_name
-        self.enrichments = enrichments
 
         self.intra_normalized = False
         self.sets = 1
@@ -208,17 +201,6 @@ class DataSet:
     @property
     def samples(self):
         return list(self.channels.keys())
-
-    @property
-    def enrichment(self):
-        """
-        The str version of self.enrichments
-
-        Returns
-        -------
-        str
-        """
-        return "+".join(self.enrichments)
 
     def __str__(self):
         return (
@@ -1005,15 +987,9 @@ class DataSet:
         data_py = self.filter(mod_types=[("Y", "Phospho")])
 
         out.write(
-            "{} {}\n"
+            "{}\n{} pY, {} pST ({:.0%} Specificity)\n{} total, {} proteins\n"
             .format(
                 self.name,
-                self.enrichment,
-            )
-        )
-        out.write(
-            "{} pY, {} pST ({:.0%} Specificity)\n{} total, {} proteins\n"
-            .format(
                 len(data_py.psms),
                 len(data_pst.psms),
                 len(data_p.psms) / len(self.psms),
@@ -1133,14 +1109,6 @@ def merge_data(
         )
     )
     new.sets = sum(data.sets for data in data_sets)
-    new.enrichments = sorted(
-        set(
-            enrichment
-            for data in data_sets
-            if data.enrichments
-            for enrichment in data.enrichments
-        )
-    )
 
     new.group_a = next(
         (i.group_a for i in data_sets if i.group_a is not None),

@@ -15,9 +15,8 @@ def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):
         folder_name = data_name
 
     if csv_name is None:
-        csv_name = "{}-{}-{}.csv".format(
+        csv_name = "{}-{}.csv".format(
             re.sub("[ ></]", "_", data_name),
-            re.sub("[ ></]", "_", data.enrichment),
             postfix,
         )
 
@@ -163,24 +162,6 @@ def changes_table(
     )
 
 
-def _rewrite_enrichments(lst):
-    mapping = {
-        "MPM2": "pST",
-        "MAPK / CDK": "pST",
-        "MAPK + CDK": "pST",
-        "NTA": "pST",
-        "IMAC": "pST",
-    }
-    return "+".join(
-        sorted(
-            set(
-                mapping.get(i, i)
-                for i in lst
-            )
-        )
-    )
-
-
 def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
     """
     Write a full list of data sets to a single .xlsx file.
@@ -236,10 +217,7 @@ def write_full_tables(datas, folder_name="All", out_name="Full Data.xlsx"):
         ws_name = re.sub(
             "/",
             "+",
-            "{} - {}".format(
-                data.name,
-                _rewrite_enrichments(data.enrichments),
-            ),
+            data.name,
         )
         df.to_excel(
             writer,
