@@ -142,6 +142,16 @@ class IntegrationTest(TestCase):
                 self.data["CKC1"],
             ],
             name="CK-p25",
+            merge_subsets=True,
+        )
+
+        merge = data_sets.merge_data(
+            [
+                self.data["CKH1"],
+                self.data["CKX2"],
+                self.data["CKC1"],
+            ],
+            name="CK-p25",
         )
 
         print(merge.psms.shape[0])
