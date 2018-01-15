@@ -22,29 +22,6 @@ RE_PROTEIN = re.compile("([A-Za-z0-9\(\)\[\]\\/\',\. \-\+]+) OS=")
 RE_MODIFICATION = re.compile("(N-Term|C-Term|([A-Z])([0-9]*))\((.*)\)")
 
 
-def _filter_unassigned_rows(psms):
-    """
-    Remove rows from psms with unassigned peptides / proteins.
-
-    Parameters
-    ----------
-    psms : :class:`pandas.DataFrame`
-
-    Returns
-    -------
-    :class:`pandas.DataFrame`
-    """
-    return psms.dropna(
-        axis=0,
-        how="any",
-        subset=[
-            "Protein Descriptions",
-            "Protein Group Accessions",
-            "Sequence"
-        ],
-    )
-
-
 def _extract_protein(prot_string):
     match = fetch_data.RE_ACCESSION.search(prot_string)
     if not match:
@@ -52,28 +29,6 @@ def _extract_protein(prot_string):
             "Unable to find accession in \"{}\"".format(prot_string)
         )
     return protein.Protein(accession=match.group(0))
-
-
-def _extract_proteins_from_accessions(prots_string):
-    """
-    Extract a list of proteins from a string containing protein accessions.
-
-    Parameters
-    ----------
-    prots_string : str
-
-    Returns
-    -------
-    :class:`Proteins<pyproteome.protein.Proteins`
-    """
-    return protein.Proteins(
-        proteins=[
-            protein.Protein(
-                accession=accession.strip(),
-            )
-            for accession in prots_string.split(";")
-        ],
-    )
 
 
 def _extract_proteins_from_description(prots_string):
@@ -97,58 +52,6 @@ def _extract_proteins_from_description(prots_string):
         ],
     )
 
-
-def extract_sequence(proteins, sequence_string):
-    """
-    Extract a Sequence object from a list of proteins and sequence string.
-
-    Does not set the Sequence.modifications attribute.
-
-    Parameters
-    ----------
-    proteins : list of :class:`Protein<pyproteome.protein.Protein>`
-    sequence_string : str
-
-    Returns
-    -------
-    list of :class:`Sequence<pyproteome.sequence.Sequence>`
-    """
-    prot_matches = []
-
-    # Skip peptides with no protein matches
-    if not isinstance(proteins, protein.Proteins):
-        proteins = []
-
-    def _get_rel_pos(protein, pep_seq):
-        seq = protein.full_sequence
-
-        if not seq:
-            return 0, False
-
-        pep_pos = seq.find(pep_seq)
-        exact = True
-
-        if pep_pos < 0:
-            pep_pos = utils.fuzzy_find(pep_seq, seq)
-            exact = False
-
-        return pep_pos, exact
-
-    for prot in proteins:
-        rel_pos, exact = _get_rel_pos(prot, sequence_string.upper())
-
-        prot_matches.append(
-            sequence.ProteinMatch(
-                protein=prot,
-                rel_pos=rel_pos,
-                exact=exact,
-            )
-        )
-
-    return sequence.Sequence(
-        pep_seq=sequence_string,
-        protein_matches=prot_matches,
-    )
 
 
 def _extract_modification(seq, mod_string):
@@ -186,82 +89,6 @@ def _extract_modification(seq, mod_string):
         cterm=cterm,
         sequence=seq,
     )
-
-
-def _extract_modifications(sequence, mods_string):
-    """
-    Extract a structured list of modifications from mod_string.
-
-    Parameters
-    ----------
-    sequence : :class:`Sequence<pyproteome.sequence.Sequence>`
-    mod_string : str
-
-    Returns
-    -------
-    :class:`Modifications<pyproteome.modification.Modifications>`
-    """
-    if isinstance(mods_string, float):
-        mods_string = ""
-
-    return modification.Modifications(
-        mods=[
-            _extract_modification(sequence, i.strip())
-            for i in mods_string.split(";")
-            if i
-        ],
-    )
-
-
-def read_table_delimited(basename):
-    psms_path = os.path.join(
-        paths.MS_SEARCHED_DIR,
-        basename + "_psms.txt",
-    )
-
-    LOGGER.info(
-        "Loading MASCOT peptides from \"{}\"".format(
-            os.path.basename(psms_path),
-        )
-    )
-
-    psms = pd.read_table(psms_path)
-    psms = _filter_unassigned_rows(psms)
-
-    # Pre-fetch UniProt data to speed up later queries
-    fetch_data.prefetch_accessions(psms)
-
-    psms["Proteins"] = pd.Series(
-        [
-            _extract_proteins_from_accessions(
-                row["Protein Group Accessions"]
-            )
-            for index, row in psms.iterrows()
-        ],
-        index=psms.index,
-    )
-    psms["Sequence"] = pd.Series(
-        [
-            extract_sequence(row["Proteins"], row["Sequence"])
-            for index, row in psms.iterrows()
-        ],
-        index=psms.index,
-    )
-    psms["Modifications"] = pd.Series(
-        [
-            _extract_modifications(row["Sequence"], row["Modifications"])
-            for index, row in psms.iterrows()
-        ],
-        index=psms.index,
-    )
-
-    psms.reset_index(inplace=True, drop=True)
-
-    # Finally close the reference loop between sequences and modifications
-    for index, row in psms.iterrows():
-        row["Sequence"].modifications = row["Modifications"]
-
-    return psms
 
 
 def _calculate_rejected(psms, accepted, maybed, rejected):
@@ -362,23 +189,17 @@ def load_mascot_psms(basename, camv_slices=None, pick_best_ptm=False):
     scan_lists : dict of str, list of int
     pick_best_ptm : bool, optional
     """
-    msf = os.path.splitext(basename)[1] == ".msf"
-
     # The load CAMV data to clear unwanted hits if available.
     accepted, maybed, rejected = camv.load_camv_validation(basename)
     lst = (accepted, maybed, rejected)
 
-    if msf:
-        psms = discoverer.read_discoverer_msf(
-            basename,
-            pick_best_ptm=(
-                pick_best_ptm and
-                all(not i for i in lst)
-            ),
-        )
-        psms = _filter_unassigned_rows(psms)
-    else:
-        psms = read_table_delimited(basename)
+    psms = discoverer.read_discoverer_msf(
+        basename,
+        pick_best_ptm=(
+            pick_best_ptm and
+            all(not i for i in lst)
+        ),
+    )
 
     # Output the phosphorylation scan list for CAMV
     psms, scan_lists = camv.output_scan_list(

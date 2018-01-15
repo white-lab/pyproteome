@@ -61,7 +61,6 @@ class DataSet:
         mascot_name=None,
         channels=None,
         psms=None,
-        camv_name=None,
         groups=None,
         phenotypes=None,
         name="",
@@ -86,8 +85,6 @@ class DataSet:
             Read psms directly from a DataFrame object.
         mascot_name : str, optional
             Read psms from MASCOT / Discoverer data files.
-        camv_name : str, optional
-            Read psms from CAMV data files.
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
@@ -140,11 +137,6 @@ class DataSet:
                 pick_best_ptm=pick_best_ptm,
             )
             self.sources = ["MASCOT"]
-        elif camv_name:
-            psms = loading.load_validated_psms(
-                camv_name,
-            )
-            self.sources = ["CAMV"]
 
         if psms is None:
             psms = pd.DataFrame(
@@ -167,7 +159,6 @@ class DataSet:
         self.name = name
         self.levels = lvls
         self.mascot_name = mascot_name
-        self.camv_name = camv_name
         self.enrichments = enrichments
 
         self.intra_normalized = False
