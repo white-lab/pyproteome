@@ -99,7 +99,7 @@ def _calculate_accepted(psms, accepted):
     return psms
 
 
-def load_mascot_psms(basename, camv_slices=None, pick_best_ptm=False):
+def load_mascot_psms(basename, pick_best_ptm=False):
     """
     Load a list of sequences from a MSF file produced by MASCOT / Discoverer.
 
@@ -111,7 +111,6 @@ def load_mascot_psms(basename, camv_slices=None, pick_best_ptm=False):
     Returns
     -------
     psms : :class:`pandas.DataFrame`
-    scan_lists : dict of str, list of int
     pick_best_ptm : bool, optional
     """
     # The load CAMV data to clear unwanted hits if available.
@@ -124,14 +123,6 @@ def load_mascot_psms(basename, camv_slices=None, pick_best_ptm=False):
             pick_best_ptm and
             all(not i for i in lst)
         ),
-    )
-
-    # Output the phosphorylation scan list for CAMV
-    psms, scan_lists = camv.output_scan_list(
-        psms,
-        basename=basename,
-        letter_mod_types=[(None, "Phospho")],
-        scan_sets=camv_slices,
     )
 
     psms["Validated"] = False
