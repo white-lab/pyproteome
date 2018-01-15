@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 from pyproteome import pride
@@ -28,3 +29,13 @@ class PrideTest(TestCase):
             "20151129_H1975HGF_VehicleControl_TMT6.mgf",
             [i.get("name") for i in ds],
         )
+
+    def test_fetch_data(self):
+        files = {"E2point5R1.dat-pride.pride.mztab.gz": "."}
+        pride.fetch_data_set(
+            "PXD003660",
+            files=files,
+        )
+
+        for f, folder in files.items():
+            os.remove(os.path.join(folder, f))

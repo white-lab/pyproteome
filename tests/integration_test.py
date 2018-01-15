@@ -6,7 +6,7 @@ from unittest import TestCase
 import pylab
 
 from pyproteome import (
-    analysis, cluster, correlation, data_sets, levels, logo, paths, plot,
+    analysis, cluster, correlation, data_sets, logo, paths, plot,
     tables, volcano, plogo, icelogo, weblogo, phosphosite,
 )
 
