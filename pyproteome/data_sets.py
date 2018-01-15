@@ -692,7 +692,7 @@ class DataSet:
             assert array.shape[0] == new.psms.shape[0]
             return (
                 new.psms.loc[array]
-                if not f["inverse"] else
+                if not f.get("inverse", False) else
                 new.psms.loc[~array]
             ).reset_index(drop=True)
 
