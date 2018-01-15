@@ -158,9 +158,86 @@ def _spearmanr_nan(a, b, min_length=5):
     return spearmanr(a[mask], b[mask])
 
 
+def _scatter_plots(
+    cp, signal,
+    data_chans, signal_chans, signal_groups,
+    scatter_cols=3,
+    xlabel="",
+    scatter_colors=None,
+    scatter_symbols=None,
+):
+    scatter_colors = scatter_colors or {}
+    scatter_symbols = scatter_symbols or {}
+
+    if cp.psms.shape[0] < 1:
+        return None, None
+
+    f_scatter, axes = plt.subplots(
+        int(np.ceil(cp.psms.shape[0] / scatter_cols)), scatter_cols,
+        figsize=(6 * scatter_cols, cp.psms.shape[0] * 2),
+    )
+
+    for index, (ax, (_, row)) in enumerate(
+        zip(
+            axes.ravel(),
+            cp.psms.sort_values("Correlation").iterrows(),
+        )
+    ):
+        for data_chan, sig_chan, sig_group in zip(
+            data_chans, signal_chans, signal_groups,
+        ):
+            ax.scatter(
+                x=signal[sig_chan],
+                y=row[data_chan],
+                facecolors=scatter_colors.get(sig_group, "black"),
+                edgecolors="black",
+                marker=scatter_symbols.get(sig_group, "o"),
+                s=200,
+            )
+
+        row_title = " / ".join(str(i.gene) for i in row["Proteins"])
+
+        ax.set_title(
+            row_title[:20] + ("..." if len(row_title) > 20 else ""),
+            fontsize=28,
+            fontweight="bold",
+        )
+
+        ax.set_xlabel(
+            "{}\n$\\rho = {:.2f}; p = {:.2E}$".format(
+                xlabel,
+                row["Correlation"],
+                row["corr p-value"],
+            ),
+            fontsize=22,
+        )
+
+        row_seq = str(row["Sequence"])
+        row_mods = str(row["Modifications"].get_mods([(None, "Phospho")]))
+
+        ax.set_ylabel(
+            row_seq[:20] + (
+                "..." if len(row_seq) > 20 else ""
+            ) + (
+                "\n({})".format(
+                    row_mods[:20] + ("..." if len(row_mods) > 20 else "")
+                ) if row_mods else ""
+            ),
+            fontsize=20,
+        )
+
+        for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(20)
+
+    f_scatter.tight_layout(pad=2)
+
+    return f_scatter, ax
+
+
 def correlate_signal(
     data, signal,
     p=0.05,
+    scatter_cols=3,
     options=None,
     folder_name=None, title=None,
     scatter_colors=None,
@@ -309,62 +386,11 @@ def correlate_signal(
 
     cp.psms = cp.psms[cp.psms["corr p-value"] < p]
 
-    f_scatter, axes = plt.subplots(
-        int(np.ceil(cp.psms.shape[0] / 3)), 3,
-        figsize=(18, cp.psms.shape[0] * 2),
+    f_scatter, _ = _scatter_plots(
+        cp, signal, data_chans, signal_chans, signal_groups,
+        scatter_cols=scatter_cols,
+        scatter_colors=scatter_colors,
+        scatter_symbols=scatter_symbols,
     )
-
-    for index, (ax, (_, row)) in enumerate(
-        zip(
-            axes.ravel(),
-            cp.psms.sort_values("Correlation").iterrows(),
-        )
-    ):
-        for data_chan, sig_chan, sig_group in zip(
-            data_chans, signal_chans, signal_groups,
-        ):
-            ax.scatter(
-                x=signal[sig_chan],
-                y=row[data_chan],
-                facecolors=scatter_colors.get(sig_group, "black"),
-                edgecolors="black",
-                marker=scatter_symbols.get(sig_group, "o"),
-                s=200,
-            )
-
-        row_title = " / ".join(str(i.gene) for i in row["Proteins"])
-
-        ax.set_title(
-            row_title[:20] + ("..." if len(row_title) > 20 else ""),
-            fontsize=28,
-            fontweight="bold",
-        )
-
-        ax.set_xlabel(
-            "{}\n$\\rho = {:.2f}; p = {:.2E}$".format(
-                xlabel,
-                row["Correlation"],
-                row["corr p-value"],
-            ),
-            fontsize=22,
-        )
-
-        row_seq = str(row["Sequence"])
-        row_mods = str(row["Modifications"].get_mods([(None, "Phospho")]))
-
-        ax.set_ylabel(
-            row_seq[:20] + (
-                "..." if len(row_seq) > 20 else ""
-            ) + (
-                "\n({})".format(
-                    row_mods[:20] + ("..." if len(row_mods) > 20 else "")
-                ) if row_mods else ""
-            ),
-            fontsize=20,
-        )
-        for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
-            tick.label.set_fontsize(20)
-
-    f_scatter.tight_layout(pad=2)
 
     return f_corr, f_scatter

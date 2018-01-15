@@ -201,7 +201,7 @@ class IntegrationTest(TestCase):
 
         correlation.correlate_signal(
             self.data["CKH1"],
-            self.data["CKH1"][self.data["CKH1"]["Sequence"] == "AVDSLVPIGR"]
+            self.data["CKH1"][self.data["CKH1"]["Sequence"] == "AVDSLVPIGR"],
         )
 
     def test_changes_table(self):
