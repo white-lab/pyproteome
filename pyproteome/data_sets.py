@@ -540,7 +540,7 @@ class DataSet:
             if not lvls.levels:
                 lvls.levels = levels.get_channel_levels(lvls)
 
-            lvls = levels.levels
+            lvls = lvls.levels
 
         new_channels = utils.norm(self.channels)
 
@@ -548,7 +548,7 @@ class DataSet:
             self.channels.values(),
             new_channels.values(),
         ):
-            new.psms[norm_key] = new.psms[key] / levels[key]
+            new.psms[norm_key] = new.psms[key] / lvls[key]
             del new.psms[key]
 
         new.intra_normalized = True
