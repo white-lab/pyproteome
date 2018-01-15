@@ -7,7 +7,7 @@ import os
 
 BASE_DIR = os.path.abspath("..")
 BCA_ASSAY_DIR, CAMV_OUT_DIR, CAMV_SESS_DIR, MS_SEARCHED_DIR, \
-    MS_RAW_DIR, SCAN_LISTS_DIR, SCRIPTS_DIR = (None,) * 8
+    MS_RAW_DIR, SCAN_LISTS_DIR, SCRIPTS_DIR = (None,) * 7
 
 
 def set_base_dir(path):
