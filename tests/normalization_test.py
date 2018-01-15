@@ -3,7 +3,7 @@ from __future__ import division
 
 from unittest import TestCase
 
-from pyproteome import data_sets, loading, modification, protein
+from pyproteome import data_sets, modification, protein, sequence
 
 import numpy as np
 from collections import OrderedDict
@@ -31,7 +31,7 @@ class NormalizationTest(TestCase):
                 )
             ],
         )
-        self.seq = loading.extract_sequence(self.prots, "QEADEATLAR")
+        self.seq = sequence.extract_sequence(self.prots, "QEADEATLAR")
 
         self.mods = modification.Modifications(
             mods=[

@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from . import (
-    fetch_data, loading, modification, paths, protein
+    fetch_data, modification, paths, protein, sequence,
 )
 
 
@@ -65,7 +65,7 @@ def _read_peptides(conn, pick_best_ptm=False):
 def _extract_sequence(df):
     df["Sequence"] = df.apply(
         lambda row:
-        loading.extract_sequence(
+        sequence.extract_sequence(
             row["Proteins"],
             row["Sequence"],
         ),
