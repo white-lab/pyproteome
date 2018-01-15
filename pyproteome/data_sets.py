@@ -124,12 +124,11 @@ class DataSet:
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
         self.sources = ["unknown"]
-        self.scan_lists = None
         self.validated = False
         self.group_a, self.group_b = None, None
 
         if mascot_name:
-            psms, self.scan_lists, lst = loading.load_mascot_psms(
+            psms, lst = loading.load_mascot_psms(
                 mascot_name,
                 pick_best_ptm=pick_best_ptm,
             )
