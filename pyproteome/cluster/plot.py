@@ -1,18 +1,18 @@
 
-from __future__ import division
+from __future__ import absolute_import, division
 
 from math import ceil, sqrt
 from functools import cmp_to_key
 import os
-
-import pyproteome
-from pyproteome import utils
 
 from matplotlib import pyplot as plt
 import numpy as np
 
 from scipy.cluster.hierarchy import dendrogram
 from fastcluster import linkage
+
+import pyproteome
+from pyproteome import utils
 
 
 def hierarchical_clusters(data, y_pred):

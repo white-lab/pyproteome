@@ -3,9 +3,7 @@ from __future__ import absolute_import, division
 
 import os
 
-from pyproteome import cluster, volcano, motifs, tables
-
-import pyproteome
+import pyproteome as pyp
 
 
 def auto_clusterer(
@@ -22,51 +20,56 @@ def auto_clusterer(
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
+    try:
+        os.makedirs(folder_name)
+    except:
+        pass
+
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
     cluster_cluster_kwargs = cluster_cluster_kwargs or {}
 
-    data = cluster.get_data(
+    data = pyp.cluster.get_data(
         data,
         **get_data_kwargs
     )
 
-    cluster.pca(data)
+    pyp.cluster.pca(data)
 
     if "n_clusters" not in cluster_kwargs:
         cluster_kwargs["n_clusters"] = 100
 
-    _, y_pred_old = cluster.cluster(
+    _, y_pred_old = pyp.cluster.cluster(
         data,
         **cluster_kwargs
     )
 
-    y_pred = cluster.cluster_clusters(
+    y_pred = pyp.cluster.cluster_clusters(
         data, y_pred_old,
         **cluster_cluster_kwargs
     )
 
-    cluster.plot.cluster_corrmap(data, y_pred_old)
-    cluster.plot.cluster_corrmap(data, y_pred)
+    pyp.cluster.plot.cluster_corrmap(data, y_pred_old)
+    pyp.cluster.plot.cluster_corrmap(data, y_pred)
 
-    cluster.plot.plot_all_clusters(data, y_pred)
+    pyp.cluster.plot.plot_all_clusters(data, y_pred)
 
     ss = sorted(set(y_pred))
 
     for ind in ss:
-        volcano.plot_volcano_filtered(
+        pyp.volcano.plot_volcano_filtered(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
             folder_name=folder_name,
         )
-        f = motifs.logo.make_logo(
+        f = pyp.motifs.logo.make_logo(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
         )
         f.savefig(
             os.path.join(folder_name, "Logo - Cluster {}.png".format(ind)),
             bbox_inches="tight",
-            dpi=pyproteome.DEFAULT_DPI,
+            dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
 
@@ -78,7 +81,7 @@ def auto_clusterer(
     for ind, s in zip(ss, slices):
         s.name = "Cluster {}".format(ind)
 
-    tables.write_full_tables(
+    pyp.tables.write_full_tables(
         slices,
         folder_name="Clusters",
     )
