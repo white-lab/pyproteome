@@ -126,72 +126,59 @@ def plot_group(
     if cmp_groups is None:
         cmp_groups = [list(data.groups.keys())]
 
-    channels = [
-        [
-            [
-                data.channels[channel_name]
-                for channel_name in data.groups[label]
-                if channel_name in data.channels
-            ]
-            for label in groups
-        ]
-        for groups in cmp_groups
-    ]
-
     if f:
         data = data.filter(f)
 
     figures = []
 
     for _, row in data.psms.iterrows():
-        names, values = [], []
+        values = []
 
         for groups in cmp_groups:
-            group_vals = [
-                data[[
+            group_vals = pd.Series([
+                row[[
                     data.channels[name]
                     for name in data.groups[group]
                     if name in data.channels
                 ]]
                 for group in groups
+            ], index=groups, dtype=object)
+
+            group_vals = pd.Series([
+                group[~pd.isnull(group)]
+                for group in group_vals
+            ], index=group_vals.index, dtype=object)
+
+            group_vals = group_vals[
+                group_vals.apply(lambda x: x.shape[0] > 0)
             ]
 
-            groups, group_vals = zip(*[
-                (group, vals.mean(axis=0))
-                for group, vals in zip(groups, group_vals)
-                if vals.shape[1] > 0
-            ])
-
-            # Check normalization channel is not null or all other channels
-            # are not null
-            if len(cmp_groups) > 1 and (
-                pd.isnull(group_vals[0]).all() or all(
-                    pd.isnull(vals) for vals in group_vals[1:]
+            # Check normalization group is not null and at least one other
+            # group of channels is not null
+            if (
+                group_vals.shape[0] < 1 or (
+                    len(cmp_groups) > 1 and
+                    groups[0] not in group_vals.index
+                ) or all(
+                    group not in group_vals.index
+                    for group in groups[1:]
                 )
             ):
                 continue
 
-            groups, group_vals = zip(*[
-                (group, vals[~pd.isnull(vals)])
-                for group, vals in zip(groups, group_vals)
-                if not pd.isnull(vals).all()
-            ])
+            normalize = group_vals.iloc[0].mean()
 
-            if not groups:
-                continue
+            group_vals = pd.Series([
+                group / normalize
+                for group in group_vals
+            ], index=group_vals.index, dtype=object)
 
-            group_vals = [
-                vals / group_vals[0].mean()
-                for vals in group_vals
-            ]
-
-            names.append(groups)
             values.append(group_vals)
 
         labels = [
             name
-            for group in names
-            for name in group
+            for group in values
+            for name in group.index
         ]
 
         means = [
@@ -273,9 +260,15 @@ def plot_group(
 
         offset = 0
 
+        v = [
+            vals
+            for group_vals in values
+            for vals in group_vals
+        ]
+
         for (
             (index_a, values_a, label_a), (index_b, values_b, label_b),
-        ) in itertools.combinations(zip(indices, values, labels), 2):
+        ) in itertools.combinations(zip(indices, v, labels), 2):
             if cmp_groups and not any(
                 label_a in group and
                 label_b in group
@@ -283,8 +276,10 @@ def plot_group(
             ):
                 continue
 
-            print(values_a, values_b)
-            pval = ttest_ind(values_a, values_b).pvalue
+            pval = ttest_ind(
+                values_a.as_matrix(),
+                values_b.as_matrix(),
+            ).pvalue
 
             if pval < 0.05:
                 ax.set_ylim(
@@ -381,7 +376,6 @@ def plot_together(
     except:
         pass
 
-    prot = " / ".join(data.genes)
     figures = plot_group(
         data,
         **kwargs

@@ -91,6 +91,11 @@ class IntegrationTest(TestCase):
             for tissue in ["Hip", "Cortex", "Cere"]
             for key, val in self.groups.items()
         ])
+        self.cmp_groups = [
+            ["CK-p25 Hip", "CK Hip"],
+            ["CK-p25 Cortex", "CK Cortex"],
+            ["CK-p25 Cere", "CK Cere"],
+        ]
 
         self.data = {
             name: data_sets.DataSet(
@@ -139,21 +144,22 @@ class IntegrationTest(TestCase):
     def test_plot_all(self):
         merge = self.test_merge_data()
 
-        plot.plot_all(
+        for data in [
             merge.filter(sequence="AVDSLVPIGR"),
-            individual=True,
-            between=True,
-        )
-
-        plot.plot_all(
             merge.filter(protein="Pkm"),
-            individual=True,
-            between=True,
-        )
+        ]:
+            for cmp_groups in [self.cmp_groups, None]:
+                plot.plot_all(
+                    data,
+                    individual=True,
+                    between=True,
+                    cmp_groups=cmp_groups,
+                )
 
-        plot.plot_together(
-            merge.filter(protein="Pkm"),
-        )
+                plot.plot_together(
+                    data,
+                    cmp_groups=cmp_groups,
+                )
 
     def test_correlate_data(self):
         self.test_normalize_data()
