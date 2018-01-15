@@ -1,9 +1,9 @@
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import os
 
-from .. import cluster, volcano, motifs, tables
+from pyproteome import cluster, volcano, motifs, tables
 
 import pyproteome
 

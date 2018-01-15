@@ -21,7 +21,7 @@ from scipy.stats import pearsonr, spearmanr
 from adjustText.adjustText import adjust_text
 
 import pyproteome
-from .. import utils
+from pyproteome import utils
 
 
 LOGGER = logging.getLogger("pyproteome.correlation")

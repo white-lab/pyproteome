@@ -20,7 +20,7 @@ import numpy as np
 import seaborn as sns
 
 
-from .. import fetch_data, utils
+from pyproteome import fetch_data, utils
 
 from . import correlation, plot, tables, volcano
 

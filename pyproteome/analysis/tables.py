@@ -6,8 +6,7 @@ import re
 
 import pandas as pd
 
-from .. import utils
-from ..motifs import motif
+from pyproteome import utils, motifs
 
 
 def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):
@@ -67,7 +66,7 @@ def motif_table(
         postfix=_get_table_title(f=f, running_title=["motifs"]),
     )
 
-    hits = motif.run_motif_enrichment(
+    hits = motifs.motif.run_motif_enrichment(
         data, f,
         **kwargs
     )[0]
