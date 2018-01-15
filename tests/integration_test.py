@@ -154,8 +154,6 @@ class IntegrationTest(TestCase):
             name="CK-p25",
         )
 
-        print(merge.psms.shape[0])
-
         for data in [
             self.data["CKH1"],
             self.data["CKX2"],

@@ -7,6 +7,12 @@ class MotifTest(TestCase):
     def setUp(self):
         self.motif = motif.Motif("O..x.-+")
 
+    def test_repr(self):
+        self.assertEqual(
+            repr(self.motif),
+            "<pyproteome.Motif: O..x.-+>",
+        )
+
     def test_match(self):
         self.assertIn("IEFtFER", self.motif)
         self.assertIn("LEFsFER", self.motif)
