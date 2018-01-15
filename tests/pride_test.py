@@ -36,6 +36,10 @@ class PrideTest(TestCase):
             "PXD003660",
             files=files,
         )
+        pride.fetch_data_set(
+            "PXD003660",
+            files=list(files.keys()),
+        )
 
         for f, folder in files.items():
             os.remove(os.path.join(folder, f))
