@@ -5,7 +5,7 @@ Plot calculated levels of a given sequence across channels or groups.
 from __future__ import division
 
 # Built-ins
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
 import itertools
 import logging
 import os
@@ -23,10 +23,9 @@ LOGGER = logging.getLogger("pyproteome.plot")
 
 
 def plot(
-    data,
+    data, f=None,
     title=None,
     figsize=(12, 8),
-    **kwargs
 ):
     """
     Plot the levels of a sequence across multiple channels.
@@ -50,43 +49,71 @@ def plot(
         for channel_name in channel_names
     ]
 
-    psms = data.filter(kwargs)
+    if f:
+        data = data.filter(f)
 
-    values = psms[channels].as_matrix()
+    figures = []
 
-    mask = ~np.isnan(values).all(axis=0)
-    channel_names = list(np.array(channel_names)[mask])
-    values = values[:, mask]
+    for _, row in data.psms.iterrows():
+        seq = str(row["Sequence"])
 
-    f, ax = plt.subplots(figsize=figsize)
+        values = row[channels].as_matrix()
 
-    for i in range(values.shape[0]):
-        indices = np.arange(len(values[i]))
-        bar_width = .35
-        ax.bar(indices, values[i], bar_width)
-        ax.set_xticks(indices)
-        ax.set_xticklabels(
-            channel_names,
-            fontsize=20,
-            rotation=45,
-            horizontalalignment="right",
+        print(values)
+        mask = ~np.isnan(values).all(axis=0)
+        channel_names = list(np.array(channel_names)[mask])
+        values = values[:, mask]
+
+        fig, ax = plt.subplots(figsize=figsize)
+
+        for i in range(values.shape[0]):
+            indices = np.arange(len(values[i]))
+            bar_width = .35
+            ax.bar(indices, values[i], bar_width)
+            ax.set_xticks(indices)
+            ax.set_xticklabels(
+                channel_names,
+                fontsize=20,
+                rotation=45,
+                horizontalalignment="right",
+            )
+
+        ax.set_title(seq + (" - {}".format(title) if title else ""))
+
+        ax.set_ylabel(
+            "Cummulative Intensity" +
+            (" (Normalized)" if data.intra_normalized else "")
         )
 
-    ax.set_title(sequence + (" - {}".format(title) if title else ""))
+        ax.title.set_fontsize(28)
+        ax.yaxis.label.set_fontsize(20)
 
-    ax.set_ylabel(
-        "Cummulative Intensity" +
-        (" (Normalized)" if data.intra_normalized else "")
-    )
+        fig.savefig(
+            os.path.join(
+                data.name,
+                re.sub(
+                    "[?/]",
+                    "_",
+                    "{}-{}.png".format(
+                        " / ".join(row["Protein"].genes),
+                        data.name,
+                    ),
+                ),
+            ),
+            bbox_inches="tight",
+            dpi=pyproteome.DEFAULT_DPI,
+            transparent=True,
+        )
 
-    ax.title.set_fontsize(28)
-    ax.yaxis.label.set_fontsize(20)
+        figures.append((fig, ax))
 
-    return f
+    return figures
 
 
 def plot_group(
-    data, sequences, cmp_groups=None,
+    data,
+    f=None,
+    cmp_groups=None,
     figsize=(12, 8),
 ):
     """
@@ -107,347 +134,255 @@ def plot_group(
         for label in groups
     ]
 
-    psms = data.psms.copy()
-    psms["Seq Str"] = psms["Sequence"].apply(str)
-    psms = psms[psms["Seq Str"].isin(sequences)]
-    psms["Sort Ind"] = psms["Seq Str"].apply(lambda x: sequences.index(x))
-    psms = psms.sort_values("Sort Ind")
+    if f:
+        data = data.filter(f)
 
-    values = np.array([
-        (
-            np.nanmean(psms[channel].as_matrix(), axis=1) /
-            np.nanmean(psms[channels[0]].as_matrix(), axis=1)
-        )
-        for channel in channels
-    ])
-    means = values
+    figures = []
 
-    errs = [
-        np.nanstd(psms[channel].as_matrix(), axis=1) /
-        np.nanmean(psms[channels[0]].as_matrix(), axis=1)
-        for channel in channels
-    ]
-    # if psms.shape[0] <= 1:
-    #     means = [[i] for i in values]
-    #     errs = [[i] for i in errs]
-
-    values, labels = zip(*[
-        (value, label)
-        for label, value in zip(groups, values)
-        if
-        # value.any() and
-        (cmp_groups is None or any(label in i for i in cmp_groups))
-    ])
-
-    if cmp_groups:
-        div = np.array([
-            means[[
-                labels.index(
-                    min(
-                        [i for i in enumerate(group) if i[1] in labels],
-                        key=lambda x: x[0],
-                    )[1]
-                )
-                for group in cmp_groups
-                if label in group
-            ][0]]
-            for label in labels
-        ])
-
-        means /= div
-        errs /= div
-
-    f, ax = plt.subplots(figsize=figsize)
-
-    means, labels = zip(*[
-        (mean, label)
-        for mean, label in zip(means, labels)
-        if not np.isnan(mean).all()
-    ])
-
-    indices = np.arange(len(means))
-    width = .75
-    bar_width = width / len(means[0])
-
-    for ind in range(len(means[0])):
+    for _, row in data.psms.iterrows():
         print(
-                    bar_width * ind - width / 2 + indices,
-                    [i[ind] for i in means],
-                    bar_width,
+            np.nanmean(row[channels[1]].as_matrix()),
+            np.nanmean(row[channels[0]].as_matrix())
 
         )
-        ax.bar(
-            bar_width * ind - width / 2 + indices,
-            [i[ind] for i in means],
-            bar_width,
-            # yerr=[i[ind] for i in errs],
-            # error_kw=dict(ecolor='k', lw=.25, capsize=.25, capthick=.25),
-        )
-
-    ax.set_ylabel(
-        "{} Signal".format(
-            "Relative" if cmp_groups else "Cumulative",
-        ),
-        fontsize=20,
-    )
-    ax.ticklabel_format(style="plain")
-
-    for label in ax.get_yticklabels():
-        label.set_fontsize(20)
-
-    ax.set_xticks(indices - bar_width / 2)
-    ax.set_xticklabels(labels, fontsize=20)
-
-    title = "{}".format(
-        # " / ".join(sequences),
-        " / ".join(
-            sorted(
-                set(
-                    gene
-                    for row in psms["Proteins"]
-                    for gene in row.genes
-                )
+        values = np.array([
+            (
+                np.nanmean(row[channel].as_matrix()) /
+                np.nanmean(row[channels[0]].as_matrix())
             )
-        )
-    )[:50]
-    ax.set_title(title, fontsize=32)
-    ax.xaxis.grid(False)
-
-    # if not means[0].any():
-    #     return f
-
-    if len(means[0]) > 1:
-        pep_seqs = [
-            data["Sequence"][data["Sequence"] == seq].iloc[0]
-            for seq in sequences
-        ]
-        ax.legend([
-            "{} ({} - {})".format(
-                str(seq),
-                seq.protein_matches[0].rel_pos,
-                seq.protein_matches[0].rel_pos + len(seq.pep_seq),
-            )
-            for seq in pep_seqs
+            for channel in channels
         ])
-        return f, ax
+        means = values
 
-    y_max = np.max([max(i) + max(j) for i, j in zip(means, errs)])
+        errs = [
+            np.nanstd(row[channel].as_matrix()) /
+            np.nanmean(row[channels[0]].as_matrix())
+            for channel in channels
+        ]
+        # if psms.shape[0] <= 1:
+        #     means = [[i] for i in values]
+        #     errs = [[i] for i in errs]
 
-    def stars(p):
-        if p < 0.0001:
-            return "****"
-        elif (p < 0.001):
-            return "***"
-        elif (p < 0.01):
-            return "**"
-        elif (p < 0.05):
-            return "*"
-        else:
-            return "-"
-
-    offset = 0
-
-    for (
-        (index_a, values_a, label_a), (index_b, values_b, label_b),
-    ) in itertools.combinations(zip(indices, values, labels), 2):
-        if cmp_groups and not any(
-            label_a in group and
-            label_b in group
-            for group in cmp_groups
-        ):
-            continue
-
-        print(values_a, values_b)
-        pval = ttest_ind(values_a, values_b).pvalue
-
-        if pval < 0.05:
-            ax.set_ylim(
-                ymax=max([
-                    ax.get_ylim()[1],
-                    y_max * (1 + offset * 0.1 + 0.15),
-                ]),
+        values, labels = zip(*[
+            (value, label)
+            for label, value in zip(groups, values)
+            if (
+                cmp_groups is None or
+                any(label in i for i in cmp_groups)
             )
-            ax.annotate(
-                "",
-                xy=(
-                    index_a + bar_width * 1.5,
-                    y_max * (1.05 + offset * 0.1)
-                ),
-                xytext=(
-                    index_b + bar_width * 1.5,
-                    y_max * (1.05 + offset * 0.1)
-                ),
-                xycoords='data',
-                textcoords='data',
-                arrowprops=dict(
-                    arrowstyle="-",
-                    ec='#000000',
-                ),
+        ])
+
+        if cmp_groups:
+            div = np.array([
+                means[[
+                    labels.index(
+                        min(
+                            [i for i in enumerate(group) if i[1] in labels],
+                            key=lambda x: x[0],
+                        )[1]
+                    )
+                    for group in cmp_groups
+                    if label in group
+                ][0]]
+                for label in labels
+            ])
+
+            means /= div
+            errs /= div
+
+        fig, ax = plt.subplots(figsize=figsize)
+
+        means, labels = zip(*[
+            (mean, label)
+            for mean, label in zip(means, labels)
+            if not np.isnan(mean).all()
+        ])
+
+        indices = np.arange(len(means))
+        width = .75
+        bar_width = width / len(means[0])
+
+        for ind in range(len(means[0])):
+            print(
+                        bar_width * ind - width / 2 + indices,
+                        [i[ind] for i in means],
+                        bar_width,
+
             )
-            ax.text(
-                x=np.mean([index_a, index_b]) + bar_width * 1.5,
-                y=y_max * (1.07 + offset * 0.1),
-                s=stars(pval),
-                horizontalalignment='center',
-                verticalalignment='center',
+            ax.bar(
+                bar_width * ind - width / 2 + indices,
+                [i[ind] for i in means],
+                bar_width,
+                # yerr=[i[ind] for i in errs],
+                # error_kw=dict(ecolor='k', lw=.25, capsize=.25, capthick=.25),
             )
 
-            offset += 1
+        ax.set_ylabel(
+            "{} Signal".format(
+                "Relative" if cmp_groups else "Cumulative",
+            ),
+            fontsize=20,
+        )
+        ax.ticklabel_format(style="plain")
 
-    return f, ax
+        for label in ax.get_yticklabels():
+            label.set_fontsize(20)
+
+        ax.set_xticks(indices - bar_width / 2)
+        ax.set_xticklabels(labels, fontsize=20)
+
+        title = "{}".format(
+            # " / ".join(sequences),
+            " / ".join(
+                sorted(set(row["Proteins"].genes))
+            )
+        )[:50]
+        ax.set_title(title, fontsize=32)
+        ax.xaxis.grid(False)
+
+        # if not means[0].any():
+        #     return f
+
+        if len(means[0]) > 1:
+            pep_seqs = row["Sequence"]
+            ax.legend([
+                "{} ({} - {})".format(
+                    str(seq),
+                    seq.protein_matches[0].rel_pos,
+                    seq.protein_matches[0].rel_pos + len(seq.pep_seq),
+                )
+                for seq in pep_seqs
+            ])
+            return f, ax
+
+        y_max = np.max([max(i) + max(j) for i, j in zip(means, errs)])
+
+        def stars(p):
+            if p < 0.0001:
+                return "****"
+            elif (p < 0.001):
+                return "***"
+            elif (p < 0.01):
+                return "**"
+            elif (p < 0.05):
+                return "*"
+            else:
+                return "-"
+
+        offset = 0
+
+        for (
+            (index_a, values_a, label_a), (index_b, values_b, label_b),
+        ) in itertools.combinations(zip(indices, values, labels), 2):
+            if cmp_groups and not any(
+                label_a in group and
+                label_b in group
+                for group in cmp_groups
+            ):
+                continue
+
+            print(values_a, values_b)
+            pval = ttest_ind(values_a, values_b).pvalue
+
+            if pval < 0.05:
+                ax.set_ylim(
+                    ymax=max([
+                        ax.get_ylim()[1],
+                        y_max * (1 + offset * 0.1 + 0.15),
+                    ]),
+                )
+                ax.annotate(
+                    "",
+                    xy=(
+                        index_a + bar_width * 1.5,
+                        y_max * (1.05 + offset * 0.1)
+                    ),
+                    xytext=(
+                        index_b + bar_width * 1.5,
+                        y_max * (1.05 + offset * 0.1)
+                    ),
+                    xycoords='data',
+                    textcoords='data',
+                    arrowprops=dict(
+                        arrowstyle="-",
+                        ec='#000000',
+                    ),
+                )
+                ax.text(
+                    x=np.mean([index_a, index_b]) + bar_width * 1.5,
+                    y=y_max * (1.07 + offset * 0.1),
+                    s=stars(pval),
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                )
+
+                offset += 1
+
+            fig.savefig(
+                os.path.join(
+                    data.name,
+                    re.sub(
+                        "[?/]",
+                        "_",
+                        "{}-{}-between.png".format(
+                            " / ".join(row["Proteins"].genes),
+                            data.name,
+                        ),
+                    ),
+                ),
+                bbox_inches="tight",
+                dpi=pyproteome.DEFAULT_DPI,
+                transparent=True,
+            )
+            figures.append((fig, ax))
+
+    return figures
 
 
 def plot_all(
-    datas, seqs=None, protein=None, figsize=(16, 8),
-    individual=True, between=False, cmp_groups=None,
+    data,
+    f=None,
+    figsize=(16, 8),
+    individual=True,
+    between=True,
+    cmp_groups=None,
 ):
-    assert seqs is not None or protein is not None
+    try:
+        os.makedirs(data.name)
+    except:
+        pass
 
-    if not isinstance(datas, Iterable):
-        datas = [datas]
+    figures = []
 
-    if protein:
-        seqs = list(
-            set(
-                str(seq)
-                for data in datas
-                for seq in data[data["Proteins"] == protein]["Sequence"]
-            )
+    if individual:
+        figures += plot(
+            data,
+            f=f,
+            figsize=figsize,
         )
-        datas = [
-            i.filter(proteins=[protein])
-            for i in datas
-        ]
 
-    if isinstance(seqs, str):
-        seqs = [seqs]
+    if between:
+        figures += plot_group(
+            data,
+            f=f,
+            cmp_groups=cmp_groups,
+        )
 
-    for seq in seqs:
-        for data in datas:
-            try:
-                os.makedirs(data.name)
-            except:
-                pass
-
-            prot = " / ".join(
-                gene
-                for i in data[data["Sequence"] == seq]["Proteins"]
-                for gene in i.genes
-            )
-            if individual:
-                f = plot(
-                    data, seq,
-                    title="{}-{}".format(
-                        prot,
-                        data.name,
-                    ),
-                    figsize=figsize,
-                )
-                f.savefig(
-                    os.path.join(
-                        data.name,
-                        re.sub(
-                            "[?/]",
-                            "_",
-                            "{}-{}.png".format(
-                                prot,
-                                data.name,
-                            ),
-                        ),
-                    ),
-                    bbox_inches="tight",
-                    dpi=pyproteome.DEFAULT_DPI,
-                    transparent=True,
-                )
-
-            if between:
-                f, _ = plot_group(
-                    data, [seq],
-                    cmp_groups=cmp_groups,
-                )
-                f.savefig(
-                    os.path.join(
-                        data.name,
-                        re.sub(
-                            "[?/]",
-                            "_",
-                            "{}-{}-between.png".format(
-                                prot,
-                                data.name,
-                            ),
-                        ),
-                    ),
-                    bbox_inches="tight",
-                    dpi=pyproteome.DEFAULT_DPI,
-                    transparent=True,
-                )
+    return figures
 
 
 def plot_together(
-    datas, seqs=None, protein=None, proteins=None, only=True, **kwargs
+    data, only=True, **kwargs
 ):
-    assert seqs is not None or protein is not None or proteins is not None
+    try:
+        os.makedirs(data.name)
+    except:
+        pass
 
-    if protein:
-        seqs = list(
-            set(
-                str(seq)
-                for data in datas
-                for seq in data[
-                    data["Proteins"].apply(
-                        lambda x:
-                        all(gene == protein for gene in x.genes)
-                    )
-                    if only else
-                    data["Proteins"] == protein
-                ]["Sequence"]
-            )
-        )
-    elif proteins:
-        seqs = list(
-            set(
-                str(seq)
-                for data in datas
-                for seq in data[data["Proteins"].apply(
-                    lambda x: any(x == i for i in proteins)
-                )]["Sequence"]
-            )
-        )
-        print(seqs)
+    prot = " / ".join(data.genes)
+    figures = plot_group(
+        data,
+        **kwargs
+    )
 
-    if isinstance(seqs, str):
-        seqs = [seqs]
-
-    for data in datas:
-        try:
-            os.makedirs(data.name)
-        except:
-            pass
-
-        prot = " / ".join(
-            gene
-            for i in data[data["Sequence"] == seqs[0]]["Proteins"]
-            for gene in i.genes
-        )
-        f, ax = plot_group(
-            data, seqs,
-            **kwargs
-        )
-        f.savefig(
-            os.path.join(
-                data.name,
-                re.sub(
-                    "[?/]",
-                    "_",
-                    "{}-{}-between.png".format(
-                        prot,
-                        data.name,
-                    ),
-                ),
-            ),
-            bbox_inches="tight",
-            dpi=pyproteome.DEFAULT_DPI,
-            transparent=True,
-        )
-
-    return f, ax
+    return figures

@@ -140,22 +140,19 @@ class IntegrationTest(TestCase):
         merge = self.test_merge_data()
 
         plot.plot_all(
-            [merge],
-            seqs="AVDSLVPIGR",
+            merge.filter(sequence="AVDSLVPIGR"),
             individual=True,
             between=True,
         )
 
         plot.plot_all(
-            [merge],
-            protein="Pkm",
+            merge.filter(protein="Pkm"),
             individual=True,
             between=True,
         )
 
         plot.plot_together(
-            [merge],
-            protein="Pkm",
+            merge.filter(protein="Pkm"),
         )
 
     def test_correlate_data(self):

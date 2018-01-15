@@ -839,7 +839,7 @@ class DataSet:
             if "sequence" in f:
                 seqs = (
                     f["sequence"]
-                    if isinstance(f["sequence"], Iterable) else
+                    if isinstance(f["sequence"], (list, tuple)) else
                     [f["sequence"]]
                 )
                 new.psms = filter_psms(
