@@ -189,7 +189,7 @@ class IntegrationTest(TestCase):
             dict(protein="Pkm"),
         ]:
             for cmp_groups in [self.cmp_groups, None]:
-                plot.plot_all(
+                analysis.plot.plot_all(
                     merge,
                     f=f,
                     individual=True,
@@ -197,7 +197,7 @@ class IntegrationTest(TestCase):
                     cmp_groups=cmp_groups,
                 )
 
-                plot.plot_together(
+                analysis.plot.plot_together(
                     merge,
                     f=f,
                     cmp_groups=cmp_groups,

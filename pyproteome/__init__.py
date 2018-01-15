@@ -7,7 +7,7 @@ and CAMV.
 """
 
 from .analysis import (
-    correlation, plot, tables, volcano,
+    correlation, tables, volcano,
 )
 from .motifs import (
     logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
@@ -94,7 +94,6 @@ __all__ = [
     "loading",
     "modification",
     "paths",
-    "plot",
     "pride",
     "protein",
     "sequence",
