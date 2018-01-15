@@ -13,10 +13,11 @@ from .motifs import (
     logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
 )
 from . import (
-    analysis, bca, cluster, data_sets, discoverer, levels,
+    analysis, bca, data_sets, discoverer, levels,
     loading, modification, paths, pride, protein, sequence,
     utils, version,
 )
+from . import cluster
 
 try:
     from IPython import get_ipython

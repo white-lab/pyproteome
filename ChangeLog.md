@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.5.0 (2018-01-\*\*)
+
+Features
+
+  - Completed clustering module.
+  - Added much more extensive integration testing, fixing many py2 bugs.
+  - Re-organized analysis into package.
+
 ## 0.4.0 (2018-01-13)
 
 Features

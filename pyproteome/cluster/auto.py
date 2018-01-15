@@ -1,8 +1,9 @@
 
 import os
 
+from .. import cluster, volcano, motifs, tables
+
 import pyproteome
-from pyproteome import cluster, volcano, motifs, tables
 
 
 def auto_clusterer(

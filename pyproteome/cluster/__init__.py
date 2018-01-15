@@ -8,8 +8,9 @@ import sklearn
 import sklearn.decomposition
 import sklearn.cluster
 
-import pyproteome
 from . import plot, auto
+
+import pyproteome
 
 
 def get_data(ds, dropna=True, groups=None):
