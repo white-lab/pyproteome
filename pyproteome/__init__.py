@@ -6,16 +6,16 @@ spectometry. Currently it only supports data produced by MASCOT / Discoverer
 and CAMV.
 """
 
-from . import (
-    analysis, bca, cluster, data_sets, discoverer, levels,
-    loading, modification, paths, pride, protein, sequence,
-    utils, version,
-)
 from .analysis import (
     correlation, plot, tables, volcano,
 )
 from .motifs import (
     logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
+)
+from . import (
+    analysis, bca, cluster, data_sets, discoverer, levels,
+    loading, modification, paths, pride, protein, sequence,
+    utils, version,
 )
 
 try:

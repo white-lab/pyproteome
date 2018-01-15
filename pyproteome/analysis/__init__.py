@@ -22,6 +22,8 @@ import seaborn as sns
 
 from .. import fetch_data, utils
 
+from . import correlation, plot, tables, volcano
+
 
 LOGGER = logging.getLogger("pyproteome.analysis")
 
