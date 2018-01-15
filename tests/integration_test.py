@@ -133,6 +133,8 @@ class IntegrationTest(TestCase):
     def test_merge_data(self):
         self.test_normalize_data()
 
+        merge = data_sets.merge_data([], name="Empty")
+
         merge = data_sets.merge_data(
             [
                 self.data["CKH1"],
