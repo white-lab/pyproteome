@@ -59,14 +59,13 @@ dilution.
 ...     mascot_name="CKH1-pY",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
-...     name="CKH1",
-...     enrichments=["pY"],
+...     name="CKH1 pY",
 ... )
 ... ck_h1_global = data_sets.DataSet(
 ...     mascot_name="CKH1-pY-sup",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
-...     name="CKH1",
+...     name="CKH1 Global",
 ... )
 >>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_global)
 >>> tables.changes_table(ck_h1_py_norm.filter(p=0.05), sort="Fold Change"))
