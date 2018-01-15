@@ -144,20 +144,22 @@ class IntegrationTest(TestCase):
     def test_plot_all(self):
         merge = self.test_merge_data()
 
-        for data in [
-            merge.filter(sequence="AVDSLVPIGR"),
-            merge.filter(protein="Pkm"),
+        for f in [
+            dict(sequence="AVDSLVPIGR"),
+            dict(protein="Pkm"),
         ]:
             for cmp_groups in [self.cmp_groups, None]:
                 plot.plot_all(
-                    data,
+                    merge,
+                    f=f,
                     individual=True,
                     between=True,
                     cmp_groups=cmp_groups,
                 )
 
                 plot.plot_together(
-                    data,
+                    merge,
+                    f=f,
                     cmp_groups=cmp_groups,
                 )
 
