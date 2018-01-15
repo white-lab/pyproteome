@@ -17,7 +17,9 @@ import os
 # Core data analysis libraries
 # from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from scipy.stats import zscore
 
 
 from pyproteome import fetch_data, utils
@@ -30,6 +32,7 @@ LOGGER = logging.getLogger("pyproteome.analysis")
 
 def hierarchical_heatmap(
     data,
+    cmp_groups=None,
     baseline_channels=None,
     metric="euclidean", method="centroid",
     row_cluster=True, col_cluster=True
@@ -49,35 +52,31 @@ def hierarchical_heatmap(
     row_cluster : bool, optional
     col_cluster : bool, optional
     """
+    if cmp_groups is None:
+        cmp_groups = [list(data.groups.keys())]
+
     channels = [
         channel
-        for channels in data.groups.values()
-        for channel in channels
-    ]
-    channel_names = [
-        data.channels[i]
-        for i in channels
+        for groups in cmp_groups
+        for group in groups
+        for channel in data.groups[group]
+        if channel in data.channels
     ]
 
-    if baseline_channels is None:
-        baseline_channels = list(data.groups.values())[-1]
+    raw = data.psms[channels].T.apply(zscore).T
+    raw.index = data.psms["Proteins"].apply(str)
+    raw = raw.dropna(how="all")
 
-    psms = data.psms[
-        data.psms["Fold Change"].apply(lambda x: max([x, 1/x])) > 1.5
-    ]
-
-    raw = psms[channels].as_matrix()
-    raw_baseline = psms[baseline_channels].as_matrix().mean(axis=1)
-    raw = np.log2((raw.T / raw_baseline).T)
-
-    sns.clustermap(
+    map = sns.clustermap(
         raw,
         method=method,
         metric=metric,
         row_cluster=row_cluster,
-        col_cluster=col_cluster,
-        xticklabels=channel_names,
-        yticklabels=False,
+        col_cluster=col_cluster and False,
+    )
+    map.ax_heatmap.set_xticklabels(
+        map.ax_heatmap.get_xticklabels(),
+        rotation=45,
     )
 
 

@@ -204,6 +204,14 @@ class IntegrationTest(TestCase):
             self.data["CKH1"][self.data["CKH1"]["Sequence"] == "AVDSLVPIGR"],
         )
 
+    def test_clustermap(self):
+        self.test_normalize_data()
+
+        for data in self.data.values():
+            analysis.hierarchical_heatmap(
+                data,
+            )
+
     def test_changes_table(self):
         self.test_normalize_data()
 
