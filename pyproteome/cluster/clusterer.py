@@ -19,25 +19,31 @@ def get_data(ds, dropna=True, groups=None):
 
     data = ds.data
     data = data.loc[:, ~data.columns.duplicated()]
+    names = [
+        chan
+        for group in groups
+        for chan in ds.groups[group]
+        if chan in ds.channels and ds.channels[chan] in data.columns
+    ]
     data = data.loc[
         :,
         data.columns.isin([
-            ds.channels[col]
-            for i in groups
-            for col in ds.groups[i]
-            if col in ds.channels
+            ds.channels[chan]
+            for chan in names
         ])
     ]
 
-    names = data.columns
     c = np.corrcoef(data.as_matrix())
     z = zscore(data, axis=1)
 
     classes = np.array([
-        [groups.index(i) for i in groups if col in ds.groups[i]][0]
-        for col in data.columns
+        [
+            groups.index(i)
+            for i in groups
+            if col in ds.groups[i]
+        ][0]
+        for col in names
     ])
-    print(data.shape)
 
     return {
         "ds": ds,
