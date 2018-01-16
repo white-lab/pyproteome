@@ -380,12 +380,6 @@ def volcano_plot(
             dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
-        fig.savefig(
-            os.path.splitext(file_name)[0] + ".svg",
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
 
     return fig, ax
 
