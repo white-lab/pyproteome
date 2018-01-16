@@ -711,19 +711,16 @@ class DataSet:
             "asym_fold": lambda val, psms:
             ~psms["Fold Change"].isnull() &
             (
-                psms["Fold Change"] >= f["asym_fold"]
-                if f["asym_fold"] > 1 else
-                psms["Fold Change"] <= f["asym_fold"]
+                psms["Fold Change"] >= val
+                if val > 1 else
+                psms["Fold Change"] <= val
             ),
 
             "fold": lambda val, psms:
             ~psms["Fold Change"].isnull() &
             (
-                np.maximum.reduce(
-                    [
-                        psms["Fold Change"],
-                        1 / psms["Fold Change"],
-                    ]
+                psms["Fold Change"].apply(
+                    lambda x: x if x > 1 else (1 / x if x else x))
                 ) >= (val if val > 1 else 1 / val)
             ),
 
