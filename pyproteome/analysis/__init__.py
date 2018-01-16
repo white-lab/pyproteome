@@ -20,8 +20,7 @@ import seaborn as sns
 from scipy.stats import zscore
 
 
-from pyproteome import fetch_data, utils
-
+import pyproteome as pyp
 from . import correlation, plot, tables, volcano
 
 
@@ -91,7 +90,6 @@ def find_tfs(data, folder_name=None, csv_name=None):
     if folder_name is None:
         folder_name = data.name
 
-    utils.make_folder(folder_name)
 
     if csv_name is None:
         csv_name = "Changing TFs.csv"
@@ -109,7 +107,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
         return any(
             go_term in go
             for prot in prots
-            for go in fetch_data.get_uniprot_data(prot.accession).get(
+            for go in pyp.fetch_data.get_uniprot_data(prot.accession).get(
                 "go", [],
             )
             for go_term in go_terms

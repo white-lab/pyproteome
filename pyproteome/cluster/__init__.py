@@ -10,7 +10,7 @@ import sklearn.cluster
 
 from . import plot, auto
 
-import pyproteome
+import pyproteome as pyp
 
 
 def get_data(ds, dropna=True, groups=None):
@@ -112,7 +112,7 @@ def cluster_range(data, min_clusters=2, max_clusters=20, cols=3):
     f.savefig(
         "Cluster-Range-Scan.png",
         bbox_inches="tight",
-        dpi=pyproteome.DEFAULT_DPI,
+        dpi=pyp.DEFAULT_DPI,
         transparent=True,
     )
 

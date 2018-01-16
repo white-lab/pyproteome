@@ -11,8 +11,7 @@ import numpy as np
 from scipy.cluster.hierarchy import dendrogram
 from fastcluster import linkage
 
-import pyproteome
-from pyproteome import utils
+import pyproteome as pyp
 
 
 def hierarchical_clusters(data, y_pred):
@@ -67,12 +66,13 @@ def hierarchical_clusters(data, y_pred):
     return mapping, new_ind, cmapping, cn
 
 
-def _get_folder(data):
-    folder_name = os.path.join(
-        data["ds"].name, "Clusters",
-    )
-    utils.make_folder(folder_name)
-    return folder_name
+def _get_folder(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(
+            data["ds"].name, "Clusters",
+        )
+
+    return pyp.utils.makedirs(data, folder_name=folder_name)
 
 
 def cluster_corrmap(
@@ -82,6 +82,7 @@ def cluster_corrmap(
     ax=None,
 ):
     folder_name = _get_folder(data)
+
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))
     elif f is None:
@@ -119,7 +120,7 @@ def cluster_corrmap(
     f.savefig(
         os.path.join(folder_name, "Cluster-Corrmap.png"),
         bbox_inches="tight",
-        dpi=pyproteome.DEFAULT_DPI,
+        dpi=pyp.DEFAULT_DPI,
         transparent=True,
     )
     return f
@@ -185,11 +186,12 @@ def plot_all_clusters(
     cols=4,
 ):
     folder_name = _get_folder(data)
+
     clusters = sorted(set(y_pred))
+    rows = int(np.ceil(len(clusters) / cols))
     f, axes = plt.subplots(
-        int(np.ceil(len(clusters) / cols)),
-        cols,
-        figsize=(cols * 3, int(np.ceil(len(clusters) / cols)) * 3),
+        rows, cols,
+        figsize=(cols * 3, rows * 3),
         sharey=True,
         sharex=True,
     )
@@ -211,7 +213,7 @@ def plot_all_clusters(
     f.savefig(
         os.path.join(folder_name, "Clusters.png"),
         bbox_inches="tight",
-        dpi=pyproteome.DEFAULT_DPI,
+        dpi=pyp.DEFAULT_DPI,
         transparent=True,
     )
 
@@ -280,7 +282,7 @@ def show_cluster(
     f.savefig(
         os.path.join(folder_name, "Cluster-{}.png".format(cluster)),
         bbox_inches="tight",
-        dpi=pyproteome.DEFAULT_DPI,
+        dpi=pyp.DEFAULT_DPI,
         transparent=True,
     )
 
@@ -343,7 +345,7 @@ def show_peptide_clusters(
     f.savefig(
         os.path.join(folder_name, "PeptideClusters.png"),
         bbox_inches="tight",
-        dpi=pyproteome.DEFAULT_DPI,
+        dpi=pyp.DEFAULT_DPI,
         transparent=True,
     )
 

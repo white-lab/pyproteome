@@ -1,11 +1,11 @@
 import os
 import requests
 
-from pyproteome import utils
+import pyproteome as pyp
 
 
 def fetch_data(dirname, datas, base_url):
-    utils.makedirs(dirname)
+    pyp.utils.makedirs(dirname)
 
     for _, filename in datas.items():
         out_path = os.path.join(dirname, filename)
