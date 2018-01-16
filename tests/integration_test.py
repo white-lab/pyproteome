@@ -29,7 +29,7 @@ class IntegrationTest(TestCase):
         paths.set_base_dir(os.path.abspath("."))
 
         utils.fetch_data(
-            dir=paths.MS_SEARCHED_DIR,
+            dirname=paths.MS_SEARCHED_DIR,
             datas=DATAS,
             base_url=DATA_URL,
         )
