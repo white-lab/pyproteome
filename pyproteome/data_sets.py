@@ -558,14 +558,15 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        columns = list(new.channels.values())
+        if groups is None:
+            groups = list(new.channels.values())
 
-        if groups is not None:
-            columns = [
-                col
-                for col in columns
-                if any(col in new.groups[i] for i in groups)
-            ]
+        columns = [
+            new.channels[chan]
+            for group in groups
+            for chan in new.groups[group]
+            if chan in new.channels
+        ]
 
         new.psms = new.psms.dropna(
             axis=0,
