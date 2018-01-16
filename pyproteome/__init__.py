@@ -10,13 +10,14 @@ from .analysis import (
     correlation, tables, volcano,
 )
 from .motifs import (
-    logo, icelogo, motif, neighborhood, plogo, phosphosite, weblogo,
+    logo, motif, phosphosite,
 )
 from . import (
     analysis, bca, data_sets, discoverer, levels,
-    loading, modification, paths, pride, protein, sequence,
+    loading, modification, motifs, paths, pride, protein, sequence,
     utils, version,
 )
+from .utils import DEFAULT_DPI
 from . import cluster
 
 try:
@@ -78,11 +79,6 @@ if get_ipython() is not None:
             ])
         )
 
-DEFAULT_DPI = 300
-"""
-The DPI to use when generating all image figures.
-"""
-
 __all__ = [
     "analysis",
     "bca",
@@ -93,6 +89,8 @@ __all__ = [
     "levels",
     "loading",
     "modification",
+    "motifs",
+    "phosphosite",
     "paths",
     "pride",
     "protein",
@@ -105,11 +103,6 @@ __all__ = [
     "import_all",
     "DEFAULT_DPI",
 
-    "icelogo",
     "logo",
     "motif",
-    "neighborhood",
-    "plogo",
-    "phosphosite",
-    "weblogo",
 ]

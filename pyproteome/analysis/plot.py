@@ -124,7 +124,7 @@ def plot_group(
     f=None,
     cmp_groups=None,
     folder_name=None,
-    figsize=(12, 8),
+    figsize=(6, 4),
 ):
     """
     Plot the levels of a sequence across each group.
@@ -209,10 +209,9 @@ def plot_group(
         fig, ax = plt.subplots(figsize=figsize)
 
         indices = np.arange(len(means))
-        width = .75
-        ind = 0
+        width = .5
         ax.bar(
-            width * ind - width / 2 + indices,
+            indices,
             means,
             width=width,
             yerr=errs,
@@ -230,7 +229,7 @@ def plot_group(
         for label in ax.get_yticklabels():
             label.set_fontsize(20)
 
-        ax.set_xticks(indices - width / 2)
+        ax.set_xticks(indices)
         ax.set_xticklabels(labels, fontsize=20)
 
         title = "{}".format(
@@ -304,11 +303,11 @@ def plot_group(
                 ax.annotate(
                     "",
                     xy=(
-                        index_a + width * 1.5,
+                        index_a,
                         y_max * (1.05 + offset * 0.1)
                     ),
                     xytext=(
-                        index_b + width * 1.5,
+                        index_b,
                         y_max * (1.05 + offset * 0.1)
                     ),
                     xycoords='data',
@@ -319,7 +318,7 @@ def plot_group(
                     ),
                 )
                 ax.text(
-                    x=np.mean([index_a, index_b]) + width * 1.5,
+                    x=np.mean([index_a, index_b]),
                     y=y_max * (1.07 + offset * 0.1),
                     s=stars(pval),
                     horizontalalignment='center',

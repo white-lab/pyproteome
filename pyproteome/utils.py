@@ -10,6 +10,12 @@ import numpy as np
 import pandas as pd
 
 
+DEFAULT_DPI = 300
+"""
+The DPI to use when generating all image figures.
+"""
+
+
 def fuzzy_find(needle, haystack):
     """
     Find the longest matching subsequence of needle within haystack.

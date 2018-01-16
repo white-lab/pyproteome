@@ -7,8 +7,8 @@ import itertools
 import pylab
 
 from pyproteome import (
-    analysis, cluster, correlation, data_sets, logo, paths,
-    tables, volcano, plogo, icelogo, weblogo, phosphosite,
+    analysis, cluster, correlation, data_sets, logo, motifs, paths,
+    tables, volcano, phosphosite,
 )
 
 from . import utils
@@ -254,16 +254,24 @@ class IntegrationTest(TestCase):
         for data in self.data.values():
             logo.make_logo(data, {"asym_fold": 1.001})
 
+    def test_neighborhood(self):
+        for data in self.data.values():
+            motifs.neighborhood.enriched_neighborhood(
+                data,
+                {"asym_fold": 1.001},
+                "ACDEFGHIKLMNPQRSTVWY",
+            )
+
     # def test_plogo(self):
-    #     plogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
+    #     motifs.plogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
 
     def test_icelogo(self):
         for data in self.data.values():
-            icelogo.make_logo(data, {"asym_fold": 1.001})
+            motifs.icelogo.make_logo(data, {"asym_fold": 1.001})
 
     # def test_weblogo(self):
     #     for _, data in self.data.items():
-    #         weblogo.make_logo(data, {})
+    #         motifs.weblogo.make_logo(data, {})
 
     def test_phosphosite_enriched(self):
         for data in self.data.values():

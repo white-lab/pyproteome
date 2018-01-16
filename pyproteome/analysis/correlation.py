@@ -399,4 +399,15 @@ def correlate_signal(
         scatter_symbols=scatter_symbols,
     )
 
+    f_corr.savefig(
+        os.path.join(folder_name, "Correlation.png"),
+        bbox_inches="tight", dpi=300,
+        transparent=True,
+    )
+    f_scatter.savefig(
+        os.path.join(folder_name, "Correlation Scatter.png"),
+        bbox_inches="tight",
+        transparent=True,
+    )
+
     return f_corr, f_scatter

@@ -15,7 +15,7 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 import numpy as np
 
-from . import utils, DEFAULT_DPI
+from . import utils
 
 
 def _make_folder(data, folder_name=None):
@@ -91,7 +91,7 @@ def get_channel_levels(
         f.savefig(
             os.path.join(folder_name, file_name),
             bbox_inches="tight",
-            dpi=DEFAULT_DPI,
+            dpi=utils.DEFAULT_DPI,
             transparent=True,
         )
 
