@@ -959,6 +959,16 @@ class DataSet:
         )
 
     @property
+    def accessions(self):
+        return sorted(
+            set(
+                gene
+                for i in self.psms["Proteins"]
+                for gene in i.accessions
+            )
+        )
+
+    @property
     def data(self):
         """
         Get the raw data corresponding to each channels' intensities for each

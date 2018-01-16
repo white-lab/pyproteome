@@ -52,6 +52,11 @@ def fetch_uniprot_data(accessions):
 
     shutil.rmtree(cache_dir)
 
+    return {
+        i: UNIPROT_DATA.get(i, {})
+        for i in accessions
+    }
+
 
 def prefetch_all_uniprot():
     """
@@ -106,39 +111,6 @@ def prefetch_all_msf_uniprot():
                 RE_DISCOVERER_ACCESSION.match(prot_string).group(1)
                 for (prot_string,) in vals
             )
-
-    fetch_uniprot_data(accessions)
-
-
-def prefetch_accessions(psms):
-    """
-    Pre-fetch all UniProt information.
-
-    Speeds up data processing by doing all queries in one go.
-
-    Parameters
-    ----------
-    psms : :class:`pandas.DataFrame`
-    """
-    accessions = set()
-
-    # MASCOT / Discoverer Outputs
-    if "Protein Group Accessions" in psms.columns:
-        accessions.update(
-            acc.strip()
-            for i in psms["Protein Group Accessions"]
-            if isinstance(i, str)
-            for acc in i.split(";")
-        )
-
-    # CAMV Outputs
-    if "Accession" in psms.columns:
-        accessions.update(
-            acc.strip()
-            for i in psms["Accession"]
-            if isinstance(i, str)
-            for acc in i.split("/")
-        )
 
     fetch_uniprot_data(accessions)
 

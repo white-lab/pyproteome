@@ -51,6 +51,8 @@ def find_tfs(data, folder_name=None, csv_name=None):
     if csv_name is None:
         csv_name = "Changing TFs.csv"
 
+    uni_data = pyp.fetch_data.fetch_uniprot_data(data.accessions)
+
     def _is_tf(prots):
         go_terms = (
             "DNA binding",
@@ -61,9 +63,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
         return any(
             go_term in go
             for prot in prots
-            for go in pyp.fetch_data.get_uniprot_data(prot.accession).get(
-                "go", [],
-            )
+            for go in uni_data.get(prot.accession, {}).get("go", [])
             for go_term in go_terms
         )
 
