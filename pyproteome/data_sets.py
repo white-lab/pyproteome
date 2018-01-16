@@ -663,14 +663,6 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        def filter_psms(new, array):
-            assert array.shape[0] == new.psms.shape[0]
-            return (
-                new.psms.loc[array]
-                if not f.get("inverse", False) else
-                new.psms.loc[~array]
-            ).reset_index(drop=True)
-
         confidence = {
             "High": ["High"],
             "Medium": ["Medium", "High"],
@@ -678,49 +670,49 @@ class DataSet:
         }
 
         fns = {
-            "series": lambda val:
+            "series": lambda val, psms:
             val,
-            "fn": lambda val:
-            new.psms.apply(val),
-            "confidence": lambda val:
-            new.psms["Confidence Level"].isin(confidence[val]),
-            "ion_score": lambda val:
-            new.psms["Ion Score"] >= val,
-            "isolation": lambda val:
-            new.psms["Isolation Interference"] <= val,
-            "missed_cleavage": lambda val:
-            new.psms["Missed Cleavages"] <= val,
-            "median_quant": lambda val:
+            "fn": lambda val, psms:
+            psms.apply(val),
+            "confidence": lambda val, psms:
+            psms["Confidence Level"].isin(confidence[val]),
+            "ion_score": lambda val, psms:
+            psms["Ion Score"] >= val,
+            "isolation": lambda val, psms:
+            psms["Isolation Interference"] <= val,
+            "missed_cleavage": lambda val, psms:
+            psms["Missed Cleavages"] <= val,
+            "median_quant": lambda val, psms:
             np.nan_to_num(
                 np.nanmedian(
-                    new.psms[
+                    psms[
                         [val for val in new.channels.values()]
                     ],
                     axis=1,
                 )
             ) >= val,
-            "p": lambda val:
-            ~new.psms["p-value"].isnull() &
-            (new.psms["p-value"] <= val),
-            "asym_fold": lambda val:
-            ~new.psms["Fold Change"].isnull() &
+            "p": lambda val, psms:
+            ~psms["p-value"].isnull() &
+            (psms["p-value"] <= val),
+            "asym_fold": lambda val, psms:
+            ~psms["Fold Change"].isnull() &
             (
-                new.psms["Fold Change"] >= f["asym_fold"]
+                psms["Fold Change"] >= f["asym_fold"]
                 if f["asym_fold"] > 1 else
-                new.psms["Fold Change"] <= f["asym_fold"]
+                psms["Fold Change"] <= f["asym_fold"]
             ),
-            "fold": lambda val:
-            ~new.psms["Fold Change"].isnull() &
+            "fold": lambda val, psms:
+            ~psms["Fold Change"].isnull() &
             (
                 np.maximum.reduce(
                     [
-                        new.psms["Fold Change"],
-                        1 / new.psms["Fold Change"],
+                        psms["Fold Change"],
+                        1 / psms["Fold Change"],
                     ]
                 ) >= (val if val > 1 else 1 / val)
             ),
-            "motif": lambda val:
-            new.psms["Sequence"].apply(
+            "motif": lambda val, psms:
+            psms["Sequence"].apply(
                 lambda x:
                 any(
                     val.match(nmer)
@@ -730,22 +722,22 @@ class DataSet:
                     )
                 )
             ),
-            "protein": lambda val:
-            new.psms["Proteins"].apply(
+            "protein": lambda val, psms:
+            psms["Proteins"].apply(
                 lambda x: bool(set(val).intersection(x.genes))
             )
             if isinstance(val, (list, tuple, pd.Series)) else
-            new.psms["Proteins"] == val,
-            "sequence": lambda val:
-            new.psms["Sequence"].apply(lambda x: any(i in x for i in val))
+            psms["Proteins"] == val,
+            "sequence": lambda val, psms:
+            psms["Sequence"].apply(lambda x: any(i in x for i in val))
             if isinstance(val, (list, tuple, pd.Series)) else
-            new.psms["Sequence"] == val,
-            "mod_types": lambda val:
-            modification.filter_mod_types(new.psms, val),
-            "only_validated": lambda val:
-            new.psms["Validated"] == val,
-            "scan_paths": lambda val:
-            new.psms["Scan Paths"]
+            psms["Sequence"] == val,
+            "mod_types": lambda val, psms:
+            modification.filter_mod_types(psms, val),
+            "only_validated": lambda val, psms:
+            psms["Validated"] == val,
+            "scan_paths": lambda val, psms:
+            psms["Scan Paths"]
             .apply(lambda x: any(i in val for i in x))
         }
 
@@ -756,17 +748,27 @@ class DataSet:
             )
 
             for f in filters:
-                if "group_a" in f or "group_b" in f:
+                group_a = f.pop("group_a", None)
+                group_b = f.pop("group_b", None)
+
+                if group_a or group_b:
                     new.update_group_changes(
-                        group_a=f.get("group_a", None),
-                        group_b=f.get("group_b", None),
+                        group_a=group_a,
+                        group_b=group_b,
                     )
 
-                for key, val in f.items():
-                    if key in ["group_a", "group_b"]:
-                        continue
+                inverse = f.pop("inverse", False)
 
-                    new.psms = filter_psms(new, fns[key](val))
+                for key, val in f.items():
+
+                    mask = fns[key](val, new.psms)
+
+                    if inverse:
+                        mask = ~mask
+
+                    assert mask.shape[0] == new.psms.shape[0]
+
+                    new.psms = new.psms.loc[mask].reset_index(drop=True)
 
         new.psms.reset_index(inplace=True, drop=True)
 
