@@ -19,6 +19,7 @@ def auto_clusterer(
     get_data_kwargs=None,
     cluster_kwargs=None,
     cluster_cluster_kwargs=None,
+    plot_clusters_kwargs=None,
     volcano_kwargs=None,
     folder_name=None,
     filename="clusters.pkl",
@@ -35,6 +36,7 @@ def auto_clusterer(
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
     cluster_cluster_kwargs = cluster_cluster_kwargs or {}
+    plot_clusters_kwargs = plot_clusters_kwargs or {}
     volcano_kwargs = volcano_kwargs or {}
 
     data = pyp.cluster.get_data(
@@ -66,7 +68,10 @@ def auto_clusterer(
         filename="Final Clusters.png",
     )
 
-    pyp.cluster.plot.plot_all_clusters(data, y_pred)
+    pyp.cluster.plot.plot_all_clusters(
+        data, y_pred,
+        **plot_clusters_kwargs
+    )
 
     ss = sorted(set(y_pred))
 

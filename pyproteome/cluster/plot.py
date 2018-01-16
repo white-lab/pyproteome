@@ -38,6 +38,8 @@ def hierarchical_heatmap(
     method="centroid",
     row_cluster=True,
     col_cluster=True,
+    show_y=False,
+    filename="Hierarchical Heatmap.png",
     folder_name=None,
 ):
     """
@@ -83,6 +85,20 @@ def hierarchical_heatmap(
         map.ax_heatmap.get_xticklabels(),
         rotation=45,
     )
+
+    if not show_y:
+        map.ax_heatmap.set_yticklabels([])
+        map.ax_heatmap.set_ylabel("")
+
+    if filename:
+        map.savefig(
+            os.path.join(folder_name, filename),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
+
+    return map
 
 
 def hierarchical_clusters(data, y_pred):
@@ -254,8 +270,8 @@ def plot_all_clusters(
 ):
     folder_name = _make_folder(data["ds"], folder_name=folder_name)
 
-    clusters = sorted(set(y_pred))
-    rows = int(np.ceil(len(clusters) / cols))
+    ss = sorted(set(y_pred))
+    rows = int(np.ceil(len(ss) / cols))
     f, axes = plt.subplots(
         rows, cols,
         figsize=(cols * 3, rows * 3),
@@ -265,11 +281,12 @@ def plot_all_clusters(
 
     ax_iter = iter(axes.ravel())
 
-    for ind, (cluster_n, ax) in enumerate(zip(sorted(set(y_pred)), ax_iter)):
+    for ind, (cluster_n, ax) in enumerate(zip(ss, ax_iter)):
         plot_cluster(
             data, y_pred, cluster_n,
             ax=ax,
             ylabel=ind % cols == 0,
+            save=False,
         )
 
     for ax in ax_iter:
@@ -293,6 +310,7 @@ def show_cluster(
     f=None,
     ax=None,
     color=None,
+    save=True,
     folder_name=None,
 ):
     folder_name = _make_folder(data["ds"], folder_name=folder_name)
@@ -347,12 +365,13 @@ def show_cluster(
             linewidth=5,
         )
 
-    f.savefig(
-        os.path.join(folder_name, "Cluster-{}.png".format(cluster)),
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
+    if save:
+        f.savefig(
+            os.path.join(folder_name, "Cluster-{}.png".format(cluster)),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
 
     dp.psms = dp[y_pred == cluster]
 
@@ -405,6 +424,7 @@ def show_peptide_clusters(
             ax=ax,
             ylabel=ind % cols == 0,
             color=color,
+            save=False,
             **fil
         )
 
