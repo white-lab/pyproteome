@@ -5,12 +5,13 @@ from math import ceil, sqrt
 from functools import cmp_to_key
 import os
 
+from fastcluster import linkage
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram
 from scipy.stats import zscore
 import seaborn as sns
-from fastcluster import linkage
+import sklearn
 
 import pyproteome as pyp
 
@@ -139,6 +140,7 @@ def cluster_corrmap(
     colorbar=True,
     f=None,
     ax=None,
+    filename="Cluster-Corrmap.png",
     folder_name=None,
 ):
     folder_name = _make_folder(data["ds"], folder_name=folder_name)
@@ -177,12 +179,14 @@ def cluster_corrmap(
     if colorbar:
         f.colorbar(mesh)
 
-    f.savefig(
-        os.path.join(folder_name, "Cluster-Corrmap.png"),
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
+    if filename:
+        f.savefig(
+            os.path.join(folder_name, filename),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
+
     return f
 
 
@@ -413,3 +417,32 @@ def show_peptide_clusters(
     )
 
     return f, axes
+
+
+def pca(data):
+    classes = data["classes"]
+    z = data["z"]
+    names = data["names"]
+
+    f, ax = plt.subplots(1, 1, figsize=(4, 4))
+    x = sklearn.decomposition.PCA().fit_transform(z.T)
+
+    for ind, label in enumerate(data["labels"]):
+        ax.scatter(
+            x[classes == ind, 0],
+            x[classes == ind, 1],
+            label=label,
+        )
+
+    offset = 0
+    for ind, column in enumerate(names):
+        ax.text(
+            x=x[ind, 0] + offset,
+            y=x[ind, 1] + offset,
+            s=column,
+        )
+
+    ax.legend()
+    ax.set_title("PCA {}".format(data["ds"].name))
+    ax.set_xlabel("Component 1")
+    ax.set_ylabel("Component 2")

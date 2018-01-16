@@ -19,6 +19,7 @@ def auto_clusterer(
     get_data_kwargs=None,
     cluster_kwargs=None,
     cluster_cluster_kwargs=None,
+    volcano_kwargs=None,
     folder_name=None,
     filename="clusters.pkl",
 ):
@@ -34,13 +35,14 @@ def auto_clusterer(
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
     cluster_cluster_kwargs = cluster_cluster_kwargs or {}
+    volcano_kwargs = volcano_kwargs or {}
 
     data = pyp.cluster.get_data(
         data,
         **get_data_kwargs
     )
 
-    pyp.cluster.pca(data)
+    pyp.cluster.plot.pca(data)
 
     if "n_clusters" not in cluster_kwargs:
         cluster_kwargs["n_clusters"] = 100
@@ -55,8 +57,14 @@ def auto_clusterer(
         **cluster_cluster_kwargs
     )
 
-    pyp.cluster.plot.cluster_corrmap(data, y_pred_old)
-    pyp.cluster.plot.cluster_corrmap(data, y_pred)
+    pyp.cluster.plot.cluster_corrmap(
+        data, y_pred_old,
+        filename="First Clusters.png",
+    )
+    pyp.cluster.plot.cluster_corrmap(
+        data, y_pred,
+        filename="Final Clusters.png",
+    )
 
     pyp.cluster.plot.plot_all_clusters(data, y_pred)
 
@@ -67,6 +75,7 @@ def auto_clusterer(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
             folder_name=folder_name,
+            **volcano_kwargs
         )
 
         f, _ = pyp.motifs.logo.make_logo(

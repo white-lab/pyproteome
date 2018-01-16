@@ -313,7 +313,7 @@ class IntegrationTest(TestCase):
         for d in self.data.values():
             data = cluster.get_data(d)
 
-            cluster.pca(data)
+            cluster.plot.pca(data)
 
             _, y_pred = cluster.cluster(
                 data,
