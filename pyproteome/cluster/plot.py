@@ -389,7 +389,7 @@ def show_cluster(
 def show_peptide_clusters(
     data, y_pred,
     filters,
-    new_colors=True,
+    new_colors=False,
     cols=4,
     folder_name=None,
 ):
@@ -422,7 +422,7 @@ def show_peptide_clusters(
     colors = [
         plt.cm.rainbow(ss.index(cluster_n) / len(ss))
         if new_colors else
-        plt.cm.rainbow(cluster_n / max(y_pred))
+        plt.cm.rainbow(cluster_n / len(set(y_pred)))
         for cluster_n in clusters
     ]
 
