@@ -15,13 +15,21 @@ from collections import OrderedDict
 from matplotlib import pyplot as plt
 import numpy as np
 
-import pyproteome
-from . import utils
+from . import utils, DEFAULT_DPI
+
+
+def _make_folder(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Correlations")
+
+    return utils.makedirs(folder_name)
 
 
 def get_channel_levels(
     data,
-    folder_name=None, file_name=None,
+    folder_name=None,
+    file_name=None,
+    cols=2,
 ):
     """
     Calculate channel levels using median channel levels.
@@ -34,16 +42,10 @@ def get_channel_levels(
     folder_name : str, optional
     file_name : str, optional
     """
-    if folder_name is None:
-        folder_name = data.name
-
     if not file_name:
         file_name = "channel_levels.png"
 
-    utils.make_folder(folder_name)
-
-    if folder_name:
-        file_name = os.path.join(folder_name, file_name)
+    folder_name = _make_folder(data, folder_name=folder_name)
 
     channel_names = list(data.channels.keys())
     channels = list(data.channels.values())
@@ -51,10 +53,11 @@ def get_channel_levels(
     base = channels[0]
     channel_levels[base] = 1
 
+    rows = int(np.ceil(len(data.channels) / cols))
     f, axes = plt.subplots(
-        int(np.ceil(len(data.channels) / 2)), 2,
+        rows, cols,
         sharex=True,
-        figsize=(12, 12),
+        figsize=(2 * rows, 6 * cols),
     )
     axes = [i for j in axes for i in j]
 
@@ -86,31 +89,10 @@ def get_channel_levels(
 
     if file_name:
         f.savefig(
-            file_name,
+            os.path.join(folder_name, file_name),
             bbox_inches="tight",
-            dpi=pyproteome.DEFAULT_DPI,
+            dpi=DEFAULT_DPI,
             transparent=True,
         )
 
     return channel_levels
-
-
-def get_average_phospho_levels(data):
-    """
-    Calculate channel levels using mean channel levels.
-
-    Parameters
-    ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
-
-    Returns
-    -------
-    OrderedDict
-    """
-    base = list(data.channels.keys())[0]
-    levels = data.psms[list(data.channels)].mean()
-
-    return OrderedDict(
-        (name, levels[name] / levels[base])
-        for name in data.channels
-    )

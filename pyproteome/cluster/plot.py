@@ -7,11 +7,74 @@ import os
 
 from matplotlib import pyplot as plt
 import numpy as np
-
 from scipy.cluster.hierarchy import dendrogram
+from scipy.stats import zscore
+import seaborn as sns
 from fastcluster import linkage
 
 import pyproteome as pyp
+
+
+def _make_folder(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Clusters")
+
+    return pyp.utils.makedirs(folder_name)
+
+
+def hierarchical_heatmap(
+    data,
+    cmp_groups=None,
+    baseline_channels=None,
+    metric="euclidean",
+    method="centroid",
+    row_cluster=True,
+    col_cluster=True,
+    folder_name=None,
+):
+    """
+    Plot a hierarhically-clustered heatmap of a data set.
+
+    Parameters
+    ----------
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    baseline_channels : list of str, optional
+        List of channels to average and use as baseline for each row.
+    metric : str, optional
+        Hierarchical clustering distance metric.
+    method : str, optional
+        Hierarchical clustering method.
+    row_cluster : bool, optional
+    col_cluster : bool, optional
+    """
+    folder_name = _make_folder(data, folder_name=folder_name)
+
+    if cmp_groups is None:
+        cmp_groups = [list(data.groups.keys())]
+
+    channels = [
+        data.channels[channel]
+        for groups in cmp_groups
+        for group in groups
+        for channel in data.groups[group]
+        if channel in data.channels
+    ]
+
+    raw = data.psms[channels].T.apply(zscore).T
+    raw.index = data.psms["Proteins"].apply(str)
+    raw = raw.dropna(how="all")
+
+    map = sns.clustermap(
+        raw,
+        method=method,
+        metric=metric,
+        row_cluster=row_cluster,
+        col_cluster=col_cluster,
+    )
+    map.ax_heatmap.set_xticklabels(
+        map.ax_heatmap.get_xticklabels(),
+        rotation=45,
+    )
 
 
 def hierarchical_clusters(data, y_pred):
@@ -66,22 +129,14 @@ def hierarchical_clusters(data, y_pred):
     return mapping, new_ind, cmapping, cn
 
 
-def _get_folder(data, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data["ds"].name, "Clusters",
-        )
-
-    return pyp.utils.makedirs(data, folder_name=folder_name)
-
-
 def cluster_corrmap(
     data, y_pred,
     colorbar=True,
     f=None,
     ax=None,
+    folder_name=None,
 ):
-    folder_name = _get_folder(data)
+    folder_name = _make_folder(data, folder_name=folder_name)
 
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))
@@ -184,8 +239,9 @@ def plot_cluster(
 def plot_all_clusters(
     data, y_pred,
     cols=4,
+    folder_name=None,
 ):
-    folder_name = _get_folder(data)
+    folder_name = _make_folder(data["ds"], folder_name=folder_name)
 
     clusters = sorted(set(y_pred))
     rows = int(np.ceil(len(clusters) / cols))
@@ -226,8 +282,9 @@ def show_cluster(
     f=None,
     ax=None,
     color=None,
+    folder_name=None,
 ):
-    folder_name = _get_folder(data)
+    folder_name = _make_folder(data["ds"], folder_name=folder_name)
 
     if ax is None:
         f, ax = plt.subplots(figsize=(6, 6))
@@ -296,8 +353,9 @@ def show_peptide_clusters(
     filters,
     new_colors=True,
     cols=4,
+    folder_name=None,
 ):
-    folder_name = _get_folder(data)
+    folder_name = _make_folder(data["ds"], folder_name=folder_name)
 
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(

@@ -9,7 +9,7 @@ import pandas as pd
 import pyproteome as pyp
 
 
-def _table_make_folder(data, folder_name=None):
+def _make_folder(data, folder_name=None):
     if folder_name is None:
         folder_name = os.path.join(data.name, "Peptides")
 
@@ -25,7 +25,7 @@ def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):
             postfix,
         )
 
-    folder_name = _table_make_folder(data, folder_name=folder_name)
+    folder_name = _make_folder(data, folder_name=folder_name)
 
     return os.path.join(folder_name, csv_name)
 
@@ -180,7 +180,7 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     out_name : str, optional
     """
 
-    folder_name = _table_make_folder(datas, folder_name=folder_name)
+    folder_name = _make_folder(datas, folder_name=folder_name)
 
     out_name = os.path.join(folder_name, out_name)
 

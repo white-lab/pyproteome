@@ -17,7 +17,7 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.volcano")
 
 
-def _vol_make_folder(data, folder_name=None):
+def _make_folder(data, folder_name=None):
     if folder_name is None:
         folder_name = os.path.join(data.name, "Volcano")
 
@@ -109,7 +109,7 @@ def volcano_plot(
     if group_a and group_b:
         data.update_group_changes(group_a=group_a, group_b=group_b)
 
-    _vol_make_folder(data, folder_name=folder_name)
+    _make_folder(data, folder_name=folder_name)
 
     options = options or {}
 

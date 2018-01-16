@@ -2,8 +2,16 @@
 from __future__ import absolute_import, division
 
 import os
+import pickle
 
 import pyproteome as pyp
+
+
+def _make_folder(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Clusters")
+
+    return pyp.utils.makedirs(folder_name)
 
 
 def auto_clusterer(
@@ -12,6 +20,7 @@ def auto_clusterer(
     cluster_kwargs=None,
     cluster_cluster_kwargs=None,
     folder_name=None,
+    filename="clusters.pkl",
 ):
     """
     Cluster and generate plots for a data set.
@@ -20,10 +29,7 @@ def auto_clusterer(
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
-    if folder_name is None:
-        folder_name = os.path.join(data.name, "Clusters")
-
-    pyp.utils.makedirs(folder_name)
+    folder_name = _make_folder(data, folder_name=folder_name)
 
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
@@ -88,5 +94,9 @@ def auto_clusterer(
         slices,
         folder_name=folder_name,
     )
+
+    if filename:
+        with open(os.path.join(folder_name, filename), "wb") as f:
+            pickle.dump((data, y_pred), f)
 
     return data, y_pred
