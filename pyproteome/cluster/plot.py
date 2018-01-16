@@ -15,9 +15,14 @@ from fastcluster import linkage
 import pyproteome as pyp
 
 
-def _make_folder(data, folder_name=None):
+def _make_folder(data=None, folder_name=None):
     if folder_name is None:
-        folder_name = os.path.join(data.name, "Clusters")
+        folder_name = os.path.join(
+            data.name
+            if data is not None else
+            os.getcwd(),
+            "Clusters",
+        )
 
     return pyp.utils.makedirs(folder_name)
 

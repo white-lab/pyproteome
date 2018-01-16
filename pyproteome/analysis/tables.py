@@ -9,9 +9,14 @@ import pandas as pd
 import pyproteome as pyp
 
 
-def _make_folder(data, folder_name=None):
+def _make_folder(data=None, folder_name=None):
     if folder_name is None:
-        folder_name = os.path.join(data.name, "Peptides")
+        folder_name = os.path.join(
+            data.name
+            if data is not None else
+            os.getcwd(),
+            "Tables",
+        )
 
     return pyp.utils.makedirs(folder_name)
 
@@ -180,7 +185,7 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     out_name : str, optional
     """
 
-    folder_name = _make_folder(datas, folder_name=folder_name)
+    folder_name = _make_folder(folder_name=folder_name)
 
     out_name = os.path.join(folder_name, out_name)
 

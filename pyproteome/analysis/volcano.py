@@ -17,9 +17,14 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.volcano")
 
 
-def _make_folder(data, folder_name=None):
+def _make_folder(data=None, folder_name=None):
     if folder_name is None:
-        folder_name = os.path.join(data.name, "Volcano")
+        folder_name = os.path.join(
+            data.name
+            if data is not None else
+            os.getcwd(),
+            "Volcano",
+        )
 
     return pyp.utils.makedirs(folder_name)
 

@@ -68,7 +68,7 @@ def make_logo(data, f, m=None, **kwargs):
     ]
     return plogo(
         fore, back,
-        title=format_title(data, f),
+        title=format_title(data=data, f=f),
         **kwargs
     )
 

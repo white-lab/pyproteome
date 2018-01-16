@@ -73,7 +73,7 @@ def enriched_neighborhood(
         ],
         normed=True, alpha=0.7, color="orange",
         bins=range(0, nmer_length, 1),
-        label=plogo.format_title(f),
+        label=plogo.format_title(f=f),
     )
 
     ax.set_title("SFK Substrate Enrichment\np = {:.2e}".format(pval))

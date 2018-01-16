@@ -26,9 +26,14 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.correlation")
 
 
-def _make_folder(data, folder_name=None):
+def _make_folder(data=None, folder_name=None):
     if folder_name is None:
-        folder_name = os.path.join(data.name, "Correlations")
+        folder_name = os.path.join(
+            data.name
+            if data is not None else
+            os.getcwd(),
+            "Correlations",
+        )
 
     return pyp.utils.makedirs(folder_name)
 

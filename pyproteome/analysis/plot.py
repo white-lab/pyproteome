@@ -23,9 +23,14 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.plot")
 
 
-def _make_folder(data, folder_name=None):
+def _make_folder(data=None, folder_name=None):
     if folder_name is None:
-        folder_name = os.path.join(data.name, "Peptides")
+        folder_name = os.path.join(
+            data.name
+            if data is not None else
+            os.getcwd(),
+            "Peptides",
+        )
 
     return pyp.utils.makedirs(folder_name)
 
