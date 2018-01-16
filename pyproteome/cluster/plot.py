@@ -141,7 +141,7 @@ def cluster_corrmap(
     ax=None,
     folder_name=None,
 ):
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = _make_folder(data["ds"], folder_name=folder_name)
 
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))

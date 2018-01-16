@@ -6,6 +6,7 @@ spectometry. Currently it only supports data produced by MASCOT / Discoverer
 and CAMV.
 """
 
+from .utils import DEFAULT_DPI
 from .analysis import (
     correlation, tables, volcano,
 )
@@ -17,7 +18,6 @@ from . import (
     loading, modification, motifs, paths, pride, protein, sequence,
     utils, version,
 )
-from .utils import DEFAULT_DPI
 from . import cluster
 
 try:
