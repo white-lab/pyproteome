@@ -152,18 +152,32 @@ class IntegrationTest(TestCase):
         }
 
     def test_filter(self):
-        for f in [
-            {"p": .1},
-            {"fold": 1.5},
-            {"fold": 1/1.5},
-            {"asym_fold": 1.5},
-            {"asym_fold": 1/1.5},
-            {"sequence": "AVDSLVPIGR"},
-            {"sequence": ["AVDSLVPIGR"]},
-            {"protein": "Pkm"},
-            {"protein": ["Pkm"]},
-        ]:
-            for data in self.data.values():
+        for data in self.data.values():
+            for f in [
+                {"p": .1},
+                {"fold": 1.5},
+                {"fold": 1/1.5},
+                {"asym_fold": 1.5},
+                {"asym_fold": 1/1.5},
+                {"sequence": "AVDSLVPIGR"},
+                {"sequence": ["AVDSLVPIGR"]},
+                {"protein": "Pkm"},
+                {"protein": ["Pkm"]},
+                {"ion_score": 10},
+                {"isolation": 15},
+                {"fn": lambda x: len(x["Sequence"]) > 5},
+                {"series": data["IonScore"] % 5},
+                {"missed_cleavage": 0},
+                {"median_quant": 10000},
+                {"only_validated": False},
+                {"mod_types": [(None, "Phospho")]},
+                {"p": .1, "inverse": True},
+                {"motif": motifs.Motif(".......xP......")},
+                {"confidence": "Low"},
+                {"confidence": "Medium"},
+                {"confidence": "High"},
+                {"group_a": "CK-p25 Hip", "group_b": "CK Hip"},
+            ]:
                 data.filter(f)
 
     def test_merge_data(self):

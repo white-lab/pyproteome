@@ -639,7 +639,7 @@ class DataSet:
         fold                Change > cutoff or Change < 1 / cutoff.
         motif               Filter for motif.
         protein             Filter for protein or list of proteins.
-        seq                 Filter for sequence or list of sequences.
+        sequence            Filter for sequence or list of sequences.
         mod_types           Filter for modifications.
         only_validated      Use rows validated by CAMV.
         inverse             Use all rows that are rejected by a filter.
@@ -742,7 +742,7 @@ class DataSet:
             "mod_types": lambda val:
             modification.filter_mod_types(new.psms, val),
             "only_validated": lambda val:
-            new.psms["Validated"],
+            new.psms["Validated"] == val,
             "scan_paths": lambda val:
             new.psms["Scan Paths"]
             .apply(lambda x: any(i in val for i in x))

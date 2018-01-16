@@ -139,6 +139,9 @@ class Sequence:
         else:
             return self._seq_with_modifications()
 
+    def __len__(self):
+        return len(self.pep_seq)
+
 
 def extract_sequence(proteins, sequence_string):
     """
