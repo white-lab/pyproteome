@@ -643,6 +643,7 @@ class DataSet:
         mod_types           Filter for modifications.
         only_validated      Use rows validated by CAMV.
         inverse             Use all rows that are rejected by a filter.
+        ================    ===================================================
 
         Returns
         -------
