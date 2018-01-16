@@ -125,13 +125,13 @@ def hierarchical_clusters(data, y_pred):
     link = linkage(
         np.array([
             z[y_pred.as_matrix() == x].mean(axis=0)
-            for x in sorted(set(y_pred))
+            for x in ss
         ])
     )
 
     leaves = dendrogram(
         link,
-        labels=[str(x) for x in sorted(set(y_pred))],
+        labels=[str(x) for x in ss],
         no_plot=True,
     )["leaves"]
 
@@ -170,7 +170,13 @@ def cluster_corrmap(
 
     div_scale = max([data["data"].shape[0] // 1000, 5])
 
-    mapping, new_ind, cmapping, cn = hierarchical_clusters(data, y_pred)
+    if len(set(y_pred)) > 1:
+        mapping, new_ind, _, cn = hierarchical_clusters(data, y_pred)
+        sorted_clusters = sorted(mapping, key=lambda x: mapping[x])
+        y_pred = y_pred.as_matrix()[new_ind]
+    else:
+        sorted_clusters = sorted(set(y_pred))
+        cn = data["c"]
 
     mesh = ax.pcolormesh(
         cn[::div_scale, ::div_scale],
@@ -178,12 +184,13 @@ def cluster_corrmap(
         vmin=-1, vmax=1,
     )
 
-    for cluster_n in sorted(mapping, key=lambda x: mapping[x]):
+    for cluster_n in sorted_clusters:
         ind = np.arange(
             0,
             data["data"].shape[0],
-        )[y_pred.as_matrix()[new_ind] == cluster_n]
+        )[y_pred == cluster_n]
         xy = np.median(ind) / div_scale
+
         ax.text(
             s=str(cluster_n),
             x=xy,
@@ -233,7 +240,7 @@ def plot_cluster(
         ax.plot(
             dad[i, :],
             alpha=min([1 / dad.shape[0] * 50 / 2, 1]),
-            color=color or plt.cm.rainbow(cluster_n / max(y_pred)),
+            color=color or plt.cm.rainbow(cluster_n / len(set(y_pred))),
         )
 
     ax.plot(
@@ -286,7 +293,6 @@ def plot_all_clusters(
             data, y_pred, cluster_n,
             ax=ax,
             ylabel=ind % cols == 0,
-            save=False,
         )
 
     for ax in ax_iter:
@@ -445,7 +451,6 @@ def pca(data):
     classes = data["classes"]
     z = data["z"]
     names = data["names"]
-    print(z)
 
     f, ax = plt.subplots(1, 1, figsize=(4, 4))
     x = sklearn.decomposition.PCA().fit_transform(z.T)

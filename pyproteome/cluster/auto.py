@@ -76,6 +76,16 @@ def auto_clusterer(
     ss = sorted(set(y_pred))
 
     for ind in ss:
+        f = pyp.cluster.plot.plot_cluster(
+            data, y_pred, ind
+        )
+        f.savefig(
+            os.path.join(folder_name, "Cluster-{}.png".format(ind)),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
+
         pyp.volcano.plot_volcano_filtered(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
