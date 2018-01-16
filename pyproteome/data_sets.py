@@ -720,7 +720,8 @@ class DataSet:
             ~psms["Fold Change"].isnull() &
             (
                 psms["Fold Change"].apply(
-                    lambda x: x if x > 1 else (1 / x if x else x))
+                    lambda x:
+                    x if x > 1 else (1 / x if x else x)
                 ) >= (val if val > 1 else 1 / val)
             ),
 
