@@ -27,12 +27,22 @@ from . import correlation, plot, tables, volcano
 LOGGER = logging.getLogger("pyproteome.analysis")
 
 
+def _analysis_make_dirs(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Analysis")
+
+    return pyp.utils.makedirs(folder_name=folder_name)
+
+
 def hierarchical_heatmap(
     data,
     cmp_groups=None,
     baseline_channels=None,
-    metric="euclidean", method="centroid",
-    row_cluster=True, col_cluster=True
+    metric="euclidean",
+    method="centroid",
+    row_cluster=True,
+    col_cluster=True,
+    folder_name=None,
 ):
     """
     Plot a hierarhically-clustered heatmap of a data set.
@@ -49,6 +59,8 @@ def hierarchical_heatmap(
     row_cluster : bool, optional
     col_cluster : bool, optional
     """
+    folder_name = _analysis_make_dirs(data, folder_name=folder_name)
+
     if cmp_groups is None:
         cmp_groups = [list(data.groups.keys())]
 
@@ -87,15 +99,10 @@ def find_tfs(data, folder_name=None, csv_name=None):
     folder_name : str, optional
     csv_name : str, optional
     """
-    if folder_name is None:
-        folder_name = data.name
-
+    folder_name = _analysis_make_dirs(data, folder_name=folder_name)
 
     if csv_name is None:
         csv_name = "Changing TFs.csv"
-
-    if folder_name and csv_name:
-        csv_name = os.path.join(folder_name, csv_name)
 
     def _is_tf(prots):
         go_terms = (
@@ -118,7 +125,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
 
     if csv_name:
         tfs[["Proteins", "Sequence", "Modifications", "Fold Change"]].to_csv(
-            csv_name,
+            os.path.join(folder_name, csv_name),
             index=False,
         )
 
