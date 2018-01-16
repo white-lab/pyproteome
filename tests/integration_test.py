@@ -7,7 +7,7 @@ import itertools
 import pylab
 
 from pyproteome import (
-    analysis, cluster, correlation, data_sets, logo, motifs, paths,
+    analysis, cluster, correlation, data_sets, logo, motif, motifs, paths,
     tables, volcano, phosphosite,
 )
 
@@ -172,7 +172,7 @@ class IntegrationTest(TestCase):
                 {"only_validated": False},
                 {"mod_types": [(None, "Phospho")]},
                 {"p": .1, "inverse": True},
-                {"motif": motifs.Motif(".......xP......")},
+                {"motif": motif.Motif(".......xP......")},
                 {"confidence": "Low"},
                 {"confidence": "Medium"},
                 {"confidence": "High"},
