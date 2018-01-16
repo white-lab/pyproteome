@@ -44,6 +44,8 @@ def makedirs(folder_name=None):
         except OSError:
             pass
 
+    return folder_name
+
 
 def norm(channels):
     """

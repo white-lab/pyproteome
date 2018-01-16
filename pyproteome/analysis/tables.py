@@ -13,7 +13,7 @@ def _table_make_folder(data, folder_name=None):
     if folder_name is None:
         folder_name = os.path.join(data.name, "Peptides")
 
-    pyp.utils.makedirs(folder_name)
+    return pyp.utils.makedirs(folder_name)
 
 
 def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):

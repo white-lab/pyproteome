@@ -30,7 +30,7 @@ def _corr_make_folder(data, folder_name=None):
     if folder_name is None:
         folder_name = os.path.join(data.name, "Correlations")
 
-    pyp.utils.makedirs(folder_name)
+    return pyp.utils.makedirs(folder_name)
 
 
 def correlate_data_sets(

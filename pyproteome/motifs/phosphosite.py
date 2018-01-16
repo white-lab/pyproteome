@@ -7,7 +7,8 @@ import requests
 import numpy as np
 import pandas as pd
 
-from . import motif, logo, utils
+import pyproteome as pyp
+from . import motif, logo
 
 DATA_URL = "https://www.phosphosite.org/downloads/Kinase_Substrate_Dataset.gz"
 DATA_CACHE = None
@@ -33,7 +34,7 @@ def get_data():
 
 
 def generate_logos(species, kinases=None, dirname="logos", min_foreground=10):
-    utils.makedirs(dirname)
+    pyp.utils.makedirs(dirname)
 
     df = get_data()
     df = df[
