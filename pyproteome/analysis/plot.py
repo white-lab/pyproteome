@@ -99,7 +99,7 @@ def plot(
             if title else
             "{} ({}{})".format(
                 seq,
-                " / ".join(row["Proteins"][:20]),
+                " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
             )
         )
