@@ -24,7 +24,12 @@ def get_data(ds, dropna=True, groups=None):
     data = data.loc[:, ~data.columns.duplicated()]
     data = data.loc[
         :,
-        data.columns.isin([col for i in groups for col in ds.groups[i]])
+        data.columns.isin([
+            ds.channels[col]
+            for i in groups
+            for col in ds.groups[i]
+            if col in ds.channels
+        ])
     ]
 
     names = data.columns
@@ -46,44 +51,6 @@ def get_data(ds, dropna=True, groups=None):
         "labels": groups,
         "classes": classes,
     }
-
-
-def cluster_range(data, min_clusters=2, max_clusters=20, cols=3):
-    clusters = range(min_clusters, max_clusters + 1)
-
-    rows = int(np.ceil(len(clusters) / cols))
-
-    f, axes = plt.subplots(
-        rows,
-        cols,
-        figsize=(4 * cols, 4 * rows),
-    )
-
-    for n, ax in zip(clusters, axes.ravel()):
-        print(n)
-
-        _, y_pred = cluster(
-            data,
-            n_clusters=n,
-        )
-
-        pyp.cluster.plot.cluster_corrmap(
-            data, y_pred,
-            ax=ax,
-            colorbar=False,
-        )
-
-        ax.set_title("{} Clusters".format(n))
-
-    for ax in axes.ravel()[len(clusters):]:
-        ax.axis("off")
-
-    f.savefig(
-        "Cluster-Range-Scan.png",
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
 
 
 def cluster(data, fn=None, kwargs=None, n_clusters=20):

@@ -322,7 +322,7 @@ class IntegrationTest(TestCase):
                 n_clusters=6,
             )
 
-            cluster.cluster_range(data, max_clusters=5)
+            cluster.plot.cluster_range(data, max_clusters=5)
 
             cluster.plot.cluster_corrmap(data, y_pred)
 

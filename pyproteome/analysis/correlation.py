@@ -271,12 +271,14 @@ def correlate_signal(
 
     cp = data.copy()
 
+    cols = getattr(signal, "columns", getattr(signal, "index", []))
+
     signal_groups = [
         label
         for label, group in cp.groups.items()
         for chan in group
         if chan in cp.channels.keys() and
-        chan in signal.columns
+        chan in cols
     ]
 
     signal_chans = [
@@ -284,7 +286,7 @@ def correlate_signal(
         for group in cp.groups.values()
         for chan in group
         if chan in cp.channels.keys() and
-        chan in signal.columns
+        chan in cols
     ]
     data_chans = [
         data.channels[chan]

@@ -2,7 +2,7 @@
 from . import auto, clusterer, plot
 
 from .clusterer import (
-    cluster, get_data, cluster_range, cluster_clusters,
+    cluster, get_data, cluster_clusters,
 )
 
 __all__ = [
@@ -12,6 +12,5 @@ __all__ = [
 
     "cluster",
     "get_data",
-    "cluster_range",
     "cluster_clusters",
 ]

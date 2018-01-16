@@ -15,6 +15,8 @@ import sklearn
 
 import pyproteome as pyp
 
+from . import clusterer
+
 
 def _make_folder(data=None, folder_name=None):
     if folder_name is None:
@@ -423,6 +425,7 @@ def pca(data):
     classes = data["classes"]
     z = data["z"]
     names = data["names"]
+    print(z)
 
     f, ax = plt.subplots(1, 1, figsize=(4, 4))
     x = sklearn.decomposition.PCA().fit_transform(z.T)
@@ -446,3 +449,49 @@ def pca(data):
     ax.set_title("PCA {}".format(data["ds"].name))
     ax.set_xlabel("Component 1")
     ax.set_ylabel("Component 2")
+
+
+def cluster_range(
+    data,
+    min_clusters=2, max_clusters=20,
+    cols=3,
+    folder_name=None,
+    filename="Cluster-Range-Scan.png",
+):
+    folder_name = _make_folder(data["ds"], folder_name=folder_name)
+
+    clusters = range(min_clusters, max_clusters + 1)
+
+    rows = int(np.ceil(len(clusters) / cols))
+
+    f, axes = plt.subplots(
+        rows,
+        cols,
+        figsize=(4 * cols, 4 * rows),
+    )
+
+    for n, ax in zip(clusters, axes.ravel()):
+        print(n)
+
+        _, y_pred = clusterer.cluster(
+            data,
+            n_clusters=n,
+        )
+
+        pyp.cluster.plot.cluster_corrmap(
+            data, y_pred,
+            ax=ax,
+            colorbar=False,
+        )
+
+        ax.set_title("{} Clusters".format(n))
+
+    for ax in axes.ravel()[len(clusters):]:
+        ax.axis("off")
+
+    f.savefig(
+        os.path.join(folder_name, filename),
+        bbox_inches="tight",
+        dpi=pyp.DEFAULT_DPI,
+        transparent=True,
+    )
