@@ -8,12 +8,13 @@ structured format.
 # Built-ins
 from __future__ import absolute_import, division
 
-from collections import OrderedDict, Iterable
+from collections import OrderedDict
 import copy
 import logging
 import os
 import warnings
 import sys
+from functools import partial
 
 # Core data analysis libraries
 import pandas as pd
@@ -282,6 +283,10 @@ class DataSet:
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
         agg_dict["Ion Score"] = max
+        agg_dict["Confidence Level"] = partial(
+            max,
+            key=lambda x: ["Low", "Medium", "High"].index(x),
+        )
         agg_dict["Isolation Interference"] = min
 
         self.psms = self.psms.groupby(
@@ -578,6 +583,7 @@ class DataSet:
             "Ion Score": 100,
             "Isolation Interference": 0,
             "Missed Cleavages": 0,
+            "Confidence Level": "High",
         }
 
         for key, val in defaults.items():
