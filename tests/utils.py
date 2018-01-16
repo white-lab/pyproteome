@@ -1,15 +1,14 @@
 import os
 import requests
 
+from pyproteome import utils
 
-def fetch_data(dir, datas, base_url):
-    try:
-        os.makedirs(dir)
-    except:
-        pass
+
+def fetch_data(dirname, datas, base_url):
+    utils.makedirs(dirname)
 
     for _, filename in datas.items():
-        out_path = os.path.join(dir, filename)
+        out_path = os.path.join(dirname, filename)
 
         if os.path.exists(out_path):
             continue

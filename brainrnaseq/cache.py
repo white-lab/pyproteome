@@ -8,6 +8,8 @@ import zlib
 
 import pandas as pd
 
+from . import utils
+
 # Taken from
 LOGGER = logging.getLogger("brainrnaseq.cache")
 DIR = os.path.abspath(os.path.split(__file__)[0])
@@ -45,10 +47,7 @@ SPECIES_DATA = {}
 MAPPING_DATA = None
 
 
-try:
-    os.makedirs(CACHE_DIR)
-except:
-    pass
+utils.makedirs(CACHE_DIR)
 
 
 def get_barres_seq_data(force=False):

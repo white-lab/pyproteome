@@ -11,11 +11,17 @@ import numpy as np
 # Misc extras
 from adjustText.adjustText import adjust_text
 
-import pyproteome
-from pyproteome import utils
+import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.volcano")
+
+
+def _vol_make_folder(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Volcano")
+
+    pyp.utils.makedirs(folder_name)
 
 
 def _remove_lesser_dups(labels, compress_sym=False):
@@ -50,12 +56,6 @@ def _remove_lesser_dups(labels, compress_sym=False):
 
 def _get_color(txt, x, y):
     return "#BFEE90" if x > 0 else "#FFC1C1"
-
-
-def _get_folder(data):
-    folder_name = os.path.join(data.name, "Volcano")
-    utils.make_folder(folder_name)
-    return folder_name
 
 
 def volcano_plot(
@@ -109,8 +109,7 @@ def volcano_plot(
     if group_a and group_b:
         data.update_group_changes(group_a=group_a, group_b=group_b)
 
-    if not folder_name:
-        folder_name = _get_folder(data)
+    _vol_make_folder(data, folder_name=folder_name)
 
     options = options or {}
 
@@ -373,13 +372,13 @@ def volcano_plot(
         fig.savefig(
             file_name,
             bbox_inches="tight",
-            dpi=pyproteome.DEFAULT_DPI,
+            dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
         fig.savefig(
             os.path.splitext(file_name)[0] + ".svg",
             bbox_inches="tight",
-            dpi=pyproteome.DEFAULT_DPI,
+            dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
 
@@ -448,7 +447,7 @@ def plot_volcano_filtered(data, f, **kwargs):
             "_Volcano.png",
         ),
         bbox_inches="tight",
-        dpi=pyproteome.DEFAULT_DPI,
+        dpi=pyp.DEFAULT_DPI,
         transparent=True,
     )
     return f, ax

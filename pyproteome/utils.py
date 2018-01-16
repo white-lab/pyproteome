@@ -30,7 +30,7 @@ def fuzzy_find(needle, haystack):
     return best.a - len(needle) + best.size
 
 
-def make_folder(folder_name=None):
+def makedirs(folder_name=None):
     """
     Creates a folder if it does not exist.
 

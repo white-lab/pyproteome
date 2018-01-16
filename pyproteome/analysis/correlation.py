@@ -20,16 +20,26 @@ from scipy.stats import pearsonr, spearmanr
 # Misc extras
 from adjustText.adjustText import adjust_text
 
-import pyproteome
-from pyproteome import utils
+import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.correlation")
 
 
+def _corr_make_folder(data, folder_name=None):
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Correlations")
+
+    pyp.utils.makedirs(folder_name)
+
+
 def correlate_data_sets(
-    data1, data2, folder_name=None, filename=None,
-    adjust=True, label_cutoff=1.5,
+    data1, data2,
+    older_name=None,
+    folder_name=None,
+    filename=None,
+    adjust=True,
+    label_cutoff=1.5,
 ):
     """
     Plot the correlation between peptides levels in two different data sets.
@@ -41,13 +51,7 @@ def correlate_data_sets(
     folder_name : str, optional
     filename : str, optional
     """
-    if not folder_name:
-        folder_name = "All" if data1.name != data2.name else data1.name
-
-    utils.make_folder(folder_name)
-
-    if folder_name and filename:
-        filename = os.path.join(folder_name, filename)
+    folder_name = _corr_make_folder(data1, folder_name=folder_name)
 
     merged = pd.merge(
         data1.psms, data2.psms,
@@ -140,9 +144,9 @@ def correlate_data_sets(
 
     if filename:
         f.savefig(
-            filename,
+            os.path.join(folder_name, filename),
             transparent=True,
-            dpi=pyproteome.DEFAULT_DPI,
+            dpi=pyp.DEFAULT_DPI,
         )
 
 
@@ -239,12 +243,14 @@ def correlate_signal(
     p=0.05,
     scatter_cols=3,
     options=None,
-    folder_name=None, title=None,
+    folder_name=None,
+    title=None,
     scatter_colors=None,
     scatter_symbols=None,
     figsize=(12, 10),
     xlabel="",
 ):
+    folder_name = _corr_make_folder(data, folder_name=folder_name)
 
     options = options or {}
 

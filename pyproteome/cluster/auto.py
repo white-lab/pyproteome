@@ -11,7 +11,7 @@ def auto_clusterer(
     get_data_kwargs=None,
     cluster_kwargs=None,
     cluster_cluster_kwargs=None,
-    folder_name="Clusters",
+    folder_name=None,
 ):
     """
     Cluster and generate plots for a data set.
@@ -20,10 +20,10 @@ def auto_clusterer(
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
-    try:
-        os.makedirs(folder_name)
-    except:
-        pass
+    if folder_name is None:
+        folder_name = os.path.join(data.name, "Clusters")
+
+    pyp.utils.makedirs(folder_name)
 
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
@@ -86,7 +86,7 @@ def auto_clusterer(
 
     pyp.tables.write_full_tables(
         slices,
-        folder_name="Clusters",
+        folder_name=folder_name,
     )
 
     return data, y_pred
