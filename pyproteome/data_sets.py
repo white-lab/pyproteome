@@ -699,21 +699,25 @@ class DataSet:
                 )
             ) >= val,
             "p": lambda val:
-            new.psms["p-value"] <= val & ~new.psms["p-value"].isnull(),
+            ~new.psms["p-value"].isnull() &
+            (new.psms["p-value"] <= val),
             "asym_fold": lambda val:
+            ~new.psms["Fold Change"].isnull() &
             (
                 new.psms["Fold Change"] >= f["asym_fold"]
                 if f["asym_fold"] > 1 else
                 new.psms["Fold Change"] <= f["asym_fold"]
-            ) & ~new.psms["Fold Change"].isnull(),
+            ),
             "fold": lambda val:
-            np.maximum.reduce(
-                [
-                    new.psms["Fold Change"],
-                    1 / new.psms["Fold Change"],
-                ]
-            ) >= (val if val > 1 else 1 / val)
-            & ~new.psms["Fold Change"].isnull(),
+            ~new.psms["Fold Change"].isnull() &
+            (
+                np.maximum.reduce(
+                    [
+                        new.psms["Fold Change"],
+                        1 / new.psms["Fold Change"],
+                    ]
+                ) >= (val if val > 1 else 1 / val)
+            ),
             "motif": lambda val:
             new.psms["Sequence"].apply(
                 lambda x:
@@ -726,21 +730,15 @@ class DataSet:
                 )
             ),
             "protein": lambda val:
-            new.psms["Proteins"]
-            .apply(
-                lambda x:
-                any(i in (
-                    val
-                    if isinstance(val, (list, tuple, pd.Series)) else
-                    [val]
-                ) for i in x.genes)
-            ),
+            new.psms["Proteins"].apply(
+                lambda x: bool(set(val).intersection(x.genes))
+            )
+            if isinstance(val, (list, tuple, pd.Series)) else
+            new.psms["Proteins"] == val,
             "sequence": lambda val:
-            new.psms["Sequence"].isin(
-                val
-                if isinstance(val, (list, tuple, pd.Series)) else
-                [val]
-            ),
+            new.psms["Sequence"].apply(lambda x: any(i in x for i in val))
+            if isinstance(val, (list, tuple, pd.Series)) else
+            new.psms["Sequence"] == val,
             "mod_types": lambda val:
             modification.filter_mod_types(new.psms, val),
             "only_validated": lambda val:
