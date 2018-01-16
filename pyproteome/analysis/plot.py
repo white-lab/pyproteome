@@ -138,6 +138,7 @@ def plot_group(
     data,
     f=None,
     cmp_groups=None,
+    title=None,
     folder_name=None,
     figsize=(6, 4),
 ):
@@ -247,13 +248,18 @@ def plot_group(
         ax.set_xticks(indices)
         ax.set_xticklabels(labels, fontsize=20)
 
-        title = "{}".format(
-            # " / ".join(sequences),
-            " / ".join(
-                sorted(set(row["Proteins"].genes))
-            )
-        )[:50]
-        ax.set_title(title, fontsize=32)
+        mod_str = row["Modifications"].__str__(prot_index=0)
+
+        ax.set_title(
+            title
+            if title else
+            "{} ({}{})".format(
+                row["Sequence"],
+                " / ".join(row["Proteins"].genes)[:20],
+                (" " + mod_str) if mod_str else "",
+            ),
+            fontsize=32,
+        )
         ax.xaxis.grid(False)
 
         # if not means[0].any():
