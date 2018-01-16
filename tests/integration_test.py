@@ -165,7 +165,7 @@ class IntegrationTest(TestCase):
                 {"protein": ["Pkm"]},
                 {"ion_score": 10},
                 {"isolation": 15},
-                {"fn": lambda x: len(x.index["Sequence"]) > 5},
+                {"fn": lambda x: len(x["Sequence"]) > 5},
                 {"series": data["Ion Score"] % 5},
                 {"missed_cleavage": 0},
                 {"median_quant": 10000},

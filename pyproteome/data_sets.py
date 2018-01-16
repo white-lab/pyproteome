@@ -674,7 +674,7 @@ class DataSet:
             val,
 
             "fn": lambda val, psms:
-            psms.apply(val),
+            psms.apply(val, axis=1),
 
             "confidence": lambda val, psms:
             psms["Confidence Level"].isin(confidence[val]),
