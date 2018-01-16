@@ -776,17 +776,7 @@ class DataSet:
                 inverse = f.pop("inverse", False)
 
                 for key, val in f.items():
-                    print(np.nan_to_num(
-                        np.nanmedian(
-                            new.psms[
-                                [v for v in new.channels.values()]
-                            ],
-                            axis=1,
-                        )
-                    ) >= f.get("median_quant", 1000))
-
                     mask = fns[key](val, new.psms)
-                    print(key, val, mask)
 
                     if inverse:
                         mask = ~mask
