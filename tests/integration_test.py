@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import os
 from unittest import TestCase
+import itertools
 
 import pylab
 
@@ -106,6 +107,14 @@ class IntegrationTest(TestCase):
             )
             for name, filename in DATAS.items()
         }
+        self.data["merge"] = data_sets.merge_data(
+            [
+                self.data["CKH1"],
+                self.data["CKX2"],
+                self.data["CKC1"],
+            ],
+            name="CK-p25",
+        )
 
     def test_dropna(self):
         self.data = {
@@ -182,148 +191,132 @@ class IntegrationTest(TestCase):
         return merge
 
     def test_plot_all(self):
-        merge = self.test_merge_data()
-
         for f in [
             dict(sequence="AVDSLVPIGR"),
             dict(protein="Pkm"),
         ]:
             for cmp_groups in [self.cmp_groups, None]:
-                analysis.plot.plot_all(
-                    merge,
-                    f=f,
-                    individual=True,
-                    between=True,
-                    cmp_groups=cmp_groups,
-                )
+                for data in self.datas.values():
+                    analysis.plot.plot_all(
+                        data,
+                        f=f,
+                        individual=True,
+                        between=True,
+                        cmp_groups=cmp_groups,
+                    )
 
-                analysis.plot.plot_together(
-                    merge,
-                    f=f,
-                    cmp_groups=cmp_groups,
-                )
+                    analysis.plot.plot_together(
+                        data,
+                        f=f,
+                        cmp_groups=cmp_groups,
+                    )
 
     def test_correlate_data(self):
-        self.test_normalize_data()
-
-        correlation.correlate_data_sets(
-            self.data["CKH1"],
-            self.data["CKX2"],
-        )
-
-        correlation.correlate_signal(
-            self.data["CKH1"],
-            self.data["CKH1"][self.data["CKH1"]["Sequence"] == "AVDSLVPIGR"],
-        )
-
-    def test_clustermap(self):
-        self.test_normalize_data()
+        for d1, d2 in itertools.combinations(self.data.values(), 2):
+            correlation.correlate_data_sets(
+                d1, d2,
+            )
 
         for data in self.data.values():
-            analysis.hierarchical_heatmap(
+            correlation.correlate_signal(
+                data,
+                data[data.dropna(how="any")["Sequence"].iloc[0]],
+            )
+
+    def test_clustermap(self):
+        for data in self.data.values():
+            cluster.plot.hierarchical_heatmap(
                 data,
             )
 
-    def test_changes_table(self):
-        self.test_normalize_data()
+    def test_find_tfs(self):
+        for data in self.data.values():
+            analysis.pathways.find_tfs(data)
 
-        for _, data in self.data.items():
+    def test_changes_table(self):
+        for data in self.data.values():
             tables.changes_table(data)
 
     def test_volcano_plot(self):
-        self.test_normalize_data()
-
-        for _, data in self.data.items():
+        for data in self.data.values():
             volcano.volcano_plot(data)
 
     def test_plot_volcano_filtered(self):
-        self.test_normalize_data()
-
-        for _, data in self.data.items():
-            volcano.plot_volcano_filtered(data, {"asym_fold": 1.25})
+        for data in self.data.values():
+            volcano.plot_volcano_filtered(data, {"asym_fold": 1.001})
 
     def test_write_full_tables(self):
-        merge = self.test_merge_data()
-
         tables.write_full_tables(
-            [data for data in self.data.values()] + [merge]
+            self.data.values(),
         )
 
     def test_logo(self):
-        self.test_normalize_data()
-
-        for _, data in self.data.items():
-            logo.make_logo(data, {"asym_fold": 1.05})
+        for data in self.data.values():
+            logo.make_logo(data, {"asym_fold": 1.001})
 
     # def test_plogo(self):
-    #     self.test_normalize_data()
-    #
     #     plogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
 
     def test_icelogo(self):
-        self.test_normalize_data()
-
-        icelogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
+        for data in self.data.values():
+            icelogo.make_logo(data, {"asym_fold": 1.001})
 
     # def test_weblogo(self):
-    #     self.test_normalize_data()
-    #
     #     for _, data in self.data.items():
     #         weblogo.make_logo(data, {})
 
     def test_phosphosite_enriched(self):
-        phosphosite.enriched(
-            self.data["CKH1"],
-            species="Mouse",
-        )
+        for data in self.data.values():
+            phosphosite.enriched(
+                data,
+                species="Mouse",
+            )
 
     def test_cluster(self):
-        merge = self.test_merge_data()
+        for d in self.data.values():
+            data = cluster.get_data(d)
 
-        data = cluster.get_data(merge)
+            cluster.pca(data)
 
-        cluster.pca(data)
+            _, y_pred = cluster.cluster(
+                data,
+                n_clusters=6,
+            )
 
-        _, y_pred = cluster.cluster(
-            data,
-            n_clusters=6,
-        )
+            cluster.cluster_range(data, max_clusters=5)
 
-        cluster.cluster_range(data, max_clusters=5)
+            cluster.plot.cluster_corrmap(data, y_pred)
 
-        cluster.plot.cluster_corrmap(data, y_pred)
+            y_pred = cluster.cluster_clusters(data, y_pred)
 
-        y_pred = cluster.cluster_clusters(data, y_pred)
+            cluster.plot.cluster_corrmap(data, y_pred)
 
-        cluster.plot.cluster_corrmap(data, y_pred)
+            f, ax = pylab.subplots()
+            cluster.plot.cluster_corrmap(data, y_pred, ax=ax)
 
-        f, ax = pylab.subplots()
-        cluster.plot.cluster_corrmap(data, y_pred, ax=ax)
+            cluster.plot.plot_all_clusters(data, y_pred)
 
-        cluster.plot.plot_all_clusters(data, y_pred)
+            cluster.plot.plot_cluster(
+                data, y_pred,
+                cluster_n=0,
+            )
 
-        cluster.plot.plot_cluster(
-            data, y_pred,
-            cluster_n=0,
-        )
+            cluster.plot.show_cluster(
+                data, y_pred,
+                protein="Pkm",
+            )
 
-        cluster.plot.show_cluster(
-            data, y_pred,
-            protein="Pkm",
-        )
-
-        cluster.plot.show_peptide_clusters(
-            data, y_pred,
-            [
-                {"seq": "AVDSLVPIGR"},
-                {"protein": "Pkm"},
-            ],
-        )
+            cluster.plot.show_peptide_clusters(
+                data, y_pred,
+                [
+                    {"seq": "AVDSLVPIGR"},
+                    {"protein": "Pkm"},
+                ],
+            )
 
     def test_auto_cluster(self):
-        merge = self.test_merge_data()
-
-        cluster.auto.auto_clusterer(
-            merge,
-            cluster_kwargs={"n_clusters": 10},
-        )
+        for data in self.data.values():
+            cluster.auto.auto_clusterer(
+                data,
+                cluster_kwargs={"n_clusters": 10},
+            )
