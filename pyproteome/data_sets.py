@@ -672,28 +672,36 @@ class DataSet:
         fns = {
             "series": lambda val, psms:
             val,
+
             "fn": lambda val, psms:
             psms.apply(val),
+
             "confidence": lambda val, psms:
             psms["Confidence Level"].isin(confidence[val]),
+
             "ion_score": lambda val, psms:
             psms["Ion Score"] >= val,
+
             "isolation": lambda val, psms:
             psms["Isolation Interference"] <= val,
+
             "missed_cleavage": lambda val, psms:
             psms["Missed Cleavages"] <= val,
+
             "median_quant": lambda val, psms:
             np.nan_to_num(
                 np.nanmedian(
                     psms[
-                        [val for val in new.channels.values()]
+                        [chan for chan in new.channels.values()]
                     ],
                     axis=1,
                 )
             ) >= val,
+
             "p": lambda val, psms:
             ~psms["p-value"].isnull() &
             (psms["p-value"] <= val),
+
             "asym_fold": lambda val, psms:
             ~psms["Fold Change"].isnull() &
             (
@@ -701,6 +709,7 @@ class DataSet:
                 if f["asym_fold"] > 1 else
                 psms["Fold Change"] <= f["asym_fold"]
             ),
+
             "fold": lambda val, psms:
             ~psms["Fold Change"].isnull() &
             (
@@ -711,6 +720,7 @@ class DataSet:
                     ]
                 ) >= (val if val > 1 else 1 / val)
             ),
+
             "motif": lambda val, psms:
             psms["Sequence"].apply(
                 lambda x:
@@ -722,20 +732,26 @@ class DataSet:
                     )
                 )
             ),
+
             "protein": lambda val, psms:
             psms["Proteins"].apply(
                 lambda x: bool(set(val).intersection(x.genes))
             )
             if isinstance(val, (list, tuple, pd.Series)) else
             psms["Proteins"] == val,
+
             "sequence": lambda val, psms:
             psms["Sequence"].apply(lambda x: any(i in x for i in val))
             if isinstance(val, (list, tuple, pd.Series)) else
             psms["Sequence"] == val,
+
             "mod_types": lambda val, psms:
             modification.filter_mod_types(psms, val),
+
             "only_validated": lambda val, psms:
+
             psms["Validated"] == val,
+
             "scan_paths": lambda val, psms:
             psms["Scan Paths"]
             .apply(lambda x: any(i in val for i in x))
@@ -760,6 +776,15 @@ class DataSet:
                 inverse = f.pop("inverse", False)
 
                 for key, val in f.items():
+                    print(np.nan_to_num(
+                        np.nanmedian(
+                            new.psms[
+                                [v for v in new.channels.values()]
+                            ],
+                            axis=1,
+                        )
+                    ) >= f.get("median_quant", 1000))
+
                     mask = fns[key](val, new.psms)
                     print(key, val, mask)
 
