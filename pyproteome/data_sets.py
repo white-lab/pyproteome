@@ -559,7 +559,7 @@ class DataSet:
             new = new.copy()
 
         if groups is None:
-            groups = list(new.channels.values())
+            groups = list(new.groups.keys())
 
         columns = [
             new.channels[chan]
