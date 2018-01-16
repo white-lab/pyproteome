@@ -233,6 +233,9 @@ def generate_n_mers(
     # Check n is odd
     assert n % 2 == 1
 
+    if not isinstance(sequences, (list, tuple)):
+        sequences = [sequences]
+
     def _n_mer_from_sequence(full_seq, abs_pos):
         return (
             fill_left * (n // 2 - abs_pos) +

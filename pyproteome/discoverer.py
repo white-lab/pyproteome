@@ -374,6 +374,8 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _fix_sequence_mods(df)
         df = _get_quantifications(df, cursor, tag_names)
 
+    df["Scan Paths"] = basename
+
     df.reset_index(inplace=True, drop=True)
 
     return df
