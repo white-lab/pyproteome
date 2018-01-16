@@ -151,6 +151,21 @@ class IntegrationTest(TestCase):
             for name, data in self.data.items()
         }
 
+    def test_filter(self):
+        for f in [
+            {"p": .1},
+            {"fold": 1.5},
+            {"fold": 1/1.5},
+            {"asym_fold": 1.5},
+            {"asym_fold": 1/1.5},
+            {"sequence": "AVDSLVPIGR"},
+            {"sequence": ["AVDSLVPIGR"]},
+            {"protein": "Pkm"},
+            {"protein": ["Pkm"]},
+        ]:
+            for data in self.data.values():
+                data.filter(f)
+
     def test_merge_data(self):
         self.test_normalize_data()
 

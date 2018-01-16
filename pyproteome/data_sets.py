@@ -604,8 +604,8 @@ class DataSet:
             Perform the filter on self, other create a copy and return the
             new object.
 
-        Filter Parameters
-        =================
+        Notes
+        -----
         These parameters filter your data set to only include peptides that
         match a given attribute. For example:
 
@@ -622,9 +622,9 @@ class DataSet:
 
         Filter parameters can be one of any below:
 
-        ================    ===========
+        ================    ===================================================
         Name                Description
-        ================    ===========
+        ================    ===================================================
         seies               Use a pandas series (data.psms[series]).
         fn                  Use data.psms.apply(fn).
         group_a             Calculate p / fold change values from group_a.
