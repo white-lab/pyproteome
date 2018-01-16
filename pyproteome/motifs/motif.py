@@ -233,7 +233,7 @@ def generate_n_mers(
     # Check n is odd
     assert n % 2 == 1
 
-    if not isinstance(sequences, (list, tuple)):
+    if not isinstance(sequences, (pd.Series, list, tuple)):
         sequences = [sequences]
 
     def _n_mer_from_sequence(full_seq, abs_pos):

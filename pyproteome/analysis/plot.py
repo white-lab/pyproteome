@@ -99,13 +99,13 @@ def plot(
 
         fig.savefig(
             os.path.join(
-                data.name,
+                folder_name,
                 re.sub(
                     "[?/]",
                     "_",
-                    "{}-{}.png".format(
-                        " / ".join(row["Proteins"].genes),
-                        data.name,
+                    "{} - {} - all.png".format(
+                        "+".join(row["Proteins"].genes)[:100],
+                        row["Sequence"],
                     ),
                 ),
             ),
@@ -330,13 +330,13 @@ def plot_group(
 
             fig.savefig(
                 os.path.join(
-                    data.name,
+                    folder_name,
                     re.sub(
                         "[?/]",
                         "_",
-                        "{}-{}-between.png".format(
-                            " / ".join(row["Proteins"].genes),
-                            data.name,
+                        "{} - {} - groups.png".format(
+                            "+".join(row["Proteins"].genes)[:50],
+                            row["Sequence"],
                         ),
                     ),
                 ),
