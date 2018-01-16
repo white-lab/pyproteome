@@ -39,7 +39,7 @@ def fetch_uniprot_data(accessions):
     accessions = set(accessions).difference(UNIPROT_DATA)
 
     if not accessions:
-        return
+        return {}
 
     cache_dir = tempfile.mkdtemp(suffix="uniprot")
 
