@@ -757,9 +757,6 @@ class DataSet:
             )
 
             for f in filters:
-                # Do series first to avoid potential row index bugs
-                f = f.copy()
-
                 if "group_a" in f or "group_b" in f:
                     new.update_group_changes(
                         group_a=f.get("group_a", None),
@@ -770,10 +767,7 @@ class DataSet:
                     if key in ["group_a", "group_b"]:
                         continue
 
-                    new.psms = filter_psms(
-                        new.psms,
-                        fns[key](val),
-                    )
+                    new.psms = filter_psms(new, fns[key](val))
 
         new.psms.reset_index(inplace=True, drop=True)
 
