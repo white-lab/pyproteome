@@ -166,7 +166,7 @@ class IntegrationTest(TestCase):
                 {"ion_score": 10},
                 {"isolation": 15},
                 {"fn": lambda x: len(x["Sequence"]) > 5},
-                {"series": data["Ion Score"] % 5},
+                {"series": data["Isolation Interference"] < data["Ion Score"]},
                 {"missed_cleavage": 0},
                 {"median_quant": 10000},
                 {"only_validated": False},
