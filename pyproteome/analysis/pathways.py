@@ -53,7 +53,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
 
     uni_data = pyp.fetch_data.fetch_uniprot_data(data.accessions)
 
-    def _is_tf(prots):
+    def _is_tf(row):
         go_terms = (
             "DNA binding",
             "double-stranded DNA binding",
@@ -62,12 +62,12 @@ def find_tfs(data, folder_name=None, csv_name=None):
         )
         return any(
             go_term in go
-            for prot in prots
-            for go in uni_data.get(prot.accession, {}).get("go", [])
+            for acc in row["Proteins"].accessions
+            for go in uni_data.get(acc, {}).get("go", [])
             for go_term in go_terms
         )
 
-    tfs = data.psms[data.psms["Proteins"].apply(_is_tf)].copy()
+    tfs = data.filter(fn=_is_tf).psms
     tfs.sort_values(by="Fold Change", ascending=False, inplace=True)
 
     if csv_name:
