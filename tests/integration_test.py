@@ -225,7 +225,7 @@ class IntegrationTest(TestCase):
             dict(protein="Pkm"),
         ]:
             for cmp_groups in [self.cmp_groups, None]:
-                for data in self.datas.values():
+                for data in self.data.values():
                     analysis.plot.plot_all(
                         data,
                         f=f,

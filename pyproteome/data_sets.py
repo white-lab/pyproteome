@@ -761,6 +761,7 @@ class DataSet:
 
                 for key, val in f.items():
                     mask = fns[key](val, new.psms)
+                    print(key, val, mask)
 
                     if inverse:
                         mask = ~mask
