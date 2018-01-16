@@ -1,14 +1,11 @@
 
 from scipy.stats import zscore
 
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.decomposition
 import sklearn.cluster
-
-import pyproteome as pyp
 
 
 def get_data(ds, dropna=True, groups=None):
