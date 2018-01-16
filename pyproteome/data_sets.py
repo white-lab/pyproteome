@@ -760,7 +760,6 @@ class DataSet:
                 inverse = f.pop("inverse", False)
 
                 for key, val in f.items():
-
                     mask = fns[key](val, new.psms)
 
                     if inverse:

@@ -21,7 +21,7 @@ class BCATest(TestCase):
         paths.set_base_dir(os.path.abspath("."))
 
         utils.fetch_data(
-            dir=paths.BCA_ASSAY_DIR,
+            dirname=paths.BCA_ASSAY_DIR,
             datas=DATAS,
             base_url=DATA_URL,
         )
