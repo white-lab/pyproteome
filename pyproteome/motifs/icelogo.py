@@ -56,8 +56,9 @@ def icelogo(
     -----
     .. [1] ...
     """
-    assert len(foreground) > 0
-    assert len(background) > 0
+    if len(foreground) < 1 or len(background) < 1:
+        return None
+
     assert scoring in ("percentage", "foldChange")
 
     letter_width = len(background[0])

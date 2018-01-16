@@ -11,8 +11,9 @@ from . import motif
 
 
 def make_logo(
-    data, f,
-    folder_name=None, filename="Motif.svg",
+    data,
+    folder_name=None,
+    filename="Motif.svg",
     **kwargs
 ):
     """
@@ -36,7 +37,7 @@ def make_logo(
         [
             Bio.Seq.Seq(seq.upper(), alphabet=alpha)
             for seq in motif.generate_n_mers(
-                data.filter(f).psms["Sequence"],
+                data.psms["Sequence"],
                 **nmer_args
             )
         ],

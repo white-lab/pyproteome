@@ -246,10 +246,12 @@ class IntegrationTest(TestCase):
                 d1, d2,
             )
 
+    def test_correlate_signal(self):
         for data in self.data.values():
             correlation.correlate_signal(
                 data,
-                data[data.dropna(how="any")["Sequence"].iloc[0]],
+                data.dropna(how="any").psms
+                .iloc[0][list(data.channels.values())],
             )
 
     def test_clustermap(self):
@@ -299,8 +301,8 @@ class IntegrationTest(TestCase):
             motifs.icelogo.make_logo(data, {"asym_fold": 1.001})
 
     # def test_weblogo(self):
-    #     for _, data in self.data.items():
-    #         motifs.weblogo.make_logo(data, {})
+    #     for data in self.data.values():
+    #         motifs.weblogo.make_logo(data)
 
     def test_phosphosite_enriched(self):
         for data in self.data.values():
