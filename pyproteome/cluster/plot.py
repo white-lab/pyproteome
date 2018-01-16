@@ -269,6 +269,8 @@ def plot_cluster(
         title
     )
 
+    return f
+
 
 def plot_all_clusters(
     data, y_pred,
