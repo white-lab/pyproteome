@@ -92,7 +92,17 @@ def plot(
             horizontalalignment="right",
         )
 
-        ax.set_title(seq + (" - {}".format(title) if title else ""))
+        mod_str = row["Modifications"].__str__(prot_index=0)
+
+        ax.set_title(
+            title
+            if title else
+            "{} ({}{})".format(
+                seq,
+                " / ".join(row["Proteins"][:20]),
+                (" " + mod_str) if mod_str else "",
+            )
+        )
 
         ax.set_ylabel(
             "Cummulative Intensity" +
