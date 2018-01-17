@@ -929,6 +929,48 @@ class DataSet:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
 
+    def norm_cmp_groups(self, cmp_groups, inplace=False):
+        new = self
+
+        if not inplace:
+            new = new.copy()
+
+        if len(cmp_groups) < 2:
+            return new
+
+        assert not any(
+            group in [i for o_groups in cmp_groups[ind + 1:] for i in o_groups]
+            for ind, groups in enumerate(cmp_groups)
+            for group in groups
+        )
+
+        for groups in cmp_groups:
+            channels = [
+                [
+                    new.channels[name]
+                    for name in new.groups[group]
+                    if name in new.channels
+                ]
+                for group in groups
+            ]
+
+            if not any(len(i) > 0 for i in channels):
+                continue
+
+            vals = new[
+                [chan for chan_group in channels for chan in chan_group]
+            ]
+
+            norm_vals = vals[channels[0]].mean(axis=1)
+
+            vals = vals.apply(lambda col: col / norm_vals)
+
+            new.psms[
+                [chan for chan_group in channels for chan in chan_group]
+            ] = vals
+
+        return new
+
     def print_stats(self, out=sys.stdout):
         data = self.dropna(how="all")
 
