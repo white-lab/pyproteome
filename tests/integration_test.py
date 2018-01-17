@@ -151,6 +151,18 @@ class IntegrationTest(TestCase):
             for name, data in self.data.items()
         }
 
+    def test_cmp_groups(self):
+        self.data = {
+            name: data.norm_cmp_groups(
+                [
+                    ["CK-p25 Hip", "CK Hip"],
+                    ["CK-p25 Cortex", "CK Cortex"],
+                    ["CK-p25 Cere", "CK Cere"],
+                ]
+            )
+            for name, data in self.data.items()
+        }
+
     def test_filter(self):
         for data in self.data.values():
             for f in [
