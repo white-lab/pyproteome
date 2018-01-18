@@ -259,6 +259,10 @@ class IntegrationTest(TestCase):
             )
 
     def test_correlate_signal(self):
+        self.test_normalize_data()
+        self.data["merge"] = self.data["merge"].norm_cmp_groups(
+            self.cmp_groups,
+        )
         for data in self.data.values():
             correlation.correlate_signal(
                 data,
