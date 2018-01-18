@@ -18,21 +18,14 @@ def get_data(ds, dropna=True, groups=None):
     if dropna:
         ds = ds.dropna(how="any", groups=groups)
 
-    data = ds.data
-    data = data.loc[:, ~data.columns.duplicated()]
     names = [
         chan
         for group in groups
         for chan in ds.groups[group]
-        if chan in ds.channels and ds.channels[chan] in data.columns
+        if chan in ds.channels
     ]
-    data = data.loc[
-        :,
-        data.columns.isin([
-            ds.channels[chan]
-            for chan in names
-        ])
-    ]
+    chans = [ds.channels[chan] for chan in names]
+    data = ds.data[chans]
 
     c = np.corrcoef(data.as_matrix())
     z = zscore(data, axis=1)

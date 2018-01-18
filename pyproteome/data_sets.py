@@ -562,9 +562,10 @@ class DataSet:
 
         if groups is not None:
             columns = [
-                col
-                for col in columns
-                if any(col in new.groups[i] for i in groups)
+                new.channels[col]
+                for group in groups
+                for col in new.groups[group]
+                if col in new.channels
             ]
 
         new.psms = new.psms.dropna(
