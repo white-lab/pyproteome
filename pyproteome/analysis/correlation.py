@@ -156,10 +156,7 @@ def correlate_data_sets(
 
 
 def spearmanr_nan(a, b, min_length=5):
-    mask = ~np.array(
-        [np.isnan(i) or np.isnan(j) for i, j in zip(a, b)],
-        dtype=bool,
-    )
+    mask = ~(pd.isnull(a) | pd.isnull(b))
 
     if mask.sum() < min_length:
         return spearmanr(np.nan, np.nan)
@@ -245,7 +242,7 @@ def _scatter_plots(
 
 def correlate_signal(
     data, signal,
-    p=0.05,
+    p=0.01,
     scatter_cols=3,
     options=None,
     folder_name=None,
@@ -293,16 +290,17 @@ def correlate_signal(
         for chan in signal_chans
     ]
 
-    corr = [
+    corr = data.psms.apply(
+        lambda row:
         spearmanr_nan(
-            row[data_chans].as_matrix().ravel(),
-            signal[signal_chans].as_matrix().ravel(),
-        )
-        for _, row in cp.psms.iterrows()
-    ]
+            row[data_chans],
+            signal[signal_chans],
+        ),
+        axis=1,
+    )
 
-    cp.psms["Correlation"] = [i.correlation for i in corr]
-    cp.psms["corr p-value"] = [i.pvalue for i in corr]
+    cp.psms["Correlation"] = corr.apply(lambda x: x.correlation)
+    cp.psms["corr p-value"] = corr.apply(lambda x: x.pvalue)
 
     f_corr, ax = plt.subplots(figsize=figsize)
     x, y, colors = [], [], []
@@ -340,6 +338,7 @@ def correlate_signal(
     ax.spines["right"].set_visible(False)
 
     texts = []
+
     for xs, ys, txt in zip(sig_x, sig_y, sig_labels):
         if any(i.strip() in hide for i in txt.split("/")):
             continue
