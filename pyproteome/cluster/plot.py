@@ -334,21 +334,23 @@ def show_cluster(
     mod = ""
 
     if seq is not None:
-        cluster = list(set([i for i in y_pred[dp["Sequence"] == seq]]))[0]
-        mod = dp[dp["Sequence"] == seq].iloc[0]["Modifications"]
-        protein = " / ".join(
-            gene
-            for prot in dp[dp["Sequence"] == seq]["Proteins"]
-            for gene in prot.genes
-        )
+        mask = dp["Sequence"] == seq
+        mod = dp[mask].iloc[0]["Modifications"]
+        protein = " / ".join(dp.filter(series=mask).genes)
+        cluster = y_pred[mask].iloc[0]
     elif protein is not None:
-        cluster = list(set([i for i in y_pred[dp["Proteins"] == protein]]))[0]
+        mask = dp["Proteins"] == protein
+        mod = dp[mask].iloc[0]["Modifications"]
+        protein = " / ".join(dp.filter(series=mask).genes)
+        cluster = y_pred[mask].iloc[0]
+
+    mod_str = mod.__str__(prot_index=0)
 
     title = "Cluster #{} N={}\n({}{})".format(
         cluster,
         (dp[y_pred == cluster]).shape[0],
         protein,
-        " {}".format(mod.__str__(prot_index=0)) if mod else "",
+        " {}".format(mod_str) if mod_str else "",
     )
     plot_cluster(
         data, y_pred, cluster,
