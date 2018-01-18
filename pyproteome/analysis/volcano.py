@@ -133,7 +133,7 @@ def volcano_plot(
         filename = re.sub("[ ></?]", "_", title) + ".png"
 
     if title:
-        file_name = re.sub("[ ></?]", "_", title) + "_Volcano.png"
+        filename = re.sub("[ ></?]", "_", title) + "_Volcano.png"
 
     upper_fold = np.log2(fold)
     lower_fold = -upper_fold
@@ -375,7 +375,7 @@ def volcano_plot(
             )
 
         fig.savefig(
-            os.path.join(folder_name, file_name),
+            os.path.join(folder_name, filename),
             bbox_inches="tight",
             dpi=pyp.DEFAULT_DPI,
             transparent=True,
