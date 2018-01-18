@@ -82,16 +82,16 @@ def cluster_clusters(
     y_pred = y_pred.copy()
 
     for _ in range(iterations):
-        ss = sorted(set(y_pred))
+        ss = sorted(set(y_pred), key=lambda i: -(y_pred == i).sum())
 
         for ind, i in enumerate(ss):
             corrs = [
                 (
                     o,
-                    pearsonr(
+                    np.correlate(
                         data["z"][y_pred == i].mean(axis=0),
                         data["z"][y_pred == o].mean(axis=0),
-                    ),
+                    )[0],
                 )
                 for o in sorted(set(y_pred))
                 if o < i
@@ -99,11 +99,14 @@ def cluster_clusters(
             if not corrs:
                 continue
 
-            o, (rho, p) = max(corrs, key=lambda x: x[1][0])
+            o, (rho) = max(corrs, key=lambda x: x[1])
 
             # if rho > corr_cutoff:
             #     y_pred[y_pred == i] = o
-            if p < p_cutoff and rho > 0 and rho > corr_cutoff:
+            if (
+                # p < p_cutoff and
+                rho > 0 and rho > corr_cutoff
+            ):
                 y_pred[y_pred == i] = o
 
     y_pred_old = y_pred.copy()

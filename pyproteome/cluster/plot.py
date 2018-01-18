@@ -17,6 +17,9 @@ import pyproteome as pyp
 
 from . import clusterer
 
+COLOR_MAP = plt.cm.rainbow
+CORR_COLOR_MAP = plt.cm.Spectral_r
+
 
 def _make_folder(data=None, folder_name=None):
     if folder_name is None:
@@ -158,6 +161,7 @@ def cluster_corrmap(
     colorbar=True,
     f=None,
     ax=None,
+    div_scale=None,
     filename="Cluster-Corrmap.png",
     folder_name=None,
 ):
@@ -168,7 +172,8 @@ def cluster_corrmap(
     elif f is None:
         f = ax.get_figure()
 
-    div_scale = max([data["data"].shape[0] // 1000, 5])
+    if div_scale is None:
+        div_scale = max([data["data"].shape[0] // 1000, 5])
 
     if len(set(y_pred)) > 1:
         mapping, new_ind, _, cn = hierarchical_clusters(data, y_pred)
@@ -178,9 +183,12 @@ def cluster_corrmap(
         sorted_clusters = sorted(set(y_pred))
         cn = data["c"]
 
+    if div_scale > 1:
+        cn = cn[::div_scale, ::div_scale]
+
     mesh = ax.pcolormesh(
-        cn[::div_scale, ::div_scale],
-        cmap=plt.cm.Spectral_r,
+        cn,
+        cmap=CORR_COLOR_MAP,
         vmin=-1, vmax=1,
     )
 
@@ -240,7 +248,7 @@ def plot_cluster(
         ax.plot(
             dad[i, :],
             alpha=min([1 / dad.shape[0] * 50 / 2, 1]),
-            color=color or plt.cm.rainbow(cluster_n / len(set(y_pred))),
+            color=color or COLOR_MAP(cluster_n / len(set(y_pred))),
         )
 
     ax.plot(
@@ -261,6 +269,7 @@ def plot_cluster(
     if ylabel:
         ax.set_ylabel("Z-scored Change")
 
+    ax.set_facecolor((.9,) * 3)
     ax.set_xticks(range(dad.shape[1]))
     ax.set_xticklabels(names, rotation=45, horizontalalignment="right")
     ax.set_title(
@@ -422,9 +431,9 @@ def show_peptide_clusters(
     ss = sorted(set(clusters))
 
     colors = [
-        plt.cm.rainbow(ss.index(cluster_n) / len(ss))
+        COLOR_MAP(ss.index(cluster_n) / len(ss))
         if new_colors else
-        plt.cm.rainbow(cluster_n / len(set(y_pred)))
+        COLOR_MAP(cluster_n / len(set(y_pred)))
         for cluster_n in clusters
     ]
 
