@@ -4,6 +4,8 @@ from __future__ import absolute_import, division
 import os
 import pickle
 
+from matplotlib import pyplot as plt
+
 import pyproteome as pyp
 
 
@@ -21,6 +23,7 @@ def auto_clusterer(
     cluster_cluster_kwargs=None,
     plot_clusters_kwargs=None,
     volcano_kwargs=None,
+    plots=True, close=False,
     folder_name=None,
     filename="clusters.pkl",
 ):
@@ -44,8 +47,6 @@ def auto_clusterer(
         **get_data_kwargs
     )
 
-    pyp.cluster.plot.pca(data)
-
     if "n_clusters" not in cluster_kwargs:
         cluster_kwargs["n_clusters"] = 100
 
@@ -58,6 +59,11 @@ def auto_clusterer(
         data, y_pred_old,
         **cluster_cluster_kwargs
     )
+
+    if not plots:
+        return data, y_pred
+
+    pyp.cluster.plot.pca(data)
 
     pyp.cluster.plot.cluster_corrmap(
         data, y_pred_old,
@@ -79,19 +85,25 @@ def auto_clusterer(
         f = pyp.cluster.plot.plot_cluster(
             data, y_pred, ind
         )
-        f.savefig(
-            os.path.join(folder_name, "Cluster-{}.png".format(ind)),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
+        if f:
+            f.savefig(
+                os.path.join(folder_name, "Cluster-{}.png".format(ind)),
+                bbox_inches="tight",
+                dpi=pyp.DEFAULT_DPI,
+                transparent=True,
+            )
+            if close:
+                plt.close(f)
 
-        pyp.volcano.plot_volcano_filtered(
+        f, _ = pyp.volcano.plot_volcano_filtered(
             data["ds"], {"series": y_pred == ind},
             title="Cluster {}".format(ind),
             folder_name=folder_name,
             **volcano_kwargs
         )
+
+        if f and close:
+            plt.close(f)
 
         f, _ = pyp.motifs.logo.make_logo(
             data["ds"], {"series": y_pred == ind},
@@ -105,6 +117,8 @@ def auto_clusterer(
                 dpi=pyp.DEFAULT_DPI,
                 transparent=True,
             )
+            if close:
+                plt.close(f)
 
     slices = [
         data["ds"].filter({"series": y_pred == ind})
