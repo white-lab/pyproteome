@@ -362,14 +362,14 @@ def show_cluster(
 
     if seq is not None:
         ax.plot(
-            z[(dp["Sequence"] == seq).as_matrix()][0],
+            z[mask][0],
             color="k",
             linestyle="--",
             linewidth=5,
         )
     elif protein is not None:
         ax.plot(
-            z[(dp["Proteins"] == protein).as_matrix()][0],
+            z[mask][0],
             color="k",
             linestyle="--",
             linewidth=5,
