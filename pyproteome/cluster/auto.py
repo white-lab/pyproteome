@@ -83,7 +83,8 @@ def auto_clusterer(
 
     for ind in ss:
         f = pyp.cluster.plot.plot_cluster(
-            data, y_pred, ind
+            data, y_pred, ind,
+            div_scale=1,
         )
         if f:
             f.savefig(

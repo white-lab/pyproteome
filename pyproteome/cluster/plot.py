@@ -227,6 +227,7 @@ def plot_cluster(
     data, y_pred, cluster_n,
     f=None,
     ax=None,
+    div_scale=None,
     ylabel=True,
     title=None,
     color=None,
@@ -241,7 +242,10 @@ def plot_cluster(
 
     dad = z[y_pred.as_matrix() == cluster_n]
     n = dad.shape[0]
-    div_scale = max([dad.shape[0] // 100, 1])
+
+    if div_scale is None:
+        div_scale = max([dad.shape[0] // 100, 1])
+
     dad = dad[::div_scale]
 
     for i in range(dad.shape[0]):
