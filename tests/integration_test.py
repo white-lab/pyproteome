@@ -371,7 +371,11 @@ class IntegrationTest(TestCase):
 
     def test_auto_cluster(self):
         for data in self.data.values():
-            cluster.auto.auto_clusterer(
+            for d in [
                 data,
-                cluster_kwargs={"n_clusters": 10},
-            )
+                data.norm_cmp_groups(self.cmp_groups),
+            ]:
+                cluster.auto.auto_clusterer(
+                    d,
+                    cluster_kwargs={"n_clusters": 10},
+                )
