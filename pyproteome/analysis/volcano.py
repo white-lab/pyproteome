@@ -376,6 +376,7 @@ def volcano_plot(
                 fontsize=20,
             )
 
+    if filename:
         fig.savefig(
             os.path.join(folder_name, filename),
             bbox_inches="tight",
