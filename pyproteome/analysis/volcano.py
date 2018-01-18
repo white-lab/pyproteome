@@ -116,7 +116,7 @@ def volcano_plot(
     if group_a and group_b:
         data.update_group_changes(group_a=group_a, group_b=group_b)
 
-    _make_folder(data, folder_name=folder_name)
+    folder_name = _make_folder(data, folder_name=folder_name)
 
     options = options or {}
 
@@ -133,9 +133,6 @@ def volcano_plot(
 
     if not filename:
         filename = re.sub("[ ></?]", "_", title) + ".png"
-
-    if title:
-        filename = re.sub("[ ></?]", "_", title) + "_Volcano.png"
 
     upper_fold = np.log2(fold)
     lower_fold = -upper_fold
