@@ -82,8 +82,8 @@ def cluster(data, fn=None, kwargs=None, n_clusters=20):
 
 def cluster_clusters(
     data, y_pred,
-    p_cutoff=0.01,
-    corr_cutoff=.6,
+    p_cutoff=1,
+    corr_cutoff=.7,
     iterations=3,
 ):
     y_pred = y_pred.copy()
