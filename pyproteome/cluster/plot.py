@@ -331,6 +331,7 @@ def show_cluster(
     f=None,
     ax=None,
     color=None,
+    div_scale=None,
     save=True,
     folder_name=None,
 ):
@@ -357,18 +358,17 @@ def show_cluster(
         protein = " / ".join(dp.filter(series=mask).genes)
         cluster = y_pred[mask].iloc[0]
 
-    mod_str = mod.__str__(prot_index=0)
+    mod_str = mod.get_mods([(None, "Phospho")]).__str__(prot_index=0)
 
-    title = "Cluster #{} N={}\n({}{})".format(
-        cluster,
-        (dp[y_pred == cluster]).shape[0],
-        protein,
+    title = "{}{}".format(
+        (protein[:15] + " ...") if len(protein) > 15 else protein,
         " {}".format(mod_str) if mod_str else "",
     )
     plot_cluster(
         data, y_pred, cluster,
         ax=ax,
         color=color,
+        div_scale=div_scale,
         ylabel=ylabel,
         title=title,
     )
@@ -405,7 +405,9 @@ def show_peptide_clusters(
     data, y_pred,
     filters,
     new_colors=False,
+    div_scale=None,
     cols=4,
+    filename="PeptideClusters.png",
     folder_name=None,
 ):
     folder_name = _make_folder(data["ds"], folder_name=folder_name)
@@ -413,7 +415,7 @@ def show_peptide_clusters(
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(
         rows, cols,
-        figsize=(cols * 4, rows * 4),
+        figsize=(cols * 3, rows * 3),
         sharex=True,
         sharey=True,
     )
@@ -447,6 +449,7 @@ def show_peptide_clusters(
             ax=ax,
             ylabel=ind % cols == 0,
             color=color,
+            div_scale=div_scale,
             save=False,
             **fil
         )
@@ -454,12 +457,13 @@ def show_peptide_clusters(
     for ax in ax_iter:
         ax.axis('off')
 
-    f.savefig(
-        os.path.join(folder_name, "PeptideClusters.png"),
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
+    if filename:
+        f.savefig(
+            os.path.join(folder_name, filename),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
 
     return f, axes
 

@@ -381,7 +381,7 @@ def volcano_plot(
             transparent=True,
         )
 
-    return fig, ax
+    return fig, ax, folder_name, filename
 
 
 def plot_volcano_filtered(data, f, **kwargs):
@@ -423,7 +423,7 @@ def plot_volcano_filtered(data, f, **kwargs):
         (-0.1, np.ceil(max(pvals))),
     )
 
-    f, ax = volcano_plot(
+    f, ax, folder_name, filename = volcano_plot(
         d,
         xminmax=xminmax,
         yminmax=yminmax,
@@ -439,14 +439,12 @@ def plot_volcano_filtered(data, f, **kwargs):
 
     ax.scatter(changes, pvals, c="lightblue", zorder=0, alpha=0.3)
 
-    f.savefig(
-        os.path.join(
-            data.name,
-            re.sub(r"[ ></\?]", "_", kwargs.get("title", "Filtered")) +
-            "_Volcano.png",
-        ),
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
+    if filename:
+        f.savefig(
+            os.path.join(folder_name, filename),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
+
     return f, ax
