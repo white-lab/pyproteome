@@ -309,6 +309,49 @@ def _get_quantifications(df, cursor, tag_names):
     return df
 
 
+def _get_q_values(df, cursor):
+    fields = cursor.execute(
+        """
+        SELECT
+        CustomDataFields.FieldID,
+        CustomDataFields.DisplayName
+        FROM CustomDataFields
+        """,
+    )
+    field_ids = [
+        field_id
+        for field_id, name in fields
+        if name in ["q-Value"]
+    ]
+
+    df["q-value"] = np.nan
+
+    if not field_ids:
+        return df
+
+    q_vals = cursor.execute(
+        """
+        SELECT
+        CustomDataPeptides.PeptideID,
+        CustomDataPeptides.FieldValue
+        FROM CustomDataPeptides
+        WHERE CustomDataPeptides.FieldID IN ({})
+        """.format(
+            ", ".join("?" * len(field_ids))
+        ),
+        field_ids,
+    )
+    indices, vals = zip(*[
+        (index, val)
+        for index, val in q_vals
+        if index in df.index
+    ])
+
+    df.at[indices, "q-value"] = vals
+
+    return df
+
+
 def read_discoverer_msf(basename, pick_best_ptm=False):
     """
     Read a Proteome Discoverer .msf file.
@@ -373,6 +416,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _get_modifications(df, cursor)
         df = _fix_sequence_mods(df)
         df = _get_quantifications(df, cursor, tag_names)
+        df = _get_q_values(df, cursor)
 
     df["Scan Paths"] = basename
 

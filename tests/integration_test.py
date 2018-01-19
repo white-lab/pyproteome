@@ -167,6 +167,7 @@ class IntegrationTest(TestCase):
         for data in self.data.values():
             for f in [
                 {"p": .1},
+                {"q": .1},
                 {"fold": 1.5},
                 {"fold": 1/1.5},
                 {"asym_fold": 1.5},

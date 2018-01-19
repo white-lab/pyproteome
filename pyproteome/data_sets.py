@@ -139,6 +139,7 @@ class DataSet:
                     "First Scan",
                     "Confidence Level",
                     "Ion Score",
+                    "q-value",
                     "Isolation Interference",
                     "Scan Paths",
                     "Missed Cleavages",
@@ -283,6 +284,7 @@ class DataSet:
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["First Scan"] = utils.flatten_set
         agg_dict["Ion Score"] = max
+        agg_dict["q-value"] = min
         agg_dict["Confidence Level"] = partial(
             max,
             key=lambda x: ["Low", "Medium", "High"].index(x),
@@ -582,6 +584,7 @@ class DataSet:
             "First Scan": set(),
             "Scan Paths": set(),
             "Ion Score": 100,
+            "q-value": 0,
             "Isolation Interference": 0,
             "Missed Cleavages": 0,
             "Confidence Level": "High",
@@ -642,6 +645,7 @@ class DataSet:
         missed_cleavage     Missed cleaves <= cutoff.
         median_quant        Median quantification signal > cutoff.
         p                   p-value < cutoff.
+        q                   q-value < cutoff.
         asym_fold           Change > val if cutoff > 1 else Change < val.
         fold                Change > cutoff or Change < 1 / cutoff.
         motif               Filter for motif.
@@ -706,11 +710,15 @@ class DataSet:
             ) >= val,
 
             "p": lambda val, psms:
-            ~psms["p-value"].isnull() &
+            (~psms["p-value"].isnull()) &
             (psms["p-value"] <= val),
 
+            "q": lambda val, psms:
+            (~psms["q-value"].isnull()) &
+            (psms["q-value"] <= val),
+
             "asym_fold": lambda val, psms:
-            ~psms["Fold Change"].isnull() &
+            (~psms["Fold Change"].isnull()) &
             (
                 psms["Fold Change"] >= val
                 if val > 1 else
