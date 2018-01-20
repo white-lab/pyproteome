@@ -50,8 +50,6 @@ class DataSet:
     levels : dict or str, float, optional
     sets : int
         Number of sets merged into this data set.
-    sources : list of str
-    scan_list : dict of str, list of int
     """
     def __init__(
         self,
@@ -115,7 +113,6 @@ class DataSet:
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
         self.cmp_groups = cmp_groups or None
-        self.sources = ["unknown"]
         self.validated = False
         self.group_a, self.group_b = None, None
 
@@ -124,7 +121,6 @@ class DataSet:
                 mascot_name,
                 pick_best_ptm=pick_best_ptm,
             )
-            self.sources = ["MASCOT"]
 
         if psms is None:
             psms = pd.DataFrame(
@@ -1125,13 +1121,6 @@ def merge_data(
     if merge_subsets:
         new._merge_subsequences(inplace=True)
 
-    new.sources = sorted(
-        set(
-            source
-            for data in data_sets
-            for source in data.sources
-        )
-    )
     new.sets = sum(data.sets for data in data_sets)
 
     new.group_a = next(
