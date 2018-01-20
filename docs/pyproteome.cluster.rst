@@ -12,6 +12,14 @@ pyproteome.cluster.auto module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.cluster.clusterer module
+-----------------------------------
+
+.. automodule:: pyproteome.cluster.clusterer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.cluster.plot module
 ------------------------------
 

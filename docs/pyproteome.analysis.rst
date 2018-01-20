@@ -12,6 +12,14 @@ pyproteome.analysis.correlation module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.analysis.pathways module
+-----------------------------------
+
+.. automodule:: pyproteome.analysis.pathways
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.analysis.plot module
 -------------------------------
 
