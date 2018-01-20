@@ -1,12 +1,17 @@
 # Change Log
 
-## 0.5.0 (2018-01-\*\*)
+## 0.6.0 (2018-\*-\*)
+
+## 0.5.0 (2018-01-20)
 
 Features
 
   - Completed clustering module.
   - Added much more extensive integration testing, fixing many py2 bugs.
   - Re-organized analysis into package.
+  - Added code for normalizing across data sets with no shared channels.
+  - Cleared out old code for reading tab-delimited Discoverer exports.
+  - Save plots into organized folders.
 
 ## 0.4.0 (2018-01-13)
 
