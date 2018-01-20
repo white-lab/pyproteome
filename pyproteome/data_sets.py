@@ -33,8 +33,7 @@ class DataSet:
     """
     Class that encompasses a proteomics data set.
 
-    Includes peptide list, scan list, channels, groups, quantitative
-    phenotypes, etc.
+    Includes peptide list, scan list, channels, groups, etc.
 
     Attributes
     ----------
@@ -46,9 +45,7 @@ class DataSet:
     groups : dict of str, list of str
         Maps groups to list of sample names. The primary group is considered
         as the first in this sequence.
-    phenotypes : dict of str, (dict of str, float)
-        Primary key is the phenotype and its value is a dictionary mapping
-        sample names to that phenotype's value.
+    cmp_groups : list of list of str
     name : str
     levels : dict or str, float, optional
     sets : int
@@ -62,7 +59,7 @@ class DataSet:
         channels=None,
         psms=None,
         groups=None,
-        phenotypes=None,
+        cmp_groups=None,
         name="",
         lvls=None,
         dropna=False,
@@ -86,7 +83,6 @@ class DataSet:
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
-        phenotypes : dict of str, (dict of str, float), optional
         name : str, optional
         lvls : dict or str, float, optional
         dropna : bool, optional
@@ -118,6 +114,7 @@ class DataSet:
 
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
+        self.cmp_groups = cmp_groups or None
         self.sources = ["unknown"]
         self.validated = False
         self.group_a, self.group_b = None, None
@@ -147,7 +144,6 @@ class DataSet:
             )
 
         self.psms = psms
-        self.phenotypes = phenotypes
         self.name = name
         self.levels = lvls
         self.mascot_name = mascot_name
@@ -176,11 +172,14 @@ class DataSet:
 
         if merge_duplicates:
             LOGGER.info("Merging duplicate peptide hits together.")
-            self._merge_duplicates()
+            self._merge_duplicates(inplace=True)
 
         if merge_subsets:
             LOGGER.info("Merging peptide hits that are subsets together.")
-            self._merge_subsequences()
+            self._merge_subsequences(inplace=True)
+
+        if cmp_groups:
+            self.norm_cmp_groups(cmp_groups, inplace=True)
 
         self.update_group_changes()
 
@@ -250,18 +249,23 @@ class DataSet:
 
         self.psms = self.psms[~reject_mask].reset_index(drop=True)
 
-    def _merge_duplicates(self):
-        if len(self.psms) < 1:
+    def _merge_duplicates(self, inplace=False):
+        new = self
+
+        if not inplace:
+            new = new.copy()
+
+        if len(new.psms) < 1:
             return
 
-        channels = list(self.channels.values())
+        channels = list(new.channels.values())
         agg_dict = {}
 
         for channel in channels:
             weight = "{}_weight".format(channel)
 
-            if weight in self.psms.columns:
-                self.psms[channel] *= self.psms[weight]
+            if weight in new.psms.columns:
+                new.psms[channel] *= new.psms[weight]
                 agg_dict[weight] = _nan_sum
 
             agg_dict[channel] = _nan_sum
@@ -291,7 +295,7 @@ class DataSet:
         )
         agg_dict["Isolation Interference"] = min
 
-        self.psms = self.psms.groupby(
+        new.psms = new.psms.groupby(
             by=[
                 "Sequence",
             ],
@@ -302,32 +306,37 @@ class DataSet:
         for channel in channels:
             weight = "{}_weight".format(channel)
 
-            if weight in self.psms.columns:
-                self.psms[channel] = (
-                    self.psms[channel] / self.psms[weight]
+            if weight in new.psms.columns:
+                new.psms[channel] = (
+                    new.psms[channel] / new.psms[weight]
                 )
 
-    def _merge_subsequences(self):
+        return new
+
+    def _merge_subsequences(self, inplace=False):
         """
         Merges petides that are a subsequence of another peptide.
 
         Only merges peptides that contain the same set of modifications and
         that map to the same protein(s).
         """
-        psms = self.psms
+        new = self
+
+        if not inplace:
+            new = new.copy()
 
         # Find all proteins that have more than one peptide mapping to them
-        for index, row in psms[
-            psms.duplicated(subset="Proteins", keep=False)
+        for index, row in new.psms[
+            new.psms.duplicated(subset="Proteins", keep=False)
         ].iterrows():
             seq = row["Sequence"]
 
             # Then iterate over each peptide and find other non-identical
             # peptides that map to the same protein
-            for o_index, o_row in psms[
+            for o_index, o_row in new.psms[
                 np.logical_and(
-                    psms["Proteins"] == row["Proteins"],
-                    psms["Sequence"] != seq,
+                    new.psms["Proteins"] == row["Proteins"],
+                    new.psms["Sequence"] != seq,
                 )
             ].iterrows():
                 # If that other peptide is a subset of this peptide, rename it
@@ -337,10 +346,10 @@ class DataSet:
                         "Modifications",
                         "Missed Cleavages",
                     ]
-                    psms.at[o_index, cols] = row[cols]
+                    new.psms.at[o_index, cols] = row[cols]
 
         # And finally group together peptides that were renamed
-        self._merge_duplicates()
+        return new._merge_duplicates(inplace=inplace)
 
     def __add__(self, other):
         """
@@ -943,6 +952,11 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
+        if self.cmp_groups:
+            raise Exception("cmp_groups normalization already set")
+
+        self.cmp_groups = cmp_groups
+
         if len(cmp_groups) < 2:
             return new
 
@@ -1106,10 +1120,10 @@ def merge_data(
         new.psms = pd.concat([new.psms, data.psms])
 
         if merge_duplicates:
-            new._merge_duplicates()
+            new._merge_duplicates(inplace=True)
 
     if merge_subsets:
-        new._merge_subsequences()
+        new._merge_subsequences(inplace=True)
 
     new.sources = sorted(
         set(
