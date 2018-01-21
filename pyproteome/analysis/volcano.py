@@ -420,7 +420,7 @@ def plot_volcano_filtered(data, f, **kwargs):
     )
     yminmax = kwargs.pop(
         "yminmax",
-        (-0.1, np.ceil(max(pvals))),
+        (-0.1, np.ceil(max(pvals + [1]))),
     )
 
     f, ax, folder_name, filename = volcano_plot(
@@ -430,12 +430,13 @@ def plot_volcano_filtered(data, f, **kwargs):
         **kwargs
     )
 
-    changes, pvals = zip(*[
-        (x, y)
-        for x, y in zip(changes, pvals)
-        if x > xminmax[0] and x < xminmax[1] and
-        y > yminmax[0] and y < yminmax[1]
-    ])
+    if changes and pvals:
+        changes, pvals = zip(*[
+            (x, y)
+            for x, y in zip(changes, pvals)
+            if x > xminmax[0] and x < xminmax[1] and
+            y > yminmax[0] and y < yminmax[1]
+        ])
 
     ax.scatter(changes, pvals, c="lightblue", zorder=0, alpha=0.3)
 
