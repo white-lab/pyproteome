@@ -103,13 +103,6 @@ class DataSet:
         if mascot_name and os.path.splitext(mascot_name)[1] == "":
             mascot_name += ".msf"
 
-        if filter_bad is True:
-            filter_bad = dict(
-                ion_score=15,
-                isolation=50,
-                median_quant=1000,
-            )
-
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
         self.cmp_groups = cmp_groups or None
@@ -150,6 +143,15 @@ class DataSet:
         if dropna:
             LOGGER.info("Dropping channels with NaN values.")
             self.dropna(inplace=True)
+
+        if filter_bad is True:
+            filter_bad = dict(
+                ion_score=15,
+                isolation=50,
+                median_quant=1000,
+            )
+            if (~pd.isnull(self.psms["q-value"]).any()):
+                filter_bad["q"] = 0.05
 
         if filter_bad:
             LOGGER.info("Filtering peptides that Discoverer marked as bad.")
