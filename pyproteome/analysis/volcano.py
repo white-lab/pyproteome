@@ -252,8 +252,8 @@ def volcano_plot(
         ax.set_xlim(xmin=xminmax[0], xmax=xminmax[1])
     else:
         ax.set_xlim(
-            xmin=np.floor(min(changes) * 2) / 2,
-            xmax=np.ceil(max(changes) * 2) / 2,
+            xmin=np.floor(min(changes + [0]) * 2) / 2,
+            xmax=np.ceil(max(changes + [0]) * 2) / 2,
         )
 
     if yminmax:
@@ -414,8 +414,8 @@ def plot_volcano_filtered(data, f, **kwargs):
     xminmax = kwargs.pop(
         "xminmax",
         (
-            np.floor(min(changes) * 2) / 2,
-            np.ceil(max(changes) * 2) / 2,
+            np.floor(min(changes + [0]) * 2) / 2,
+            np.ceil(max(changes + [0]) * 2) / 2,
         ),
     )
     yminmax = kwargs.pop(
