@@ -246,7 +246,12 @@ def plot_group(
             label.set_fontsize(20)
 
         ax.set_xticks(indices)
-        ax.set_xticklabels(labels, fontsize=20)
+        ax.set_xticklabels(
+            labels,
+            fontsize=20,
+            rotation=45,
+            horizontalalignment="right",
+        )
 
         mod_str = row["Modifications"].__str__(prot_index=0)
 
