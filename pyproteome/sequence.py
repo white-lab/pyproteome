@@ -73,7 +73,7 @@ class Sequence:
 
     def to_tuple(self):
         return (
-            self.pep_seq,
+            str(self),
             self.modifications,
         )
 

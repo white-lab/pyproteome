@@ -184,7 +184,7 @@ class Modification:
             self.mod_type,
             self.nterm,
             self.cterm,
-            self.letter,
+            self.letter.lower(),
             tuple(self.abs_pos),
             tuple(self.exact),
         )
