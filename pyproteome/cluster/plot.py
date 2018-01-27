@@ -248,27 +248,45 @@ def plot_cluster(
 
     dad = dad[::div_scale]
 
-    for i in range(dad.shape[0]):
+    prev_ind = 0
+    means = np.mean(dad, axis=0)
+
+    for ind, v in enumerate(data["classes"]):
+        n_v, p_v = None, None
+
+        if ind > 0:
+            p_v = data["classes"][ind - 1]
+
+        if ind + 1 < len(data["classes"]):
+            n_v = data["classes"][ind + 1]
+
+        if v != p_v and p_v is not None:
+            ax.axvline(
+                x=ind - .5,
+                color="k",
+                linestyle=":",
+            )
+
+        if v == n_v:
+            continue
+
         ax.plot(
-            dad[i, :],
+            np.tile(
+                np.arange(prev_ind, ind + 1),
+                (dad.shape[0], 1),
+            ).T,
+            dad[:, prev_ind:ind + 1].T,
             alpha=min([1 / dad.shape[0] * 50 / 2, 1]),
             color=color or COLOR_MAP(cluster_n / len(set(y_pred))),
         )
 
-    ax.plot(
-        np.mean(dad, axis=0),
-        color='k',
-    )
-
-    for ind, (v, n_v) in enumerate(zip(data["classes"], data["classes"][1:])):
-        if v == n_v:
-            continue
-
-        ax.axvline(
-            x=ind + .5,
-            color="k",
-            linestyle="--",
+        ax.plot(
+            range(prev_ind, ind + 1),
+            means[prev_ind:ind + 1],
+            color='k',
         )
+
+        prev_ind = ind + 1
 
     if ylabel:
         ax.set_ylabel("Z-scored Change")
@@ -346,6 +364,7 @@ def show_cluster(
     z = data["z"]
     dp = ds.copy()
     mod = ""
+    mask = None
 
     if seq is not None:
         mask = dp["Sequence"] == seq
@@ -373,20 +392,31 @@ def show_cluster(
         title=title,
     )
 
-    if seq is not None:
-        ax.plot(
-            z[mask][0],
-            color="k",
-            linestyle="--",
-            linewidth=5,
-        )
-    elif protein is not None:
-        ax.plot(
-            z[mask][0],
-            color="k",
-            linestyle="--",
-            linewidth=5,
-        )
+    if mask is not None:
+        z_m = z[mask]
+        prev_ind = 0
+
+        for ind, v in enumerate(data["classes"]):
+            n_v = None
+
+            if ind + 1 < len(data["classes"]):
+                n_v = data["classes"][ind + 1]
+
+            if v == n_v:
+                continue
+
+            ax.plot(
+                np.tile(
+                    np.arange(prev_ind, ind + 1),
+                    (z_m.shape[0], 1),
+                ).T,
+                z_m[:, prev_ind:ind + 1].T,
+                color="k",
+                linestyle=":",
+                linewidth=5,
+            )
+
+            prev_ind = ind + 1
 
     if save:
         f.savefig(

@@ -134,6 +134,9 @@ def changes_table(
     psms["Sequence"] = psms["Sequence"].apply(
         lambda x: "{} ({})".format(x, x.modifications)
     )
+    psms["Uniprot Accessions"] = psms["Proteins"].apply(
+        lambda x: "; ".join(x.accessions)
+    )
 
     if sort == "Fold Change":
         psms["Fold Change-Sort"] = psms["Fold Change"].apply(
