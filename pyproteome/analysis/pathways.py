@@ -24,18 +24,6 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.pathways")
 
 
-def _make_folder(data=None, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data.name
-            if data is not None else
-            os.getcwd(),
-            "Analysis",
-        )
-
-    return pyp.utils.makedirs(folder_name=folder_name)
-
-
 def find_tfs(data, folder_name=None, csv_name=None):
     """
     Scan over a data set to find proteins annotated as transcription factors.
@@ -46,7 +34,11 @@ def find_tfs(data, folder_name=None, csv_name=None):
     folder_name : str, optional
     csv_name : str, optional
     """
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Pathway Analysis",
+    )
 
     if csv_name is None:
         csv_name = "Changing TFs.csv"

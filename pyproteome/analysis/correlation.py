@@ -26,18 +26,6 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.correlation")
 
 
-def _make_folder(data=None, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data.name
-            if data is not None else
-            os.getcwd(),
-            "Correlations",
-        )
-
-    return pyp.utils.makedirs(folder_name)
-
-
 def correlate_data_sets(
     data1, data2,
     older_name=None,
@@ -56,7 +44,11 @@ def correlate_data_sets(
     folder_name : str, optional
     filename : str, optional
     """
-    folder_name = _make_folder(data1, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data1,
+        folder_name=folder_name,
+        sub="Correlation Analysis",
+    )
 
     merged = pd.merge(
         data1.psms, data2.psms,
@@ -252,7 +244,11 @@ def correlate_signal(
     figsize=(12, 10),
     xlabel="",
 ):
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Correlation Analysis",
+    )
 
     options = options or {}
 

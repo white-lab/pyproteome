@@ -21,18 +21,6 @@ COLOR_MAP = plt.cm.rainbow
 CORR_COLOR_MAP = plt.cm.Spectral_r
 
 
-def _make_folder(data=None, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data.name
-            if data is not None else
-            os.getcwd(),
-            "Clusters",
-        )
-
-    return pyp.utils.makedirs(folder_name)
-
-
 def hierarchical_heatmap(
     data,
     cmp_groups=None,
@@ -60,7 +48,11 @@ def hierarchical_heatmap(
     row_cluster : bool, optional
     col_cluster : bool, optional
     """
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     if cmp_groups is None:
         cmp_groups = [list(data.groups.keys())]
@@ -165,7 +157,11 @@ def cluster_corrmap(
     filename="Cluster-Corrmap.png",
     folder_name=None,
 ):
-    folder_name = _make_folder(data["ds"], folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data["ds"],
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))
@@ -308,7 +304,11 @@ def plot_all_clusters(
     cols=4,
     folder_name=None,
 ):
-    folder_name = _make_folder(data["ds"], folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data["ds"],
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     ss = sorted(set(y_pred))
     rows = int(np.ceil(len(ss) / cols))
@@ -353,7 +353,11 @@ def show_cluster(
     save=True,
     folder_name=None,
 ):
-    folder_name = _make_folder(data["ds"], folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data["ds"],
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     if ax is None:
         f, ax = plt.subplots(figsize=(6, 6))
@@ -440,7 +444,11 @@ def show_peptide_clusters(
     filename="PeptideClusters.png",
     folder_name=None,
 ):
-    folder_name = _make_folder(data["ds"], folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data["ds"],
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(
@@ -534,7 +542,11 @@ def cluster_range(
     folder_name=None,
     filename="Cluster-Range-Scan.png",
 ):
-    folder_name = _make_folder(data["ds"], folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data["ds"],
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     clusters = range(min_clusters, max_clusters + 1)
 

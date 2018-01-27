@@ -23,18 +23,6 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.plot")
 
 
-def _make_folder(data=None, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data.name
-            if data is not None else
-            os.getcwd(),
-            "Peptides",
-        )
-
-    return pyp.utils.makedirs(folder_name)
-
-
 def plot(
     data, f=None,
     title=None,
@@ -51,7 +39,11 @@ def plot(
     title : str, optional
     figsize : tuple of int, int
     """
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Peptides",
+    )
 
     channel_names = [
         channel_name
@@ -150,7 +142,11 @@ def plot_group(
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequences : list of str
     """
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Peptides",
+    )
 
     if cmp_groups is None:
         cmp_groups = [list(data.groups.keys())]
@@ -383,7 +379,11 @@ def plot_all(
     cmp_groups=None,
     folder_name=None,
 ):
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Peptides",
+    )
 
     figures = []
 
@@ -412,7 +412,11 @@ def plot_together(
     only=True,
     **kwargs
 ):
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Peptides",
+    )
 
     figures = plot_group(
         data,

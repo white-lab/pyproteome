@@ -9,28 +9,17 @@ import pandas as pd
 import pyproteome as pyp
 
 
-def _make_folder(data=None, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data.name
-            if data is not None else
-            os.getcwd(),
-            "Tables",
-        )
-
-    return pyp.utils.makedirs(folder_name)
-
-
 def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):
-    data_name = getattr(data, "name", "Data")
-
     if csv_name is None:
-        csv_name = "{}-{}.csv".format(
-            re.sub("[ ></]", "_", data_name),
+        csv_name = "{}.csv".format(
             postfix,
         )
 
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Tables",
+    )
 
     return os.path.join(folder_name, csv_name)
 
@@ -177,6 +166,76 @@ def changes_table(
     )
 
 
+def ptmsigdb_changes_table(
+    data,
+    sort="p-value",
+    folder_name=None,
+    csv_name=None,
+):
+    """
+    Show a table of fold changes and p-values for PTMSigDB.
+
+    Parameters
+    ----------
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    sort : str, optional
+    folder_name : str, optional
+    csv_name : str, optional
+    """
+    csv_name = _prep_csv(
+        data,
+        folder_name=folder_name,
+        csv_name=csv_name,
+        postfix=_get_table_title(running_title=["ptmsigdb"]),
+    )
+
+    psms = getattr(data, "psms", data).copy()
+    psms = psms.dropna(subset=("Fold Change",))
+
+    psms["Protein Description"] = psms["Proteins"].apply(
+        lambda x: x.proteins[0].description
+    )
+    psms["Gene"] = psms["Proteins"].apply(
+        lambda x: x.genes[0]
+    )
+    psms["Uniprot Accession"] = psms["Proteins"].apply(
+        lambda x: x.accessions[0]
+    )
+    psms["All Modifications"] = psms["Modifications"]
+    psms["Phospho Modifications"] = psms["Modifications"].apply(
+        lambda x: x.get_mods([(None, "Phospho")]).__str__(prot_index=0)
+    )
+
+    psms = psms[
+        [
+            "Protein Description",
+            "Gene",
+            "Uniprot Accession",
+            "Sequence",
+            "All Modifications",
+            "Phospho Modifications",
+            "Fold Change",
+        ]
+    ].copy()
+    psms.sort_values("Fold Change", inplace=True, ascending=False)
+
+    if csv_name:
+        psms.to_csv(
+            csv_name,
+            index=False,
+        )
+
+    if psms.empty:
+        return psms
+
+    return psms.style.set_table_styles(  # Hide index and "Validated" columns
+        [
+            {"selector": "th:first-child", "props": [("display", "none")]},
+            {"selector": "*", "props": [("text-align", "left")]},
+        ]
+    )
+
+
 def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     """
     Write a full list of data sets to a single .xlsx file.
@@ -188,7 +247,10 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     out_name : str, optional
     """
 
-    folder_name = _make_folder(folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        folder_name=folder_name,
+        sub="Tables",
+    )
 
     out_name = os.path.join(folder_name, out_name)
 

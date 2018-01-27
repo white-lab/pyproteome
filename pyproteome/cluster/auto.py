@@ -9,13 +9,6 @@ from matplotlib import pyplot as plt
 import pyproteome as pyp
 
 
-def _make_folder(data, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(data.name, "Clusters")
-
-    return pyp.utils.makedirs(folder_name)
-
-
 def auto_clusterer(
     data,
     get_data_kwargs=None,
@@ -34,7 +27,11 @@ def auto_clusterer(
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Clusters",
+    )
 
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}

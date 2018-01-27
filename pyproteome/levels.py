@@ -18,13 +18,6 @@ import numpy as np
 from . import utils
 
 
-def _make_folder(data, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(data.name, "Correlations")
-
-    return utils.makedirs(folder_name)
-
-
 def get_channel_levels(
     data,
     folder_name=None,
@@ -45,7 +38,11 @@ def get_channel_levels(
     if not file_name:
         file_name = "channel_levels.png"
 
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Normalization",
+    )
 
     channel_names = list(data.channels.keys())
     channels = list(data.channels.values())

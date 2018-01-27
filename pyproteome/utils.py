@@ -9,6 +9,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from . import paths
+
 
 DEFAULT_DPI = 300
 """
@@ -34,6 +36,19 @@ def fuzzy_find(needle, haystack):
     s = difflib.SequenceMatcher(a=haystack, b=needle)
     best = s.find_longest_match(0, len(haystack), 0, len(needle))
     return best.a - len(needle) + best.size
+
+
+def make_folder(data=None, folder_name=None, sub="Output"):
+    if folder_name is None:
+        folder_name = os.path.join(
+            paths.FIGURES_DIR,
+            data.name
+            if data is not None else
+            os.getcwd(),
+            sub,
+        )
+
+    return makedirs(folder_name)
 
 
 def makedirs(folder_name=None):

@@ -56,6 +56,10 @@ class Proteins:
         return [i.accession for i in self.proteins]
 
     @property
+    def descriptions(self):
+        return [i.description for i in self.proteins]
+
+    @property
     def genes(self):
         return [i.gene for i in self.proteins]
 

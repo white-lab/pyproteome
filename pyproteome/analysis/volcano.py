@@ -17,18 +17,6 @@ import pyproteome as pyp
 LOGGER = logging.getLogger("pyproteome.volcano")
 
 
-def _make_folder(data=None, folder_name=None):
-    if folder_name is None:
-        folder_name = os.path.join(
-            data.name
-            if data is not None else
-            os.getcwd(),
-            "Volcano",
-        )
-
-    return pyp.utils.makedirs(folder_name)
-
-
 def _remove_lesser_dups(labels, compress_sym=False):
     new_labels = []
 
@@ -116,7 +104,11 @@ def volcano_plot(
     if group_a and group_b:
         data.update_group_changes(group_a=group_a, group_b=group_b)
 
-    folder_name = _make_folder(data, folder_name=folder_name)
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Volcano",
+    )
 
     options = options or {}
 
