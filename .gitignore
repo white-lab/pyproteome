@@ -129,3 +129,6 @@ All/
 BCA Protein Assays/
 *.mztab.gz
 Clusters/
+lib64/
+Figures/
+
