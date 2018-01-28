@@ -21,7 +21,7 @@ class Proteins:
     """
 
     def __init__(self, proteins=None):
-        self.proteins = tuple(proteins) or ()
+        self.proteins = proteins or ()
 
     def __iter__(self):
         return iter(self.proteins)

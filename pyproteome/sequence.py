@@ -69,7 +69,7 @@ class Sequence:
         modifications : :class:`Modifications<pyproteome.modification.Modifications>`, optional
         """
         self.pep_seq = pep_seq
-        self.protein_matches = tuple(protein_matches) or ()
+        self.protein_matches = protein_matches or ()
         self.modifications = modifications
 
     def to_tuple(self):

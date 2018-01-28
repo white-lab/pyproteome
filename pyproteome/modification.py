@@ -27,7 +27,7 @@ class Modifications:
         ----------
         mods : list of :class:`Modification<pyproteome.modification.Modification>`
         """
-        self.mods = tuple(mods) or ()
+        self.mods = mods or ()
 
     def __iter__(self):
         return iter(self.mods)

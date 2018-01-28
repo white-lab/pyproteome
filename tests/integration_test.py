@@ -124,7 +124,7 @@ class IntegrationTest(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        shutil.rmtree(paths.FIGURES_DIR)
+        shutil.rmtree(paths.FIGURES_DIR, ignore_errors=True)
 
     def test_dropna(self):
         self.data = {
@@ -139,16 +139,8 @@ class IntegrationTest(TestCase):
         }
 
     def test_merge_subsets(self):
-        self.data = {
-            name: data_sets.DataSet(
-                mascot_name=os.path.splitext(filename)[0],
-                name=name,
-                channels=self.channels[name],
-                groups=self.groups,
-                merge_subsets=True,
-            )
-            for name, filename in DATAS.items()
-        }
+        for data in self.data.values():
+            data.merge_subsequences()
 
     def test_add_data(self):
         data = self.data["CKH1"]
@@ -215,7 +207,6 @@ class IntegrationTest(TestCase):
                 self.data["CKC1"],
             ],
             name="CK-p25",
-            merge_subsets=True,
         )
 
         merge = data_sets.merge_data(

@@ -33,6 +33,19 @@ DEFAULT_FILTER_BAD = dict(
     median_quant=1000,
     q=0.05,
 )
+DATA_SET_COLS = [
+    "Proteins",
+    "Sequence",
+    "Modifications",
+    "Validated",
+    "First Scan",
+    "Confidence Level",
+    "Ion Score",
+    "q-value",
+    "Isolation Interference",
+    "Scan Paths",
+    "Missed Cleavages",
+]
 
 
 class DataSet:
@@ -109,26 +122,15 @@ class DataSet:
         self.group_a, self.group_b = None, None
 
         if mascot_name:
-            psms, lst = loading.load_mascot_psms(
+            self.psms, lst = loading.load_mascot_psms(
                 mascot_name,
                 pick_best_ptm=pick_best_ptm,
             )
-
-        self.psms = pd.DataFrame(
-            columns=[
-                "Proteins",
-                "Sequence",
-                "Modifications",
-                "Validated",
-                "First Scan",
-                "Confidence Level",
-                "Ion Score",
-                "q-value",
-                "Isolation Interference",
-                "Scan Paths",
-                "Missed Cleavages",
-            ] + list(self.channels.values()),
-        )
+            assert all(i in self.psms.columns for i in DATA_SET_COLS)
+        else:
+            self.psms = pd.DataFrame(
+                columns=DATA_SET_COLS + list(self.channels.values()),
+            )
 
         self.name = name
         self.levels = lvls
@@ -611,6 +613,8 @@ class DataSet:
             if key not in insert:
                 insert[key] = val
 
+        assert all(i in insert for i in DATA_SET_COLS)
+
         self.psms = self.psms.append(pd.Series(insert), ignore_index=True)
 
     def filter(
@@ -808,6 +812,7 @@ class DataSet:
 
                 inverse = f.pop("inverse", False)
                 rename = f.pop("rename", None)
+
                 if rename is not None:
                     new.name = rename
 
@@ -914,9 +919,6 @@ class DataSet:
         group_a : str or list of str, optional
         group_b : str or list of str, optional
         """
-        if self.psms.shape[0] < 1:
-            return
-
         (group_a, group_b), _, (self.group_a, self.group_b) = self.get_groups(
             group_a=group_a,
             group_b=group_b,
@@ -952,6 +954,8 @@ class DataSet:
 
                 if ma.is_masked(pvals):
                     pvals = ma.fix_invalid(pvals, fill_value=np.nan)
+                elif isinstance(pvals, float):
+                    pvals = [pvals]
                 elif pvals.shape == ():
                     pvals = [pvals]
 
@@ -1097,8 +1101,10 @@ class DataSet:
 
 
 def merge_data(
-    data_sets, name=None, norm_channels=None,
-    merge_duplicates=True, merge_subsets=False,
+    data_sets,
+    name=None,
+    norm_channels=None,
+    merge_duplicates=True,
 ):
     """
     Merge a list of data sets together.
@@ -1108,7 +1114,6 @@ def merge_data(
     data_sets : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
     name : str, optional
     merge_duplicates : bool, optional
-    merge_subsets : bool, optional
 
     Returns
     -------
@@ -1165,9 +1170,6 @@ def merge_data(
 
         if merge_duplicates:
             new.merge_duplicates(inplace=True)
-
-    if merge_subsets:
-        new._merge_subsequences(inplace=True)
 
     new.sets = sum(data.sets for data in data_sets)
 
