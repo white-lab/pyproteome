@@ -652,7 +652,7 @@ class DataSet:
         ================    ===================================================
         Name                Description
         ================    ===================================================
-        seies               Use a pandas series (data.psms[series]).
+        series              Use a pandas series (data.psms[series]).
         fn                  Use data.psms.apply(fn).
         group_a             Calculate p / fold change values from group_a.
         group_b             Calculate p / fold change values from group_b.
@@ -671,6 +671,7 @@ class DataSet:
         mod_types           Filter for modifications.
         only_validated      Use rows validated by CAMV.
         inverse             Use all rows that are rejected by a filter.
+        rename              Change the new data sets name to a new value.
         ================    ===================================================
 
         Returns
@@ -806,6 +807,9 @@ class DataSet:
                     )
 
                 inverse = f.pop("inverse", False)
+                rename = f.pop("rename", None)
+                if rename is not None:
+                    new.name = rename
 
                 for key, val in f.items():
                     mask = fns[key](val, new.psms)
