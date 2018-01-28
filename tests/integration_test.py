@@ -3,6 +3,7 @@ from collections import OrderedDict
 import os
 from unittest import TestCase
 import itertools
+import shutil
 
 import pylab
 
@@ -24,9 +25,13 @@ DATAS = {
 
 
 class IntegrationTest(TestCase):
-
-    def setUp(self):
-        paths.set_base_dir(os.path.abspath("."))
+    @classmethod
+    def setUpClass(cls):
+        paths.set_base_dir(
+            os.path.abspath(
+                os.path.join(".", "tests_output")
+            )
+        )
 
         utils.fetch_data(
             dirname=paths.MS_SEARCHED_DIR,
@@ -36,6 +41,7 @@ class IntegrationTest(TestCase):
 
         pylab.rcParams['figure.max_open_warning'] = 0
 
+    def setUp(self):
         ck_channels = OrderedDict(
             [
                 ("3130 CK",     "126"),
@@ -115,6 +121,10 @@ class IntegrationTest(TestCase):
             ],
             name="CK-p25",
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(paths.FIGURES_DIR)
 
     def test_dropna(self):
         self.data = {
@@ -226,10 +236,6 @@ class IntegrationTest(TestCase):
             ]:
                 data.print_stats(out=f)
 
-        # self.assertEqual(
-        #     merge.shape[0],
-        #     100,
-        # )
         return merge
 
     def test_plot_all(self):
