@@ -33,8 +33,11 @@ def get_data():
     return df
 
 
-def generate_logos(species, kinases=None, dirname="logos", min_foreground=10):
-    pyp.utils.makedirs(dirname)
+def generate_logos(species, kinases=None, folder_name=None, min_foreground=10):
+    folder_name = pyp.utils.make_folder(
+        folder_name=folder_name,
+        sub="Logos",
+    )
 
     df = get_data()
     df = df[
@@ -59,7 +62,7 @@ def generate_logos(species, kinases=None, dirname="logos", min_foreground=10):
             title=kinase,
         )[0]
         f.savefig(
-            os.path.join(dirname, "{}.png".format(kinase)),
+            os.path.join(folder_name, "{}.png".format(kinase)),
             dpi=f.dpi,
             bbox_inches="tight",
             pad_inches=.1,
