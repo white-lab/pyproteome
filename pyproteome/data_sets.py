@@ -356,7 +356,7 @@ class DataSet:
                     new.psms.at[o_index, cols] = row[cols]
 
         # And finally group together peptides that were renamed
-        return new._merge_duplicates(inplace=inplace)
+        return new.merge_duplicates(inplace=inplace)
 
     def __add__(self, other):
         """
