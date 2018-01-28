@@ -58,7 +58,12 @@ class Sequence:
         non-ambiguous subsequences of this peptide.
     """
 
-    def __init__(self, pep_seq, protein_matches, modifications=None):
+    def __init__(
+        self,
+        pep_seq="",
+        protein_matches=None,
+        modifications=None,
+    ):
         """
         Parameters
         ----------
@@ -67,7 +72,7 @@ class Sequence:
         modifications : :class:`Modifications<pyproteome.modification.Modifications>`, optional
         """
         self.pep_seq = pep_seq
-        self.protein_matches = protein_matches
+        self.protein_matches = protein_matches or []
         self.modifications = modifications
         self.alt_hits = []
 

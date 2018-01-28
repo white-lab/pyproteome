@@ -22,7 +22,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy.stats import ttest_ind
 
-from . import levels, loading, modification, utils
+from . import levels, loading, modification, protein, sequence, utils
 from .motifs import motif as pymotif
 
 
@@ -55,7 +55,6 @@ class DataSet:
         self,
         mascot_name=None,
         channels=None,
-        psms=None,
         groups=None,
         cmp_groups=None,
         name="",
@@ -63,7 +62,6 @@ class DataSet:
         dropna=False,
         pick_best_ptm=True,
         merge_duplicates=True,
-        merge_subsets=False,
         filter_bad=True,
     ):
         """
@@ -71,13 +69,11 @@ class DataSet:
 
         Parameters
         ----------
+        mascot_name : str, optional
+            Read psms from MASCOT / Discoverer data files.
         channels : dict of (str, str), optional
             Ordered dictionary mapping sample names to quantification channels
             (i.e. {"X": "126", "Y": "127", "Z": "128", "W": "129"})
-        psms : :class:`pandas.DataFrame`, optional
-            Read psms directly from a DataFrame object.
-        mascot_name : str, optional
-            Read psms from MASCOT / Discoverer data files.
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
@@ -94,8 +90,6 @@ class DataSet:
             Merge scans that have the same peptide sequence into one peptide,
             summing the quantification channel intensities to give a weighted
             estimate of relative abundances.
-        merge_subsets : bool, optional
-            Merge peptides that are subsets of one another (i.e. "RLK" => "LK")
         filter_bad : bool or dict, optional
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
@@ -106,7 +100,6 @@ class DataSet:
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
         self.cmp_groups = cmp_groups or None
-        self.validated = False
         self.group_a, self.group_b = None, None
 
         if mascot_name:
@@ -115,24 +108,22 @@ class DataSet:
                 pick_best_ptm=pick_best_ptm,
             )
 
-        if psms is None:
-            psms = pd.DataFrame(
-                columns=[
-                    "Proteins",
-                    "Sequence",
-                    "Modifications",
-                    "Validated",
-                    "First Scan",
-                    "Confidence Level",
-                    "Ion Score",
-                    "q-value",
-                    "Isolation Interference",
-                    "Scan Paths",
-                    "Missed Cleavages",
-                ] + list(self.channels.values()),
-            )
+        self.psms = pd.DataFrame(
+            columns=[
+                "Proteins",
+                "Sequence",
+                "Modifications",
+                "Validated",
+                "First Scan",
+                "Confidence Level",
+                "Ion Score",
+                "q-value",
+                "Isolation Interference",
+                "Scan Paths",
+                "Missed Cleavages",
+            ] + list(self.channels.values()),
+        )
 
-        self.psms = psms
         self.name = name
         self.levels = lvls
         self.mascot_name = mascot_name
@@ -154,7 +145,10 @@ class DataSet:
                 filter_bad["q"] = 0.05
 
         if filter_bad:
-            LOGGER.info("Filtering peptides that Discoverer marked as bad.")
+            LOGGER.info(
+                "Filtering peptides using the following parameters: {}"
+                .format(filter_bad)
+            )
             self.filter(
                 filter_bad,
                 inplace=True,
@@ -170,11 +164,7 @@ class DataSet:
 
         if merge_duplicates:
             LOGGER.info("Merging duplicate peptide hits together.")
-            self._merge_duplicates(inplace=True)
-
-        if merge_subsets:
-            LOGGER.info("Merging peptide hits that are subsets together.")
-            self._merge_subsequences(inplace=True)
+            self.merge_duplicates(inplace=True)
 
         if cmp_groups:
             self.norm_cmp_groups(cmp_groups, inplace=True)
@@ -311,7 +301,7 @@ class DataSet:
 
         return new
 
-    def _merge_subsequences(self, inplace=False):
+    def merge_subsequences(self, inplace=False):
         """
         Merges petides that are a subsequence of another peptide.
 
@@ -587,6 +577,9 @@ class DataSet:
 
     def add_peptide(self, insert):
         defaults = {
+            "Proteins": protein.Proteins(),
+            "Sequence": sequence.Sequence(),
+            "Modifications": modification.Modifications(),
             "Validated": False,
             "First Scan": set(),
             "Scan Paths": set(),
@@ -945,6 +938,36 @@ class DataSet:
             self.psms["p-value"] = np.nan
 
     def norm_cmp_groups(self, cmp_groups, inplace=False):
+        """
+        Normalize between groups in a list. This can be used to compare data
+        sets that have comparable control groups.
+
+        Channnels within each list of groups are normalized to the mean of the
+        group's channels.
+
+        Parameters
+        ----------
+        cmp_gorups : list of list of str
+            List of groups to be normalized to each other.
+            i.e. [["CK-p25 Hip", "CK Hip"], ["CK-p25 Cortex", "CK Cortex"]]
+        inplace : bool, optional
+            Modify the data set in place, otherwise create a copy and return
+            the new object.
+
+        Examples
+        --------
+        >>> channels = ["a", "b", "c", "d"]
+        >>> groups = {i: [i] for i in channels}
+        >>> ds = data_sets.DataSet(channels=channels, groups=groups)
+        >>> ds.add_peptide({'a': 1000, 'b': 500, 'c': 100, 'd': 25})
+        >>> ds = ds.norm_cmp_groups([["a", "b"], ["c", "d"]])
+        >>> {i: vals.psms.iloc[0][i] for i in channels}
+        {"a": 1, "b": 0.5, "c": 1, "d": .25}
+
+        Returns
+        -------
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        """
         new = self
 
         if not inplace:
@@ -1118,7 +1141,7 @@ def merge_data(
         new.psms = pd.concat([new.psms, data.psms])
 
         if merge_duplicates:
-            new._merge_duplicates(inplace=True)
+            new.merge_duplicates(inplace=True)
 
     if merge_subsets:
         new._merge_subsequences(inplace=True)

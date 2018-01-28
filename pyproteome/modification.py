@@ -19,7 +19,7 @@ class Modifications:
     mods : list of :class:`Modification<pyproteome.modification.Modification>`
     """
 
-    def __init__(self, mods):
+    def __init__(self, mods=None):
         """
         Initialize from a list of modifications.
 
@@ -27,7 +27,7 @@ class Modifications:
         ----------
         mods : list of :class:`Modification<pyproteome.modification.Modification>`
         """
-        self.mods = mods
+        self.mods = mods or []
 
     def __iter__(self):
         return iter(self.mods)
