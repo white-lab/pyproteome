@@ -240,7 +240,21 @@ class DataSet:
 
         self.psms = self.psms[~reject_mask].reset_index(drop=True)
 
-    def _merge_duplicates(self, inplace=False):
+    def merge_duplicates(self, inplace=False):
+        """
+        Merge together all duplicate peptides. New quantification values are
+        calculated from a weighted sum of each channel's values.
+
+        Parameters
+        ----------
+        inplace : bool, optional
+            Modify the data set in place, otherwise create a copy and return
+            the new object.
+
+        Returns
+        -------
+        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        """
         new = self
 
         if not inplace:
