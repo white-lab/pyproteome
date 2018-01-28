@@ -157,7 +157,7 @@ def _get_proteins(df, cursor):
     df["Proteins"] = df.index.map(
         lambda peptide_id:
         protein.Proteins(
-            proteins=[
+            proteins=tuple(
                 protein.Protein(
                     accession=accession,
                     gene=gene,
@@ -170,7 +170,7 @@ def _get_proteins(df, cursor):
                     sequences[peptide_id],
                     descriptions[peptide_id],
                 )
-            ]
+            )
         )
     )
 
@@ -255,7 +255,7 @@ def _get_modifications(df, cursor):
     df["Modifications"] = df.index.map(
         lambda peptide_id:
         modification.Modifications(
-            mods=(
+            mods=tuple(
                 term_mod_dict[peptide_id] +
                 aa_mod_dict[peptide_id]
             ),

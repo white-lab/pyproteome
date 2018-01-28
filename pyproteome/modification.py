@@ -27,7 +27,7 @@ class Modifications:
         ----------
         mods : list of :class:`Modification<pyproteome.modification.Modification>`
         """
-        self.mods = mods or []
+        self.mods = tuple(mods) or ()
 
     def __iter__(self):
         return iter(self.mods)
@@ -55,6 +55,28 @@ class Modifications:
 
         Only keeps modifications with a given letter, mod_type, or both.
 
+        Examples
+        --------
+        >>> from pyproteome.sequence import Sequence
+        >>> from pyproteome.modification import Modification, Modifications
+        >>> s = Sequence(pep_seq="AVYSEIK")
+        >>> m = Modifications(
+        ...     [
+        ...         Modification(mod_type="TMT", nterm=True, sequence=s),
+        ...         Modification(mod_type="Phospho", rel_pos=2, sequence=s),
+        ...         Modification(mod_type="Phospho", rel_pos=3, sequence=s),
+        ...         Modification(mod_type="TMT", rel_pos=6, sequence=s),
+        ...     ]
+        ... )
+        >>> m.get_mods("TMT")
+        ["TMT A0", "TMT K6"]
+        >>> m.get_mods("Phospho")
+        ["p Y2", "p S3"]
+        >>> m.get_mods("Y")
+        ["p Y2"]
+        >>> m.get_mods([("Y", "Phospho")])
+        ["p Y2"]
+
         Parameters
         ----------
         letter_mod_types : list of tuple of str, str
@@ -66,7 +88,7 @@ class Modifications:
         any_letter, any_mod, letter_mod = \
             _extract_letter_mods(letter_mod_types)
         return Modifications(
-            [
+            tuple(
                 mod
                 for mod in self.mods
                 if allowed_mod_type(
@@ -75,7 +97,7 @@ class Modifications:
                     any_mod=any_mod,
                     letter_mod=letter_mod,
                 )
-            ]
+            )
         )
 
     def __hash__(self):
@@ -116,7 +138,7 @@ class Modifications:
             return ", ".join(
                 "{}{}{}{}".format(
                     mod.display_mod_type(),
-                    mod.letter.upper(),
+                    mod.letter,
                     1 + (mod.abs_pos[i] if absolute else mod.rel_pos),
                     "" if mod.exact[i] else "*"
                 )
@@ -146,20 +168,19 @@ class Modification:
     abs_pos : int
     """
 
-    def __init__(self, rel_pos, mod_type, sequence, nterm=False, cterm=False):
+    def __init__(
+        self,
+        rel_pos=0,
+        mod_type="",
+        sequence=None,
+        nterm=False,
+        cterm=False,
+    ):
         self.rel_pos = rel_pos
         self.mod_type = mod_type
         self.nterm = nterm
         self.cterm = cterm
-        self.letter = sequence.pep_seq[rel_pos]
-        self.abs_pos = [
-            rel_pos + match.rel_pos
-            for match in sequence.protein_matches
-        ]
-        self.exact = [
-            match.exact
-            for match in sequence.protein_matches
-        ]
+        self.sequence = sequence
 
     def display_mod_type(self):
         """
@@ -184,9 +205,9 @@ class Modification:
             self.mod_type,
             self.nterm,
             self.cterm,
-            self.letter.lower(),
-            tuple(self.abs_pos),
-            tuple(self.exact),
+            self.letter,
+            self.abs_pos,
+            self.exact,
         )
 
     def __hash__(self):
@@ -197,6 +218,33 @@ class Modification:
             raise TypeError()
 
         return self.to_tuple() == other.to_tuple()
+
+    @property
+    def letter(self):
+        if self.sequence is None:
+            return ""
+
+        return self.sequence.pep_seq[self.rel_pos].upper()
+
+    @property
+    def abs_pos(self):
+        if self.sequence is None:
+            return ()
+
+        return tuple(
+            self.rel_pos + match.rel_pos
+            for match in self.sequence.protein_matches
+        )
+
+    @property
+    def exact(self):
+        if self.sequence is None:
+            return ()
+
+        return tuple(
+            match.exact
+            for match in self.sequence.protein_matches
+        )
 
 
 def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
@@ -215,13 +263,13 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
     return (
         (
             any_letter is None or
-            mod.letter.upper() in any_mod
+            mod.letter in any_mod
         ) or (
             any_mod is None or
             mod.mod_type in any_letter
         ) or (
             letter_mod is None or
-            (mod.letter.upper(), mod.mod_type) in letter_mod
+            (mod.letter, mod.mod_type) in letter_mod
         )
     )
 
@@ -230,11 +278,19 @@ def _extract_letter_mods(letter_mod_types=None):
     if letter_mod_types is None:
         return None, None, None
 
+    if isinstance(letter_mod_types, str):
+        letter_mod_types = (letter_mod_types,)
+
     any_letter = set()
     any_mod = set()
     letter_mod = set()
 
-    for letter, mod_type in letter_mod_types:
+    for elem in letter_mod_types:
+        if isinstance(elem, tuple):
+            letter, mod_type = elem
+        else:
+            letter, mod_type = elem, elem
+
         if letter is None and mod_type is None:
             raise Exception("Need at least one letter or mod type not None")
         elif letter is None and mod_type is not None:
@@ -245,26 +301,3 @@ def _extract_letter_mods(letter_mod_types=None):
             letter_mod.add((letter.upper(), mod_type))
 
     return any_letter, any_mod, letter_mod
-
-
-def filter_mod_types(psms, letter_mod_types=None):
-    """
-    Filter a list of psms sequences with a given modification type.
-
-    Parameters
-    ----------
-    psms : :class:`pandas.DataFrame`
-    letter_mod_types : list of tuple of str or None, str or None, optional
-
-    Returns
-    -------
-    :class:`pandas.DataFrame`
-    """
-    if psms.shape[0] < 1:
-        return psms["Modifications"].apply(
-            lambda x: True
-        )
-
-    return psms["Modifications"].apply(
-        lambda x: bool(x.get_mods(letter_mod_types).mods)
-    )

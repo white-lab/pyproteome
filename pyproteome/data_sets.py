@@ -27,6 +27,12 @@ from .motifs import motif as pymotif
 
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
+DEFAULT_FILTER_BAD = dict(
+    ion_score=15,
+    isolation=50,
+    median_quant=1000,
+    q=0.05,
+)
 
 
 class DataSet:
@@ -136,13 +142,10 @@ class DataSet:
             self.dropna(inplace=True)
 
         if filter_bad is True:
-            filter_bad = dict(
-                ion_score=15,
-                isolation=50,
-                median_quant=1000,
-            )
-            if (~pd.isnull(self.psms["q-value"]).any()):
-                filter_bad["q"] = 0.05
+            filter_bad = DEFAULT_FILTER_BAD.copy()
+
+            if pd.isnull(self.psms["q-value"]).all() and "q" in filter_bad:
+                del filter_bad["q"]
 
         if filter_bad:
             LOGGER.info(
@@ -759,7 +762,9 @@ class DataSet:
             psms["Sequence"] == val,
 
             "mod_types": lambda val, psms:
-            modification.filter_mod_types(psms, val),
+            psms["Modifications"].apply(
+                lambda x: bool(x.get_mods(val).mods)
+            ),
 
             "only_validated": lambda val, psms:
 

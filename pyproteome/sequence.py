@@ -53,9 +53,6 @@ class Sequence:
     pep_seq : str
     protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
     modifications : :class:`Modifications<pyproteome.modification.Modifications>`
-    alt_hits : list of :class:`Sequence<pyproteome.sequence.Sequence>`
-        This attribute indicates which peptides were identified as
-        non-ambiguous subsequences of this peptide.
     """
 
     def __init__(
@@ -72,9 +69,8 @@ class Sequence:
         modifications : :class:`Modifications<pyproteome.modification.Modifications>`, optional
         """
         self.pep_seq = pep_seq
-        self.protein_matches = protein_matches or []
+        self.protein_matches = tuple(protein_matches) or ()
         self.modifications = modifications
-        self.alt_hits = []
 
     def to_tuple(self):
         return (

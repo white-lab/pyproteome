@@ -12,7 +12,7 @@ from collections import OrderedDict
 class NormalizationTest(TestCase):
     def setUp(self):
         self.prots = protein.Proteins(
-            proteins=[
+            proteins=(
                 protein.Protein(
                     accession="P03995",
                     gene="Gfap",
@@ -28,8 +28,8 @@ class NormalizationTest(TestCase):
                         "NRITIPVQTFSNLQIRETSLDTKSVSEGHLKRNIVVKTVEMRDGEVIKDSKQE"
                         "HKDVVM"
                     ),
-                )
-            ],
+                ),
+            ),
         )
         self.seq = sequence.extract_sequence(self.prots, "QEADEATLAR")
 

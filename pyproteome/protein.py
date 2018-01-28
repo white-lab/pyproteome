@@ -17,17 +17,18 @@ class Proteins:
     Attributes
     ----------
     proteins : list of :class:`Protein<pyproteome.protein.Protein>`
+        List of proteins to which a peptide sequence is mapped.
     """
 
-    def __init__(self, proteins):
-        self.proteins = proteins
+    def __init__(self, proteins=None):
+        self.proteins = tuple(proteins) or ()
 
     def __iter__(self):
         return iter(self.proteins)
 
     def __hash__(self):
         return hash(
-            tuple(self.proteins),
+            self.proteins,
         )
 
     def __eq__(self, other):
@@ -53,15 +54,15 @@ class Proteins:
 
     @property
     def accessions(self):
-        return [i.accession for i in self.proteins]
+        return tuple(i.accession for i in self.proteins)
 
     @property
     def descriptions(self):
-        return [i.description for i in self.proteins]
+        return tuple(i.description for i in self.proteins)
 
     @property
     def genes(self):
-        return [i.gene for i in self.proteins]
+        return tuple(i.gene for i in self.proteins)
 
 
 class Protein:
@@ -71,9 +72,14 @@ class Protein:
     Attributes
     ----------
     accession : str
+        The UniProt accession (i.e. "P40763")
     gene : str
+        The UniProt gene name (i.e. "STAT3")
     description : str
+        A brief description of the protein (i.e. "Signal transducer and
+        activator of transcription 3")
     full_sequence : str
+        The full sequence of the protein.
     """
 
     def __init__(
