@@ -1188,8 +1188,9 @@ def merge_data(
             grp
             for i in data_sets
             for grp in i.cmp_groups
+            if i.cmp_groups is not None
         )
-    )
+    ) or None
 
     new.update_group_changes()
 
