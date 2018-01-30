@@ -263,10 +263,10 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
     return (
         (
             any_letter is None or
-            mod.letter in any_mod
+            mod.letter in any_letter
         ) or (
             any_mod is None or
-            mod.mod_type in any_letter
+            mod.mod_type in any_mod
         ) or (
             letter_mod is None or
             (mod.letter, mod.mod_type) in letter_mod
@@ -286,10 +286,15 @@ def _extract_letter_mods(letter_mod_types=None):
     letter_mod = set()
 
     for elem in letter_mod_types:
-        if isinstance(elem, tuple):
-            letter, mod_type = elem
-        else:
-            letter, mod_type = elem, elem
+        if not isinstance(elem, tuple):
+            if len(elem) == 1:
+                any_letter.add(elem.upper())
+            else:
+                any_mod.add(elem)
+
+            continue
+
+        letter, mod_type = elem
 
         if letter is None and mod_type is None:
             raise Exception("Need at least one letter or mod type not None")
