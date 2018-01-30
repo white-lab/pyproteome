@@ -1187,8 +1187,8 @@ def merge_data(
         set(
             grp
             for i in data_sets
-            for grp in i.cmp_groups
             if i.cmp_groups is not None
+            for grp in i.cmp_groups
         )
     ) or None
 
