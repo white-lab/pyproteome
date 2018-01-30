@@ -58,7 +58,7 @@ class GenerateNMersTest(TestCase):
     def setUp(self):
         self.sequence = sequence.Sequence(
             pep_seq="GEPNVsyICSR",
-            protein_matches=[
+            protein_matches=(
                 sequence.ProteinMatch(
                     protein=protein.Protein(
                         accession="Q9WV60",
@@ -79,10 +79,10 @@ class GenerateNMersTest(TestCase):
                     rel_pos=209,
                     exact=True,
                 ),
-            ],
+            ),
         )
         self.sequence.modifications = modification.Modifications(
-            [
+            (
                 # S215-p
                 modification.Modification(
                     rel_pos=5,
@@ -95,14 +95,14 @@ class GenerateNMersTest(TestCase):
                     mod_type="Phospho",
                     sequence=self.sequence,
                 ),
-            ],
+            ),
         )
 
     def test_n_mers(self):
         nmers = list(
             motif.generate_n_mers(
-                [self.sequence],
-                letter_mod_types=[(None, "Phospho")]
+                self.sequence,
+                letter_mod_types=[(None, "Phospho")],
             )
         )
 
@@ -121,7 +121,7 @@ class GenerateNMersTest(TestCase):
 
         nmers_no_filter = list(
             motif.generate_n_mers(
-                [self.sequence],
+                self.sequence,
             )
         )
         self.assertEqual(nmers, nmers_no_filter)
@@ -135,7 +135,7 @@ class MotifEnrichmentTest(TestCase):
     def setUp(self):
         self.sequence = sequence.Sequence(
             pep_seq="GEPNVsyICSR",
-            protein_matches=[
+            protein_matches=(
                 sequence.ProteinMatch(
                     protein=protein.Protein(
                         accession="Q9WV60",
@@ -156,10 +156,10 @@ class MotifEnrichmentTest(TestCase):
                     rel_pos=209,
                     exact=True,
                 ),
-            ],
+            ),
         )
         self.sequence.modifications = modification.Modifications(
-            [
+            (
                 # S215-p
                 modification.Modification(
                     rel_pos=5,
@@ -172,9 +172,9 @@ class MotifEnrichmentTest(TestCase):
                     mod_type="Phospho",
                     sequence=self.sequence,
                 ),
-            ],
+            ),
         )
-        self.sequences = list(motif.generate_n_mers([self.sequence]))
+        self.sequences = list(motif.generate_n_mers(self.sequence))
         self.foreground = self.sequences
         self.background = self.sequences
 

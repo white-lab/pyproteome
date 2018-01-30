@@ -299,9 +299,9 @@ def _extract_letter_mods(letter_mod_types=None):
         if letter is None and mod_type is None:
             raise Exception("Need at least one letter or mod type not None")
         elif letter is None and mod_type is not None:
-            any_letter.add(mod_type)
+            any_mod.add(mod_type)
         elif letter is not None and mod_type is None:
-            any_mod.add(letter.upper())
+            any_letter.add(letter.upper())
         else:
             letter_mod.add((letter.upper(), mod_type))
 
