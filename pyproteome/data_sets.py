@@ -1003,7 +1003,9 @@ class DataSet:
         if self.cmp_groups:
             raise Exception("cmp_groups normalization already set")
 
-        self.cmp_groups = cmp_groups
+        self.cmp_groups = [
+            tuple(i) for i in cmp_groups
+        ]
 
         if len(cmp_groups) < 2:
             return new
@@ -1180,6 +1182,13 @@ def merge_data(
     new.group_b = next(
         (i.group_b for i in data_sets if i.group_b is not None),
         None,
+    )
+    new.cmp_groups = sorted(
+        set(
+            grp
+            for i in data_sets
+            for grp in i.cmp_groups
+        )
     )
 
     new.update_group_changes()
