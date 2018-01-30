@@ -111,12 +111,12 @@ class Modifications:
         if not isinstance(other, Modifications):
             raise TypeError()
 
-        return len(self.mods) == len(other.mods) and all(
+        self_mods = sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple())
+        o_mods = sorted(other.skip_labels_iter(), key=lambda x: x.to_tuple())
+
+        return len(self_mods) == len(o_mods) and all(
             i == j
-            for i, j in zip(
-                sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple()),
-                sorted(other.skip_labels_iter(), key=lambda x: x.to_tuple()),
-            )
+            for i, j in zip(self_mods, o_mods)
         )
 
     def __repr__(self, absolute=True, skip_labels=True):
