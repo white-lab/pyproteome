@@ -213,7 +213,7 @@ def plot_group(
         ]
 
         errs = [
-            i.std()
+            i.std() if len(i) > 1 else 0
             for vals in values
             for i in vals
         ]
@@ -308,6 +308,9 @@ def plot_group(
                 label_b in group
                 for group in cmp_groups
             ):
+                continue
+
+            if values_a.shape[0] < 2 or values_b.shape[0] < 2:
                 continue
 
             pval = ttest_ind(
