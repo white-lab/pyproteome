@@ -578,6 +578,9 @@ class DataSet:
 
         columns = list(new.channels.values())
 
+        if how is None and thresh is None:
+            how = "any"
+
         if groups is not None:
             columns = [
                 new.channels[col]
