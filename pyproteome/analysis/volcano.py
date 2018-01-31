@@ -293,9 +293,9 @@ def volcano_plot(
     if show_xlabel:
         ax.set_xlabel(
             "Fold Change {} (n={}) / {} (n={})".format(
-                label_a,
+                label_a[:50] + ("..." if len(label_a) > 50 else ""),
                 len(channels_a),
-                label_b,
+                label_b[:50] + ("..." if len(label_b) > 50 else ""),
                 len(channels_b),
             ),
             fontsize=20,
