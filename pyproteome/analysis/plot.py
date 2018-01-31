@@ -132,7 +132,7 @@ def plot_group(
     cmp_groups=None,
     title=None,
     folder_name=None,
-    figsize=(6, 4),
+    figsize=(8, 4),
 ):
     """
     Plot the levels of a sequence across each group.
@@ -149,7 +149,7 @@ def plot_group(
     )
 
     if cmp_groups is None:
-        cmp_groups = [list(data.groups.keys())]
+        cmp_groups = data.cmp_groups or [list(data.groups.keys())]
 
     if f:
         data = data.filter(f)
@@ -352,23 +352,24 @@ def plot_group(
 
                 offset += 1
 
-            fig.savefig(
-                os.path.join(
-                    folder_name,
-                    re.sub(
-                        "[?/]",
-                        "_",
-                        "{} - {} - groups.png".format(
-                            "+".join(row["Proteins"].genes)[:50],
-                            row["Sequence"],
-                        ),
+        fig.savefig(
+            os.path.join(
+                folder_name,
+                re.sub(
+                    "[?/]",
+                    "_",
+                    "{} - {} - groups.png".format(
+                        "+".join(row["Proteins"].genes)[:50],
+                        row["Sequence"],
                     ),
                 ),
-                bbox_inches="tight",
-                dpi=pyp.DEFAULT_DPI,
-                transparent=True,
-            )
-            figures.append((fig, ax))
+            ),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
+        )
+
+        figures.append((fig, ax))
 
     return figures
 
@@ -397,6 +398,7 @@ def plot_all(
             figsize=figsize,
             folder_name=folder_name,
         )
+        print(figures)
 
     if between:
         figures += plot_group(
@@ -405,6 +407,7 @@ def plot_all(
             cmp_groups=cmp_groups,
             folder_name=folder_name,
         )
+        print(figures)
 
     return figures
 

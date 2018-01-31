@@ -1000,15 +1000,15 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        if self.cmp_groups:
+        if new.cmp_groups:
             raise Exception("cmp_groups normalization already set")
 
-        self.cmp_groups = [
+        new.cmp_groups = [
             tuple(i) for i in cmp_groups
         ]
 
-        if len(cmp_groups) < 2:
-            return new
+        # if len(cmp_groups) < 2:
+        #     return new
 
         assert not any(
             group in [i for o_groups in cmp_groups[ind + 1:] for i in o_groups]
