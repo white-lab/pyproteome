@@ -398,7 +398,6 @@ def plot_all(
             figsize=figsize,
             folder_name=folder_name,
         )
-        print(figures)
 
     if between:
         figures += plot_group(
@@ -407,7 +406,6 @@ def plot_all(
             cmp_groups=cmp_groups,
             folder_name=folder_name,
         )
-        print(figures)
 
     return figures
 
