@@ -82,6 +82,7 @@ class DataSet:
         pick_best_ptm=True,
         merge_duplicates=True,
         filter_bad=True,
+        log_stats=True,
     ):
         """
         Initializes a data set.
@@ -140,7 +141,9 @@ class DataSet:
         self.sets = 1
 
         if dropna:
-            LOGGER.info("Dropping channels with NaN values.")
+            LOGGER.info(
+                "{}: Dropping channels with NaN values.".format(self.name)
+            )
             self.dropna(inplace=True)
 
         if filter_bad is True:
@@ -151,8 +154,8 @@ class DataSet:
 
         if filter_bad:
             LOGGER.info(
-                "Filtering peptides using the following parameters: {}"
-                .format(filter_bad)
+                "{}: Filtering peptides using the following parameters: {}"
+                .format(self.name, filter_bad)
             )
             self.filter(
                 filter_bad,
@@ -164,17 +167,26 @@ class DataSet:
             os.path.splitext(mascot_name)[1] != ".msf" or
             any(i for i in lst)
         ):
-            LOGGER.info("Picking peptides with best ion score for each scan.")
+            LOGGER.info(
+                "{}: Picking peptides with best ion score for each scan."
+                .format(self.name)
+            )
             self._pick_best_ptm()
 
         if merge_duplicates:
-            LOGGER.info("Merging duplicate peptide hits together.")
+            LOGGER.info(
+                "{}: Merging duplicate peptide hits together."
+                .format(self.name)
+            )
             self.merge_duplicates(inplace=True)
 
         if cmp_groups:
             self.norm_cmp_groups(cmp_groups, inplace=True)
 
         self.update_group_changes()
+
+        if log_stats:
+            self.log_stats()
 
     def copy(self):
         """
@@ -280,7 +292,9 @@ class DataSet:
         def _first(x):
             if not all(i == x.values[0] for i in x.values):
                 LOGGER.warning(
-                    "Mismatch between peptide data: '{}' not in {}".format(
+                    "{}: Mismatch between peptide data: '{}' not in {}"
+                    .format(
+                        new.name,
                         x.values[0],
                         [str(i) for i in x.values[1:]],
                     )
@@ -752,7 +766,7 @@ class DataSet:
             ),
 
             "fold": lambda val, psms:
-            ~psms["Fold Change"].isnull() &
+            (~psms["Fold Change"].isnull()) &
             (
                 psms["Fold Change"].apply(
                     lambda x:
@@ -821,6 +835,10 @@ class DataSet:
                     new.name = rename
 
                 for key, val in f.items():
+                    # Skip filtering if psms is empty (fixes pandas type error)
+                    if new.psms.shape[0] < 1:
+                        continue
+
                     mask = fns[key](val, new.psms)
 
                     if inverse:
@@ -1066,6 +1084,40 @@ class DataSet:
             )
         )
 
+    def log_stats(self):
+        data_p = self.filter(mod_types=[(None, "Phospho")])
+        data_pst = self.filter(mod_types=[("S", "Phospho"), ("T", "Phospho")])
+        data_py = self.filter(mod_types=[("Y", "Phospho")])
+
+        LOGGER.info(
+            (
+                "{}: {} pY - {} pST ({:.0%} phospho specificity) -"
+                " {} total peptides - {} unique proteins"
+            ).format(
+                self.name,
+                len(data_py.psms),
+                len(data_pst.psms),
+                len(data_p.psms) / max([len(self.psms), 1]),
+                len(self.psms),
+                len(self.genes),
+            )
+        )
+
+        per_lab = self.filter(
+            fn=lambda x:
+            any(
+                i in j.mod_type
+                for j in x["Modifications"].mods
+                for i in modification.LABEL_NAMES
+            )
+        ).psms.shape[0] / max([self.psms.shape[0], 1])
+        mmc = self.psms["Missed Cleavages"].mean()
+
+        LOGGER.info(
+            "{}: {:.0%} labeled - {:.1f} mean missed cleavages"
+            .format(self.name, per_lab, mmc)
+        )
+
     @property
     def genes(self):
         return sorted(
@@ -1127,6 +1179,7 @@ def merge_data(
     """
     new = DataSet(
         name=name,
+        log_stats=False,
     )
 
     if len(data_sets) < 1:
@@ -1200,6 +1253,8 @@ def merge_data(
 
     if name:
         new.name = name
+
+    new.log_stats()
 
     return new
 
