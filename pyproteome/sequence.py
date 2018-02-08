@@ -5,7 +5,7 @@ This module provides functionality for manipulating sequences.
 # Built-ins
 import logging
 
-from . import protein, utils
+from . import modification, protein, utils
 
 
 LOGGER = logging.getLogger("pyproteome.sequence")
@@ -194,4 +194,30 @@ def extract_sequence(proteins, sequence_string):
     return Sequence(
         pep_seq=sequence_string,
         protein_matches=prot_matches,
+    )
+
+
+def is_labeled(seq):
+    return any(
+        i in j.mod_type
+        for j in seq.modifications.mods
+        for i in modification.LABEL_NAMES
+    )
+
+
+def is_underlabeled(seq):
+    if not is_labeled(seq):
+        return False
+
+    # XXX: Hardcodes label modification locations, not extendable to
+    # new quantification tags without changes to this function
+    return not any(
+        i in j.mod_type and j.nterm
+        for j in seq.modifications.mods
+        for i in modification.LABEL_NAMES
+    ) or seq.pep_seq.count("K") != sum(
+        i in j.mod_type
+        for j in seq.modifications.mods
+        if j.letter == "K" and not j.nterm
+        for i in modification.LABEL_NAMES
     )

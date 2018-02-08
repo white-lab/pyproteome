@@ -1103,19 +1103,26 @@ class DataSet:
             )
         )
 
-        per_lab = self.filter(
+        labeled = self.filter(
             fn=lambda x:
-            any(
-                i in j.mod_type
-                for j in x["Modifications"].mods
-                for i in modification.LABEL_NAMES
-            )
-        ).psms.shape[0] / max([self.psms.shape[0], 1])
+            sequence.is_labeled(x["Sequence"])
+        ).psms.shape[0]
+
+        underlabeled = self.filter(
+            fn=lambda x:
+            sequence.is_underlabeled(x["Sequence"])
+        ).psms.shape[0]
+
+        per_lab = labeled / max([self.psms.shape[0], 1])
+        per_under_lab = underlabeled / max([self.psms.shape[0], 1])
+
         mmc = self.psms["Missed Cleavages"].mean()
 
         LOGGER.info(
-            "{}: {:.0%} labeled - {:.1f} mean missed cleavages"
-            .format(self.name, per_lab, mmc)
+            (
+                "{}: {:.0%} labeled - {:.0%} underlabeled - "
+                "{:.1f} mean missed cleavages"
+            ).format(self.name, per_lab, per_under_lab, mmc)
         )
 
     @property
