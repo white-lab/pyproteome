@@ -290,11 +290,15 @@ def _get_quantifications(df, cursor, tag_names):
     mapping = {
         (peptide_id, channel_id): height
         for peptide_id, channel_id, height in vals
+        if peptide_id in df.index
     }
 
     # Convert very low ion counts to nan
     for key, val in mapping.items():
-        if val <= 1:
+        if (
+            val <= 1 or
+            not sequence.is_labeled(df.loc[key[0]]["Sequence"])
+        ):
             mapping[key] = np.nan
 
     channel_ids = sorted(set(i[1] for i in mapping.keys()))
