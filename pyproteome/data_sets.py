@@ -389,36 +389,47 @@ class DataSet:
         """
         return merge_data([self, other])
 
-    def rename_channels(self):
+    def rename_channels(self, inplace=False):
         """
         Rename all channels from quantification channel name to sample name.
         (i.e. "126" => "Mouse 1337")
+
+        Parameters
+        ----------
+        inplace : bool, optional
         """
-        for new_channel, old_channel in self.channels.items():
+        new = self
+
+        if not inplace:
+            new = new.copy()
+
+        for new_channel, old_channel in new.channels.items():
             if new_channel != old_channel:
                 new_weight = "{}_weight".format(new_channel)
 
                 if (
-                    new_channel in self.psms.columns or
-                    new_weight in self.psms.columns
+                    new_channel in new.psms.columns or
+                    new_weight in new.psms.columns
                 ):
                     raise Exception(
                         "Channel {} already exists, cannot rename to it"
                         .format(new_channel)
                     )
 
-                self.psms[new_channel] = self.psms[old_channel]
-                del self.psms[old_channel]
+                new.psms[new_channel] = new.psms[old_channel]
+                del new.psms[old_channel]
 
                 old_weight = "{}_weight".format(old_channel)
 
-                if old_weight in self.psms.columns:
-                    self.psms[new_weight] = self.psms[old_weight]
-                    del self.psms[old_weight]
+                if old_weight in new.psms.columns:
+                    new.psms[new_weight] = new.psms[old_weight]
+                    del new.psms[old_weight]
 
-        self.channels = OrderedDict([
-            (key, key) for key in self.channels.keys()
+        new.channels = OrderedDict([
+            (key, key) for key in new.channels.keys()
         ])
+
+        return new
 
     def inter_normalize(self, norm_channels=None, other=None, inplace=False):
         """
@@ -445,7 +456,7 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        new.rename_channels()
+        new = new.rename_channels(inplace=inplace)
 
         if norm_channels is None:
             norm_channels = set(new.channels).intersection(other.channels)
@@ -1200,7 +1211,9 @@ def merge_data(
     #     )
 
     for index, data in enumerate(data_sets):
-        # Update new.groups
+        data = data.rename_channels()
+
+        # Update new.groupss
         for group, samples in data.groups.items():
             if group not in new.groups:
                 new.groups[group] = samples

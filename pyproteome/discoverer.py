@@ -4,6 +4,7 @@ Discoverer.
 """
 
 from collections import defaultdict
+from datetime import datetime
 import logging
 import os
 import re
@@ -382,6 +383,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
             os.path.basename(msf_path),
         )
     )
+    start = datetime.now()
 
     with sqlite3.connect(msf_path) as conn:
         cursor = conn.cursor()
@@ -425,5 +427,13 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     df["Scan Paths"] = basename
 
     df.reset_index(inplace=True, drop=True)
+
+    LOGGER.info(
+        "Loaded {} peptides in {:.d} hr:min:sec"
+        .format(
+            df.shape[0],
+            str(datetime.now() - start).split('.')[0],
+        )
+    )
 
     return df
