@@ -150,7 +150,7 @@ def correlate_data_sets(
 def spearmanr_nan(a, b, min_length=5):
     mask = ~(pd.isnull(a) | pd.isnull(b))
 
-    if mask.count() < min_length:
+    if mask.sum() < min_length:
         return spearmanr(np.nan, np.nan)
 
     return spearmanr(a[mask], b[mask])

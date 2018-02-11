@@ -429,7 +429,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     df.reset_index(inplace=True, drop=True)
 
     LOGGER.info(
-        "Loaded {} peptides in {:.d} hr:min:sec"
+        "Loaded {} peptides in {} hr:min:sec"
         .format(
             df.shape[0],
             str(datetime.now() - start).split('.')[0],
