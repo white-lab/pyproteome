@@ -152,6 +152,9 @@ class DataSet:
             if pd.isnull(self.psms["q-value"]).all() and "q" in filter_bad:
                 del filter_bad["q"]
 
+        if log_stats:
+            self.log_stats()
+
         if filter_bad:
             LOGGER.info(
                 "{}: Filtering peptides using the following parameters: {}"
