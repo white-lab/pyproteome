@@ -5,6 +5,8 @@ Wraps modifications in a structured class and allows filtering of
 modifications by amino acid and modification type.
 """
 
+import copy
+
 LABEL_NAMES = ["TMT", "ITRAQ"]
 
 
@@ -34,6 +36,15 @@ class Modifications:
 
     def __len__(self):
         return len(self.mods)
+
+    def copy(self):
+        """
+        Creates a copy of a set of modifications. Does not copy the underlying
+        sequence object.
+        """
+        new = copy.copy(self)
+        new.mods = tuple(i.copy() for i in new.mods)
+        return new
 
     def skip_labels_iter(self):
         """
@@ -219,6 +230,14 @@ class Modification:
 
         return self.to_tuple() == other.to_tuple()
 
+    def copy(self):
+        """
+        Creates a copy of a modification. Does not copy the underlying sequence
+        object.
+        """
+        new = copy.copy(self)
+        return new
+
     @property
     def letter(self):
         if self.sequence is None:
@@ -244,6 +263,15 @@ class Modification:
         return tuple(
             match.exact
             for match in self.sequence.protein_matches
+        )
+
+    def __repr__(self):
+        return (
+            "<pyproteome.modification.Modification {}{}{}>"
+        ).format(
+            self.display_mod_type(),
+            self.letter,
+            self.rel_pos + 1,
         )
 
 
