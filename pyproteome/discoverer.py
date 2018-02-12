@@ -21,6 +21,7 @@ from . import (
 
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
+RE_PSP = re.compile("(\w+)\((\d+)\): ([\d\.]+)")
 RE_GENE = re.compile("^>.* GN=(.+) PE=")
 RE_GENE_BACKUP = re.compile("^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) ")
 RE_DESCRIPTION = re.compile(
@@ -257,8 +258,10 @@ def _get_modifications(df, cursor):
         lambda peptide_id:
         modification.Modifications(
             mods=tuple(
-                term_mod_dict[peptide_id] +
-                aa_mod_dict[peptide_id]
+                sorted(
+                    term_mod_dict[peptide_id] + aa_mod_dict[peptide_id],
+                    key=lambda x: (x.rel_pos, x.nterm, x.cterm),
+                )
             ),
         )
     )
@@ -357,6 +360,110 @@ def _get_q_values(df, cursor):
     return df
 
 
+def _is_pmod(mod):
+    return (
+        not mod.nterm and
+        not mod.cterm and
+        mod.mod_type in ["Phospho"]
+    )
+
+
+def _reassign_mods(mods, psp_val):
+    reassigned = False
+
+    psp_val = [
+        RE_PSP.match(i.strip()).groups()
+        for i in psp_val.split(";")
+    ]
+    psp_val = [
+        (i[0], int(i[1]), float(i[2]))
+        for i in psp_val
+    ]
+
+    o_mods = [i for i in mods if not _is_pmod(i)]
+    p_mods = [i for i in mods if _is_pmod(i)]
+    psp_val_f = [i for i in psp_val if i[2] > 50]
+
+    if len(p_mods) != len(psp_val_f):
+        LOGGER.debug(
+            "Not enough info to assign phophosite: {}".format(psp_val)
+        )
+    elif set(i.rel_pos + 1 for i in p_mods) != set(i[1] for i in psp_val_f):
+        p_mods = [
+            modification.Modification(
+                rel_pos=i[1] - 1,
+                nterm=False,
+                cterm=False,
+                sequence=p_mods[0].sequence,
+            )
+            for i in psp_val_f
+        ]
+        reassigned = True
+
+        mods = mods.copy()
+        mods.mods = tuple(
+            sorted(
+                o_mods + p_mods,
+                key=lambda x: (x.rel_pos, x.nterm, x.cterm)
+            )
+        )
+
+    return mods, reassigned
+
+
+def _get_phosphors(df, cursor):
+    fields = cursor.execute(
+        """
+        SELECT
+        CustomDataFields.FieldID,
+        CustomDataFields.DisplayName
+        FROM CustomDataFields
+        """,
+    )
+    field_ids = [
+        field_id
+        for field_id, name in fields
+        if name in ["phosphoRS Site Probabilities"]
+    ]
+
+    if not field_ids:
+        return df
+
+    psp_vals = cursor.execute(
+        """
+        SELECT
+        CustomDataPeptides.PeptideID,
+        CustomDataPeptides.FieldValue
+        FROM CustomDataPeptides
+        WHERE CustomDataPeptides.FieldID IN ({})
+        """.format(
+            ", ".join("?" * len(field_ids))
+        ),
+        field_ids,
+    )
+
+    changed_peptides = 0
+
+    for pep_id, psp_val in psp_vals:
+        if pep_id not in df.index:
+            continue
+
+        old_mods = df.loc[pep_id]["Modifications"]
+
+        new_mods, reassigned = _reassign_mods(old_mods, psp_val)
+
+        if reassigned:
+            changed_peptides += 1
+
+        df.at[pep_id, "Modifications"] = new_mods
+
+    LOGGER.info(
+        "Reassigned {} phosphosites using phosphoRS".format(changed_peptides)
+    )
+
+    return df
+
+
 def read_discoverer_msf(basename, pick_best_ptm=False):
     """
     Read a Proteome Discoverer .msf file.
@@ -420,6 +527,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _extract_confidence(df)
         df = _extract_spectrum_file(df)
         df = _get_modifications(df, cursor)
+        df = _get_phosphors(df, cursor)
         df = _fix_sequence_mods(df)
         df = _get_quantifications(df, cursor, tag_names)
         df = _get_q_values(df, cursor)
