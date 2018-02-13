@@ -317,6 +317,91 @@ def _get_quantifications(df, cursor, tag_names):
     return df
 
 
+def _get_ms_data(df, cursor):
+    vals = cursor.execute(
+        """
+        SELECT
+        Peptides.PeptideID,
+        SpectrumHeaders.Charge,
+        SpectrumHeaders.Mass,
+        SpectrumHeaders.RetentionTime,
+        MassPeaks.Intensity
+        FROM Peptides
+        JOIN SpectrumHeaders
+        ON Peptides.SpectrumID=SpectrumHeaders.SpectrumID
+        JOIN MassPeaks
+        ON MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID
+        """,
+    )
+    mapping = {
+        index: (charge, mass, rt, i)
+        for index, charge, mass, rt, i in vals
+    }
+    charge_mapping = {
+        key: {val[0]}
+        for key, val in mapping.items()
+    }
+    mass_mapping = {
+        key: {val[1]}
+        for key, val in mapping.items()
+    }
+    rt_mapping = {
+        key: {val[2]}
+        for key, val in mapping.items()
+    }
+    i_mapping = {
+        key: {val[3]}
+        for key, val in mapping.items()
+    }
+
+    df["Charges"] = df.index.map(
+        lambda peptide_id:
+        charge_mapping.get(peptide_id, set()),
+    )
+    df["Masses"] = df.index.map(
+        lambda peptide_id:
+        mass_mapping.get(peptide_id, set()),
+    )
+    df["RTs"] = df.index.map(
+        lambda peptide_id:
+        rt_mapping.get(peptide_id, set()),
+    )
+    df["MS Intensities"] = df.index.map(
+        lambda peptide_id:
+        i_mapping.get(peptide_id, set()),
+    )
+
+    return df
+
+
+def _get_filenames(df, cursor):
+    files = cursor.execute(
+        """
+        SELECT
+        Peptides.PeptideID,
+        FileInfos.PhysicalFileName
+        FROM Peptides
+        JOIN SpectrumHeaders
+        ON Peptides.SpectrumID=SpectrumHeaders.SpectrumID
+        JOIN MassPeaks
+        ON MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID
+        JOIN FileInfos
+        ON FileInfos.FileID=MassPeaks.FileID
+        """,
+    )
+    mapping = {
+        index: os.path.split(val)[-1]
+        for index, val in files
+    }
+
+    df["Raw Paths"] = df.index.map(
+        lambda peptide_id:
+        mapping.get(peptide_id, {})
+    )
+
+    return df
+
+
 def _get_q_values(df, cursor):
     fields = cursor.execute(
         """
@@ -531,6 +616,8 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _fix_sequence_mods(df)
         df = _get_quantifications(df, cursor, tag_names)
         df = _get_q_values(df, cursor)
+        df = _get_ms_data(df, cursor)
+        df = _get_filenames(df, cursor)
 
     df["Scan Paths"] = basename
 

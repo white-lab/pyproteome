@@ -60,7 +60,7 @@ def set_base_dir(path):
 def find_base_dir():
     for opt in BASE_DIR_OPTS:
         if any(
-            os.exists(os.path.join(opt, i))
+            os.path.exists(os.path.join(opt, i))
             for i in DIR_NAMES
         ):
             return opt

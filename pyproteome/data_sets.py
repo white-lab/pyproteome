@@ -314,7 +314,15 @@ class DataSet:
         agg_dict["Modifications"] = _first
         agg_dict["Missed Cleavages"] = _first
         agg_dict["Validated"] = all
+
         agg_dict["Scan Paths"] = utils.flatten_set
+        agg_dict["Raw Paths"] = utils.flatten_set
+
+        agg_dict["Masses"] = utils.flatten_set
+        agg_dict["Charges"] = utils.flatten_set
+        agg_dict["Intensities"] = utils.flatten_set
+        agg_dict["RTs"] = utils.flatten_set
+
         agg_dict["First Scan"] = utils.flatten_set
         agg_dict["Ion Score"] = max
         agg_dict["q-value"] = min
@@ -596,20 +604,23 @@ class DataSet:
 
         Returns
         -------
-        bool
+        found_all : bool
         """
         raw_dir = os.listdir(paths.MS_RAW_DIR)
+        found_all = True
 
-        for raw in set(
-            path
+        for raw in utils.flatten_set(
+            row["Raw Paths"]
             for _, row in self.psms.iterrows()
-            for path in row["Scan Paths"]
         ):
             if not any(
                 os.path.splitext(i)[0] == raw
                 for i in raw_dir
             ):
                 LOGGER.warning("Unable to locate raw file for {}".format(raw))
+                found_all = False
+
+        return found_all
 
     def dropna(self, how=None, thresh=None, groups=None, inplace=False):
         """
@@ -1209,24 +1220,59 @@ class DataSet:
 def load_all_data(
     chan_mapping=None,
     group_mapping=None,
+    norm_mapping=None,
+    merge_mapping=None,
     **kwargs
 ):
     chan_mapping = chan_mapping or {}
     group_mapping = group_mapping or {}
+    norm_mapping = norm_mapping or {}
+    merge_mapping = merge_mapping or {}
 
     datas = {}
 
     for f in os.listdir(paths.MS_SEARCHED_DIR):
+        kws = kwargs.copy()
         name, ext = os.path.splitext(f)
 
         if ext not in [".msf"]:
             continue
 
+        chan = kws.pop("channels", None)
+        group = kws.pop("groups", None)
+
+        for key, val in chan_mapping.items():
+            if name.startswith(key):
+                chan = key
+
+        for key, val in group_mapping.items():
+            if name.startswith(key):
+                group = key
+
         datas["name"] = DataSet(
             name=name,
-            channels=chan_mapping.get(name, kwargs.get('channels')),
-            groups=group_mapping.get(name, kwargs.get('groups')),
-            **kwargs
+            channels=chan,
+            groups=group,
+            **kws
+        )
+
+    mapped_names = {}
+
+    for key, val in norm_mapping.items():
+        for name, data in datas.items():
+            if not any(name.startswith(key)):
+                continue
+
+            mapped_names[name] = name + "-norm"
+            datas[mapped_names[name]] = data.normalize(datas[val])
+
+    for key, vals in merge_mapping.items():
+        datas[key] = merge_data(
+            [
+                datas[mapped_names.get(val, val)]
+                for val in vals
+            ],
+            name=key,
         )
 
     return datas

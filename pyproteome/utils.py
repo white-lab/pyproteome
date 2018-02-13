@@ -5,6 +5,7 @@ from collections import OrderedDict, Callable
 import copy
 import difflib
 import os
+import types
 
 import numpy as np
 import pandas as pd
@@ -143,7 +144,10 @@ def flatten_set(lst):
     -------
     set
     """
-    if isinstance(lst, (list, tuple, set, pd.Series, np.ndarray)):
+    if isinstance(
+        lst,
+        (list, tuple, set, types.GeneratorType, pd.Series, np.ndarray)
+    ):
         ret = set()
 
         for element in lst:
