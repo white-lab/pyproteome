@@ -22,12 +22,13 @@ environment, such as Jupyter Notebook, alongside other data analysis packages.
 This allows scientists to create their analysis workflow within a reproducable
 code environment.
 
-# Getting Started
+Getting Started
+===============
 
   1. Install pyproteome: `pip install pyproteome`
 
   2. Load your data sets:
-  ```
+  ``
   from pyproteome import *
   # if using IPython:
   %import_all
@@ -47,10 +48,10 @@ code environment.
           {"CK": ["3130 CK", "3148 CK", "3157 CK"]},
       ],
   )
-  ```
+  ``
 
   3. Analyze your data:
-  ```
+  ``
   # Show sequence motifs in upregulated set of peptides
   logo.make_logo(
       datas["CK-H1-pST"],
@@ -69,12 +70,13 @@ code environment.
       datas["CK-H1-pST"],
       {"series": y_pred == 1},
   )
-  ```
+  ``
 
 Python 2 and 3 are both supported. Windows users may wish to use Anaconda to
 manage their Python environment and provide pyproteome's dependencies.
 
-# Contents
+Contents
+========
 
 .. toctree::
    :maxdepth: 5
