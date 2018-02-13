@@ -1260,7 +1260,7 @@ def load_all_data(
 
     for key, val in norm_mapping.items():
         for name, data in datas.items():
-            if not any(name.startswith(key)):
+            if not name.startswith(key):
                 continue
 
             mapped_names[name] = name + "-norm"
