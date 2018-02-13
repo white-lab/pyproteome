@@ -22,9 +22,54 @@ environment, such as Jupyter Notebook, alongside other data analysis packages.
 This allows scientists to create their analysis workflow within a reproducable
 code environment.
 
-# Installation
+# Getting Started
 
-To install pyproteome, type: `pip install pyproteome`
+  1. Install pyproteome: `pip install pyproteome`
+
+  2. Load your data sets:
+  ```
+  from pyproteome import *
+  # if using IPython:
+  %import_all
+
+  # with search data located in "Searched/"
+  datas = data_sets.load_all_data(
+      channels={
+          "126": "3130 CK",
+          "127": "3131 CK-p25",
+          "128": "3145 CK-p25",
+          "129": "3136 CK-p25",
+          "130": "3148 CK",
+          "131": "3157 CK",
+      },
+      groups=[
+          {"CK-p25": ["3131 CK-p25", "3145 CK-p25", "3146 CK-p25"]},
+          {"CK": ["3130 CK", "3148 CK", "3157 CK"]},
+      ],
+  )
+  ```
+
+  3. Analyze your data:
+  ```
+  # Show sequence motifs in upregulated set of peptides
+  logo.make_logo(
+      datas["CK-H1-pST"],
+      {"asym_fold": 1.5, "p": 0.01},
+  )
+
+  # Cluster peptides into groups with similar changes
+  data, y_pred = cluster.auto.auto_cluster(datas["CK-H1-pST"])
+
+  # Show volcano and sequence motif logo for peptides enriched in cluster 1
+  volcano.plot_volcano_filtered(
+      datas["CK-H1-pST"],
+      {"series": y_pred == 1},
+  )
+  logo.make_logo(
+      datas["CK-H1-pST"],
+      {"series": y_pred == 1},
+  )
+  ```
 
 Python 2 and 3 are both supported. Windows users may wish to use Anaconda to
 manage their Python environment and provide pyproteome's dependencies.

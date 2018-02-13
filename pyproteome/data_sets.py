@@ -1206,6 +1206,32 @@ class DataSet:
         ]
 
 
+def load_all_data(
+    chan_mapping=None,
+    group_mapping=None,
+    **kwargs
+):
+    chan_mapping = chan_mapping or {}
+    group_mapping = group_mapping or {}
+
+    datas = {}
+
+    for f in os.listdir(paths.MS_SEARCHED_DIR):
+        name, ext = os.path.splitext(f)
+
+        if ext not in [".msf"]:
+            continue
+
+        datas["name"] = DataSet(
+            name=name,
+            channels=chan_mapping.get(name, kwargs.get('channels')),
+            groups=group_mapping.get(name, kwargs.get('groups')),
+            **kwargs
+        )
+
+    return datas
+
+
 def merge_data(
     data_sets,
     name=None,
