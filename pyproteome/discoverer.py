@@ -513,8 +513,9 @@ def _get_phosphors(df, cursor):
         if name in ["phosphoRS Site Probabilities"]
     ]
 
+    df["Ambiguous"] = False
+
     if not field_ids:
-        df["Ambiguous"] = False
         return df
 
     psp_vals = cursor.execute(
