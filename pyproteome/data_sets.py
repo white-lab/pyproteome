@@ -22,7 +22,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy.stats import ttest_ind
 
-from . import levels, loading, modification, protein, sequence, utils
+from . import levels, loading, modification, paths, protein, sequence, utils
 from .motifs import motif as pymotif
 
 
@@ -56,7 +56,7 @@ class DataSet:
 
     Attributes
     ----------
-    mascot_name : str, optional
+    search_name : str, optional
     psms : :class:`pandas.DataFrame`
         Contains at least "Proteins", "Sequence", and "Modifications" columns.
     channels : dict of str, str
@@ -72,11 +72,11 @@ class DataSet:
     """
     def __init__(
         self,
-        mascot_name=None,
+        name="",
+        search_name=None,
         channels=None,
         groups=None,
         cmp_groups=None,
-        name="",
         lvls=None,
         dropna=False,
         pick_best_ptm=True,
@@ -89,7 +89,8 @@ class DataSet:
 
         Parameters
         ----------
-        mascot_name : str, optional
+        name : str, optional
+        search_name : str, optional
             Read psms from MASCOT / Discoverer data files.
         channels : dict of (str, str), optional
             Ordered dictionary mapping sample names to quantification channels
@@ -97,7 +98,6 @@ class DataSet:
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
-        name : str, optional
         lvls : dict or str, float, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
@@ -114,17 +114,20 @@ class DataSet:
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
         """
-        if mascot_name and os.path.splitext(mascot_name)[1] == "":
-            mascot_name += ".msf"
+        if search_name is None:
+            search_name = name
+
+        if search_name and os.path.splitext(search_name)[1] == "":
+            search_name += ".msf"
 
         self.channels = channels or OrderedDict()
         self.groups = groups or OrderedDict()
         self.cmp_groups = cmp_groups or None
         self.group_a, self.group_b = None, None
 
-        if mascot_name:
+        if search_name:
             self.psms, lst = loading.load_mascot_psms(
-                mascot_name,
+                search_name,
                 pick_best_ptm=pick_best_ptm,
             )
             assert all(i in self.psms.columns for i in DATA_SET_COLS)
@@ -135,10 +138,12 @@ class DataSet:
 
         self.name = name
         self.levels = lvls
-        self.mascot_name = mascot_name
+        self.search_name = search_name
 
         self.intra_normalized = False
         self.sets = 1
+
+        self.check_raw()
 
         if dropna:
             LOGGER.info(
@@ -166,8 +171,8 @@ class DataSet:
             )
 
         if pick_best_ptm and (
-            not mascot_name or
-            os.path.splitext(mascot_name)[1] != ".msf" or
+            not search_name or
+            os.path.splitext(search_name)[1] != ".msf" or
             any(i for i in lst)
         ):
             LOGGER.info(
@@ -583,6 +588,28 @@ class DataSet:
         new.update_group_changes()
 
         return new
+
+    def check_raw(self):
+        """
+        Checks that all raw files referenced in search data can be found in
+        paths.MS_RAW_DIR
+
+        Returns
+        -------
+        bool
+        """
+        raw_dir = os.listdir(paths.MS_RAW_DIR)
+
+        for raw in set(
+            path
+            for _, row in self.psms.iterrows()
+            for path in row["Scan Paths"]
+        ):
+            if not any(
+                os.path.splitext(i)[0] == raw
+                for i in raw_dir
+            ):
+                LOGGER.warning("Unable to locate raw file for {}".format(raw))
 
     def dropna(self, how=None, thresh=None, groups=None, inplace=False):
         """
