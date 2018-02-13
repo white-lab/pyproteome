@@ -1,6 +1,12 @@
 # Change Log
 
-## 0.6.0 (2018-\*-\*)
+## 0.6.0 (2018-02-12)
+
+Features
+
+  - Improvements to ProteomeDiscoverer feature support (percolator, phosphoRS).
+  - Many organizational changes.
+  - Improvements to clustering module.
 
 ## 0.5.0 (2018-01-20)
 
