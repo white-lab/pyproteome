@@ -25,9 +25,11 @@ code environment.
 Getting Started
 ===============
 
-  1. Install pyproteome: ``pip install pyproteome``
+  1. Install pyproteome::
 
-  2. Load your data sets:
+      $ pip install pyproteome
+
+  2. Open Python and load your data sets::
 
       from pyproteome import *
       # if using IPython:
@@ -49,7 +51,7 @@ Getting Started
           ],
       )
 
-  3. Analyze your data:
+  3. Analyze your data::
 
       # Show sequence motifs in upregulated set of peptides
       logo.make_logo(
