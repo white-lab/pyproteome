@@ -25,6 +25,10 @@ code environment.
 Getting Started
 ===============
 
+To start, you will need a Python environment. Python 2 and 3 are both supported.
+Windows users may wish to use [Anaconda](https://www.anaconda.com/download/)
+to manage their Python environment and provide pyproteome's dependencies.
+
   1. Install pyproteome::
 
       $ pip install pyproteome
@@ -74,9 +78,6 @@ Getting Started
           {"p": .001},
       )
 
-Python 2 and 3 are both supported. Windows users may wish to use Anaconda to
-manage their Python environment and provide pyproteome's dependencies.
-
 Contents
 ========
 
@@ -91,4 +92,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
