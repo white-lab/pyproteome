@@ -26,7 +26,7 @@ Getting Started
 ===============
 
 To start, you will need a Python environment. Python 2 and 3 are both supported.
-Windows users may wish to use `Anaconda <https://www.anaconda.com/download/>`
+Windows users may wish to use `Anaconda <https://www.anaconda.com/download/>`_
 to manage their Python environment and provide pyproteome's dependencies.
 
   1. Install pyproteome::
