@@ -455,6 +455,7 @@ def _is_pmod(mod):
 
 def _reassign_mods(mods, psp_val):
     reassigned = False
+    ambiguous = False
 
     psp_val = [
         RE_PSP.match(i.strip()).groups()
@@ -473,6 +474,7 @@ def _reassign_mods(mods, psp_val):
         LOGGER.debug(
             "Not enough info to assign phophosite: {}".format(psp_val)
         )
+        ambiguous = True
     elif set(i.rel_pos + 1 for i in p_mods) != set(i[1] for i in psp_val_f):
         p_mods = [
             modification.Modification(
@@ -493,7 +495,7 @@ def _reassign_mods(mods, psp_val):
             )
         )
 
-    return mods, reassigned
+    return mods, reassigned, ambiguous
 
 
 def _get_phosphors(df, cursor):
@@ -512,6 +514,7 @@ def _get_phosphors(df, cursor):
     ]
 
     if not field_ids:
+        df["Ambiguous"] = False
         return df
 
     psp_vals = cursor.execute(
@@ -535,12 +538,13 @@ def _get_phosphors(df, cursor):
 
         old_mods = df.loc[pep_id]["Modifications"]
 
-        new_mods, reassigned = _reassign_mods(old_mods, psp_val)
+        new_mods, reassigned, ambiguous = _reassign_mods(old_mods, psp_val)
 
         if reassigned:
             changed_peptides += 1
 
         df.at[pep_id, "Modifications"] = new_mods
+        df.at[pep_id, "Ambiguous"] = ambiguous
 
     LOGGER.info(
         "Reassigned {} phosphosites using phosphoRS".format(changed_peptides)

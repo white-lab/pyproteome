@@ -318,6 +318,8 @@ class DataSet:
         agg_dict["Scan Paths"] = utils.flatten_set
         agg_dict["Raw Paths"] = utils.flatten_set
 
+        agg_dict["Ambiguous"] = all
+
         agg_dict["Masses"] = utils.flatten_set
         agg_dict["Charges"] = utils.flatten_set
         agg_dict["Intensities"] = utils.flatten_set
