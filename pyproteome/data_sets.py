@@ -613,10 +613,7 @@ class DataSet:
             row["Raw Paths"]
             for _, row in self.psms.iterrows()
         ):
-            if not any(
-                os.path.splitext(i)[0] == raw
-                for i in raw_dir
-            ):
+            if raw not in raw_dir:
                 LOGGER.warning("Unable to locate raw file for {}".format(raw))
                 found_all = False
 

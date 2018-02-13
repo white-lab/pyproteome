@@ -571,8 +571,8 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     )
 
     LOGGER.info(
-        "Loading ProteomeDiscoverer peptides from \"{}\"".format(
-            os.path.basename(msf_path),
+        "{}: Loading ProteomeDiscoverer peptides".format(
+            os.path.spltext(basename)[0],
         )
     )
     start = datetime.now()
@@ -624,8 +624,9 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     df.reset_index(inplace=True, drop=True)
 
     LOGGER.info(
-        "Loaded {} peptides in {} hr:min:sec"
+        "{}: Loaded {} peptides in {} hr:min:sec"
         .format(
+            os.path.spltext(basename)[0],
             df.shape[0],
             str(datetime.now() - start).split('.')[0],
         )
