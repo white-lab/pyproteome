@@ -577,7 +577,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
 
     LOGGER.info(
         "{}: Loading ProteomeDiscoverer peptides".format(
-            os.path.spltext(basename)[0],
+            os.path.splitext(basename)[0],
         )
     )
     start = datetime.now()
