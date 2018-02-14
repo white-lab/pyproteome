@@ -17,11 +17,11 @@ from . import utils
 
 DATA_URL = "https://github.com/white-lab/pyproteome-data/raw/master/test_data/"
 
-DATAS = {
-    "CKH1": "CKH1-pY-sup.msf",
-    "CKX2": "CKX2-pY-sup.msf",
-    "CKC1": "CKC1-pY-sup.msf",
-}
+DATAS = (
+    "CK-H1-Global"
+    "CK-X2-Global",
+    "CK-C1-Global",
+)
 
 
 class IntegrationTest(TestCase):
@@ -66,9 +66,9 @@ class IntegrationTest(TestCase):
             for key, val in ck_channels.items()
         ])
         self.channels = {
-            "CKH1": ckh_channels,
-            "CKX2": ckx_channels,
-            "CKC1": ckc_channels,
+            "CK-H1-Global": ckh_channels,
+            "CK-X2-Global": ckx_channels,
+            "CK-C1-Global": ckc_channels,
         }
         self.groups = OrderedDict(
             [
@@ -104,20 +104,15 @@ class IntegrationTest(TestCase):
             ["CK-p25 Cere", "CK Cere"],
         ]
 
-        self.data = {
-            name: data_sets.DataSet(
-                mascot_name=os.path.splitext(filename)[0],
-                name=name,
-                channels=self.channels[name],
-                groups=self.groups,
-            )
-            for name, filename in DATAS.items()
-        }
+        self.data = data_sets.load_all_data(
+            chan_mapping=self.channels,
+            groups=self.groups,
+        )
         self.data["merge"] = data_sets.merge_data(
             [
-                self.data["CKH1"],
-                self.data["CKX2"],
-                self.data["CKC1"],
+                self.data["CK-H1-Global"],
+                self.data["CK-X2-Global"],
+                self.data["CK-C1-Global"],
             ],
             name="CK-p25",
         )
@@ -126,16 +121,41 @@ class IntegrationTest(TestCase):
     def tearDownClass(cls):
         shutil.rmtree(paths.FIGURES_DIR, ignore_errors=True)
 
+    def test_columns(self):
+        for _, data in self.datas.items():
+            for col in [
+                "Proteins",
+                "Sequence",
+                "Modifications",
+                "Missed Cleavages",
+                "Validated",
+                "Ambiguous",
+                "Charges",
+                "Masses",
+                "RTs",
+                "MS Intensities",
+                "Raw Paths",
+                "First Scan",
+                "Scan Paths",
+                "Isolation Interference",
+                "Confidence Level",
+                "Ion Score",
+                "q-value",
+            ]:
+                self.assertIn(col, data.psms.columns)
+
+            for _, col in data.channels.items():
+                self.assertIn(col, data.psms.columns)
+
     def test_dropna(self):
         self.data = {
             name: data_sets.DataSet(
-                mascot_name=os.path.splitext(filename)[0],
                 name=name,
                 channels=self.channels[name],
                 groups=self.groups,
                 dropna=True,
             )
-            for name, filename in DATAS.items()
+            for name in DATAS
         }
 
     def test_merge_subsets(self):
@@ -143,9 +163,9 @@ class IntegrationTest(TestCase):
             data.merge_subsequences()
 
     def test_add_data(self):
-        data = self.data["CKH1"]
-        data += self.data["CKX2"]
-        data += self.data["CKC1"]
+        data = self.data["CK-H1-Global"]
+        data += self.data["CK-X2-Global"]
+        data += self.data["CK-C1-Global"]
 
     def test_normalize_data(self):
         self.data = {
@@ -168,6 +188,8 @@ class IntegrationTest(TestCase):
     def test_filter(self):
         for data in self.data.values():
             for f in [
+                {"ambiguous": True},
+                {"ambiguous": False},
                 {"p": .1},
                 {"q": .1},
                 {"fold": 1.5},
@@ -202,27 +224,27 @@ class IntegrationTest(TestCase):
 
         merge = data_sets.merge_data(
             [
-                self.data["CKH1"],
-                self.data["CKX2"],
-                self.data["CKC1"],
+                self.data["CK-H1-Global"],
+                self.data["CK-X2-Global"],
+                self.data["CK-C1-Global"],
             ],
             name="CK-p25",
         )
 
         merge = data_sets.merge_data(
             [
-                self.data["CKH1"],
-                self.data["CKX2"],
-                self.data["CKC1"],
+                self.data["CK-H1-Global"],
+                self.data["CK-X2-Global"],
+                self.data["CK-C1-Global"],
             ],
             name="CK-p25",
         )
 
         with open(os.devnull, 'w') as f:
             for data in [
-                self.data["CKH1"],
-                self.data["CKX2"],
-                self.data["CKC1"],
+                self.data["CK-H1-Global"],
+                self.data["CK-X2-Global"],
+                self.data["CK-C1-Global"],
                 merge,
             ]:
                 data.print_stats(out=f)

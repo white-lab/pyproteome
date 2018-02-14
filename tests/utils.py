@@ -7,7 +7,8 @@ import pyproteome as pyp
 def fetch_data(dirname, datas, base_url):
     pyp.utils.makedirs(dirname)
 
-    for _, filename in datas.items():
+    for name in datas:
+        filename = name + ".msf"
         out_path = os.path.join(dirname, filename)
 
         if os.path.exists(out_path):

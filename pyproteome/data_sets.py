@@ -729,6 +729,8 @@ class DataSet:
         fn                  Use data.psms.apply(fn).
         group_a             Calculate p / fold change values from group_a.
         group_b             Calculate p / fold change values from group_b.
+        ambiguous           Include peptides with ambiguous PTMs if true,
+                            filter them out if false.
         confidence          Discoverer's peptide confidence (High|Medium|Low).
         ion_score           MASCOT's ion score.
         isolation           Discoverer's isolation inference.
@@ -777,6 +779,9 @@ class DataSet:
 
             "fn": lambda val, psms:
             psms.apply(val, axis=1),
+
+            "ambiguous": lambda val, psms:
+            psms["Ambiguous"] == val,
 
             "confidence": lambda val, psms:
             psms["Confidence Level"].isin(confidence[val]),
