@@ -1290,6 +1290,7 @@ def load_all_data(
         )
 
     mapped_names = {}
+    datas_new = datas.copy()
 
     for key, val in norm_mapping.items():
         for name, data in datas.items():
@@ -1297,7 +1298,9 @@ def load_all_data(
                 continue
 
             mapped_names[name] = "{}-norm".format(name)
-            datas[mapped_names[name]] = data.normalize(datas[val])
+            datas_new[mapped_names[name]] = data.normalize(datas[val])
+
+    datas = datas_new
 
     for key, vals in merge_mapping.items():
         datas[key] = merge_data(
