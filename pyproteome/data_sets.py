@@ -1174,7 +1174,7 @@ class DataSet:
 
         per_amb = (
             data_p.filter(ambiguous=True).psms.shape[0] /
-            data_p.psms.shape[0]
+            max([data_p.psms.shape[0], 1])
         )
 
         LOGGER.info(
