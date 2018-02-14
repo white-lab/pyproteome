@@ -457,9 +457,16 @@ def _reassign_mods(mods, psp_val):
     reassigned = False
     ambiguous = False
 
+    # phophoRS example format: "T(4): 99.6; S(6): 0.4; S(10): 0.0"
+    # Error messages include: "Too many isoforms"
     psp_val = [
-        RE_PSP.match(i.strip()).groups()
+        RE_PSP.match(i.strip())
         for i in psp_val.split(";")
+    ]
+    psp_val = [
+        i.groups()
+        for i in psp_val
+        if i
     ]
     psp_val = [
         (i[0], int(i[1]), float(i[2]))
