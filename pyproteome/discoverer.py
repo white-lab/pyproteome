@@ -631,7 +631,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     LOGGER.info(
         "{}: Loaded {} peptides in {} hr:min:sec"
         .format(
-            os.path.spltext(basename)[0],
+            os.path.splitext(basename)[0],
             df.shape[0],
             str(datetime.now() - start).split('.')[0],
         )
