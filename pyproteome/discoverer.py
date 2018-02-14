@@ -41,7 +41,7 @@ def _read_peptides(conn, pick_best_ptm=False):
         Peptides.ConfidenceLevel AS "Confidence Level",
         Peptides.MissedCleavages AS "Missed Cleavages",
         PeptideScores.ScoreValue AS "Ion Score",
-        SpectrumHeaders.FirstScan AS "First Scan",
+        SpectrumHeaders.FirstScan AS "Scan",
         SpectrumHeaders.LastScan AS "Last Scan",
         FileInfos.FileName AS "Spectrum File",
         MassPeaks.PercentIsolationInterference AS "Isolation Interference"

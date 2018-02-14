@@ -49,8 +49,8 @@ DATA_SET_COLS = [
     "RTs",
     "Intensities",
     "Raw Paths",
-    "First Scan",
     "Scan Paths",
+    "Scan",
 ]
 
 
@@ -255,7 +255,7 @@ class DataSet:
 
         for index, row in self.psms.iterrows():
             hits = np.logical_and(
-                self.psms["First Scan"] == row["First Scan"],
+                self.psms["Scan"] == row["Scan"],
                 self.psms["Sequence"] != row["Sequence"],
             )
 
@@ -334,7 +334,7 @@ class DataSet:
         agg_dict["Intensities"] = utils.flatten_set
         agg_dict["RTs"] = utils.flatten_set
 
-        agg_dict["First Scan"] = utils.flatten_set
+        agg_dict["Scan"] = utils.flatten_set
         agg_dict["Ion Score"] = max
         agg_dict["q-value"] = min
         agg_dict["Confidence Level"] = partial(
@@ -682,20 +682,27 @@ class DataSet:
             "Sequence": sequence.Sequence(),
             "Modifications": modification.Modifications(),
             "Validated": False,
-            "First Scan": set(),
-            "Scan Paths": set(),
+            "Confidence Level": "High",
             "Ion Score": 100,
             "q-value": 0,
             "Isolation Interference": 0,
             "Missed Cleavages": 0,
-            "Confidence Level": "High",
+            "Ambiguous": False,
+            "Charges": set(),
+            "Masses": set(),
+            "RTs": set(),
+            "Intensities": set(),
+            "Raw Paths": set(),
+            "Scan Paths": set(),
+            "Scan": set(),
         }
 
         for key, val in defaults.items():
             if key not in insert:
                 insert[key] = val
 
-        assert all(i in insert for i in DATA_SET_COLS)
+        for col in DATA_SET_COLS:
+            assert col in insert
 
         self.psms = self.psms.append(pd.Series(insert), ignore_index=True)
 

@@ -30,8 +30,8 @@ def _calculate_rejected(psms, accepted, maybed, rejected):
     for index, row in psms.iterrows():
         # Check if this specific sequence and scan was rejected
         hit = np.logical_and(
-            # Assuming First Scan always == Last Scan
-            rejected["Scan"] == row["First Scan"],
+            # Assuming Scan always == Last Scan
+            rejected["Scan"] == row["Scan"],
             rejected["Sequence"] == row["Sequence"],
         )
 
@@ -41,7 +41,7 @@ def _calculate_rejected(psms, accepted, maybed, rejected):
 
         if accepted is not None:
             if np.logical_and(
-                accepted["Scan"] == row["First Scan"],
+                accepted["Scan"] == row["Scan"],
                 accepted["Sequence"] == row["Sequence"],
             ).any():
                 validations[index] = True
@@ -49,13 +49,13 @@ def _calculate_rejected(psms, accepted, maybed, rejected):
 
         if maybed is not None:
             if np.logical_and(
-                maybed["Scan"] == row["First Scan"],
+                maybed["Scan"] == row["Scan"],
                 maybed["Sequence"] == row["Sequence"],
             ).any():
                 continue
 
         # Check if this scan was rejected and no sequences were accepted
-        hit = (rejected["Scan"] == row["First Scan"]).any()
+        hit = (rejected["Scan"] == row["Scan"]).any()
         if not hit:
             continue
 
@@ -80,14 +80,14 @@ def _calculate_accepted(psms, accepted):
         # Reject hits where the scan number is the same but the sequence
         # is different.
         hit = np.logical_and(
-            accepted["Scan"] == row["First Scan"],
+            accepted["Scan"] == row["Scan"],
             accepted["Sequence"] != row["Sequence"],
         )
         if hit.any():
             reject_mask[index] = True
 
         hit = np.logical_and(
-            accepted["Scan"] == row["First Scan"],
+            accepted["Scan"] == row["Scan"],
             accepted["Sequence"] != row["Sequence"],
         )
         if hit.any():
