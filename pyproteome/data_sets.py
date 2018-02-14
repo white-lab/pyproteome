@@ -1282,7 +1282,7 @@ def load_all_data(
             if name.startswith(key):
                 group = val
 
-        datas["name"] = DataSet(
+        datas[name] = DataSet(
             name=name,
             channels=chan,
             groups=group,
@@ -1296,7 +1296,7 @@ def load_all_data(
             if not name.startswith(key):
                 continue
 
-            mapped_names[name] = name + "-norm"
+            mapped_names[name] = "{}-norm".format(name)
             datas[mapped_names[name]] = data.normalize(datas[val])
 
     for key, vals in merge_mapping.items():
