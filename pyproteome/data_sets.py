@@ -82,6 +82,7 @@ class DataSet:
         pick_best_ptm=True,
         merge_duplicates=True,
         filter_bad=True,
+        check_raw=True,
         log_stats=True,
     ):
         """
@@ -143,7 +144,8 @@ class DataSet:
         self.intra_normalized = False
         self.sets = 1
 
-        self.check_raw()
+        if check_raw:
+            self.check_raw()
 
         if dropna:
             LOGGER.info(
@@ -608,7 +610,11 @@ class DataSet:
         -------
         found_all : bool
         """
-        raw_dir = os.listdir(paths.MS_RAW_DIR)
+        try:
+            raw_dir = os.listdir(paths.MS_RAW_DIR)
+        except OSError:
+            raw_dir = []
+
         found_all = True
 
         for raw in utils.flatten_set(

@@ -107,6 +107,7 @@ class IntegrationTest(TestCase):
         self.data = data_sets.load_all_data(
             chan_mapping=self.channels,
             groups=self.groups,
+            check_raw=False,
         )
         self.data["merge"] = data_sets.merge_data(
             [
@@ -154,6 +155,7 @@ class IntegrationTest(TestCase):
                 channels=self.channels[name],
                 groups=self.groups,
                 dropna=True,
+                check_raw=False,
             )
             for name in DATAS
         }
