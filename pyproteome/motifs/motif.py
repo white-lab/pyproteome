@@ -229,6 +229,10 @@ def generate_n_mers(
     use_ptms : bool, optional
     use_nterms : bool, optional
     use_cterms : bool, optional
+
+    Returns
+    -------
+    set of str
     """
     # Check n is odd
     assert n % 2 == 1
