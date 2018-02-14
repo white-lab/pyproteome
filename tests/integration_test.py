@@ -18,7 +18,7 @@ from . import utils
 DATA_URL = "https://github.com/white-lab/pyproteome-data/raw/master/test_data/"
 
 DATAS = (
-    "CK-H1-Global"
+    "CK-H1-Global",
     "CK-X2-Global",
     "CK-C1-Global",
 )
