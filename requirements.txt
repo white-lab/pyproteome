@@ -1,5 +1,4 @@
 adjustText>=0.6.1
-biopython>=1.68
 fastcluster>=1.1.23
 ipython>=5.4.1
 matplotlib>=2.0.0
