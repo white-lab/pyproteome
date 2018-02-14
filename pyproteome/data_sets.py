@@ -1173,8 +1173,8 @@ class DataSet:
         )
 
         per_amb = (
-            data_p.filter(ambiguous=True).shape[0] /
-            data_p.shape[0]
+            data_p.filter(ambiguous=True).psms.shape[0] /
+            data_p.psms.shape[0]
         )
 
         LOGGER.info(
