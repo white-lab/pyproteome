@@ -82,7 +82,7 @@ def get_channel_levels(
     for ax in axes[len(data.channels) - 1:]:
         ax.set_axis_off()
 
-    f.suptitle("{} - {}".format(data.name, data.mascot_name))
+    f.suptitle("{}".format(data.name))
 
     if file_name:
         f.savefig(

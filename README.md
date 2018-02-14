@@ -56,16 +56,14 @@ dilution.
 ... ])
 >>> ck_name = "CK-p25 vs. CK, 2 weeks"
 >>> ck_h1_py = data_sets.DataSet(
-...     mascot_name="CKH1-pY",
+...     name="CK-H1-pY",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
-...     name="CKH1 pY",
 ... )
 ... ck_h1_global = data_sets.DataSet(
-...     mascot_name="CKH1-pY-sup",
+...     name="CK-H1-Global",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
-...     name="CKH1 Global",
 ... )
 >>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_global)
 >>> tables.changes_table(ck_h1_py_norm.filter(p=0.05), sort="Fold Change"))
@@ -83,7 +81,7 @@ base_directory/
     CAMV Sessions/
     Mascot XMLs/
     MS RAW/
-    MS Searched/
+    Searched/
     Scan Lists/
     Scripts/
 ```
