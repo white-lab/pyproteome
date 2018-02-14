@@ -366,7 +366,7 @@ def _get_ms_data(df, cursor):
         lambda peptide_id:
         rt_mapping.get(peptide_id, set()),
     )
-    df["MS Intensities"] = df.index.map(
+    df["Intensities"] = df.index.map(
         lambda peptide_id:
         i_mapping.get(peptide_id, set()),
     )

@@ -124,25 +124,7 @@ class IntegrationTest(TestCase):
 
     def test_columns(self):
         for _, data in self.datas.items():
-            for col in [
-                "Proteins",
-                "Sequence",
-                "Modifications",
-                "Missed Cleavages",
-                "Validated",
-                "Ambiguous",
-                "Charges",
-                "Masses",
-                "RTs",
-                "MS Intensities",
-                "Raw Paths",
-                "First Scan",
-                "Scan Paths",
-                "Isolation Interference",
-                "Confidence Level",
-                "Ion Score",
-                "q-value",
-            ]:
+            for col in data_sets.DATA_SET_COLS:
                 self.assertIn(col, data.psms.columns)
 
             for _, col in data.channels.items():

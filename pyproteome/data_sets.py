@@ -38,13 +38,19 @@ DATA_SET_COLS = [
     "Sequence",
     "Modifications",
     "Validated",
-    "First Scan",
     "Confidence Level",
     "Ion Score",
     "q-value",
     "Isolation Interference",
-    "Scan Paths",
     "Missed Cleavages",
+    "Ambiguous",
+    "Charges",
+    "Masses",
+    "RTs",
+    "MS Intensities",
+    "Raw Paths",
+    "First Scan",
+    "Scan Paths",
 ]
 
 
@@ -1165,6 +1171,17 @@ class DataSet:
             )
         )
 
+        per_amb = (
+            data_p.filter(ambiguous=True).shape[0] /
+            data_p.shape[0]
+        )
+
+        LOGGER.info(
+            (
+                "{}: {:.0%} of phosphopeptides have an ambiguous assignment"
+            ).format(self.name, per_amb)
+        )
+
         labeled = self.filter(
             fn=lambda x:
             sequence.is_labeled(x["Sequence"])
@@ -1178,13 +1195,18 @@ class DataSet:
         per_lab = labeled / max([self.psms.shape[0], 1])
         per_under_lab = underlabeled / max([self.psms.shape[0], 1])
 
+        LOGGER.info(
+            (
+                "{}: {:.0%} labeled - {:.0%} underlabeled"
+            ).format(self.name, per_lab, per_under_lab)
+        )
+
         mmc = self.psms["Missed Cleavages"].mean()
 
         LOGGER.info(
             (
-                "{}: {:.0%} labeled - {:.0%} underlabeled - "
-                "{:.1f} mean missed cleavages"
-            ).format(self.name, per_lab, per_under_lab, mmc)
+                "{}: {:.1f} mean missed cleavages"
+            ).format(self.name, mmc)
         )
 
     @property
@@ -1253,11 +1275,11 @@ def load_all_data(
 
         for key, val in chan_mapping.items():
             if name.startswith(key):
-                chan = key
+                chan = val
 
         for key, val in group_mapping.items():
             if name.startswith(key):
-                group = key
+                group = val
 
         datas["name"] = DataSet(
             name=name,
