@@ -65,6 +65,9 @@ def _read_peptides(conn, pick_best_ptm=False):
 
 
 def _extract_sequence(df):
+    if df.shape[0] < 1:
+        return df
+
     df["Sequence"] = df.apply(
         lambda row:
         sequence.extract_sequence(
