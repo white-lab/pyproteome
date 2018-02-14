@@ -47,7 +47,7 @@ DATA_SET_COLS = [
     "Charges",
     "Masses",
     "RTs",
-    "MS Intensities",
+    "Intensities",
     "Raw Paths",
     "First Scan",
     "Scan Paths",
@@ -137,7 +137,8 @@ class DataSet:
                 search_name,
                 pick_best_ptm=pick_best_ptm,
             )
-            assert all(i in self.psms.columns for i in DATA_SET_COLS)
+            for col in DATA_SET_COLS:
+                assert col in self.psms.columns
         else:
             self.psms = pd.DataFrame(
                 columns=DATA_SET_COLS + list(self.channels.values()),
