@@ -489,6 +489,7 @@ def _reassign_mods(mods, psp_val):
         p_mods = [
             modification.Modification(
                 rel_pos=i[1] - 1,
+                mod_type="Phospho",
                 nterm=False,
                 cterm=False,
                 sequence=p_mods[0].sequence,
