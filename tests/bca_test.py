@@ -22,7 +22,7 @@ class BCATest(TestCase):
 
         utils.fetch_data(
             dirname=paths.BCA_ASSAY_DIR,
-            datas=DATAS,
+            datas=list(DATAS.values()),
             base_url=DATA_URL,
         )
 

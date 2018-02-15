@@ -169,7 +169,7 @@ def cluster_corrmap(
         f = ax.get_figure()
 
     if div_scale is None:
-        div_scale = max([data["data"].shape[0] // 1000, 5])
+        div_scale = max([data["data"].shape[0] // 1000, 1])
 
     if len(set(y_pred)) > 1:
         mapping, new_ind, _, cn = hierarchical_clusters(data, y_pred)
@@ -242,7 +242,8 @@ def plot_cluster(
     if div_scale is None:
         div_scale = max([dad.shape[0] // 100, 1])
 
-    dad = dad[::div_scale]
+    if div_scale > 1:
+        dad = dad[::div_scale]
 
     prev_ind = 0
     means = np.mean(dad, axis=0)
@@ -468,8 +469,13 @@ def show_peptide_clusters(
                     data["ds"]["Proteins"] == fil["protein"]
                 ]
             )
-        )[0]
+        )
         for fil in filters
+    ]
+    clusters = [
+        i[0]
+        for i in clusters
+        if i
     ]
 
     ss = sorted(set(clusters))

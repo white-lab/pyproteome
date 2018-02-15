@@ -35,7 +35,7 @@ class IntegrationTest(TestCase):
 
         utils.fetch_data(
             dirname=paths.MS_SEARCHED_DIR,
-            datas=DATAS,
+            datas=[i + ".msf" for i in DATAS],
             base_url=DATA_URL,
         )
 
