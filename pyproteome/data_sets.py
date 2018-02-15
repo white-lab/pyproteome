@@ -1341,9 +1341,9 @@ def merge_data(
     :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
     new = DataSet(
-        name=name,
         log_stats=False,
     )
+    new.name = name
 
     if len(data_sets) < 1:
         return new

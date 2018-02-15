@@ -585,6 +585,9 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         basename,
     )
 
+    if not os.path.exists(msf_path):
+        raise Exception("Search database does not exist: {}".format(msf_path))
+
     LOGGER.info(
         "{}: Loading ProteomeDiscoverer peptides".format(
             os.path.splitext(basename)[0],
