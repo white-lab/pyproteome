@@ -243,6 +243,11 @@ class Modification:
         if self.sequence is None:
             return ""
 
+        if self.nterm:
+            return "N-term"
+        elif self.cterm:
+            return "C-term"
+
         return self.sequence.pep_seq[self.rel_pos].upper()
 
     @property
@@ -267,11 +272,11 @@ class Modification:
 
     def __repr__(self):
         return (
-            "<pyproteome.modification.Modification {}{}{}>"
+            "<pyproteome.modification.Modification {}{}({})>"
         ).format(
-            self.display_mod_type(),
             self.letter,
-            self.rel_pos + 1,
+            (self.rel_pos + 1) if not self.cterm and not self.nterm else "",
+            self.mod_type,
         )
 
 
