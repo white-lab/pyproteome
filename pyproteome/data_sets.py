@@ -90,6 +90,7 @@ class DataSet:
         filter_bad=True,
         check_raw=True,
         log_stats=True,
+        load=True,
     ):
         """
         Initializes a data set.
@@ -120,6 +121,8 @@ class DataSet:
         filter_bad : bool or dict, optional
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
+        log_stats : bool, optional
+        load : bool, optional
         """
         if search_name is None:
             search_name = name
@@ -132,7 +135,9 @@ class DataSet:
         self.cmp_groups = cmp_groups or None
         self.group_a, self.group_b = None, None
 
-        if search_name:
+        lst = []
+
+        if search_name and load:
             self.psms, lst = loading.load_mascot_psms(
                 search_name,
                 pick_best_ptm=pick_best_ptm,
@@ -1322,9 +1327,10 @@ def merge_data(
     :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
     new = DataSet(
+        name=name,
         log_stats=False,
+        load=False,
     )
-    new.name = name
 
     if len(data_sets) < 1:
         return new
