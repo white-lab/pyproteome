@@ -16,7 +16,8 @@ def auto_clusterer(
     cluster_cluster_kwargs=None,
     plot_clusters_kwargs=None,
     volcano_kwargs=None,
-    plots=True, close=False,
+    plots=True,
+    close=False,
     folder_name=None,
     filename="clusters.pkl",
 ):
