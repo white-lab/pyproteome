@@ -224,15 +224,6 @@ class IntegrationTest(TestCase):
             name="CK-p25",
         )
 
-        with open(os.devnull, 'w') as f:
-            for data in [
-                self.data["CK-H1-Global"],
-                self.data["CK-X2-Global"],
-                self.data["CK-C1-Global"],
-                merge,
-            ]:
-                data.print_stats(out=f)
-
         return merge
 
     def test_plot_all(self):

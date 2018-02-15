@@ -1141,25 +1141,6 @@ class DataSet:
 
         return new
 
-    def print_stats(self, out=sys.stdout):
-        data = self.dropna(how="all")
-
-        data_p = self.filter(mod_types=[(None, "Phospho")])
-        data_pst = self.filter(mod_types=[("S", "Phospho"), ("T", "Phospho")])
-        data_py = self.filter(mod_types=[("Y", "Phospho")])
-
-        out.write(
-            "{}\n{} pY, {} pST ({:.0%} Specificity)\n{} total, {} proteins\n"
-            .format(
-                self.name,
-                len(data_py.psms),
-                len(data_pst.psms),
-                len(data_p.psms) / len(self.psms),
-                len(data.psms),
-                len(data.genes),
-            )
-        )
-
     def log_stats(self):
         data_p = self.filter(mod_types=[(None, "Phospho")])
         data_pst = self.filter(mod_types=[("S", "Phospho"), ("T", "Phospho")])
