@@ -123,7 +123,7 @@ class IntegrationTest(TestCase):
         shutil.rmtree(paths.FIGURES_DIR, ignore_errors=True)
 
     def test_columns(self):
-        for _, data in self.datas.items():
+        for _, data in self.data.items():
             for col in data_sets.DATA_SET_COLS:
                 self.assertIn(col, data.psms.columns)
 
