@@ -167,12 +167,12 @@ def _scatter_plots(
     scatter_colors = scatter_colors or {}
     scatter_symbols = scatter_symbols or {}
 
-    if cp.psms.shape[0] < 1:
+    if cp.shape[0] < 1:
         return None, None
 
     f_scatter, axes = plt.subplots(
-        int(np.ceil(cp.psms.shape[0] / scatter_cols)), scatter_cols,
-        figsize=(6 * scatter_cols, cp.psms.shape[0] * 2),
+        int(np.ceil(cp.shape[0] / scatter_cols)), scatter_cols,
+        figsize=(6 * scatter_cols, cp.shape[0] * 2),
     )
 
     for index, (ax, (_, row)) in enumerate(

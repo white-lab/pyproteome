@@ -252,6 +252,6 @@ class NormalizationTest(TestCase):
         psms = self.data.inter_normalize(["norm"])
 
         self.assertEqual(
-            psms.psms.shape[0],
+            psms.shape[0],
             0,
         )
