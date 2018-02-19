@@ -45,6 +45,7 @@ if get_ipython() is not None:
         ip.ex(
             "\n".join([
                 "from collections import OrderedDict, Counter",
+                "import logging",
                 "import os",
                 "import pickle",
                 "from IPython.display import display, SVG, Image",
@@ -64,11 +65,16 @@ if get_ipython() is not None:
                 'pd.set_option("display.max_colwidth", 500)',
                 'pd.set_option("display.max_rows", 500)',
 
-                "import logging",
+                "formatter = logging.Formatter('%(asctime)s - %(name)s - "
+                "%(levelname)s - %(message)s')",
+
                 "root = logging.getLogger()",
+
                 "if not root.handlers: "
-                "root.addHandler(logging.StreamHandler())",
-                "logging.getLogger().setLevel(logging.INFO)",
+                "handler = logging.StreamHandler(); "
+                "handler.setFormatter(formatter); "
+                "handler.setLevel(logging.INFO); "
+                "root.addHandler(handler)",
             ])
         )
 
