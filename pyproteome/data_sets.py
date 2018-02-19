@@ -13,7 +13,6 @@ import copy
 import logging
 import os
 import warnings
-import sys
 from functools import partial
 
 # Core data analysis libraries
@@ -627,7 +626,10 @@ class DataSet:
         found_all : bool
         """
         try:
-            raw_dir = os.listdir(paths.MS_RAW_DIR)
+            raw_dir = [
+                i.lower()
+                for i in os.listdir(paths.MS_RAW_DIR)
+            ]
         except OSError:
             raw_dir = []
 
@@ -637,7 +639,7 @@ class DataSet:
             row["Raw Paths"]
             for _, row in self.psms.iterrows()
         ):
-            if raw not in raw_dir:
+            if raw.lower() not in raw_dir:
                 LOGGER.warning(
                     "{}: Unable to locate raw file for {}"
                     .format(self.name, raw)
@@ -1277,10 +1279,12 @@ def load_all_data(
         for key, val in chan_mapping.items():
             if name.startswith(key):
                 chan = val
+                break
 
         for key, val in group_mapping.items():
             if name.startswith(key):
                 group = val
+                break
 
         datas[name] = DataSet(
             name=name,
