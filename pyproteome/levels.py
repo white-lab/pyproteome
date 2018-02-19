@@ -19,6 +19,7 @@ import numpy as np
 from . import utils
 
 LOGGER = logging.getLogger("pyproteome.levels")
+WARN_PEP_CUTOFF = 150
 
 
 def get_channel_levels(
@@ -68,7 +69,7 @@ def get_channel_levels(
         # may throw off histogram binning
         points = points[points < 30]
 
-        if points.shape[0] < 150:
+        if points.shape[0] < WARN_PEP_CUTOFF:
             LOGGER.warning(
                 (
                     "{}: Too few peptides for normalization, "
