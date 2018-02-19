@@ -255,8 +255,12 @@ class DataSet:
 
         raise TypeError(type(key))
 
+    @property
+    def shape(self):
+        return self.psms.shape
+
     def _pick_best_ptm(self):
-        reject_mask = np.zeros(self.psms.shape[0], dtype=bool)
+        reject_mask = np.zeros(self.shape[0], dtype=bool)
 
         for index, row in self.psms.iterrows():
             hits = np.logical_and(
@@ -529,7 +533,7 @@ class DataSet:
                 how="left",
                 suffixes=("_self", "_other"),
             )
-            assert merge.shape[0] == new.psms.shape[0]
+            assert merge.shape[0] == new.shape[0]
 
             self_mean = merge[
                 ["{}_self".format(i) for i in norm_channels]
@@ -555,7 +559,7 @@ class DataSet:
                 if self_mean.any():
                     vals *= cp / self_mean
 
-                assert new.psms.shape[0] == vals.shape[0]
+                assert new.shape[0] == vals.shape[0]
                 new.psms[channel] = vals
 
         new.update_group_changes()
@@ -634,7 +638,10 @@ class DataSet:
             for _, row in self.psms.iterrows()
         ):
             if raw not in raw_dir:
-                LOGGER.warning("Unable to locate raw file for {}".format(raw))
+                LOGGER.warning(
+                    "{}: Unable to locate raw file for {}"
+                    .format(self.name, raw)
+                )
                 found_all = False
 
         return found_all
@@ -917,7 +924,7 @@ class DataSet:
 
                 for key, val in f.items():
                     # Skip filtering if psms is empty (fixes pandas type error)
-                    if new.psms.shape[0] < 1:
+                    if new.shape[0] < 1:
                         continue
 
                     mask = fns[key](val, new.psms)
@@ -925,7 +932,7 @@ class DataSet:
                     if inverse:
                         mask = ~mask
 
-                    assert mask.shape[0] == new.psms.shape[0]
+                    assert mask.shape[0] == new.shape[0]
 
                     new.psms = new.psms.loc[mask].reset_index(drop=True)
 
@@ -1166,8 +1173,8 @@ class DataSet:
         )
 
         per_amb = (
-            data_p.filter(ambiguous=True).psms.shape[0] /
-            max([data_p.psms.shape[0], 1])
+            data_p.filter(ambiguous=True).shape[0] /
+            max([data_p.shape[0], 1])
         )
 
         LOGGER.info(
@@ -1179,15 +1186,15 @@ class DataSet:
         labeled = self.filter(
             fn=lambda x:
             sequence.is_labeled(x["Sequence"])
-        ).psms.shape[0]
+        ).shape[0]
 
         underlabeled = self.filter(
             fn=lambda x:
             sequence.is_underlabeled(x["Sequence"])
-        ).psms.shape[0]
+        ).shape[0]
 
-        per_lab = labeled / max([self.psms.shape[0], 1])
-        per_under_lab = underlabeled / max([self.psms.shape[0], 1])
+        per_lab = labeled / max([self.shape[0], 1])
+        per_under_lab = underlabeled / max([self.shape[0], 1])
 
         LOGGER.info(
             (
@@ -1282,6 +1289,13 @@ def load_all_data(
             **kws
         )
 
+    datas, mapped_names = norm_all_data(datas, norm_mapping)
+    datas = merge_all_data(datas, merge_mapping, mapped_names=mapped_names)
+
+    return datas
+
+
+def norm_all_data(datas, norm_mapping):
     mapped_names = {}
     datas_new = datas.copy()
 
@@ -1293,7 +1307,14 @@ def load_all_data(
             mapped_names[name] = "{}-norm".format(name)
             datas_new[mapped_names[name]] = data.normalize(datas[val])
 
-    datas = datas_new
+    return datas_new, mapped_names
+
+
+def merge_all_data(datas, merge_mapping, mapped_names=None):
+    datas = datas.copy()
+
+    if mapped_names is None:
+        mapped_names = {}
 
     for key, vals in merge_mapping.items():
         datas[key] = merge_data(
