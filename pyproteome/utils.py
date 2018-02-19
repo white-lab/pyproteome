@@ -45,7 +45,7 @@ def make_folder(data=None, folder_name=None, sub="Output"):
             paths.FIGURES_DIR,
             data.name
             if data is not None else
-            os.getcwd(),
+            "All",
             sub,
         )
 
