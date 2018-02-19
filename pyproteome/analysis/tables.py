@@ -9,7 +9,7 @@ import pandas as pd
 import pyproteome as pyp
 
 
-def _prep_csv(data, postfix="table", folder_name=None, csv_name=None):
+def _prep_csv(data=None, postfix="table", folder_name=None, csv_name=None):
     if csv_name is None:
         csv_name = "{}.csv".format(
             postfix,
@@ -59,7 +59,7 @@ def motif_table(
     **kwargs
 ):
     csv_name = _prep_csv(
-        data,
+        data=data,
         folder_name=folder_name,
         csv_name=csv_name,
         postfix=_get_table_title(f=f, running_title=["motifs"]),
@@ -107,7 +107,7 @@ def changes_table(
     csv_name : str, optional
     """
     csv_name = _prep_csv(
-        data,
+        data=data,
         folder_name=folder_name,
         csv_name=csv_name,
         postfix=_get_table_title(running_title=["changes"]),
@@ -183,7 +183,7 @@ def ptmsigdb_changes_table(
     csv_name : str, optional
     """
     csv_name = _prep_csv(
-        data,
+        data=data,
         folder_name=folder_name,
         csv_name=csv_name,
         postfix=_get_table_title(running_title=["ptmsigdb"]),
@@ -247,12 +247,11 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     out_name : str, optional
     """
 
-    folder_name = pyp.utils.make_folder(
+    out_name = _prep_csv(
+        data=None,
         folder_name=folder_name,
-        sub="Tables",
+        csv_name=out_name,
     )
-
-    out_name = os.path.join(folder_name, out_name)
 
     writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
 
