@@ -8,6 +8,7 @@ or mean peptide levels across multiple channels.
 from __future__ import absolute_import, division
 
 # Built-ins
+import logging
 import os
 from collections import OrderedDict
 
@@ -16,6 +17,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from . import utils
+
+LOGGER = logging.getLogger("pyproteome.levels")
 
 
 def get_channel_levels(
@@ -64,6 +67,15 @@ def get_channel_levels(
         # Filter ratios > 30, those are likely an error in quantification and
         # may throw off histogram binning
         points = points[points < 30]
+
+        if points.shape[0] < 150:
+            LOGGER.warning(
+                (
+                    "{}: Too few peptides for normalization, "
+                    "quantification may be inaccurate ({} peptides for {}: {})"
+                ).format(data.name, points.shape[0], col_name, col)
+            )
+
         med = np.median(points)
         channel_levels[col] = med
 
