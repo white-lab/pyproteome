@@ -73,7 +73,7 @@ if get_ipython() is not None:
                 "if not root.handlers: "
                 "handler = logging.StreamHandler(); "
                 "handler.setFormatter(formatter); "
-                "handler.setLevel(logging.INFO); "
+                "root.setLevel(logging.INFO); "
                 "root.addHandler(handler)",
             ])
         )
