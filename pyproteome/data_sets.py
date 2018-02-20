@@ -593,7 +593,7 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        if isinstance(lvls, DataSet):
+        if hasattr(lvls, "levels"):
             if not lvls.levels:
                 lvls.levels = levels.get_channel_levels(lvls)
 
@@ -1305,11 +1305,13 @@ def norm_all_data(datas, norm_mapping):
 
     for key, val in norm_mapping.items():
         for name, data in datas.items():
-            if not name.startswith(key):
+            if not name.startswith(key) or name.endswith("-norm"):
                 continue
 
             mapped_names[name] = "{}-norm".format(name)
+
             datas_new[mapped_names[name]] = data.normalize(datas[val])
+            datas_new[mapped_names[name]].name += "-norm"
 
     return datas_new, mapped_names
 
@@ -1319,6 +1321,17 @@ def merge_all_data(datas, merge_mapping, mapped_names=None):
 
     if mapped_names is None:
         mapped_names = {}
+
+    rmap = {val: key for key, val in mapped_names.items()}
+
+    for name in datas.keys():
+        if not any(
+            name in vals or
+            rmap.get(name, name) in vals or
+            name == key
+            for key, vals in merge_mapping.items()
+        ):
+            LOGGER.warning("Unmerged data: {}".format(name))
 
     for key, vals in merge_mapping.items():
         datas[key] = merge_data(
