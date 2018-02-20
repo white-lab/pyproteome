@@ -633,10 +633,10 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _get_modifications(df, cursor)
         df = _get_phosphors(df, cursor)
         df = _fix_sequence_mods(df)
-        df = _get_quantifications(df, cursor, tag_names)
         df = _get_q_values(df, cursor)
         df = _get_ms_data(df, cursor)
         df = _get_filenames(df, cursor)
+        df = _get_quantifications(df, cursor, tag_names)
 
     df["Scan Paths"] = basename
 
