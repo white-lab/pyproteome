@@ -1264,7 +1264,7 @@ def load_all_data(
     norm_mapping = norm_mapping or {}
     merge_mapping = merge_mapping or {}
 
-    datas = {}
+    datas = OrderedDict()
 
     for f in os.listdir(paths.MS_SEARCHED_DIR):
         kws = kwargs.copy()
@@ -1300,7 +1300,7 @@ def load_all_data(
 
 
 def norm_all_data(datas, norm_mapping):
-    mapped_names = {}
+    mapped_names = OrderedDict()
     datas_new = datas.copy()
 
     for key, val in norm_mapping.items():
