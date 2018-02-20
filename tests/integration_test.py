@@ -307,9 +307,9 @@ class IntegrationTest(TestCase):
     # def test_plogo(self):
     #     motifs.plogo.make_logo(self.data["CKH1"], {"asym_fold": 1.05})
 
-    def test_icelogo(self):
-        for data in self.data.values():
-            motifs.icelogo.make_logo(data, {"asym_fold": 1.001})
+    # def test_icelogo(self):
+    #     for data in self.data.values():
+    #         motifs.icelogo.make_logo(data, {"asym_fold": 1.001})
 
     # def test_weblogo(self):
     #     for data in self.data.values():
