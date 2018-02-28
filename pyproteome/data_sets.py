@@ -1187,12 +1187,12 @@ class DataSet:
 
         labeled = self.filter(
             fn=lambda x:
-            sequence.is_labeled(x["Sequence"])
+            x["Sequence"].is_labeled
         ).shape[0]
 
         underlabeled = self.filter(
             fn=lambda x:
-            sequence.is_underlabeled(x["Sequence"])
+            x["Sequence"].is_underlabeled
         ).shape[0]
 
         per_lab = labeled / max([self.shape[0], 1])
@@ -1324,14 +1324,15 @@ def merge_all_data(datas, merge_mapping, mapped_names=None):
 
     rmap = {val: key for key, val in mapped_names.items()}
 
-    for name in datas.keys():
-        if not any(
-            name in vals or
-            rmap.get(name, name) in vals or
-            name == key
-            for key, vals in merge_mapping.items()
-        ):
-            LOGGER.warning("Unmerged data: {}".format(name))
+    if merge_mapping:
+        for name in datas.keys():
+            if not any(
+                name in vals or
+                rmap.get(name, name) in vals or
+                name == key
+                for key, vals in merge_mapping.items()
+            ):
+                LOGGER.warning("Unmerged data: {}".format(name))
 
     for key, vals in merge_mapping.items():
         datas[key] = merge_data(

@@ -72,6 +72,9 @@ class Sequence:
         self.protein_matches = protein_matches or ()
         self.modifications = modifications
 
+        self._is_labeled = None
+        self._is_underlabeled = None
+
     def to_tuple(self):
         return (
             str(self),
@@ -143,6 +146,46 @@ class Sequence:
     def __len__(self):
         return len(self.pep_seq)
 
+    @property
+    def is_labeled(self):
+        if self._is_labeled is not None:
+            return self._is_labeled
+
+        val = any(
+            i in j.mod_type
+            for j in self.modifications.mods
+            for i in modification.LABEL_NAMES
+        )
+
+        self._is_labeled = val
+
+        return val
+
+    @property
+    def is_underlabeled(self):
+        if self._is_underlabeled is not None:
+            return self._is_underlabeled
+
+        underlabeled = False
+
+        if self.is_labeled:
+            # XXX: Hardcodes label modification locations, not extendable to
+            # new quantification tags without changes to this function
+            underlabeled = not any(
+                i in j.mod_type and j.nterm
+                for j in self.modifications.mods
+                for i in modification.LABEL_NAMES
+            ) or self.pep_seq.count("K") != sum(
+                i in j.mod_type
+                for j in self.modifications.mods
+                if j.letter == "K" and not j.nterm
+                for i in modification.LABEL_NAMES
+            )
+
+        self._is_underlabeled = underlabeled
+
+        return underlabeled
+
 
 def extract_sequence(proteins, sequence_string):
     """
@@ -197,27 +240,3 @@ def extract_sequence(proteins, sequence_string):
     )
 
 
-def is_labeled(seq):
-    return any(
-        i in j.mod_type
-        for j in seq.modifications.mods
-        for i in modification.LABEL_NAMES
-    )
-
-
-def is_underlabeled(seq):
-    if not is_labeled(seq):
-        return False
-
-    # XXX: Hardcodes label modification locations, not extendable to
-    # new quantification tags without changes to this function
-    return not any(
-        i in j.mod_type and j.nterm
-        for j in seq.modifications.mods
-        for i in modification.LABEL_NAMES
-    ) or seq.pep_seq.count("K") != sum(
-        i in j.mod_type
-        for j in seq.modifications.mods
-        if j.letter == "K" and not j.nterm
-        for i in modification.LABEL_NAMES
-    )

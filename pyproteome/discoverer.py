@@ -201,17 +201,11 @@ def _get_modifications(df, cursor):
     aa_mod_dict = defaultdict(list)
 
     for peptide_id, name, pos in aa_mods:
-        try:
-            sequence = df.loc[peptide_id]["Sequence"]
-        except KeyError:
-            continue
-
         mod = modification.Modification(
             rel_pos=pos,
             mod_type=name,
             nterm=False,
             cterm=False,
-            sequence=sequence,
         )
 
         aa_mod_dict[peptide_id].append(mod)
@@ -220,6 +214,7 @@ def _get_modifications(df, cursor):
         """
         SELECT
         Peptides.PeptideID,
+        Peptides.Sequence,
         AminoAcidModifications.Abbreviation,
         AminoAcidModifications.PositionType
         FROM Peptides
@@ -239,35 +234,36 @@ def _get_modifications(df, cursor):
     # 697a2fe94de2e960a9bb962d1f263dc983461999/thermo_msf_parser_API/
     # src/main/java/com/compomics/thermo_msf_parser_API/highmeminstance/
     # Parser.java#L1022
-    for peptide_id, name, pos_type in term_mods:
+    for peptide_id, pep_seq, name, pos_type in term_mods:
         nterm = pos_type == 1
-        pos = 0 if nterm else len(sequence)
-
-        try:
-            sequence = df.loc[peptide_id]["Sequence"]
-        except KeyError:
-            continue
+        pos = 0 if nterm else len(pep_seq)
 
         mod = modification.Modification(
             rel_pos=pos,
             mod_type=name,
             nterm=nterm,
             cterm=not nterm,
-            sequence=sequence,
         )
         term_mod_dict[peptide_id].append(mod)
 
-    df["Modifications"] = df.index.map(
-        lambda peptide_id:
-        modification.Modifications(
+    def _get_mods(row):
+        peptide_id = row.name
+        mods = term_mod_dict[peptide_id] + aa_mod_dict[peptide_id]
+
+        for mod in mods:
+            assert mod.sequence is None
+            mod.sequence = row["Sequence"]
+
+        return modification.Modifications(
             mods=tuple(
                 sorted(
-                    term_mod_dict[peptide_id] + aa_mod_dict[peptide_id],
+                    mods,
                     key=lambda x: (x.rel_pos, x.nterm, x.cterm),
                 )
             ),
         )
-    )
+
+    df["Modifications"] = df.apply(_get_mods, axis=1)
 
     return df
 
@@ -300,21 +296,24 @@ def _get_quantifications(df, cursor, tag_names):
         if peptide_id in df.index
     }
 
-    # Convert very low ion counts to nan
-    for key, val in mapping.items():
-        if (
-            val <= 1 or
-            not sequence.is_labeled(df.loc[key[0]]["Sequence"])
-        ):
-            mapping[key] = np.nan
-
     channel_ids = sorted(set(i[1] for i in mapping.keys()))
 
     for channel_id in channel_ids:
         tag_name = tag_names[channel_id - 1]
-        df[tag_name] = df.index.map(
-            lambda peptide_id:
-            mapping.get((peptide_id, channel_id), np.nan)
+
+        def _get_quants(row):
+            peptide_id = row.name
+            val = mapping.get((peptide_id, channel_id), np.nan)
+
+            # Convert very low ion counts and unlabeled peptides to nan
+            if val <= 1 or not row["Sequence"].is_labeled:
+                return np.nan
+
+            return val
+
+        df[tag_name] = df.apply(
+            _get_quants,
+            axis=1,
         )
 
     return df
@@ -589,10 +588,10 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     if not os.path.exists(msf_path):
         raise Exception("Search database does not exist: {}".format(msf_path))
 
+    name = os.path.splitext(basename)[0]
+
     LOGGER.info(
-        "{}: Loading ProteomeDiscoverer peptides".format(
-            os.path.splitext(basename)[0],
-        )
+        "{}: Loading ProteomeDiscoverer peptides".format(name)
     )
     start = datetime.now()
 
