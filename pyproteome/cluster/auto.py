@@ -48,7 +48,7 @@ def auto_clusterer(
     if "n_clusters" not in cluster_kwargs:
         cluster_kwargs["n_clusters"] = 100
 
-    _, y_pred_old = pyp.cluster.cluster(
+    clr, y_pred_old = pyp.cluster.cluster(
         data,
         **cluster_kwargs
     )
@@ -76,6 +76,8 @@ def auto_clusterer(
         data, y_pred,
         **plot_clusters_kwargs
     )
+
+    # return data, y_pred, clr
 
     ss = sorted(set(y_pred))
 

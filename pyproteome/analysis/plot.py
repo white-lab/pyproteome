@@ -132,7 +132,7 @@ def plot_group(
     cmp_groups=None,
     title=None,
     folder_name=None,
-    figsize=(8, 4),
+    figsize=(12, 4),
 ):
     """
     Plot the levels of a sequence across each group.
@@ -292,65 +292,66 @@ def plot_group(
             else:
                 return "-"
 
-        offset = 0
-
         v = [
             vals
             for group_vals in values
             for vals in group_vals
         ]
 
-        for (
-            (index_a, values_a, label_a), (index_b, values_b, label_b),
-        ) in itertools.combinations(zip(indices, v, labels), 2):
-            if cmp_groups and not any(
-                label_a in group and
-                label_b in group
-                for group in cmp_groups
-            ):
-                continue
+        for grp_set in cmp_groups:
+            offset = 0
 
-            if values_a.shape[0] < 2 or values_b.shape[0] < 2:
-                continue
+            for label_a, label_b in itertools.combinations(grp_set, 2):
+                if label_a not in labels or label_b not in labels:
+                    continue
 
-            pval = ttest_ind(
-                values_a.as_matrix(),
-                values_b.as_matrix(),
-            ).pvalue
+                index_a = labels.index(label_a)
+                index_b = labels.index(label_b)
 
-            if pval < 0.05:
-                ax.set_ylim(
-                    ymax=max([
-                        ax.get_ylim()[1],
-                        y_max * (1 + offset * 0.1 + 0.15),
-                    ]),
-                )
-                ax.annotate(
-                    "",
-                    xy=(
-                        index_a,
-                        y_max * (1.05 + offset * 0.1)
-                    ),
-                    xytext=(
-                        index_b,
-                        y_max * (1.05 + offset * 0.1)
-                    ),
-                    xycoords='data',
-                    textcoords='data',
-                    arrowprops=dict(
-                        arrowstyle="-",
-                        ec='#000000',
-                    ),
-                )
-                ax.text(
-                    x=np.mean([index_a, index_b]),
-                    y=y_max * (1.07 + offset * 0.1),
-                    s=stars(pval),
-                    horizontalalignment='center',
-                    verticalalignment='center',
-                )
+                values_a = v[index_a]
+                values_b = v[index_b]
 
-                offset += 1
+                if values_a.shape[0] < 2 or values_b.shape[0] < 2:
+                    continue
+
+                pval = ttest_ind(
+                    values_a.as_matrix(),
+                    values_b.as_matrix(),
+                ).pvalue
+
+                if pval < 0.05:
+                    ax.set_ylim(
+                        ymax=max([
+                            ax.get_ylim()[1],
+                            y_max * (1 + offset * 0.1 + 0.15),
+                        ]),
+                    )
+                    ax.annotate(
+                        "",
+                        xy=(
+                            index_a,
+                            y_max * (1.05 + offset * 0.1)
+                        ),
+                        xytext=(
+                            index_b,
+                            y_max * (1.05 + offset * 0.1)
+                        ),
+                        xycoords='data',
+                        textcoords='data',
+                        arrowprops=dict(
+                            arrowstyle="-",
+                            ec='#000000',
+                        ),
+                    )
+                    ax.text(
+                        x=np.mean([index_a, index_b]),
+                        y=y_max * (1.07 + offset * 0.1),
+                        s=stars(pval),
+                        horizontalalignment='center',
+                        verticalalignment='center',
+                    )
+
+                    offset += 1
 
         fig.savefig(
             os.path.join(

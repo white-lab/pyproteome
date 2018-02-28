@@ -454,7 +454,7 @@ def show_peptide_clusters(
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(
         rows, cols,
-        figsize=(cols * 3, rows * 3),
+        figsize=(cols * 2, rows * 2),
         sharex=True,
         sharey=True,
     )
@@ -472,6 +472,7 @@ def show_peptide_clusters(
         )
         for fil in filters
     ]
+    print(list(zip(filters, clusters)))
     clusters = [
         i[0]
         for i in clusters

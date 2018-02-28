@@ -5,10 +5,14 @@ Wraps modifications in a structured class and allows filtering of
 modifications by amino acid and modification type.
 """
 
+from collections import defaultdict
 import copy
 
-LABEL_NAMES = ["TMT", "ITRAQ"]
-
+LABEL_NAME_TARGETS = (
+    "TMT", "ITRAQ", "plex",
+)
+LABEL_NAMES = defaultdict(set)
+LABEL_NAMES["TMT10"].add("N-term")
 
 class Modifications:
     """

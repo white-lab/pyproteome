@@ -152,9 +152,8 @@ class Sequence:
             return self._is_labeled
 
         val = any(
-            i in j.mod_type
+            j.mod_type in modification.LABEL_NAMES
             for j in self.modifications.mods
-            for i in modification.LABEL_NAMES
         )
 
         self._is_labeled = val
@@ -172,14 +171,12 @@ class Sequence:
             # XXX: Hardcodes label modification locations, not extendable to
             # new quantification tags without changes to this function
             underlabeled = not any(
-                i in j.mod_type and j.nterm
+                j.mod_type in modification.LABEL_NAMES and j.nterm
                 for j in self.modifications.mods
-                for i in modification.LABEL_NAMES
             ) or self.pep_seq.count("K") != sum(
-                i in j.mod_type
+                j.mod_type in modification.LABEL_NAMES
                 for j in self.modifications.mods
                 if j.letter == "K" and not j.nterm
-                for i in modification.LABEL_NAMES
             )
 
         self._is_underlabeled = underlabeled

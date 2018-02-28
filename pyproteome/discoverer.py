@@ -564,6 +564,38 @@ def _get_phosphors(df, cursor):
     return df
 
 
+def update_label_names(cursor):
+    fields = cursor.execute(
+        """
+        SELECT
+        AminoAcidModifications.Abbreviation,
+        AminoAcidModifications.ModificationName,
+        AminoAcids.AminoAcidName,
+        AminoAcids.OneLetterCode
+        FROM AminoAcidModifications
+        JOIN AminoAcidModificationsAminoAcids
+        ON AminoAcidModifications.AminoAcidModificationID=
+        AminoAcidModificationsAminoAcids.AminoAcidModificationID
+        JOIN AminoAcids
+        ON AminoAcids.AminoAcidID=
+        AminoAcidModificationsAminoAcids.AminoAcidID
+        WHERE AminoAcidModifications.isActive
+        """,
+    )
+
+    for abbrev, mod_name, aa_name, letter in fields:
+        if any(
+            i in abbrev or i in mod_name
+            for i in modification.LABEL_NAME_TARGETS
+        ):
+            if aa_name in ["N-Terminus"]:
+                letter = "N-term"
+            elif aa_name in ["C-Terminus"]:
+                letter = "C-term"
+
+            modification.LABEL_NAMES[abbrev].add(letter)
+
+
 def read_discoverer_msf(basename, pick_best_ptm=False):
     """
     Read a Proteome Discoverer .msf file.
@@ -597,6 +629,8 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
 
     with sqlite3.connect(msf_path) as conn:
         cursor = conn.cursor()
+
+        update_label_names(cursor)
 
         # Get any N-terminal quantification tags
         quantification = cursor.execute(
