@@ -14,6 +14,7 @@ LABEL_NAME_TARGETS = (
 LABEL_NAMES = defaultdict(set)
 LABEL_NAMES["TMT10"].add("N-term")
 
+
 class Modifications:
     """
     A list of modifications.
