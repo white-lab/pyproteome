@@ -10,15 +10,19 @@ from __future__ import absolute_import, division
 # Built-ins
 import logging
 import os
+import requests
 
 # IPython
 # from IPython.display import display
 
 # Core data analysis libraries
 # from matplotlib import pyplot as plt
+import pandas as pd
 
 
 import pyproteome as pyp
+import brainrnaseq as brs
+from . import enrichments
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
@@ -75,4 +79,55 @@ def find_tfs(data, folder_name=None, csv_name=None):
             {"selector": "th:first-child", "props": [("display", "none")]},
             {"selector": "*", "props": [("text-align", "left")]},
         ]
+    )
+
+def _get_pathways():
+    url = (
+        "https://raw.githubusercontent.com/dhimmel/pathways/"
+        "master/data/pathways.tsv"
+    )
+    # response = requests.get(url, stream=True)
+    # response.raise_for_status()
+    #
+    # with open("pathways.tsv", "wb") as f:
+    #     for block in response.iter_content(1024):
+    #         f.write(block)
+    #
+    pathways_df = pd.read_table(url)
+
+    return pathways_df
+
+
+def gsea(ds, **kwargs):
+    LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
+    ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
+
+    LOGGER.info("building gene sets")
+    pathways_df = _get_pathways()
+
+    pathways_df["set"] = pathways_df["genes"].apply(
+        lambda row:
+        set(int(i) for i in row.split("|")),
+    )
+
+    LOGGER.info("building changes: {}".format(len(set(ds.genes))))
+
+    ds.psms["Entrez"] = ds.psms["Proteins"].apply(
+        lambda row:
+        brs.mapping.get_entrez_mapping(
+            row.genes[0],
+            species="Human",
+        ),
+    )
+
+    changes = {
+        row["Entrez"]: row["Fold Change"]
+        for _, row in ds.psms.iterrows()
+        if row["Entrez"] is not None
+    }
+    LOGGER.info("plotting enrichments")
+
+    return enrichments.plot_enrichment(
+        changes, pathways_df,
+        **kwargs
     )
