@@ -97,13 +97,6 @@ def _extract_spectrum_file(df):
     return df
 
 
-def _fix_sequence_mods(df):
-    for _, row in df.iterrows():
-        row["Sequence"].modifications = row["Modifications"]
-
-    return df
-
-
 def _get_proteins(df, cursor):
     prots = cursor.execute(
         """
@@ -198,9 +191,12 @@ def _get_modifications(df, cursor):
         """,
     )
 
-    aa_mod_dict = defaultdict(list)
+    mod_dict = defaultdict(list)
 
     for peptide_id, name, pos in aa_mods:
+        if peptide_id not in df.index:
+            continue
+
         mod = modification.Modification(
             rel_pos=pos,
             mod_type=name,
@@ -208,7 +204,7 @@ def _get_modifications(df, cursor):
             cterm=False,
         )
 
-        aa_mod_dict[peptide_id].append(mod)
+        mod_dict[peptide_id].append(mod)
 
     term_mods = cursor.execute(
         """
@@ -226,8 +222,6 @@ def _get_modifications(df, cursor):
         """,
     )
 
-    term_mod_dict = defaultdict(list)
-
     # PositionType rules taken from:
     #
     # https://github.com/compomics/thermo-msf-parser/blob/
@@ -235,6 +229,9 @@ def _get_modifications(df, cursor):
     # src/main/java/com/compomics/thermo_msf_parser_API/highmeminstance/
     # Parser.java#L1022
     for peptide_id, pep_seq, name, pos_type in term_mods:
+        if peptide_id not in df.index:
+            continue
+
         nterm = pos_type == 1
         pos = 0 if nterm else len(pep_seq)
 
@@ -244,24 +241,27 @@ def _get_modifications(df, cursor):
             nterm=nterm,
             cterm=not nterm,
         )
-        term_mod_dict[peptide_id].append(mod)
+        mod_dict[peptide_id].append(mod)
+
+    mod_dict = {
+        key: _sort_mods(val)
+        for key, val in mod_dict.items()
+    }
 
     def _get_mods(row):
         peptide_id = row.name
-        mods = term_mod_dict[peptide_id] + aa_mod_dict[peptide_id]
 
-        for mod in mods:
+        mods = modification.Modifications(
+            mods=mod_dict.get(peptide_id, tuple()),
+        )
+
+        for mod in mods.mods:
             assert mod.sequence is None
             mod.sequence = row["Sequence"]
 
-        return modification.Modifications(
-            mods=tuple(
-                sorted(
-                    mods,
-                    key=lambda x: (x.rel_pos, x.nterm, x.cterm),
-                )
-            ),
-        )
+        row["Sequence"].modifications = mods
+
+        return mods
 
     df["Modifications"] = df.apply(_get_mods, axis=1)
 
@@ -298,23 +298,31 @@ def _get_quantifications(df, cursor, tag_names):
 
     channel_ids = sorted(set(i[1] for i in mapping.keys()))
 
-    for channel_id in channel_ids:
-        tag_name = tag_names[channel_id - 1]
+    col_names = [tag_names[channel_id - 1] for channel_id in channel_ids]
 
-        def _get_quants(row):
-            peptide_id = row.name
-            val = mapping.get((peptide_id, channel_id), np.nan)
+    def _get_quants(row):
+        peptide_id = row.name
 
-            # Convert very low ion counts and unlabeled peptides to nan
-            if val <= 1 or not row["Sequence"].is_labeled:
-                return np.nan
+        vals = [
+            mapping.get((peptide_id, channel_id), np.nan)
+            for channel_id in channel_ids
+        ]
 
-            return val
+        # Convert very low ion counts and unlabeled peptides to nan
+        vals = [
+            np.nan if val <= 1 else val
+            for val in vals
+        ]
 
-        df[tag_name] = df.apply(
-            _get_quants,
-            axis=1,
-        )
+        if not np.isnan(vals).all() and not row["Sequence"].is_labeled:
+            vals = [np.nan] * len(vals)
+
+        return pd.Series(vals, index=col_names)
+
+    df[col_names] = df.apply(
+        _get_quants,
+        axis=1,
+    )
 
     return df
 
@@ -455,6 +463,15 @@ def _is_pmod(mod):
     )
 
 
+def _sort_mods(mods):
+    return tuple(
+        sorted(
+            mods,
+            key=lambda x: (x.rel_pos, x.nterm, x.cterm, x.mod_type),
+        )
+    )
+
+
 def _reassign_mods(mods, psp_val):
     reassigned = False
     ambiguous = False
@@ -497,13 +514,12 @@ def _reassign_mods(mods, psp_val):
         ]
         reassigned = True
 
-        mods = mods.copy()
-        mods.mods = tuple(
-            sorted(
-                o_mods + p_mods,
-                key=lambda x: (x.rel_pos, x.nterm, x.cterm)
-            )
+        mods = modification.Modifications(
+            mods=_sort_mods(o_mods + p_mods),
         )
+
+        for mod in mods.mods:
+            mod.sequence.modifications = mods
 
     return mods, reassigned, ambiguous
 
@@ -665,7 +681,6 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _extract_spectrum_file(df)
         df = _get_modifications(df, cursor)
         df = _get_phosphors(df, cursor)
-        df = _fix_sequence_mods(df)
         df = _get_q_values(df, cursor)
         df = _get_ms_data(df, cursor)
         df = _get_filenames(df, cursor)

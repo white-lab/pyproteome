@@ -2,12 +2,10 @@
 from . import cache
 
 
-def get_mapping(gene, species="Mouse", force=False):
-    data = cache.get_mapping_data(species=species, force=force)
-
+def _find_uniprot_gene(gene, data):
     try:
-        data.loc[gene]
-        return gene
+        row = data.loc[gene]
+        return row
     except KeyError:
         pass
 
@@ -15,6 +13,30 @@ def get_mapping(gene, species="Mouse", force=False):
         data["Synonyms"].apply(lambda x: gene in x.split("|"))
     ]
     if rows.shape[0] > 0:
-        return rows.index[0]
+        return rows.iloc[0]
 
     return None
+
+
+def get_symbol_mapping(gene, species="Mouse", force=False):
+    """
+    Returns
+    -------
+    pandas.Series
+    """
+    data = cache.get_mapping_data(species=species, force=force)
+
+    row = _find_uniprot_gene(gene, data)
+    return row.index if row is not None else None
+
+
+def get_entrez_mapping(gene, species="Mouse", force=False):
+    """
+    Returns
+    -------
+    pandas.Series
+    """
+    data = cache.get_mapping_data(species=species, force=force)
+
+    row = _find_uniprot_gene(gene, data)
+    return row["GeneID"] if row is not None else None

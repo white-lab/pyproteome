@@ -52,7 +52,7 @@ class BrainRNASeqTest(TestCase):
         for _ in range(2):
             for gene in ["Jak2", "Fd17"]:
                 self.assertEqual(
-                    brs.mapping.get_mapping(
+                    brs.mapping.get_symbol_mapping(
                         gene=gene,
                         species="Mouse",
                     ),
@@ -60,7 +60,7 @@ class BrainRNASeqTest(TestCase):
                 )
 
             self.assertEqual(
-                brs.mapping.get_mapping(
+                brs.mapping.get_symbol_mapping(
                     gene="NaNNaNNaN",
                     species="Mouse",
                 ),
@@ -69,7 +69,7 @@ class BrainRNASeqTest(TestCase):
 
             for gene in ["JAK2", "JTK10", "THCYT3"]:
                 self.assertEqual(
-                    brs.mapping.get_mapping(
+                    brs.mapping.get_symbol_mapping(
                         gene=gene,
                         species="Human",
                     ),
@@ -78,7 +78,7 @@ class BrainRNASeqTest(TestCase):
 
             # Ambiguous gene
             self.assertEqual(
-                brs.mapping.get_mapping(
+                brs.mapping.get_symbol_mapping(
                     gene="AP-1",
                     species="Human",
                 ),
