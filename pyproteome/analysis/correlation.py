@@ -147,6 +147,15 @@ def correlate_data_sets(
         )
 
 
+def pearsonr_nan(a, b, min_length=5):
+    mask = ~(pd.isnull(a) | pd.isnull(b))
+
+    if mask.sum() < min_length:
+        return (np.nan, np.nan)
+
+    return pearsonr(a[mask], b[mask])
+
+
 def spearmanr_nan(a, b, min_length=5):
     mask = ~(pd.isnull(a) | pd.isnull(b))
 
