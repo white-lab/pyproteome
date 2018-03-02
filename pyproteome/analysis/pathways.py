@@ -17,12 +17,13 @@ import requests
 
 # Core data analysis libraries
 # from matplotlib import pyplot as plt
+import numpy as np
 import pandas as pd
 
 
 import pyproteome as pyp
 import brainrnaseq as brs
-from . import enrichments
+from . import correlation, enrichments
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
@@ -98,7 +99,7 @@ def _get_pathways():
     return pathways_df
 
 
-def gsea(ds, **kwargs):
+def gsea(ds, phenotype, **kwargs):
     LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
 
@@ -110,7 +111,7 @@ def gsea(ds, **kwargs):
         set(int(i) for i in row.split("|")),
     )
 
-    LOGGER.info("building changes: {}".format(len(set(ds.genes))))
+    LOGGER.info("mapping genes: {}".format(len(set(ds.genes))))
 
     ds.psms["Entrez"] = ds.psms["Proteins"].apply(
         lambda row:
@@ -120,10 +121,27 @@ def gsea(ds, **kwargs):
         ),
     )
 
+    LOGGER.info("building correlations")
+
+    ds.psms["Correlation"] = ds.psms.apply(
+        lambda row:
+        correlation.pearsonr_nan(
+            row[phenotype.index],
+            phenotype,
+        )[0],
+        # correlation.spearmanr_nan(
+        #     row[phenotype.index],
+        #     phenotype,
+        # ).correlation,
+        axis=1,
+    )
+
     changes = {
-        row["Entrez"]: row["Fold Change"]
+        row["Entrez"]: row["Correlation"]
         for _, row in ds.psms.iterrows()
-        if row["Entrez"] is not None
+        if row["Entrez"] is not None and
+        not np.isnan(row["Entrez"]) and
+        not np.isnan(row["Correlation"])
     }
     LOGGER.info("plotting enrichments")
 
