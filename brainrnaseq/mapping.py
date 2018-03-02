@@ -1,5 +1,5 @@
 
-from . import cache
+from . import cache, utils
 
 
 def _find_uniprot_gene(gene, data):
@@ -23,25 +23,27 @@ def _find_uniprot_gene(gene, data):
     return None
 
 
-def get_symbol_mapping(gene, species="Mouse", force=False):
+@utils.memoize
+def get_symbol_mapping(gene, species="Mouse"):
     """
     Returns
     -------
     pandas.Series
     """
-    data = cache.get_mapping_data(species=species, force=force)
+    data = cache.get_mapping_data(species=species)
 
     row = _find_uniprot_gene(gene, data)
     return row.index if row is not None else None
 
 
-def get_entrez_mapping(gene, species="Mouse", force=False):
+@utils.memoize
+def get_entrez_mapping(gene, species="Mouse"):
     """
     Returns
     -------
     pandas.Series
     """
-    data = cache.get_mapping_data(species=species, force=force)
+    data = cache.get_mapping_data(species=species)
 
     row = _find_uniprot_gene(gene, data)
     return row["GeneID"] if row is not None else None
