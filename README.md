@@ -79,11 +79,10 @@ base_directory/
     BCA Protein Assays/
     CAMV Output/
     CAMV Sessions/
-    Mascot XMLs/
+    Figures/
     MS RAW/
-    Searched/
-    Scan Lists/
     Scripts/
+    Searched/
 ```
 
 Under this scheme, all of your python code / IPython notebooks should go in the
