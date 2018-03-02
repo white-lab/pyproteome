@@ -17,13 +17,12 @@ import requests
 
 # Core data analysis libraries
 # from matplotlib import pyplot as plt
-import numpy as np
 import pandas as pd
 
 
 import pyproteome as pyp
 import brainrnaseq as brs
-from . import correlation, enrichments
+from . import enrichments
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
@@ -104,6 +103,7 @@ def gsea(ds, phenotype, **kwargs):
     LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
     ds = ds.copy()
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
+    ds.psms = ds.psms.sort_values(by="Fold Change", ascending=True)
 
     LOGGER.info("building gene sets")
     pathways_df = _get_pathways()
@@ -127,24 +127,23 @@ def gsea(ds, phenotype, **kwargs):
 
     phenotype = pd.to_numeric(phenotype)
 
+    ds.psms = ds.psms[
+        (~ds.psms["Entrez"].isnull()) &
+        (
+            (~ds.psms[phenotype.index].isnull()).sum(axis=1) >=
+            enrichments.MIN_PERIODS
+        )
+    ]
+
     ds.psms["Correlation"] = ds.psms.apply(
         lambda row:
         phenotype.corr(
             pd.to_numeric(row[phenotype.index]),
             method="pearson",
-            min_periods=5,
+            min_periods=enrichments.MIN_PERIODS,
         ),
-        # correlation.spearmanr_nan(
-        #     row[phenotype.index],
-        #     phenotype,
-        # ).correlation,
         axis=1,
     )
-
-    ds.psms = ds.psms[
-        (~ds.psms["Entrez"].isnull()) &
-        ((~ds.psms[phenotype.index].isnull()).sum(axis=1) >= 5)
-    ]
 
     LOGGER.info("plotting enrichments {}".format(ds.shape))
 

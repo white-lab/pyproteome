@@ -1,7 +1,10 @@
 
-from collections import OrderedDict
+from __future__ import division
+
+from collections import defaultdict
 from functools import partial
 import logging
+import multiprocessing
 
 import numpy as np
 import pandas as pd
@@ -9,21 +12,39 @@ from matplotlib import pyplot as plt
 from sklearn.utils import shuffle
 
 
-from . import correlation
-
 LOGGER = logging.getLogger("pyproteome.enrichments")
+MIN_PERIODS = 5
 
 # Here is the function for calculating gene set enrichment scores.
 # It calculates the association of each gene with a given phenotype
 # and then generates the ES(S) scores for a given gene set.
 
 
+def _calc_p(ess, ess_pi):
+    return [
+        abs(ess) <= abs(i)
+        for i in ess_pi
+        if (i < 0) == (ess < 0)
+    ]
+
+
+def _shuffle(ser):
+    ind = ser.index
+    ser = shuffle(ser)
+    ser.index = ind
+    return ser
+
+
+def _frac_true(x):
+    return sum(x) / max([len(x), 1])
+
+
 def absmax(i):
     return max([abs(min(i)), abs(max(i))])
 
 
-def _calc_pdist(phen, ds=None, gene_sets=None, p=1):
-    return enrichment_scores(
+def _calc_essdist(phen, ds=None, gene_sets=None, p=1):
+    vals = enrichment_scores(
         ds,
         gene_sets,
         phen,
@@ -32,15 +53,13 @@ def _calc_pdist(phen, ds=None, gene_sets=None, p=1):
         pval=False,
     )
 
+    return vals["ES(S)"]
+
 
 def enrichment_scores(
     ds, gene_sets, phenotype,
     p=1, pval=True, recorrelate=False, p_iter=1000,
 ):
-    # if ds.shape[0] < len(gene_set):
-    #     return None
-    # ds = ds.copy()
-
     if recorrelate:
         ds = ds.copy()
         ds.psms["Correlation"] = ds.psms.apply(
@@ -48,71 +67,139 @@ def enrichment_scores(
             phenotype.corr(
                 pd.to_numeric(row[phenotype.index]),
                 method="pearson",
-                min_periods=5,
+                min_periods=MIN_PERIODS,
             ),
-            # correlation.spearmanr_nan(
-            #     row[phenotype.index],
-            #     phenotype,
-            # ).correlation,
             axis=1,
         )
 
-    gene_changes = {
-        row["Entrez"]: row["Correlation"]
-        for _, row in ds.psms.iterrows()
-    }
+    gene_changes = ds.psms[["Entrez", "Correlation"]]
+    gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
+    gene_changes = gene_changes.drop_duplicates(subset="Entrez", keep="last")
+    gene_changes = gene_changes.set_index(keys="Entrez")
 
-    ranked_genes = sorted(
-        gene_changes.items(),
-        key=lambda x: x[1],
-        reverse=True,
+    cols = ["cumscore", "ES(S)", "hits", "n_hits"]
+    vals = pd.DataFrame(
+        columns=cols,
     )
-
-    vals = {}
 
     for set_id, row in gene_sets.iterrows():
         n = len(gene_changes)
-        gene_set = row["set"]
-        n_h = sum(
-            gene in gene_changes
-            for gene in gene_set
-        )
-        n_r = sum(
-            abs(gene_changes.get(gene, 0)) ** p
-            for gene in gene_set
-        )
-
-        hits = [
-            gene in gene_set
-            for gene, _ in ranked_genes
+        gene_set = [
+            gene
+            for gene in row["set"]
+            if gene in gene_changes.index
         ]
+        hits = gene_changes.index.isin(gene_set)
+
+        n_h = len(gene_set)
+        n_r = gene_changes[hits]["Correlation"].apply(
+            lambda x: abs(x) ** p
+        ).sum()
 
         scores = [0] + [
             ((abs(val) ** p) / n_r)
             if hit else
             (-1 / (n - n_h))
-            for hit, (_, val) in zip(hits, ranked_genes)
+            for hit, val in zip(hits, gene_changes["Correlation"])
         ]
         cumscore = np.cumsum(scores)
-        vals[set_id] = (cumscore, hits, 0)
+        vals = vals.append(
+            pd.Series(
+                [
+                    cumscore,
+                    max(cumscore, key=abs),
+                    hits,
+                    sum(hits),
+                ],
+                name=set_id,
+                index=cols,
+            )
+        )
 
     if pval:
-        from multiprocessing import Pool
         LOGGER.info(
             "Calculating p-value for {} gene sets".format(len(gene_sets))
         )
 
-        p_dist = Pool(8).map(
-            partial(_calc_pdist, ds=ds, gene_sets=gene_sets, p=p),
-            [shuffle(phenotype) for _ in range(p_iter)],
+        pool = multiprocessing.Pool(
+            processes=6,
         )
 
-        for key, val in vals.items():
-            pval = sum(
-                absmax(cumscore) > absmax(i[key][0])
-                for i in p_dist
-            ) / len(p_dist)
-            vals[key] = (val[0], val[1], pval)
+        p_df = pd.DataFrame(
+            columns=["NES(S)", "NES(S, pi)"],
+            index=vals.index.copy(),
+        )
+
+        ess_dist = defaultdict(list)
+
+        for ind, ess in enumerate(
+            pool.imap_unordered(
+                partial(_calc_essdist, ds=ds, gene_sets=gene_sets, p=p),
+                [_shuffle(phenotype) for _ in range(p_iter)],
+            ),
+            start=1,
+        ):
+            for key, val in ess.items():
+                ess_dist[key].append(val)
+
+            if ind % (p_iter // 10) == 0:
+                LOGGER.info(
+                    "Calculated {}/{} pvals".format(ind, p_iter)
+                )
+
+        LOGGER.info("Calculating ES(S, pi)")
+
+        vals["ES(S, pi)"] = vals.index.map(
+            lambda row: ess_dist[row],
+        )
+
+        LOGGER.info("Calculated pos, neg means")
+
+        neg = vals["ES(S, pi)"].apply(
+            lambda x:
+            np.mean([i for i in x if i < 0] or [1])
+        )
+        pos = vals["ES(S, pi)"].apply(
+            lambda x:
+            np.mean([i for i in x if i > 0] or [1])
+        )
+
+        LOGGER.info("Calculated pos, neg distributions")
+
+        def _norm_data(ess, key):
+            div = np.array([(neg if i < 0 else pos)[key] for i in ess])
+            return ess / div
+
+        # p_df["NES(S)"] = vals.apply(
+        #     lambda x:
+        #     x["ES(S)"] / (neg if x["ES(S)"] < 0 else pos)[x.name],
+        #     axis=1,
+        # )
+        #
+        # p_df["NES(S, pi)"] = p_df.apply(
+        #     lambda x:
+        #     _norm_data(x["ES(S, pi)"], x.name),
+        #     axis=1,
+        # )
+        LOGGER.info("Normalized NES distributions")
+
+        vals["p-value"] = vals.apply(
+            lambda x:
+            _frac_true(
+                _calc_p(x["ES(S)"], x["ES(S, pi)"])
+            ),
+            axis=1,
+        )
+
+        # vals["q-value"] = p_df.apply(
+        #     lambda x:
+        #     _frac_true(
+        #         max(x["NES(S)"]) < max(x["NES(S, pi)"])
+        #     ),
+        #     axis=1,
+        # )
+
+        LOGGER.info("Calculated p, q values")
 
     return vals
 
@@ -123,13 +210,20 @@ def plot_enrichment(
     p=1,
     cols=5,
     min_hits=10,
-    min_abs_score=0.5,
-    max_pval=.05,
+    min_abs_score=0.4,
+    max_pval=1,
+    max_qval=1,
+    pval=False,
+    p_iter=1000,
 ):
     # Plot the ranked list of correlations
     f, ax = plt.subplots()
+    gene_changes = ds.psms[["Entrez", "Correlation"]]
+    gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
+    gene_changes = gene_changes.drop_duplicates(subset="Entrez", keep="last")
+
     ax.plot(sorted(
-        ds.psms["Correlation"],
+        gene_changes["Correlation"],
         reverse=True,
     ))
     ax.axhline(0, color="k")
@@ -137,7 +231,10 @@ def plot_enrichment(
     ax.set_ylabel("Correlation", fontsize=20)
 
     gene_sets = gene_sets[
-        gene_sets["set"].apply(len) < len(ds.genes)
+        (gene_sets["set"].apply(len) < len(set(ds["Entrez"]))) &
+        gene_sets["set"].apply(
+            lambda x: len(set(ds["Entrez"]).intersection(x)) > min_hits
+        )
     ]
 
     vals = enrichment_scores(
@@ -145,27 +242,33 @@ def plot_enrichment(
         gene_sets,
         phenotype,
         p=p,
-        # pval=False,
+        pval=pval,
+        p_iter=p_iter,
     )
 
-    filtered_vals = sorted(
-        [
-            val
-            for val in vals.items()
-            if sum(val[1][1]) >= min_hits and
-            absmax(val[1][0]) >= min_abs_score and
-            val[1][2] < max_pval
-        ],
-        key=lambda x: sum(x[1][1]),
-        reverse=True,
-    )
+    filtered_vals = vals[
+        vals.apply(
+            lambda x:
+            abs(x["ES(S)"]) >= min_abs_score and (
+                (x["p-value"] < max_pval)
+                if "p-value" in x.index else
+                True
+            ) and (
+                (x["q-value"] < max_qval)
+                if "q-value" in x.index else
+                True
+            ),
+            axis=1,
+        )
+    ]
+    filtered_vals = filtered_vals.sort_values("ES(S)", ascending=False)
 
     LOGGER.info(
         "Filtered {} gene sets down to {} after cutoffs"
         .format(len(vals), len(filtered_vals))
     )
 
-    rows = len(filtered_vals) // cols
+    rows = max([len(filtered_vals) // cols, 1])
     scale = 6
 
     f, axes = plt.subplots(
@@ -177,13 +280,13 @@ def plot_enrichment(
     )
     axes = [i for j in axes for i in j]
 
-    for (index, ax), (set_id, (ess, hits, pval)) in zip(
+    for (index, ax), (set_id, row) in zip(
         enumerate(axes),
-        filtered_vals,
+        filtered_vals.iterrows(),
     ):
-        ax.plot(ess)
+        ax.plot(row["cumscore"])
 
-        for ind, hit in enumerate(hits):
+        for ind, hit in enumerate(row["hits"]):
             if hit:
                 ax.axvline(ind, linestyle="--", alpha=.25)
 
@@ -191,12 +294,19 @@ def plot_enrichment(
         name = name if len(name) < 40 else name[:40] + "..."
 
         ax.set_title(
-            "{}\nhits: {} min/max ES: {:.2f}, p={:.2f}"
+            "{}\nhits: {} ES={:.2f}"
             .format(
                 name,
-                sum(hits),
-                max([min(ess), max(ess)], key=lambda x: abs(x)),
-                pval,
+                row["n_hits"],
+                row["ES(S)"],
+            ) + (
+                ", p={:.2f}".format(
+                    row["p-value"],
+                ) if "p-value" in row.index else ""
+            ) + (
+                ", q={:.2f}".format(
+                    row["q-value"],
+                ) if "q-value" in row.index else ""
             ),
             fontsize=20,
         )
@@ -211,90 +321,3 @@ def plot_enrichment(
         ax.set_ylim(-1, 1)
 
     return vals
-
-
-def scores(sorted_set, gene_set, permute_n=1000, p=1):
-    np.random.seed(0)
-    es_s = max(
-        enrichment_scores(
-            sorted_set,
-            gene_set,
-            p=p,
-        ),
-        key=lambda x: abs(x),
-    )
-    es_s_pi = np.array([
-        max(
-            enrichment_scores(
-                dict(zip(
-                    np.random.permutation(list(sorted_set.keys())),
-                    sorted_set.values()
-                )),
-                gene_set,
-                p=p,
-            ),
-            key=lambda x: abs(x),
-        )
-        for i in range(permute_n)
-    ])
-
-    # Only select the subset of the binomial distribution that we care
-    # about. Not 100% sure if this is kosher, statistically.
-    if es_s >= 0:
-        es_s_pi = es_s_pi[es_s_pi >= 0]
-    else:
-        es_s_pi = es_s_pi[es_s_pi <= 0]
-
-    nes_s = es_s / np.mean(es_s_pi)
-    nes_s_pi = es_s_pi / np.mean(es_s_pi)
-
-    return nes_s, nes_s_pi
-
-
-def plot_permutations(sorted_set, gene_sets, cols=1):
-    rows = len(gene_sets) // cols
-
-    f, axes = plt.subplots(
-        rows, cols,
-        figsize=(2 * cols, 2 * rows),
-        squeeze=False,
-        sharey=True,
-    )
-    f.set_size_inches(cols * 3.5, 4)
-    axes = [i for j in axes for i in j]
-
-    # Compute the distributions of all (S, \pi) and (S) for
-    # later use in calculating the FDR q-value
-    fdr_nes_s, fdr_nes_s_pi = np.array([]), np.array([])
-
-    for gene_set in gene_sets:
-        nes_s, nes_s_pi = scores(sorted_set, gene_set)
-        fdr_nes_s = np.append(fdr_nes_s, [nes_s])
-        fdr_nes_s_pi = np.append(fdr_nes_s_pi, nes_s_pi)
-
-    # Plot each distribution and compute the true p and q-values
-    for index, ax, gene_set in zip(range(len(axes)), axes, gene_sets):
-        nes_s, nes_s_pi = scores(sorted_set, gene_set)
-        p_value = sum(nes_s_pi >= nes_s) / nes_s_pi.size
-
-        q_nominator = sum(fdr_nes_s_pi >= nes_s) / fdr_nes_s_pi.size
-        q_denomator = sum(fdr_nes_s >= nes_s) / fdr_nes_s.size
-
-        q_value = q_nominator / q_denomator
-
-        ax.hist(nes_s_pi, normed=1)
-        ax.axvline(nes_s, color="red")
-        ax.set_title(
-            (
-                "Permuted phenotype labels\nGene set: {}\n"
-                "p-value={:.3f}, FDR q-value={:.3f}"
-            ).format("gene_set", p_value, q_value)
-        )
-
-        if index >= len(axes) - cols:
-            ax.set_xlabel(r"NES(S, $\pi$)", fontsize=20)
-
-        if index % cols == 0:
-            ax.set_ylabel("ES(S)", fontsize=20)
-
-        ax.set_ylim(-1, 1)
