@@ -43,6 +43,20 @@ def absmax(i):
     return max([abs(min(i)), abs(max(i))])
 
 
+def _get_changes(ds):
+    gene_changes = ds.psms[["Entrez", "Correlation"]]
+    gene_changes.is_copy = None
+
+    gene_changes["Abs Corr"] = gene_changes["Correlation"].apply(abs)
+    gene_changes = gene_changes.sort_values(by="Abs Corr", ascending=True)
+    gene_changes = gene_changes.drop_duplicates(subset="Entrez", keep="last")
+
+    gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
+    gene_changes = gene_changes.set_index(keys="Entrez")
+
+    return gene_changes
+
+
 def _calc_essdist(phen, ds=None, gene_sets=None, p=1):
     vals = enrichment_scores(
         ds,
@@ -72,10 +86,7 @@ def enrichment_scores(
             axis=1,
         )
 
-    gene_changes = ds.psms[["Entrez", "Correlation"]]
-    gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
-    gene_changes = gene_changes.drop_duplicates(subset="Entrez", keep="last")
-    gene_changes = gene_changes.set_index(keys="Entrez")
+    gene_changes = _get_changes(ds)
 
     cols = ["cumscore", "ES(S)", "hits", "n_hits"]
     vals = pd.DataFrame(
@@ -218,9 +229,7 @@ def plot_enrichment(
 ):
     # Plot the ranked list of correlations
     f, ax = plt.subplots()
-    gene_changes = ds.psms[["Entrez", "Correlation"]]
-    gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
-    gene_changes = gene_changes.drop_duplicates(subset="Entrez", keep="last")
+    gene_changes = _get_changes(ds)
 
     ax.plot(sorted(
         gene_changes["Correlation"],
