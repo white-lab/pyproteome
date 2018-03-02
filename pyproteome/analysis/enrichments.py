@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from matplotlib import pyplot as plt
 
-LOGGER = logging.getLogger("pyproteome.analysis.enrichments")
+LOGGER = logging.getLogger("pyproteome.enrichments")
 
 # Here is the function for calculating gene set enrichment scores.
 # It calculates the association of each gene with a given phenotype
@@ -20,10 +20,12 @@ def enrichment_scores(gene_changes, gene_set, p=1):
         key=lambda x: x[1],
         reverse=True,
     )
-    # print(ranked_genes)
 
     n = len(gene_changes)
-    n_h = len(gene_set)
+    n_h = sum(
+        gene in gene_changes
+        for gene in gene_set
+    )
     n_r = sum(
         abs(gene_changes.get(gene, 0)) ** p
         for gene in gene_set
@@ -51,6 +53,16 @@ def plot_enrichment(
     min_hits=10,
     min_abs_score=0.5,
 ):
+    # Plot the ranked list of correlations
+    f, ax = plt.subplots()
+    ax.plot(sorted(
+        sorted_set.values(),
+        reverse=True,
+    ))
+    ax.axhline(0, color="k")
+    ax.set_xlabel("Gene List Rank", fontsize=20)
+    ax.set_ylabel("Correlation", fontsize=20)
+
     gene_sets = gene_sets[
         gene_sets["set"].apply(lambda x: len(x) < len(sorted_set))
     ]
@@ -61,11 +73,15 @@ def plot_enrichment(
         ess, hits = enrichment_scores(sorted_set, row["set"], p=p)
         vals[index] = (ess, hits)
 
-    filtered_vals = OrderedDict(
-        (index, (ess, hits))
-        for index, (ess, hits) in vals.items()
-        if sum(hits) >= min_hits and
-        max([abs(max(ess)), abs(min(ess))]) >= min_abs_score
+    filtered_vals = sorted(
+        [
+            (index, (ess, hits))
+            for index, (ess, hits) in vals.items()
+            if sum(hits) >= min_hits and
+            max([abs(max(ess)), abs(min(ess))]) >= min_abs_score
+        ],
+        key=lambda x: max([abs(max(x[1][0])), abs(min(x[1][0]))]),
+        reverse=True,
     )
 
     LOGGER.info(
@@ -74,7 +90,7 @@ def plot_enrichment(
     )
 
     rows = len(filtered_vals) // cols
-    scale = 4
+    scale = 6
 
     f, axes = plt.subplots(
         rows, cols,
@@ -87,7 +103,7 @@ def plot_enrichment(
 
     for (index, ax), (set_id, (ess, hits)) in zip(
         enumerate(axes),
-        filtered_vals.items(),
+        filtered_vals,
     ):
         ax.plot(ess)
 
@@ -96,32 +112,33 @@ def plot_enrichment(
                 ax.axvline(ind, linestyle="--", alpha=.25)
 
         name = gene_sets.loc[set_id]["name"]
-        name = name if len(name) < 20 else name[:20] + "..."
+        name = name if len(name) < 40 else name[:40] + "..."
 
         ax.set_title(
-            "{}, p={}\n(max: {:.2f}, min: {:.2f})"
-            .format(name, p, max(ess), min(ess))
+            "{}\nhits: {} min/max ES: {:.2f}, {:.2f}"
+            .format(name, sum(hits), min(ess), max(ess)),
+            fontsize=20,
         )
         ax.axhline(0, color="k")
 
         if index >= len(axes) - cols:
-            ax.set_xlabel("Gene List Rank")
+            ax.set_xlabel("Gene List Rank", fontsize=20)
 
         if index % cols == 0:
-            ax.set_ylabel("ES(S)")
+            ax.set_ylabel("ES(S)", fontsize=20)
 
         ax.set_ylim(-1, 1)
 
     return vals
 
 
-def scores(sorted_set, gene_set, permute_n=1000):
+def scores(sorted_set, gene_set, permute_n=1000, p=1):
     np.random.seed(0)
     es_s = max(
         enrichment_scores(
             sorted_set,
             gene_set,
-            p=1,
+            p=p,
         ),
         key=lambda x: abs(x),
     )
@@ -133,7 +150,7 @@ def scores(sorted_set, gene_set, permute_n=1000):
                     sorted_set.values()
                 )),
                 gene_set,
-                p=1,
+                p=p,
             ),
             key=lambda x: abs(x),
         )
@@ -192,7 +209,11 @@ def plot_permutations(sorted_set, gene_sets, cols=1):
                 "p-value={:.3f}, FDR q-value={:.3f}"
             ).format("gene_set", p_value, q_value)
         )
-        ax.set_xlabel(r"NES(S, $\pi$)")
+
+        if index >= len(axes) - cols:
+            ax.set_xlabel(r"NES(S, $\pi$)", fontsize=20)
 
         if index % cols == 0:
-            ax.set_ylabel("Frequency")
+            ax.set_ylabel("ES(S)", fontsize=20)
+
+        ax.set_ylim(-1, 1)
