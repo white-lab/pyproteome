@@ -82,6 +82,7 @@ def find_tfs(data, folder_name=None, csv_name=None):
         ]
     )
 
+
 def _get_pathways():
     url = (
         "https://raw.githubusercontent.com/dhimmel/pathways/"
@@ -101,6 +102,7 @@ def _get_pathways():
 
 def gsea(ds, phenotype, **kwargs):
     LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
+    ds = ds.copy()
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
 
     LOGGER.info("building gene sets")
@@ -123,12 +125,15 @@ def gsea(ds, phenotype, **kwargs):
 
     LOGGER.info("building correlations")
 
+    phenotype = pd.to_numeric(phenotype)
+
     ds.psms["Correlation"] = ds.psms.apply(
         lambda row:
-        correlation.pearsonr_nan(
-            row[phenotype.index],
-            phenotype,
-        )[0],
+        phenotype.corr(
+            pd.to_numeric(row[phenotype.index]),
+            method="pearson",
+            min_periods=5,
+        ),
         # correlation.spearmanr_nan(
         #     row[phenotype.index],
         #     phenotype,
@@ -136,16 +141,14 @@ def gsea(ds, phenotype, **kwargs):
         axis=1,
     )
 
-    changes = {
-        row["Entrez"]: row["Correlation"]
-        for _, row in ds.psms.iterrows()
-        if row["Entrez"] is not None and
-        not np.isnan(row["Entrez"]) and
-        not np.isnan(row["Correlation"])
-    }
-    LOGGER.info("plotting enrichments")
+    ds.psms = ds.psms[
+        (~ds.psms["Entrez"].isnull()) &
+        ((~ds.psms[phenotype.index].isnull()).sum(axis=1) >= 5)
+    ]
+
+    LOGGER.info("plotting enrichments {}".format(ds.shape))
 
     return enrichments.plot_enrichment(
-        changes, pathways_df,
+        ds, pathways_df, phenotype,
         **kwargs
     )

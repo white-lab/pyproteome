@@ -1,8 +1,15 @@
 
 from collections import OrderedDict
+from functools import partial
 import logging
+
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
+from sklearn.utils import shuffle
+
+
+from . import correlation
 
 LOGGER = logging.getLogger("pyproteome.enrichments")
 
@@ -11,9 +18,49 @@ LOGGER = logging.getLogger("pyproteome.enrichments")
 # and then generates the ES(S) scores for a given gene set.
 
 
-def enrichment_scores(gene_changes, gene_set, p=1):
-    if len(gene_changes) < len(gene_set):
-        return None
+def absmax(i):
+    return max([abs(min(i)), abs(max(i))])
+
+
+def _calc_pdist(phen, ds=None, gene_sets=None, p=1):
+    return enrichment_scores(
+        ds,
+        gene_sets,
+        phen,
+        p=p,
+        recorrelate=True,
+        pval=False,
+    )
+
+
+def enrichment_scores(
+    ds, gene_sets, phenotype,
+    p=1, pval=True, recorrelate=False, p_iter=1000,
+):
+    # if ds.shape[0] < len(gene_set):
+    #     return None
+    # ds = ds.copy()
+
+    if recorrelate:
+        ds = ds.copy()
+        ds.psms["Correlation"] = ds.psms.apply(
+            lambda row:
+            phenotype.corr(
+                pd.to_numeric(row[phenotype.index]),
+                method="pearson",
+                min_periods=5,
+            ),
+            # correlation.spearmanr_nan(
+            #     row[phenotype.index],
+            #     phenotype,
+            # ).correlation,
+            axis=1,
+        )
+
+    gene_changes = {
+        row["Entrez"]: row["Correlation"]
+        for _, row in ds.psms.iterrows()
+    }
 
     ranked_genes = sorted(
         gene_changes.items(),
@@ -21,42 +68,68 @@ def enrichment_scores(gene_changes, gene_set, p=1):
         reverse=True,
     )
 
-    n = len(gene_changes)
-    n_h = sum(
-        gene in gene_changes
-        for gene in gene_set
-    )
-    n_r = sum(
-        abs(gene_changes.get(gene, 0)) ** p
-        for gene in gene_set
-    )
-    hits = [
-        gene in gene_set
-        for gene, _ in ranked_genes
-    ]
+    vals = {}
 
-    scores = [0] + [
-        ((abs(val) ** p) / n_r)
-        if hit else
-        (-1 / (n - n_h))
-        for hit, (_, val) in zip(hits, ranked_genes)
-    ]
+    for set_id, row in gene_sets.iterrows():
+        n = len(gene_changes)
+        gene_set = row["set"]
+        n_h = sum(
+            gene in gene_changes
+            for gene in gene_set
+        )
+        n_r = sum(
+            abs(gene_changes.get(gene, 0)) ** p
+            for gene in gene_set
+        )
 
-    return np.cumsum(scores), hits
+        hits = [
+            gene in gene_set
+            for gene, _ in ranked_genes
+        ]
+
+        scores = [0] + [
+            ((abs(val) ** p) / n_r)
+            if hit else
+            (-1 / (n - n_h))
+            for hit, (_, val) in zip(hits, ranked_genes)
+        ]
+        cumscore = np.cumsum(scores)
+        vals[set_id] = (cumscore, hits, 0)
+
+    if pval:
+        from multiprocessing import Pool
+        LOGGER.info(
+            "Calculating p-value for {} gene sets".format(len(gene_sets))
+        )
+
+        p_dist = Pool(8).map(
+            partial(_calc_pdist, ds=ds, gene_sets=gene_sets, p=p),
+            [shuffle(phenotype) for _ in range(p_iter)],
+        )
+
+        for key, val in vals.items():
+            pval = sum(
+                absmax(cumscore) > absmax(i[key][0])
+                for i in p_dist
+            ) / len(p_dist)
+            vals[key] = (val[0], val[1], pval)
+
+    return vals
 
 
 # Here's a helper function to generate the plots seen below
 def plot_enrichment(
-    sorted_set, gene_sets,
+    ds, gene_sets, phenotype,
     p=1,
     cols=5,
     min_hits=10,
     min_abs_score=0.5,
+    max_pval=.05,
 ):
     # Plot the ranked list of correlations
     f, ax = plt.subplots()
     ax.plot(sorted(
-        sorted_set.values(),
+        ds.psms["Correlation"],
         reverse=True,
     ))
     ax.axhline(0, color="k")
@@ -64,23 +137,26 @@ def plot_enrichment(
     ax.set_ylabel("Correlation", fontsize=20)
 
     gene_sets = gene_sets[
-        gene_sets["set"].apply(lambda x: len(x) < len(sorted_set))
+        gene_sets["set"].apply(len) < len(ds.genes)
     ]
 
-    vals = OrderedDict()
-
-    for index, row in gene_sets.iterrows():
-        ess, hits = enrichment_scores(sorted_set, row["set"], p=p)
-        vals[index] = (ess, hits)
+    vals = enrichment_scores(
+        ds,
+        gene_sets,
+        phenotype,
+        p=p,
+        # pval=False,
+    )
 
     filtered_vals = sorted(
         [
-            (index, (ess, hits))
-            for index, (ess, hits) in vals.items()
-            if sum(hits) >= min_hits and
-            max([abs(max(ess)), abs(min(ess))]) >= min_abs_score
+            val
+            for val in vals.items()
+            if sum(val[1][1]) >= min_hits and
+            absmax(val[1][0]) >= min_abs_score and
+            val[1][2] < max_pval
         ],
-        key=lambda x: max([abs(max(x[1][0])), abs(min(x[1][0]))]),
+        key=lambda x: sum(x[1][1]),
         reverse=True,
     )
 
@@ -101,7 +177,7 @@ def plot_enrichment(
     )
     axes = [i for j in axes for i in j]
 
-    for (index, ax), (set_id, (ess, hits)) in zip(
+    for (index, ax), (set_id, (ess, hits, pval)) in zip(
         enumerate(axes),
         filtered_vals,
     ):
@@ -115,8 +191,13 @@ def plot_enrichment(
         name = name if len(name) < 40 else name[:40] + "..."
 
         ax.set_title(
-            "{}\nhits: {} min/max ES: {:.2f}, {:.2f}"
-            .format(name, sum(hits), min(ess), max(ess)),
+            "{}\nhits: {} min/max ES: {:.2f}, p={:.2f}"
+            .format(
+                name,
+                sum(hits),
+                max([min(ess), max(ess)], key=lambda x: abs(x)),
+                pval,
+            ),
             fontsize=20,
         )
         ax.axhline(0, color="k")
