@@ -316,11 +316,11 @@ def plot_enrichment(
         vals.apply(
             lambda x:
             abs(x["ES(S)"]) >= min_abs_score and (
-                (x["p-value"] < max_pval)
+                (x["p-value"] <= max_pval)
                 if "p-value" in x.index else
                 True
             ) and (
-                (x["q-value"] < max_qval)
+                (x["q-value"] <= max_qval)
                 if "q-value" in x.index else
                 True
             ),
