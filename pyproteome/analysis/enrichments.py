@@ -107,14 +107,12 @@ def estimate_pq(vals):
     pos_nes = (pos_ess / pos_mean)
     neg_nes = (neg_ess / neg_mean)
 
-    pos_pi_nes = np.concatenate(
-        (pos_pi / pos_mean).as_matrix()
-    )
-    neg_pi_nes = np.concatenate(
-        (pos_pi / pos_mean).as_matrix()
-    )
+    pos_pi_nes = pos_pi / pos_mean
+    neg_pi_nes = neg_pi / neg_mean
 
     vals["NES(S)"] = pos_nes.fillna(neg_nes)
+    vals["pos NES(S, pi)"] = pos_pi_nes
+    vals["neg NES(S, pi)"] = neg_pi_nes
 
     for index, row in pos_nes.items():
         assert not np.isnan(row) or not np.isnan(neg_nes[index])
@@ -126,8 +124,8 @@ def estimate_pq(vals):
     pos_pdf = PrPDF(pos_nes.dropna().as_matrix())
     neg_pdf = PrPDF(neg_nes.dropna().as_matrix())
 
-    pos_pi_pdf = PrPDF(pos_pi_nes)
-    neg_pi_pdf = PrPDF(neg_pi_nes)
+    pos_pi_pdf = PrPDF(np.concatenate(pos_pi_nes.as_matrix()))
+    neg_pi_pdf = PrPDF(np.concatenate(neg_pi_nes.as_matrix()))
 
     LOGGER.info("Normalized NES distributions")
 
