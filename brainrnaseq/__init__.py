@@ -3,7 +3,7 @@ from . import cache, mapping, enrichments
 
 
 CELL_TYPE_COLS = {
-    "Human": {
+    "Homo sapiens": {
         "Astrocyte": [
             '8yo',
             '13yo', '16yo', '21yo.1', '22yo.1', '35yo', '47yo', '51yo', '53yo',
@@ -32,7 +32,7 @@ CELL_TYPE_COLS = {
             "47yo.1",
         ],
     },
-    "Mouse": {
+    "Mus musculus": {
         "Astrocyte": [
             # "FACS - p69",
             # "FACS p70",

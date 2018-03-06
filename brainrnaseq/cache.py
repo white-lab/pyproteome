@@ -28,18 +28,9 @@ BARRES_DATA_NAME = "TableS4-HumanMouseMasterFPKMList.xlsx"
 BARRES_SEQ_PATH = os.path.join(CACHE_DIR, BARRES_DATA_NAME)
 
 # MAPPING_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/"
-# HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz"
-# MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz"
 MAPPING_URL = (
     "https://github.com/white-lab/pyproteome-data/raw/master/brainrnaseq/"
 )
-HUMAN_MAPPING_URL = MAPPING_URL + "Homo_sapiens.gene_info.gz"
-MOUSE_MAPPING_URL = MAPPING_URL + "Mus_musculus.gene_info.gz"
-
-MAPPING_URLS = {
-    "Human": HUMAN_MAPPING_URL,
-    "Mouse": MOUSE_MAPPING_URL
-}
 
 ENRICHMENT_CACHE = os.path.join(CACHE_DIR, "enrichment_cache.pickle")
 MAPPING_CACHE = os.path.join(CACHE_DIR, "mapping_cache.pickle")
@@ -64,12 +55,12 @@ def get_barres_seq_data(force=False):
 
     LOGGER.info("Reading Barres RNA Seq Data")
     SPECIES_DATA = {
-        "Human": pd.read_excel(
+        "Homo sapiens": pd.read_excel(
             BARRES_SEQ_PATH,
             sheet_name="Human data only",
             skiprows=[0],
         ).iloc[1:],
-        "Mouse": pd.read_excel(
+        "Mus musculus": pd.read_excel(
             BARRES_SEQ_PATH,
             sheet_name="Mouse data only",
             skiprows=[0],
@@ -77,7 +68,8 @@ def get_barres_seq_data(force=False):
     }
 
 
-def fetch_mapping_data(url):
+def fetch_mapping_data(species):
+    url = "{}{}.gene_info.gz".format(MAPPING_URL, "_".join(species.split(" ")))
     LOGGER.info("Fetching mapping data from {}".format(url))
 
     response = requests.get(url, stream=True)
@@ -101,7 +93,7 @@ def fetch_mapping_data(url):
     return df
 
 
-def get_mapping_data(species="Mouse", force=False):
+def get_mapping_data(species="Mus musculus", force=False):
     global MAPPING_DATA
     global MAPPING_CACHE
 
@@ -115,13 +107,11 @@ def get_mapping_data(species="Mouse", force=False):
         else:
             MAPPING_DATA = {}
 
-    assert species in MAPPING_URLS
-
     if species in MAPPING_DATA:
         return MAPPING_DATA[species]
 
     MAPPING_DATA[species] = fetch_mapping_data(
-        MAPPING_URLS[species]
+        species
     )
 
     try:

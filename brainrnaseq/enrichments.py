@@ -68,7 +68,7 @@ def get_enrichments(species, add_mappings=True, cutoff=2.5, **kwargs):
         if val[1] >= cutoff
     }
 
-    for index, row in cache.get_mapping_data().iterrows():
+    for index, row in cache.get_mapping_data(species=species).iterrows():
         if index not in enrichments:
             continue
 
