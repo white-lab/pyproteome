@@ -96,22 +96,20 @@ def _get_pathways():
     #
     pathways_df = pd.read_table(url)
 
+    pathways_df["set"] = pathways_df["genes"].apply(
+        lambda row:
+        set(int(i) for i in row.split("|")),
+    )
+
     return pathways_df
 
 
 def gsea(ds, phenotype, **kwargs):
     LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
-    ds = ds.copy()
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
-    ds.psms = ds.psms.sort_values(by="Fold Change", ascending=True)
 
     LOGGER.info("building gene sets")
     pathways_df = _get_pathways()
-
-    pathways_df["set"] = pathways_df["genes"].apply(
-        lambda row:
-        set(int(i) for i in row.split("|")),
-    )
 
     LOGGER.info("mapping genes: {}".format(len(set(ds.genes))))
 
@@ -135,15 +133,7 @@ def gsea(ds, phenotype, **kwargs):
         )
     ]
 
-    ds.psms["Correlation"] = ds.psms.apply(
-        lambda row:
-        phenotype.corr(
-            pd.to_numeric(row[phenotype.index]),
-            method="pearson",
-            min_periods=enrichments.MIN_PERIODS,
-        ),
-        axis=1,
-    )
+    ds = enrichments.correlate_phenotype(ds, phenotype)
 
     LOGGER.info("plotting enrichments {}".format(ds.shape))
 

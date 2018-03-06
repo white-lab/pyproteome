@@ -15,10 +15,6 @@ from sklearn.utils import shuffle
 LOGGER = logging.getLogger("pyproteome.enrichments")
 MIN_PERIODS = 5
 
-# Here is the function for calculating gene set enrichment scores.
-# It calculates the association of each gene with a given phenotype
-# and then generates the ES(S) scores for a given gene set.
-
 
 def _calc_p(ess, ess_pi):
     return [
@@ -33,6 +29,128 @@ def _shuffle(ser):
     ser = shuffle(ser)
     ser.index = ind
     return ser
+
+
+def simulate_es_s_pi(
+    vals,
+    ds, gene_sets, phenotype,
+    p=1,
+    p_iter=1000,
+):
+    LOGGER.info(
+        "Calculating ES(S, pi) for {} gene sets".format(len(gene_sets))
+    )
+    pool = multiprocessing.Pool(
+        processes=6,
+    )
+
+    ess_dist = defaultdict(list)
+
+    for ind, ess in enumerate(
+        pool.imap_unordered(
+            partial(_calc_essdist, ds=ds, gene_sets=gene_sets, p=p),
+            [_shuffle(phenotype) for _ in range(p_iter)],
+        ),
+        start=1,
+    ):
+        for key, val in ess.items():
+            ess_dist[key].append(val)
+
+        if ind % (p_iter // 10) == 0:
+            LOGGER.info(
+                "Calculated {}/{} pvals".format(ind, p_iter)
+            )
+
+    LOGGER.info("Calculating ES(S, pi)")
+
+    vals["ES(S, pi)"] = vals.index.map(
+        lambda row: ess_dist[row],
+    )
+
+    return vals
+
+
+def _calc_q(nes, nes_pdf, nes_pi_pdf):
+    return (
+        nes_pi_pdf.pdf(nes) + nes_pi_pdf.sf(nes)
+    ) / (
+        nes_pdf.pdf(nes) + nes_pdf.sf(nes)
+    )
+
+
+class PrPDF(object):
+    def __init__(self, data):
+        self.data = np.sort(data)
+
+    def pdf(self, x):
+        return 1 / self.data.shape[0]
+
+    def cdf(self, x):
+        return np.searchsorted(self.data, x, side="left") / self.data.shape[0]
+
+    def sf(self, x):
+        return 1 - self.cdf(x) - self.pdf(x)
+
+
+def estimate_pq(vals):
+    vals = vals.copy()
+
+    pos_ess = vals["ES(S)"][vals["ES(S)"] > 0]
+    neg_ess = vals["ES(S)"][vals["ES(S)"] < 0]
+
+    pos_pi = vals["ES(S, pi)"].apply(np.array).apply(lambda x: x[x > 0])
+    neg_pi = vals["ES(S, pi)"].apply(np.array).apply(lambda x: x[x < 0])
+
+    pos_mean = pos_pi.apply(np.mean)
+    neg_mean = neg_pi.apply(np.mean)
+
+    pos_nes = (pos_ess / pos_mean)
+    neg_nes = (neg_ess / neg_mean)
+
+    pos_pi_nes = np.concatenate(
+        (pos_pi / pos_mean).as_matrix()
+    )
+    neg_pi_nes = np.concatenate(
+        (pos_pi / pos_mean).as_matrix()
+    )
+
+    vals["NES(S)"] = pos_nes.fillna(neg_nes)
+
+    for index, row in pos_nes.items():
+        assert not np.isnan(row) or not np.isnan(neg_nes[index])
+    for index, row in neg_nes.items():
+        assert not np.isnan(row) or not np.isnan(pos_nes[index])
+
+    LOGGER.info("Calculated pos, neg distributions")
+
+    pos_pdf = PrPDF(pos_nes.dropna().as_matrix())
+    neg_pdf = PrPDF(neg_nes.dropna().as_matrix())
+
+    pos_pi_pdf = PrPDF(pos_pi_nes)
+    neg_pi_pdf = PrPDF(neg_pi_nes)
+
+    LOGGER.info("Normalized NES distributions")
+
+    vals["p-value"] = vals.apply(
+        lambda x:
+        _frac_true(
+            _calc_p(x["ES(S)"], x["ES(S, pi)"])
+        ),
+        axis=1,
+    )
+
+    vals["q-value"] = vals.apply(
+        lambda x:
+        _calc_q(
+            x["NES(S)"],
+            pos_pdf if x["ES(S)"] > 0 else neg_pdf,
+            pos_pi_pdf if x["ES(S)"] > 0 else neg_pi_pdf,
+        ),
+        axis=1,
+    )
+
+    LOGGER.info("Calculated p, q values")
+    return vals
 
 
 def _frac_true(x):
@@ -70,21 +188,54 @@ def _calc_essdist(phen, ds=None, gene_sets=None, p=1):
     return vals["ES(S)"]
 
 
+def correlate_phenotype(ds, phenotype):
+    ds = ds.copy()
+    ds.psms["Correlation"] = ds.psms.apply(
+        lambda row:
+        phenotype.corr(
+            pd.to_numeric(row[phenotype.index]),
+            method="pearson",
+            min_periods=MIN_PERIODS,
+        ),
+        axis=1,
+    )
+    return ds
+
+
+def calculate_es_s(gene_changes, gene_set, p=1):
+    n = len(gene_changes)
+    gene_set = [
+        gene
+        for gene in gene_set
+        if gene in gene_changes.index
+    ]
+    hits = gene_changes.index.isin(gene_set)
+
+    n_h = len(gene_set)
+    n_r = gene_changes[hits]["Correlation"].apply(
+        lambda x: abs(x) ** p
+    ).sum()
+
+    scores = [0] + [
+        ((abs(val) ** p) / n_r)
+        if hit else
+        (-1 / (n - n_h))
+        for hit, val in zip(hits, gene_changes["Correlation"])
+    ]
+    return hits, np.cumsum(scores)
+
+
 def enrichment_scores(
     ds, gene_sets, phenotype,
     p=1, pval=True, recorrelate=False, p_iter=1000,
 ):
+    """
+    Here is the function for calculating gene set enrichment scores.
+    It calculates the association of each gene with a given phenotype
+    and then generates the ES(S) scores for a given gene set.
+    """
     if recorrelate:
-        ds = ds.copy()
-        ds.psms["Correlation"] = ds.psms.apply(
-            lambda row:
-            phenotype.corr(
-                pd.to_numeric(row[phenotype.index]),
-                method="pearson",
-                min_periods=MIN_PERIODS,
-            ),
-            axis=1,
-        )
+        ds = correlate_phenotype(ds, phenotype)
 
     gene_changes = _get_changes(ds)
 
@@ -94,26 +245,11 @@ def enrichment_scores(
     )
 
     for set_id, row in gene_sets.iterrows():
-        n = len(gene_changes)
-        gene_set = [
-            gene
-            for gene in row["set"]
-            if gene in gene_changes.index
-        ]
-        hits = gene_changes.index.isin(gene_set)
-
-        n_h = len(gene_set)
-        n_r = gene_changes[hits]["Correlation"].apply(
-            lambda x: abs(x) ** p
-        ).sum()
-
-        scores = [0] + [
-            ((abs(val) ** p) / n_r)
-            if hit else
-            (-1 / (n - n_h))
-            for hit, val in zip(hits, gene_changes["Correlation"])
-        ]
-        cumscore = np.cumsum(scores)
+        hits, cumscore = calculate_es_s(
+            gene_changes,
+            row["set"],
+            p=p,
+        )
         vals = vals.append(
             pd.Series(
                 [
@@ -128,89 +264,12 @@ def enrichment_scores(
         )
 
     if pval:
-        LOGGER.info(
-            "Calculating p-value for {} gene sets".format(len(gene_sets))
+        vals = simulate_es_s_pi(
+            vals, ds, gene_sets, phenotype,
+            p=p,
+            p_iter=p_iter,
         )
-
-        pool = multiprocessing.Pool(
-            processes=6,
-        )
-
-        p_df = pd.DataFrame(
-            columns=["NES(S)", "NES(S, pi)"],
-            index=vals.index.copy(),
-        )
-
-        ess_dist = defaultdict(list)
-
-        for ind, ess in enumerate(
-            pool.imap_unordered(
-                partial(_calc_essdist, ds=ds, gene_sets=gene_sets, p=p),
-                [_shuffle(phenotype) for _ in range(p_iter)],
-            ),
-            start=1,
-        ):
-            for key, val in ess.items():
-                ess_dist[key].append(val)
-
-            if ind % (p_iter // 10) == 0:
-                LOGGER.info(
-                    "Calculated {}/{} pvals".format(ind, p_iter)
-                )
-
-        LOGGER.info("Calculating ES(S, pi)")
-
-        vals["ES(S, pi)"] = vals.index.map(
-            lambda row: ess_dist[row],
-        )
-
-        LOGGER.info("Calculated pos, neg means")
-
-        neg = vals["ES(S, pi)"].apply(
-            lambda x:
-            np.mean([i for i in x if i < 0] or [1])
-        )
-        pos = vals["ES(S, pi)"].apply(
-            lambda x:
-            np.mean([i for i in x if i > 0] or [1])
-        )
-
-        LOGGER.info("Calculated pos, neg distributions")
-
-        def _norm_data(ess, key):
-            div = np.array([(neg if i < 0 else pos)[key] for i in ess])
-            return ess / div
-
-        # p_df["NES(S)"] = vals.apply(
-        #     lambda x:
-        #     x["ES(S)"] / (neg if x["ES(S)"] < 0 else pos)[x.name],
-        #     axis=1,
-        # )
-        #
-        # p_df["NES(S, pi)"] = p_df.apply(
-        #     lambda x:
-        #     _norm_data(x["ES(S, pi)"], x.name),
-        #     axis=1,
-        # )
-        LOGGER.info("Normalized NES distributions")
-
-        vals["p-value"] = vals.apply(
-            lambda x:
-            _frac_true(
-                _calc_p(x["ES(S)"], x["ES(S, pi)"])
-            ),
-            axis=1,
-        )
-
-        # vals["q-value"] = p_df.apply(
-        #     lambda x:
-        #     _frac_true(
-        #         max(x["NES(S)"]) < max(x["NES(S, pi)"])
-        #     ),
-        #     axis=1,
-        # )
-
-        LOGGER.info("Calculated p, q values")
+        vals = estimate_pq(vals)
 
     return vals
 
@@ -297,7 +356,7 @@ def plot_enrichment(
 
         for ind, hit in enumerate(row["hits"]):
             if hit:
-                ax.axvline(ind, linestyle="--", alpha=.25)
+                ax.axvline(ind, linestyle=":", alpha=.25)
 
         name = gene_sets.loc[set_id]["name"]
         name = name if len(name) < 40 else name[:40] + "..."
