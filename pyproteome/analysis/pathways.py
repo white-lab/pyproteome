@@ -8,8 +8,11 @@ Functions include volcano plots, sorted tables, and plotting sequence levels.
 from __future__ import absolute_import, division
 
 # Built-ins
+import gzip
+import io
 import logging
 import os
+import re
 import requests
 
 # IPython
@@ -26,6 +29,10 @@ from . import enrichments
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
+WIKIPATHWAYS_URL = (
+    "http://data.wikipathways.org/20180210/gmt/"
+    "wikipathways-20180210-gmt-{}.gmt"
+)
 
 
 def find_tfs(data, folder_name=None, csv_name=None):
@@ -82,24 +89,72 @@ def find_tfs(data, folder_name=None, csv_name=None):
     )
 
 
-def _get_pathways():
-    url = (
-        "https://raw.githubusercontent.com/dhimmel/pathways/"
-        "master/data/pathways.tsv"
+def _get_pathway_common(species):
+    PATHWAYS_COMMON_URL = (
+        "http://www.pathwaycommons.org/archives/PC2/v9/"
+        "PathwayCommons9.All.hgnc.gmt.gz"
     )
-    # response = requests.get(url, stream=True)
-    # response.raise_for_status()
-    #
-    # with open("pathways.tsv", "wb") as f:
-    #     for block in response.iter_content(1024):
-    #         f.write(block)
-    #
-    pathways_df = pd.read_table(url)
+    r = requests.get(PATHWAYS_COMMON_URL, stream=True)
+    r.raise_for_status()
 
-    pathways_df["set"] = pathways_df["genes"].apply(
-        lambda row:
-        set(int(i) for i in row.split("|")),
+    name_re = re.compile(
+        "name: (.+); datasource: (.+); organism: (.+); idtype: (.+)"
     )
+
+    def _get_data(line):
+        line = line.decode()
+        _, name, genes = line.split("\t", 2)
+        name = name_re.match(name)
+
+        name = {
+            "name": name.group(1),
+            "datasource": name.group(2),
+            "organism": name.group(3),
+            "id_type": name.group(4),
+        }
+
+        assert int(name["organism"]) == 9606
+
+        genes = set(
+            brs.mapping.get_entrez_mapping(i, species=species)
+            for i in genes.split("\t")
+        )
+
+        return name["name"], genes
+
+    pathways_df = pd.DataFrame(
+        data=[
+            _get_data(line)
+            for line in gzip.GzipFile(fileobj=io.BytesIO(r.raw.read()))
+        ],
+        columns=["name", "set"],
+    )
+
+    return pathways_df
+
+
+def _get_pathways(species):
+    url = WIKIPATHWAYS_URL.format("_".join(species.split(" ")))
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+
+    def _get_data(line):
+        line = line.decode()
+        name, _, genes = line.split("\t", 2)
+        name, _, _, species = name.split("%")
+        assert species == species
+        return name, set(genes.split("\t"))
+
+    pathways_df = pd.DataFrame(
+        data=[
+            _get_data(line)
+            for line in response.iter_lines()
+        ],
+        columns=["name", "set"],
+    )
+
+    if species in ["Homo sapiens"]:
+        pathways_df = pathways_df.append(_get_pathway_common(species))
 
     return pathways_df
 
@@ -107,9 +162,10 @@ def _get_pathways():
 def gsea(ds, phenotype, **kwargs):
     LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
+    species = list(ds.species)[0]
 
     LOGGER.info("building gene sets")
-    pathways_df = _get_pathways()
+    pathways_df = _get_pathways(species)
 
     LOGGER.info("mapping genes: {}".format(len(set(ds.genes))))
 
@@ -117,7 +173,7 @@ def gsea(ds, phenotype, **kwargs):
         lambda row:
         brs.mapping.get_entrez_mapping(
             row.genes[0],
-            species="Human",
+            species=species,
         ),
     )
 
