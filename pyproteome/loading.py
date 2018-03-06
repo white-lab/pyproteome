@@ -116,7 +116,7 @@ def load_mascot_psms(basename, pick_best_ptm=False):
     accepted, maybed, rejected = camv.load_camv_validation(basename)
     lst = (accepted, maybed, rejected)
 
-    psms = discoverer.read_discoverer_msf(
+    psms, species = discoverer.read_discoverer_msf(
         basename,
         pick_best_ptm=(
             pick_best_ptm and
@@ -129,4 +129,4 @@ def load_mascot_psms(basename, pick_best_ptm=False):
     psms = _calculate_rejected(psms, accepted, maybed, rejected)
     psms = _calculate_accepted(psms, accepted)
 
-    return psms, lst
+    return psms, species, lst

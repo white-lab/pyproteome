@@ -134,10 +134,10 @@ class DataSet:
         self.cmp_groups = cmp_groups or None
         self.group_a, self.group_b = None, None
 
-        lst = []
+        species, lst = set(), []
 
         if search_name and load:
-            self.psms, lst = loading.load_mascot_psms(
+            self.psms, species, lst = loading.load_mascot_psms(
                 search_name,
                 pick_best_ptm=pick_best_ptm,
             )
@@ -151,6 +151,7 @@ class DataSet:
         self.name = name
         self.levels = lvls
         self.search_name = search_name
+        self.species = species
 
         self.intra_normalized = False
         self.sets = 1
@@ -1439,6 +1440,11 @@ def merge_data(
             for grp in i.cmp_groups
         )
     ) or None
+    new.species = set(
+        species
+        for i in data_sets
+        for species in i.species
+    )
 
     new.update_group_changes()
 

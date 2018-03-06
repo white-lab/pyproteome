@@ -580,6 +580,25 @@ def _get_phosphors(df, cursor):
     return df
 
 
+def _get_species(cursor):
+    fields = cursor.execute(
+        """
+        SELECT
+        ProcessingNodeParameters.ParameterValue
+        FROM ProcessingNodeParameters
+        WHERE ProcessingNodeParameters.ParameterName="Taxonomy"
+        """,
+    )
+    species = set()
+
+    for name, in fields:
+        # ". . . . . . . . . . . . . . . . Homo sapiens (human)"
+        # => "Homo sapiens"
+        species.add(" ".join(name.strip(". ").split(" ")[:2]))
+
+    return species
+
+
 def update_label_names(cursor):
     fields = cursor.execute(
         """
@@ -686,6 +705,8 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _get_filenames(df, cursor)
         df = _get_quantifications(df, cursor, tag_names)
 
+        species = _get_species(cursor)
+
     df["Scan Paths"] = basename
 
     df.reset_index(inplace=True, drop=True)
@@ -699,4 +720,4 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         )
     )
 
-    return df
+    return df, species
