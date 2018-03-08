@@ -4,6 +4,7 @@
 from collections import OrderedDict, Callable
 import copy
 import difflib
+import functools
 import os
 import types
 
@@ -198,5 +199,22 @@ class DefaultOrderedDict(OrderedDict):
                           copy.deepcopy(self.items()))
 
     def __repr__(self):
-        return 'OrderedDefaultDict(%s, %s)' % (self.default_factory,
-                                               OrderedDict.__repr__(self))
+        return 'OrderedDefaultDict(%s, %s)' % (
+            self.default_factory,
+            OrderedDict.__repr__(self),
+        )
+
+
+def memoize(func):
+    cache = func.cache = {}
+
+    @functools.wraps(func)
+    def memoized_func(*args, **kwargs):
+        key = str(args) + str(kwargs)
+
+        if key not in cache:
+            cache[key] = func(*args, **kwargs)
+
+        return cache[key]
+
+    return memoized_func

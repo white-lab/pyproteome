@@ -237,7 +237,7 @@ def enrichment_scores(
 
     gene_changes = _get_changes(ds)
 
-    cols = ["cumscore", "ES(S)", "hits", "n_hits"]
+    cols = ["name", "cumscore", "ES(S)", "hits", "n_hits"]
     vals = pd.DataFrame(
         columns=cols,
     )
@@ -251,6 +251,7 @@ def enrichment_scores(
         vals = vals.append(
             pd.Series(
                 [
+                    row["name"],
                     cumscore,
                     max(cumscore, key=abs),
                     hits,
@@ -284,24 +285,36 @@ def plot_enrichment(
     pval=False,
     p_iter=1000,
 ):
-    # Plot the ranked list of correlations
-    f, ax = plt.subplots()
+    LOGGER.info("Getting gene correlations")
+
     gene_changes = _get_changes(ds)
 
-    ax.plot(sorted(
-        gene_changes["Correlation"],
-        reverse=True,
-    ))
+    LOGGER.info("Plotting gene correlations")
+
+    # Plot the ranked list of correlations
+    f, ax = plt.subplots()
+    ax.plot(gene_changes["Correlation"].sort_values(ascending=False).tolist())
     ax.axhline(0, color="k")
     ax.set_xlabel("Gene List Rank", fontsize=20)
     ax.set_ylabel("Correlation", fontsize=20)
 
+    LOGGER.info("Filtering gene sets")
+
+    total_sets = gene_sets
+    all_genes = set(ds["Entrez"].apply(int))
+
     gene_sets = gene_sets[
-        (gene_sets["set"].apply(len) < len(set(ds["Entrez"]))) &
         gene_sets["set"].apply(
-            lambda x: len(set(ds["Entrez"]).intersection(x)) > min_hits
+            lambda x:
+            len(x) < len(all_genes) and
+            len(all_genes.intersection(x)) > min_hits
         )
     ]
+
+    LOGGER.info(
+        "Filtered {} gene sets down to {} with {} or more genes present"
+        .format(total_sets.shape[0], gene_sets.shape[0], min_hits)
+    )
 
     vals = enrichment_scores(
         ds,

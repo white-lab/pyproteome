@@ -33,6 +33,13 @@ WIKIPATHWAYS_URL = (
     "http://data.wikipathways.org/20180210/gmt/"
     "wikipathways-20180210-gmt-{}.gmt"
 )
+PATHWAYS_COMMON_URL = (
+    "http://www.pathwaycommons.org/archives/PC2/v9/"
+    "PathwayCommons9.All.hgnc.gmt.gz"
+)
+GSKB_URL = (
+    "http://ge-lab.org/gskb/2-MousePath/mGSKB_Entrez.gmt"
+)
 
 
 def find_tfs(data, folder_name=None, csv_name=None):
@@ -89,12 +96,40 @@ def find_tfs(data, folder_name=None, csv_name=None):
     )
 
 
-def _get_pathway_common(species):
-    PATHWAYS_COMMON_URL = (
-        "http://www.pathwaycommons.org/archives/PC2/v9/"
-        "PathwayCommons9.All.hgnc.gmt.gz"
+@pyp.utils.memoize
+def _get_gskb_pathways(species):
+    LOGGER.info("Fetching GSKB pathways")
+
+    url = GSKB_URL
+    r = requests.get(url, stream=True)
+    r.raise_for_status()
+
+    def _get_data(line):
+        line = line.decode("windows-1252")
+        name, _, genes = line.split("\t", 2)
+
+        genes = set(int(i) for i in genes.split("\t") if i)
+
+        return name, genes
+
+    pathways_df = pd.DataFrame(
+        data=[
+            _get_data(line)
+            for ind, line in enumerate(r.iter_lines())
+            if ind > 0
+        ],
+        columns=["name", "set"],
     )
-    r = requests.get(PATHWAYS_COMMON_URL, stream=True)
+
+    return pathways_df
+
+
+@pyp.utils.memoize
+def _get_pathway_common(species):
+    LOGGER.info("Fetching Pathways Common")
+
+    url = PATHWAYS_COMMON_URL
+    r = requests.get(url, stream=True)
     r.raise_for_status()
 
     name_re = re.compile(
@@ -133,7 +168,8 @@ def _get_pathway_common(species):
     return pathways_df
 
 
-def _get_pathways(species):
+@pyp.utils.memoize
+def _get_wikipathways(species):
     url = WIKIPATHWAYS_URL.format("_".join(species.split(" ")))
     response = requests.get(url, stream=True)
     response.raise_for_status()
@@ -143,7 +179,7 @@ def _get_pathways(species):
         name, _, genes = line.split("\t", 2)
         name, _, _, species = name.split("%")
         assert species == species
-        return name, set(genes.split("\t"))
+        return name, set(int(i) for i in genes.split("\t"))
 
     pathways_df = pd.DataFrame(
         data=[
@@ -153,8 +189,19 @@ def _get_pathways(species):
         columns=["name", "set"],
     )
 
+    return pathways_df
+
+
+def _get_pathways(species):
+    LOGGER.info("Fetching WikiPathways")
+
+    pathways_df = _get_wikipathways(species)
+
     if species in ["Homo sapiens"]:
         pathways_df = pathways_df.append(_get_pathway_common(species))
+
+    if species in ["Mus musculus"]:
+        pathways_df = pathways_df.append(_get_gskb_pathways(species))
 
     return pathways_df
 
@@ -166,6 +213,7 @@ def gsea(ds, phenotype, **kwargs):
 
     LOGGER.info("building gene sets")
     pathways_df = _get_pathways(species)
+    LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
 
     LOGGER.info("mapping genes: {}".format(len(set(ds.genes))))
 
