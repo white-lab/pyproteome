@@ -142,6 +142,8 @@ def _get_pathway_common(species):
 
 @pyp.utils.memoize
 def _get_wikipathways(species):
+    LOGGER.info("Fetching WikiPathways")
+
     url = WIKIPATHWAYS_URL.format("_".join(species.split(" ")))
     response = requests.get(url, stream=True)
     response.raise_for_status()
