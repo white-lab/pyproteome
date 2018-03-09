@@ -164,6 +164,99 @@ def _get_wikipathways(species):
     return pathways_df
 
 
+@pyp.utils.memoize
+def _get_phosphomap_data():
+    url = PSP_SITE_MAPPING_URL
+
+    r = requests.get(url, stream=True)
+    r.raise_for_status()
+
+    gz = gzip.GzipFile(fileobj=io.BytesIO(r.raw.read()))
+
+    return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t")
+
+
+def _remap_data(ds, species):
+    new = ds.copy()
+    old_species = list(new.species)[0]
+
+    old_species = ORGANISM_MAPPING.get(old_species, old_species)
+    species = ORGANISM_MAPPING.get(species, species)
+
+    new.species = set([species])
+
+    LOGGER.info(
+        "Remapping phosphosites from {} to {}".format(old_species, species)
+    )
+
+    mapping = _get_phosphomap_data()
+
+    acc_mapping = mapping.set_index(["ACC_ID", "MOD_RSD", "ORGANISM"])
+    site_mapping = mapping.set_index(["SITE_GRP_ID", "ORGANISM"])
+
+    acc_mapping = acc_mapping.sort_index()
+    site_mapping = site_mapping.sort_index()
+
+    def _remap(val):
+        acc, mod = val.split(",")
+
+        try:
+            site = acc_mapping.loc[acc, mod, old_species]
+        except KeyError:
+            return None
+
+        site = site.iloc[0]["SITE_GRP_ID"]
+
+        try:
+            re_map = site_mapping.loc[site, species]
+        except KeyError:
+            return None
+
+        re_map = re_map.iloc[0]
+
+        return ",".join([re_map["ACC_ID"], re_map["MOD_RSD"]])
+
+    new.psms["ID"] = new.psms["ID"].apply(_remap)
+    new.psms = new.psms[~(new.psms["ID"].isnull())]
+
+    LOGGER.info(
+        "Mapping {} IDs ({}) down to {} IDs ({})"
+        .format(ds.shape[0], old_species, new.shape[0], species)
+    )
+
+    return new
+
+
+def _get_psite_ids(ds, species):
+    LOGGER.info("Building list of individual phosphosites")
+    new_rows = []
+
+    def _split_rows(row):
+        acc = row["Proteins"].accessions[0]
+
+        for mod in row["Modifications"].get_mods("Phospho"):
+            new_row = row.to_dict()
+
+            mod_name = "{}{}-p".format(mod.letter, mod.abs_pos[0] + 1)
+
+            new_row["ID"] = ",".join([acc, mod_name])
+            new_rows.append(new_row)
+
+    ds.psms.apply(_split_rows, axis=1)
+
+    return pd.DataFrame(new_rows)
+
+
+def _get_protein_ids(ds, species):
+    return ds.psms["Proteins"].apply(
+        lambda row:
+        brs.mapping.get_entrez_mapping(
+            row.genes[0],
+            species=species,
+        ),
+    )
+
+
 def _get_pathways(species):
     LOGGER.info("Fetching WikiPathways")
 
@@ -178,8 +271,22 @@ def _get_pathways(species):
     return pathways_df
 
 
-def gsea(ds, phenotype, **kwargs):
-    LOGGER.info("filtering ambiguous peptides {}".format(len(set(ds.genes))))
+def gsea(
+    ds, phenotype,
+    p_sites=False,
+    remap=None, folder_name=None,
+    **kwargs
+):
+    folder_name = pyp.utils.make_folder(
+        data=ds,
+        folder_name=folder_name,
+        sub="Volcano",
+    )
+
+    LOGGER.info(
+        "filtering ambiguous peptides {}".format(len(set(ds.genes)))
+    )
+
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
     species = list(ds.species)[0]
 
@@ -187,22 +294,22 @@ def gsea(ds, phenotype, **kwargs):
     pathways_df = _get_pathways(species)
     LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
 
-    LOGGER.info("mapping genes: {}".format(len(set(ds.genes))))
+    LOGGER.info("mapping genes: {}, {}".format(len(set(ds.genes)), p_sites))
 
-    ds.psms["Entrez"] = ds.psms["Proteins"].apply(
-        lambda row:
-        brs.mapping.get_entrez_mapping(
-            row.genes[0],
-            species=species,
-        ),
-    )
+    if p_sites:
+        ds.psms = _get_psite_ids(ds, species)
+
+        if remap:
+            ds = _remap_data(ds, remap)
+    else:
+        ds.psms["ID"] = _get_protein_ids(ds, species)
 
     LOGGER.info("building correlations")
 
     phenotype = pd.to_numeric(phenotype)
 
     ds.psms = ds.psms[
-        (~ds.psms["Entrez"].isnull()) &
+        (~ds.psms["ID"].isnull()) &
         (
             (~ds.psms[phenotype.index].isnull()).sum(axis=1) >=
             enrichments.MIN_PERIODS
@@ -213,7 +320,16 @@ def gsea(ds, phenotype, **kwargs):
 
     LOGGER.info("plotting enrichments {}".format(ds.shape))
 
-    return enrichments.plot_enrichment(
+    vals = enrichments.plot_enrichment(
         ds, pathways_df, phenotype,
         **kwargs
     )
+
+    vals.to_csv(
+        os.path.join(
+            folder_name,
+            ("PSEA" if p_sites else "GSEA") + ".csv",
+        ),
+    )
+
+    return vals

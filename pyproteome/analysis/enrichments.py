@@ -160,15 +160,15 @@ def absmax(i):
 
 
 def _get_changes(ds):
-    gene_changes = ds.psms[["Entrez", "Correlation"]]
+    gene_changes = ds.psms[["ID", "Correlation"]]
     gene_changes.is_copy = None
 
     gene_changes["Abs Corr"] = gene_changes["Correlation"].apply(abs)
     gene_changes = gene_changes.sort_values(by="Abs Corr", ascending=True)
-    gene_changes = gene_changes.drop_duplicates(subset="Entrez", keep="last")
+    gene_changes = gene_changes.drop_duplicates(subset="ID", keep="last")
 
     gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
-    gene_changes = gene_changes.set_index(keys="Entrez")
+    gene_changes = gene_changes.set_index(keys="ID")
 
     return gene_changes
 
@@ -301,7 +301,7 @@ def plot_enrichment(
     LOGGER.info("Filtering gene sets")
 
     total_sets = gene_sets
-    all_genes = set(ds["Entrez"].apply(int))
+    all_genes = set(ds["ID"].apply(int))
 
     gene_sets = gene_sets[
         gene_sets["set"].apply(
@@ -373,11 +373,12 @@ def plot_enrichment(
         name = name if len(name) < 40 else name[:40] + "..."
 
         ax.set_title(
-            "{}\nhits: {} ES={:.2f}"
+            "{}\nhits: {} {}={:.2f}"
             .format(
                 name,
                 row["n_hits"],
-                row["ES(S)"],
+                "NES(S)" if "NES(S)" in row.index else "ES(S)",
+                row["NES(S)" if "NES(S)" in row.index else "ES(S)"],
             ) + (
                 ", p={:.2f}".format(
                     row["p-value"],
