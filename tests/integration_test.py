@@ -271,10 +271,6 @@ class IntegrationTest(TestCase):
                 data,
             )
 
-    def test_find_tfs(self):
-        for data in self.data.values():
-            analysis.pathways.find_tfs(data)
-
     def test_changes_table(self):
         for data in self.data.values():
             tables.changes_table(data)
