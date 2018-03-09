@@ -46,4 +46,4 @@ def get_entrez_mapping(gene, species="Mouse"):
     data = cache.get_mapping_data(species=species)
 
     row = _find_uniprot_gene(gene, data)
-    return row["GeneID"] if row is not None else None
+    return str(row["GeneID"]) if row is not None else None

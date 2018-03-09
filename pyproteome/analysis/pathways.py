@@ -80,7 +80,7 @@ def _get_gskb_pathways(species):
         line = line.decode("windows-1252")
         name, _, genes = line.split("\t", 2)
 
-        genes = set(int(i) for i in genes.split("\t") if i)
+        genes = set(i for i in genes.split("\t") if i)
 
         return name, genes
 
@@ -149,9 +149,9 @@ def _get_wikipathways(species):
     def _get_data(line):
         line = line.decode()
         name, _, genes = line.split("\t", 2)
-        name, _, _, species = name.split("%")
-        assert species == species
-        return name, set(int(i) for i in genes.split("\t"))
+        name, _, _, spec = name.split("%")
+        assert species == spec
+        return name, set(i for i in genes.split("\t"))
 
     pathways_df = pd.DataFrame(
         data=[
@@ -166,6 +166,8 @@ def _get_wikipathways(species):
 
 @pyp.utils.memoize
 def _get_phosphomap_data():
+    LOGGER.info("Fetching Phosphosite Plus mapping data")
+
     url = PSP_SITE_MAPPING_URL
 
     r = requests.get(url, stream=True)
@@ -258,8 +260,6 @@ def _get_protein_ids(ds, species):
 
 
 def _get_pathways(species):
-    LOGGER.info("Fetching WikiPathways")
-
     pathways_df = _get_wikipathways(species)
 
     if species in ["Homo sapiens"]:
@@ -268,7 +268,7 @@ def _get_pathways(species):
     if species in ["Mus musculus"]:
         pathways_df = pathways_df.append(_get_gskb_pathways(species))
 
-    return pathways_df
+    return pathways_df.reset_index()
 
 
 def gsea(

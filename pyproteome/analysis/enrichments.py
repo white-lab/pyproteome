@@ -301,7 +301,7 @@ def plot_enrichment(
     LOGGER.info("Filtering gene sets")
 
     total_sets = gene_sets
-    all_genes = set(ds["ID"].apply(int))
+    all_genes = set(ds["ID"])
 
     gene_sets = gene_sets[
         gene_sets["set"].apply(
