@@ -249,7 +249,7 @@ class DataSet:
 
         if any(
             isinstance(key, i)
-            for i in [str, list, tuple, pd.Series, np.ndarray]
+            for i in [str, list, set, tuple, pd.Series, np.ndarray]
         ):
             return self.psms[key]
 
@@ -881,12 +881,12 @@ class DataSet:
             psms["Proteins"].apply(
                 lambda x: bool(set(val).intersection(x.genes))
             )
-            if isinstance(val, (list, tuple, pd.Series)) else
+            if isinstance(val, (list, set, tuple, pd.Series)) else
             psms["Proteins"] == val,
 
             "sequence": lambda val, psms:
             psms["Sequence"].apply(lambda x: any(i in x for i in val))
-            if isinstance(val, (list, tuple, pd.Series)) else
+            if isinstance(val, (list, set, tuple, pd.Series)) else
             psms["Sequence"] == val,
 
             "mod_types": lambda val, psms:
