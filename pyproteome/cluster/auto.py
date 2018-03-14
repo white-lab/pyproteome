@@ -138,4 +138,4 @@ def auto_clusterer(
         with open(os.path.join(folder_name, filename), "wb") as f:
             pickle.dump(y_pred, f)
 
-    return data, y_pred
+    return data, y_pred, clr
