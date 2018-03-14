@@ -6,6 +6,7 @@ from functools import partial
 import logging
 import multiprocessing
 
+from adjustText.adjustText import adjust_text
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -14,6 +15,12 @@ from sklearn.utils import shuffle
 
 LOGGER = logging.getLogger("pyproteome.enrichments")
 MIN_PERIODS = 5
+CORRELATION_METRICS = [
+    "spearman",
+    "pearson",
+    "fold",
+    "zscore",
+]
 
 
 def _calc_p(ess, ess_pi):
@@ -33,10 +40,14 @@ def _shuffle(ser):
 
 def simulate_es_s_pi(
     vals,
-    ds, gene_sets, phenotype,
+    ds, gene_sets,
+    phenotype=None,
     p=1,
+    metric="spearman",
     p_iter=1000,
 ):
+    assert metric in CORRELATION_METRICS
+
     LOGGER.info(
         "Calculating ES(S, pi) for {} gene sets".format(len(gene_sets))
     )
@@ -48,8 +59,14 @@ def simulate_es_s_pi(
 
     for ind, ess in enumerate(
         pool.imap_unordered(
-            partial(_calc_essdist, ds=ds, gene_sets=gene_sets, p=p),
-            [_shuffle(phenotype) for _ in range(p_iter)],
+            partial(
+                _calc_essdist,
+                ds=ds,
+                gene_sets=gene_sets,
+                p=p,
+                metric=metric,
+            ),
+            [phenotype for _ in range(p_iter)],
         ),
         start=1,
     ):
@@ -95,8 +112,10 @@ class PrPDF(object):
 def estimate_pq(vals):
     vals = vals.copy()
 
-    pos_ess = vals["ES(S)"][vals["ES(S)"] > 0]
-    neg_ess = vals["ES(S)"][vals["ES(S)"] < 0]
+    mask = vals["ES(S)"] > 0
+
+    pos_ess = vals["ES(S)"][mask]
+    neg_ess = vals["ES(S)"][~mask]
 
     pos_pi = vals["ES(S, pi)"].apply(np.array).apply(lambda x: x[x > 0])
     neg_pi = vals["ES(S, pi)"].apply(np.array).apply(lambda x: x[x < 0])
@@ -114,10 +133,8 @@ def estimate_pq(vals):
     vals["pos NES(S, pi)"] = pos_pi_nes
     vals["neg NES(S, pi)"] = neg_pi_nes
 
-    for index, row in pos_nes.items():
-        assert not np.isnan(row) or not np.isnan(neg_nes[index])
-    for index, row in neg_nes.items():
-        assert not np.isnan(row) or not np.isnan(pos_nes[index])
+    assert (pos_nes.isnull() | neg_nes.isnull()).all()
+    assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
 
     LOGGER.info("Calculated pos, neg distributions")
 
@@ -167,17 +184,26 @@ def _get_changes(ds):
     gene_changes = gene_changes.sort_values(by="Abs Corr", ascending=True)
     gene_changes = gene_changes.drop_duplicates(subset="ID", keep="last")
 
-    gene_changes = gene_changes.sort_values(by="Correlation", ascending=True)
+    gene_changes = gene_changes.sort_values(by="Correlation", ascending=False)
     gene_changes = gene_changes.set_index(keys="ID")
 
     return gene_changes
 
 
-def _calc_essdist(phen, ds=None, gene_sets=None, p=1):
+def _calc_essdist(phen, ds=None, gene_sets=None, p=1, metric="spearman"):
+    assert metric in CORRELATION_METRICS
+
+    if metric in ["spearman", "pearson"]:
+        phen = _shuffle(phen)
+    else:
+        ds = ds.copy()
+        ds.psms["Fold Change"] = _shuffle(ds.psms["Fold Change"])
+
     vals = enrichment_scores(
         ds,
         gene_sets,
-        phen,
+        phenotype=phen,
+        metric=metric,
         p=p,
         recorrelate=True,
         pval=False,
@@ -186,17 +212,30 @@ def _calc_essdist(phen, ds=None, gene_sets=None, p=1):
     return vals["ES(S)"]
 
 
-def correlate_phenotype(ds, phenotype):
+def correlate_phenotype(ds, phenotype=None, metric="spearman"):
+    assert metric in CORRELATION_METRICS
+
     ds = ds.copy()
-    ds.psms["Correlation"] = ds.psms.apply(
-        lambda row:
-        phenotype.corr(
-            pd.to_numeric(row[phenotype.index]),
-            method="pearson",
-            min_periods=MIN_PERIODS,
-        ),
-        axis=1,
-    )
+
+    if metric in ["spearman", "pearson"]:
+        ds.psms["Correlation"] = ds.psms.apply(
+            lambda row:
+            phenotype.corr(
+                pd.to_numeric(row[phenotype.index]),
+                method=metric,
+                min_periods=MIN_PERIODS,
+            ),
+            axis=1,
+        )
+    else:
+        new = ds.psms["Fold Change"]
+        new = new.apply(np.log2)
+
+        if metric in ["zscore"]:
+            new = (new - new.mean()) / new.std()
+
+        ds.psms["Correlation"] = new
+
     return ds
 
 
@@ -208,6 +247,7 @@ def calculate_es_s(gene_changes, gene_set, p=1):
         if gene in gene_changes.index
     ]
     hits = gene_changes.index.isin(gene_set)
+    hit_list = gene_changes[hits].index.tolist()
 
     n_h = len(gene_set)
     n_r = gene_changes[hits]["Correlation"].apply(
@@ -220,30 +260,43 @@ def calculate_es_s(gene_changes, gene_set, p=1):
         (-1 / (n - n_h))
         for hit, val in zip(hits, gene_changes["Correlation"])
     ]
-    return hits, np.cumsum(scores)
+    cumsum = np.cumsum(scores)
+
+    # ess = cumsum.max() - cumsum.min()
+    # ess *= np.sign(max(cumsum, key=abs))
+    ess = max(cumsum, key=abs)
+
+    return hits, hit_list, cumsum, ess
 
 
 def enrichment_scores(
-    ds, gene_sets, phenotype,
-    p=1, pval=True, recorrelate=False, p_iter=1000,
+    ds, gene_sets,
+    phenotype=None,
+    p=1,
+    pval=True,
+    recorrelate=False,
+    p_iter=1000,
+    metric="spearman",
 ):
     """
     Here is the function for calculating gene set enrichment scores.
     It calculates the association of each gene with a given phenotype
     and then generates the ES(S) scores for a given gene set.
     """
+    assert metric in CORRELATION_METRICS
+
     if recorrelate:
-        ds = correlate_phenotype(ds, phenotype)
+        ds = correlate_phenotype(ds, phenotype=phenotype, metric=metric)
 
     gene_changes = _get_changes(ds)
 
-    cols = ["name", "cumscore", "ES(S)", "hits", "n_hits"]
+    cols = ["name", "cumscore", "ES(S)", "hits", "hit_list", "n_hits"]
     vals = pd.DataFrame(
         columns=cols,
     )
 
     for set_id, row in gene_sets.iterrows():
-        hits, cumscore = calculate_es_s(
+        hits, hit_list, cumscore, ess = calculate_es_s(
             gene_changes,
             row["set"],
             p=p,
@@ -253,9 +306,10 @@ def enrichment_scores(
                 [
                     row["name"],
                     cumscore,
-                    max(cumscore, key=abs),
+                    ess,
                     hits,
-                    sum(hits),
+                    hit_list,
+                    len(hit_list),
                 ],
                 name=set_id,
                 index=cols,
@@ -264,8 +318,10 @@ def enrichment_scores(
 
     if pval:
         vals = simulate_es_s_pi(
-            vals, ds, gene_sets, phenotype,
+            vals, ds, gene_sets,
+            phenotype=phenotype,
             p=p,
+            metric=metric,
             p_iter=p_iter,
         )
         vals = estimate_pq(vals)
@@ -275,7 +331,8 @@ def enrichment_scores(
 
 # Here's a helper function to generate the plots seen below
 def plot_enrichment(
-    ds, gene_sets, phenotype,
+    ds, gene_sets,
+    phenotype=None,
     p=1,
     cols=5,
     min_hits=10,
@@ -284,7 +341,9 @@ def plot_enrichment(
     max_qval=1,
     pval=False,
     p_iter=1000,
+    metric="spearman",
 ):
+    assert metric in CORRELATION_METRICS
     LOGGER.info("Getting gene correlations")
 
     gene_changes = _get_changes(ds)
@@ -293,8 +352,12 @@ def plot_enrichment(
 
     # Plot the ranked list of correlations
     f, ax = plt.subplots()
-    ax.plot(gene_changes["Correlation"].sort_values(ascending=False).tolist())
+
+    ax.plot(
+        gene_changes["Correlation"].sort_values(ascending=False).tolist(),
+    )
     ax.axhline(0, color="k")
+
     ax.set_xlabel("Gene List Rank", fontsize=20)
     ax.set_ylabel("Correlation", fontsize=20)
 
@@ -307,7 +370,7 @@ def plot_enrichment(
         gene_sets["set"].apply(
             lambda x:
             len(x) < len(all_genes) and
-            len(all_genes.intersection(x)) > min_hits
+            len(all_genes.intersection(x)) >= min_hits
         )
     ]
 
@@ -319,10 +382,11 @@ def plot_enrichment(
     vals = enrichment_scores(
         ds,
         gene_sets,
-        phenotype,
+        phenotype=phenotype,
         p=p,
         pval=pval,
         p_iter=p_iter,
+        metric=metric,
     )
 
     filtered_vals = vals[
@@ -370,15 +434,19 @@ def plot_enrichment(
                 ax.axvline(ind, linestyle=":", alpha=.25)
 
         name = gene_sets.loc[set_id]["name"]
-        name = name if len(name) < 40 else name[:40] + "..."
+        name = name if len(name) < 35 else name[:35] + "..."
+
+        nes = "NES(S)" if "NES(S)" in row.index else "ES(S)"
 
         ax.set_title(
             "{}\nhits: {} {}={:.2f}"
             .format(
                 name,
                 row["n_hits"],
-                "NES(S)" if "NES(S)" in row.index else "ES(S)",
-                row["NES(S)" if "NES(S)" in row.index else "ES(S)"],
+                nes,
+                row[nes] * (
+                    np.sign(row["ES(S)"]) if nes == "NES(S)" else 1
+                ),
             ) + (
                 ", p={:.2f}".format(
                     row["p-value"],
@@ -399,5 +467,76 @@ def plot_enrichment(
             ax.set_ylabel("ES(S)", fontsize=20)
 
         ax.set_ylim(-1, 1)
+
+    if pval:
+        f, ax = plt.subplots()
+        v = vals.copy()
+        v["NES(S)"] = vals["NES(S)"] * vals["ES(S)"].apply(np.sign)
+        v = v.sort_values("NES(S)")
+        mask = (
+            (v["p-value"] < max_pval) &
+            (v["q-value"] < max_qval)
+        )
+
+        nes = v["NES(S)"]
+
+        pos = nes[mask]
+        neg = nes[~mask]
+
+        ind = np.arange(v.shape[0])
+        pos_ind = ind[mask]
+        neg_ind = ind[~mask]
+
+        ax.scatter(
+            x=pos_ind,
+            y=pos,
+            color="r",
+        )
+        ax.scatter(
+            x=neg_ind,
+            y=neg,
+            color="k",
+        )
+        ax.set_ylabel("Normalized Enrichment Score (NES)")
+        ax.set_xlim(
+            left=ind.min() - 5,
+            right=ind.max() + 5,
+        )
+        ax.set_ylim(
+            bottom=nes.min() - .5,
+            top=nes.max() + .5,
+        )
+
+        texts = []
+        labels = []
+
+        for m, x, (_, row) in zip(mask, ind, v.iterrows()):
+            y = row["NES(S)"]
+            labels.append(
+                (x, y)
+            )
+            texts.append(
+                ax.text(
+                    x=x,
+                    y=y,
+                    s=row["name"] if m else "",
+                    horizontalalignment='right',
+                )
+            )
+
+        adjust_text(
+            x=[i[0] for i in labels],
+            y=[i[1] for i in labels],
+            texts=texts,
+            ax=ax,
+            lim=500,
+            force_text=0.5,
+            force_points=0.1,
+            arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),
+            only_move={
+                "points": "y",
+                "text": "xy",
+            }
+        )
 
     return vals
