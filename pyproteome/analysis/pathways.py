@@ -236,15 +236,16 @@ def _get_psite_ids(ds, species):
     new_rows = []
 
     def _split_rows(row):
-        acc = row["Proteins"].accessions[0]
+        mods = row["Modifications"].get_mods("Phospho")
 
-        for mod in row["Modifications"].get_mods("Phospho"):
-            new_row = row.to_dict()
+        for mod in mods:
+            for gene, abs_pos in zip(row["Proteins"].accessions, mod.abs_pos):
+                new_row = row.to_dict()
 
-            mod_name = "{}{}-p".format(mod.letter, mod.abs_pos[0] + 1)
+                mod_name = "{}{}-p".format(mod.letter, abs_pos + 1)
 
-            new_row["ID"] = ",".join([acc, mod_name])
-            new_rows.append(new_row)
+                new_row["ID"] = ",".join([gene, mod_name])
+                new_rows.append(new_row)
 
     ds.psms.apply(_split_rows, axis=1)
 
@@ -261,22 +262,60 @@ def _get_protein_ids(ds, species):
     )
 
 
-def _get_pathways(species):
-    pathways_df = _get_wikipathways(species)
+@pyp.utils.memoize
+def _get_phosphosite(species):
+    LOGGER.info("Getting phosphosite data for {}".format(species))
 
-    if species in ["Homo sapiens"]:
-        pathways_df = pathways_df.append(_get_pathway_common(species))
+    species = ORGANISM_MAPPING.get(species, species)
 
-    if species in ["Mus musculus"]:
-        pathways_df = pathways_df.append(_get_gskb_pathways(species))
+    psp = pyp.motifs.phosphosite.get_data()
+    psp = psp[psp["SUB_ORGANISM"] == species]
+
+    return pd.DataFrame(
+        [
+            (
+                kinase,
+                set(
+                    psp[
+                        psp["KINASE"] == kinase
+                    ].apply(
+                        lambda x:
+                        ",".join([
+                            x["SUB_ACC_ID"].split("-")[0],
+                            x["SUB_MOD_RSD"],
+                        ]) + "-p",
+                        axis=1,
+                    )
+                )
+            )
+            for kinase in set(psp["KINASE"])
+        ],
+        columns=["name", "set"]
+    )
+
+
+def _get_pathways(species, p_sites=False):
+    if p_sites:
+        pathways_df = _get_phosphosite(species)
+    else:
+        pathways_df = _get_wikipathways(species)
+
+        if species in ["Homo sapiens"]:
+            pathways_df = pathways_df.append(_get_pathway_common(species))
+
+        # if species in ["Mus musculus"]:
+        #     pathways_df = pathways_df.append(_get_gskb_pathways(species))
 
     return pathways_df.reset_index()
 
 
 def gsea(
-    ds, phenotype,
+    ds,
+    phenotype=None,
+    metric="spearman",
     p_sites=False,
-    remap=None, folder_name=None,
+    remap=None,
+    folder_name=None,
     **kwargs
 ):
     folder_name = pyp.utils.make_folder(
@@ -293,7 +332,7 @@ def gsea(
     species = list(ds.species)[0]
 
     LOGGER.info("building gene sets")
-    pathways_df = _get_pathways(species)
+    pathways_df = _get_pathways(species, p_sites=p_sites)
     LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
 
     LOGGER.info("mapping genes: {}, {}".format(len(set(ds.genes)), p_sites))
@@ -308,22 +347,32 @@ def gsea(
 
     LOGGER.info("building correlations")
 
-    phenotype = pd.to_numeric(phenotype)
+    ds.psms = ds.psms[~ds.psms["ID"].isnull()]
 
-    ds.psms = ds.psms[
-        (~ds.psms["ID"].isnull()) &
-        (
+    if phenotype is not None and metric in ["spearman", "pearson"]:
+        phenotype = pd.to_numeric(phenotype)
+
+        ds.psms = ds.psms[
             (~ds.psms[phenotype.index].isnull()).sum(axis=1) >=
             enrichments.MIN_PERIODS
-        )
-    ]
+        ]
 
-    ds = enrichments.correlate_phenotype(ds, phenotype)
+    ds = enrichments.correlate_phenotype(
+        ds,
+        phenotype=phenotype,
+        metric=metric,
+    )
+
+    ds.psms = ds.psms[
+        ~ds.psms["Correlation"].isnull()
+    ]
 
     LOGGER.info("plotting enrichments {}".format(ds.shape))
 
     vals = enrichments.plot_enrichment(
-        ds, pathways_df, phenotype,
+        ds, pathways_df,
+        phenotype=phenotype,
+        metric=metric,
         **kwargs
     )
 
