@@ -11,24 +11,15 @@ import pyproteome as pyp
 from . import motif, logo
 
 DATA_URL = "https://www.phosphosite.org/downloads/Kinase_Substrate_Dataset.gz"
-DATA_CACHE = None
 
 
+@pyp.utils.memoize
 def get_data():
-    global DATA_CACHE
-
-    if DATA_CACHE is not None:
-        return DATA_CACHE
-
-    # r = requests.Session()
-
     data = requests.get(DATA_URL, stream=True)
     content = BytesIO(data.content)
 
     with gzip.GzipFile(fileobj=content) as f:
         df = pd.read_csv(f, skiprows=range(2), sep="\t")
-
-    DATA_CACHE = df
 
     return df
 
