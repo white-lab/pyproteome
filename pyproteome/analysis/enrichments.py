@@ -18,6 +18,7 @@ MIN_PERIODS = 5
 CORRELATION_METRICS = [
     "spearman",
     "pearson",
+    "kendall",
     "fold",
     "zscore",
 ]
@@ -51,8 +52,13 @@ def simulate_es_s_pi(
     LOGGER.info(
         "Calculating ES(S, pi) for {} gene sets".format(len(gene_sets))
     )
+    n_cpus = 6
+
+    if metric in ["spearman", "pearson", "kendall"]:
+        n_cpus = 4
+
     pool = multiprocessing.Pool(
-        processes=6,
+        processes=n_cpus,
     )
 
     ess_dist = defaultdict(list)
@@ -88,11 +94,18 @@ def simulate_es_s_pi(
 
 
 def _calc_q(nes, nes_pdf, nes_pi_pdf):
-    return (
-        nes_pi_pdf.pdf(nes) + nes_pi_pdf.sf(nes)
-    ) / (
-        nes_pdf.pdf(nes) + nes_pdf.sf(nes)
-    )
+    if nes > 0:
+        return (
+            nes_pi_pdf.sf(nes)
+        ) / (
+            nes_pdf.pdf(nes) + nes_pdf.sf(nes)
+        )
+    else:
+        return (
+            nes_pi_pdf.cdf(nes)
+        ) / (
+            nes_pdf.pdf(nes) + nes_pdf.cdf(nes)
+        )
 
 
 class PrPDF(object):
@@ -106,7 +119,9 @@ class PrPDF(object):
         return np.searchsorted(self.data, x, side="left") / self.data.shape[0]
 
     def sf(self, x):
-        return 1 - self.cdf(x) - self.pdf(x)
+        return 1 - (
+            np.searchsorted(self.data, x, side="right") / self.data.shape[0]
+        )
 
 
 def estimate_pq(vals):
@@ -124,17 +139,37 @@ def estimate_pq(vals):
     neg_mean = neg_pi.apply(np.mean)
 
     pos_nes = (pos_ess / pos_mean)
-    neg_nes = (neg_ess / neg_mean)
+    neg_nes = -(neg_ess / neg_mean)
+
+    assert (pos_nes.isnull() | neg_nes.isnull()).all()
+    assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
 
     pos_pi_nes = pos_pi / pos_mean
-    neg_pi_nes = neg_pi / neg_mean
+    neg_pi_nes = -neg_pi / neg_mean
 
     vals["NES(S)"] = pos_nes.fillna(neg_nes)
     vals["pos NES(S, pi)"] = pos_pi_nes
     vals["neg NES(S, pi)"] = neg_pi_nes
 
-    assert (pos_nes.isnull() | neg_nes.isnull()).all()
-    assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
+    f, ax = plt.subplots()
+    ax.hist(
+        np.concatenate(pos_pi_nes.as_matrix()),
+        bins=50,
+        color='k',
+        alpha=.5,
+    )
+    ax.hist(
+        np.concatenate(neg_pi_nes.as_matrix()),
+        bins=50,
+        color='k',
+        alpha=.5,
+    )
+    ax.hist(
+        vals["NES(S)"].as_matrix(),
+        bins=50,
+        color='r',
+        alpha=.5,
+    )
 
     LOGGER.info("Calculated pos, neg distributions")
 
@@ -158,8 +193,8 @@ def estimate_pq(vals):
         lambda x:
         _calc_q(
             x["NES(S)"],
-            pos_pdf if x["ES(S)"] > 0 else neg_pdf,
-            pos_pi_pdf if x["ES(S)"] > 0 else neg_pi_pdf,
+            pos_pdf if x["NES(S)"] > 0 else neg_pdf,
+            pos_pi_pdf if x["NES(S)"] > 0 else neg_pi_pdf,
         ),
         axis=1,
     )
@@ -193,7 +228,7 @@ def _get_changes(ds):
 def _calc_essdist(phen, ds=None, gene_sets=None, p=1, metric="spearman"):
     assert metric in CORRELATION_METRICS
 
-    if metric in ["spearman", "pearson"]:
+    if metric in ["spearman", "pearson", "kendall"]:
         phen = _shuffle(phen)
     else:
         ds = ds.copy()
@@ -217,7 +252,7 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
 
     ds = ds.copy()
 
-    if metric in ["spearman", "pearson"]:
+    if metric in ["spearman", "pearson", "kendall"]:
         ds.psms["Correlation"] = ds.psms.apply(
             lambda row:
             phenotype.corr(
@@ -404,14 +439,16 @@ def plot_enrichment(
             axis=1,
         )
     ]
-    filtered_vals = filtered_vals.sort_values("ES(S)", ascending=False)
+    nes = "NES(S)" if "NES(S)" in filtered_vals.columns else "ES(S)"
+
+    filtered_vals = filtered_vals.sort_values(nes, ascending=False)
 
     LOGGER.info(
         "Filtered {} gene sets down to {} after cutoffs"
         .format(len(vals), len(filtered_vals))
     )
 
-    rows = max([len(filtered_vals) // cols, 1])
+    rows = max([int(np.ceil(len(filtered_vals) / cols)), 1])
     scale = 6
 
     f, axes = plt.subplots(
@@ -436,17 +473,13 @@ def plot_enrichment(
         name = gene_sets.loc[set_id]["name"]
         name = name if len(name) < 35 else name[:35] + "..."
 
-        nes = "NES(S)" if "NES(S)" in row.index else "ES(S)"
-
         ax.set_title(
             "{}\nhits: {} {}={:.2f}"
             .format(
                 name,
                 row["n_hits"],
-                nes,
-                row[nes] * (
-                    np.sign(row["ES(S)"]) if nes == "NES(S)" else 1
-                ),
+                nes.split("(")[0],
+                row[nes],
             ) + (
                 ", p={:.2f}".format(
                     row["p-value"],
@@ -471,7 +504,6 @@ def plot_enrichment(
     if pval:
         f, ax = plt.subplots()
         v = vals.copy()
-        v["NES(S)"] = vals["NES(S)"] * vals["ES(S)"].apply(np.sign)
         v = v.sort_values("NES(S)")
         mask = (
             (v["p-value"] < max_pval) &
