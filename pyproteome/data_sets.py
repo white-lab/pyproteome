@@ -891,7 +891,7 @@ class DataSet:
 
             "mod_types": lambda val, psms:
             psms["Modifications"].apply(
-                lambda x: bool(x.get_mods(val).mods)
+                lambda x: bool(list(x.get_mods(val).skip_labels_iter()))
             ),
 
             "only_validated": lambda val, psms:
