@@ -300,8 +300,8 @@ def _get_pathways(species, p_sites=False):
     else:
         pathways_df = _get_wikipathways(species)
 
-        if species in ["Homo sapiens"]:
-            pathways_df = pathways_df.append(_get_pathway_common(species))
+        # if species in ["Homo sapiens"]:
+        #     pathways_df = pathways_df.append(_get_pathway_common(species))
 
         # if species in ["Mus musculus"]:
         #     pathways_df = pathways_df.append(_get_gskb_pathways(species))
@@ -331,10 +331,6 @@ def gsea(
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
     species = list(ds.species)[0]
 
-    LOGGER.info("building gene sets")
-    pathways_df = _get_pathways(species, p_sites=p_sites)
-    LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
-
     LOGGER.info("mapping genes: {}, {}".format(len(set(ds.genes)), p_sites))
 
     if p_sites:
@@ -342,8 +338,13 @@ def gsea(
 
         if remap:
             ds = _remap_data(ds, remap)
+            species = remap
     else:
         ds.psms["ID"] = _get_protein_ids(ds, species)
+
+    LOGGER.info("building gene sets")
+    pathways_df = _get_pathways(species, p_sites=p_sites)
+    LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
 
     LOGGER.info("building correlations")
 
