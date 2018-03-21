@@ -225,7 +225,9 @@ def absmax(i):
     return max([abs(min(i)), abs(max(i))])
 
 
-def _get_changes(ds):
+def get_gene_changes(ds):
+    LOGGER.info("Getting gene correlations")
+
     gene_changes = ds.psms[["ID", "Correlation"]]
     gene_changes.is_copy = None
 
@@ -337,7 +339,7 @@ def enrichment_scores(
     if recorrelate:
         ds = correlate_phenotype(ds, phenotype=phenotype, metric=metric)
 
-    gene_changes = _get_changes(ds)
+    gene_changes = get_gene_changes(ds)
 
     cols = ["name", "cumscore", "ES(S)", "hits", "hit_list", "n_hits"]
     vals = pd.DataFrame(
@@ -373,33 +375,93 @@ def enrichment_scores(
             metric=metric,
             p_iter=p_iter,
         )
+
         vals = estimate_pq(vals)
+        vals = vals.sort_values("NES(S)", ascending=False)
+    else:
+        vals = vals.sort_values("ES(S)", ascending=False)
 
     return vals
 
 
-# Here's a helper function to generate the plots seen below
-def plot_enrichment(
-    ds, gene_sets,
-    phenotype=None,
-    p=1,
-    cols=5,
-    min_hits=10,
-    min_abs_score=.3,
-    max_pval=1,
-    max_qval=1,
-    pval=False,
-    p_iter=1000,
-    metric="spearman",
-):
-    assert metric in CORRELATION_METRICS
-    LOGGER.info("Getting gene correlations")
+def plot_nes(vals, max_pval=.1, max_qval=1):
+    f, ax = plt.subplots()
+    v = vals.copy()
+    v = v.sort_values("NES(S)")
+    mask = (
+        (v["p-value"] < max_pval) &
+        (v["q-value"] < max_qval)
+    )
 
-    gene_changes = _get_changes(ds)
+    nes = v["NES(S)"]
 
+    pos = nes[mask]
+    neg = nes[~mask]
+
+    ind = np.arange(v.shape[0])
+    pos_ind = ind[mask]
+    neg_ind = ind[~mask]
+
+    ax.scatter(
+        x=pos_ind,
+        y=pos,
+        color="r",
+    )
+    ax.scatter(
+        x=neg_ind,
+        y=neg,
+        color="k",
+    )
+    ax.set_ylabel("Normalized Enrichment Score (NES)")
+    ax.set_xlim(
+        left=ind.min() - 5,
+        right=ind.max() + 5,
+    )
+    ax.set_ylim(
+        bottom=nes.min() - .5,
+        top=nes.max() + .5,
+    )
+
+    texts = []
+    labels = []
+
+    for m, x, (_, row) in zip(mask, ind, v.iterrows()):
+        y = row["NES(S)"]
+        labels.append(
+            (x, y)
+        )
+        texts.append(
+            ax.text(
+                x=x,
+                y=y,
+                s=row["name"] if m else "",
+                horizontalalignment='right',
+            )
+        )
+
+    adjust_text(
+        x=[i[0] for i in labels],
+        y=[i[1] for i in labels],
+        texts=texts,
+        ax=ax,
+        lim=500,
+        force_text=0.5,
+        force_points=0.1,
+        arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),
+        only_move={
+            "points": "y",
+            "text": "xy",
+        }
+    )
+
+    return f, ax
+
+
+def plot_correlations(gene_changes):
+    """
+    Plot the ranked list of correlations.
+    """
     LOGGER.info("Plotting gene correlations")
-
-    # Plot the ranked list of correlations
     f, ax = plt.subplots()
 
     ax.plot(
@@ -410,6 +472,10 @@ def plot_enrichment(
     ax.set_xlabel("Gene List Rank", fontsize=20)
     ax.set_ylabel("Correlation", fontsize=20)
 
+    return f, ax
+
+
+def filter_gene_sets(gene_sets, ds, min_hits=10):
     LOGGER.info("Filtering gene sets")
 
     total_sets = gene_sets
@@ -428,19 +494,15 @@ def plot_enrichment(
         .format(total_sets.shape[0], gene_sets.shape[0], min_hits)
     )
 
-    vals = enrichment_scores(
-        ds,
-        gene_sets,
-        phenotype=phenotype,
-        p=p,
-        pval=pval,
-        p_iter=p_iter,
-        metric=metric,
-    )
+    return gene_sets
 
-    if vals.shape[0] < 1:
-        return vals
 
+def filter_vals(
+    vals,
+    min_abs_score=.3,
+    max_pval=1,
+    max_qval=1,
+):
     filtered_vals = vals[
         vals.apply(
             lambda x:
@@ -456,16 +518,19 @@ def plot_enrichment(
             axis=1,
         )
     ]
-    nes = "NES(S)" if "NES(S)" in filtered_vals.columns else "ES(S)"
-
-    filtered_vals = filtered_vals.sort_values(nes, ascending=False)
-
     LOGGER.info(
         "Filtered {} gene sets down to {} after cutoffs"
         .format(len(vals), len(filtered_vals))
     )
 
-    rows = max([int(np.ceil(len(filtered_vals) / cols)), 1])
+    return filtered_vals
+
+
+def plot_enrichment(
+    vals, gene_sets,
+    cols=5,
+):
+    rows = max([int(np.ceil(len(vals) / cols)), 1])
     scale = 6
 
     f, axes = plt.subplots(
@@ -477,9 +542,11 @@ def plot_enrichment(
     )
     axes = [i for j in axes for i in j]
 
+    nes = "NES(S)" if "NES(S)" in vals.columns else "ES(S)"
+
     for (index, ax), (set_id, row) in zip(
         enumerate(axes),
-        filtered_vals.iterrows(),
+        vals.iterrows(),
     ):
         ax.plot(row["cumscore"])
 
@@ -518,74 +585,65 @@ def plot_enrichment(
 
         ax.set_ylim(-1, 1)
 
+    return f, axes
+
+
+# Here's a helper function to generate the plots seen below
+def plot_gsea(
+    ds, gene_sets,
+    phenotype=None,
+    p=1,
+    cols=5,
+    min_hits=10,
+    min_abs_score=.3,
+    max_pval=1,
+    max_qval=1,
+    pval=False,
+    p_iter=1000,
+    metric="spearman",
+):
+    assert metric in CORRELATION_METRICS
+
+    gene_changes = get_gene_changes(ds)
+
+    figs = ()
+
+    figs += plot_correlations(gene_changes)[0],
+
+    gene_sets = filter_gene_sets(
+        gene_sets, ds,
+        min_hits=min_hits,
+    )
+
+    vals = enrichment_scores(
+        ds,
+        gene_sets,
+        phenotype=phenotype,
+        p=p,
+        pval=pval,
+        p_iter=p_iter,
+        metric=metric,
+    )
+
+    if vals.shape[0] < 1:
+        return vals, figs
+
+    figs += plot_enrichment(
+        filter_vals(
+            vals,
+            min_abs_score=min_abs_score,
+            max_pval=max_pval,
+            max_qval=max_qval,
+        ),
+        gene_sets,
+        cols=cols,
+    )[0],
+
     if pval:
-        f, ax = plt.subplots()
-        v = vals.copy()
-        v = v.sort_values("NES(S)")
-        mask = (
-            (v["p-value"] < max_pval) &
-            (v["q-value"] < max_qval)
-        )
+        figs += plot_nes(
+            vals,
+            max_pval=max_pval,
+            max_qval=max_qval,
+        )[0],
 
-        nes = v["NES(S)"]
-
-        pos = nes[mask]
-        neg = nes[~mask]
-
-        ind = np.arange(v.shape[0])
-        pos_ind = ind[mask]
-        neg_ind = ind[~mask]
-
-        ax.scatter(
-            x=pos_ind,
-            y=pos,
-            color="r",
-        )
-        ax.scatter(
-            x=neg_ind,
-            y=neg,
-            color="k",
-        )
-        ax.set_ylabel("Normalized Enrichment Score (NES)")
-        ax.set_xlim(
-            left=ind.min() - 5,
-            right=ind.max() + 5,
-        )
-        ax.set_ylim(
-            bottom=nes.min() - .5,
-            top=nes.max() + .5,
-        )
-
-        texts = []
-        labels = []
-
-        for m, x, (_, row) in zip(mask, ind, v.iterrows()):
-            y = row["NES(S)"]
-            labels.append(
-                (x, y)
-            )
-            texts.append(
-                ax.text(
-                    x=x,
-                    y=y,
-                    s=row["name"] if m else "",
-                    horizontalalignment='right',
-                )
-            )
-
-        adjust_text(
-            x=[i[0] for i in labels],
-            y=[i[1] for i in labels],
-            texts=texts,
-            ax=ax,
-            lim=500,
-            force_text=0.5,
-            force_points=0.1,
-            arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),
-            only_move={
-                "points": "y",
-                "text": "xy",
-            }
-        )
-
-    return vals
+    return vals, figs

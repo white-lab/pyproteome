@@ -295,6 +295,8 @@ def _get_phosphosite(species):
 
 
 def _get_pathways(species, p_sites=False):
+    LOGGER.info("building gene sets")
+
     if p_sites:
         pathways_df = _get_phosphosite(species)
     else:
@@ -306,46 +308,25 @@ def _get_pathways(species, p_sites=False):
         # if species in ["Mus musculus"]:
         #     pathways_df = pathways_df.append(_get_gskb_pathways(species))
 
+    LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
+
     return pathways_df.reset_index()
 
 
-def gsea(
-    ds,
-    phenotype=None,
-    metric="spearman",
-    p_sites=False,
-    remap=None,
-    folder_name=None,
-    **kwargs
-):
-    folder_name = pyp.utils.make_folder(
-        data=ds,
-        folder_name=folder_name,
-        sub="Volcano",
-    )
-
+def _filter_ambiguous_peptides(ds):
     LOGGER.info(
-        "filtering ambiguous peptides {}".format(len(set(ds.genes)))
+        "filtering ambiguous peptides ({} proteins)".format(len(set(ds.genes)))
     )
 
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
-    species = list(ds.species)[0]
+    ds = ds.filter(ambiguous=False)
 
-    LOGGER.info("mapping genes: {}, {}".format(len(set(ds.genes)), p_sites))
+    LOGGER.info("filtered down to {} proteins".format(len(set(ds.genes))))
 
-    if p_sites:
-        ds.psms = _get_psite_ids(ds, species)
+    return ds
 
-        if remap:
-            ds = _remap_data(ds, remap)
-            species = remap
-    else:
-        ds.psms["ID"] = _get_protein_ids(ds, species)
 
-    LOGGER.info("building gene sets")
-    pathways_df = _get_pathways(species, p_sites=p_sites)
-    LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
-
+def _get_scores(ds, phenotype=None, metric="spearman"):
     LOGGER.info("building correlations")
 
     ds.psms = ds.psms[~ds.psms["ID"].isnull()]
@@ -368,20 +349,68 @@ def gsea(
         ~ds.psms["Correlation"].isnull()
     ]
 
-    LOGGER.info("plotting enrichments {}".format(ds.shape))
+    return ds
 
-    vals = enrichments.plot_enrichment(
+
+def gsea(
+    ds,
+    phenotype=None,
+    name=None,
+    metric="spearman",
+    p_sites=False,
+    species=None,
+    folder_name=None,
+    **kwargs
+):
+    folder_name = pyp.utils.make_folder(
+        data=ds,
+        folder_name=folder_name,
+        sub="Volcano",
+    )
+
+    ds = _filter_ambiguous_peptides(ds)
+
+    if p_sites:
+        ds.psms = _get_psite_ids(ds, species)
+    else:
+        ds.psms["ID"] = _get_protein_ids(ds, species)
+
+    if species is not None:
+        ds = _remap_data(ds, species)
+    else:
+        species = list(ds.species)[0]
+
+    pathways_df = _get_pathways(species, p_sites=p_sites)
+
+    ds = _get_scores(
+        ds,
+        phenotype=phenotype,
+        metric=metric,
+    )
+
+    vals, figs = enrichments.plot_gsea(
         ds, pathways_df,
         phenotype=phenotype,
         metric=metric,
         **kwargs
     )
 
+    if name is None:
+        name = "{}-{}".format(
+            ds.name,
+            "PSEA" if p_sites else "GSEA",
+        )
+
     vals.to_csv(
         os.path.join(
             folder_name,
-            ("PSEA" if p_sites else "GSEA") + ".csv",
+            name + ".csv",
         ),
     )
+
+    for index, fig in enumerate(figs):
+        fig.savefig(
+            os.path.join(folder_name, name + "-{}.png".format(index)),
+        )
 
     return vals
