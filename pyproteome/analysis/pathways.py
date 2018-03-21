@@ -411,6 +411,9 @@ def gsea(
     for index, fig in enumerate(figs):
         fig.savefig(
             os.path.join(folder_name, name + "-{}.png".format(index)),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
+            transparent=True,
         )
 
     return vals
