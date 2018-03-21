@@ -151,21 +151,34 @@ def estimate_pq(vals):
     vals["pos NES(S, pi)"] = pos_pi_nes
     vals["neg NES(S, pi)"] = neg_pi_nes
 
+    pos_mat = (
+        np.concatenate(pos_pi_nes.as_matrix())
+        if pos_pi_nes.shape[0] > 0 else
+        np.array([])
+    )
+    neg_mat = (
+        np.concatenate(neg_pi_nes.as_matrix())
+        if neg_pi_nes.shape[0] > 0 else
+        np.array([])
+    )
+
     f, ax = plt.subplots()
     ax.hist(
-        np.concatenate(pos_pi_nes.as_matrix()),
+        pos_mat,
         bins=50,
         color='k',
         alpha=.5,
     )
     ax.hist(
-        np.concatenate(neg_pi_nes.as_matrix()),
+        neg_mat,
         bins=50,
         color='k',
         alpha=.5,
     )
     ax.hist(
-        vals["NES(S)"].as_matrix(),
+        vals["NES(S)"].as_matrix()
+        if vals["NES(S)"].shape[0] > 0 else
+        [],
         bins=50,
         color='r',
         alpha=.5,
@@ -176,28 +189,29 @@ def estimate_pq(vals):
     pos_pdf = PrPDF(pos_nes.dropna().as_matrix())
     neg_pdf = PrPDF(neg_nes.dropna().as_matrix())
 
-    pos_pi_pdf = PrPDF(np.concatenate(pos_pi_nes.as_matrix()))
-    neg_pi_pdf = PrPDF(np.concatenate(neg_pi_nes.as_matrix()))
+    pos_pi_pdf = PrPDF(pos_mat)
+    neg_pi_pdf = PrPDF(neg_mat)
 
     LOGGER.info("Normalized NES distributions")
 
-    vals["p-value"] = vals.apply(
-        lambda x:
-        _frac_true(
-            _calc_p(x["ES(S)"], x["ES(S, pi)"])
-        ),
-        axis=1,
-    )
+    if vals.shape[0] > 0:
+        vals["p-value"] = vals.apply(
+            lambda x:
+            _frac_true(
+                _calc_p(x["ES(S)"], x["ES(S, pi)"])
+            ),
+            axis=1,
+        )
 
-    vals["q-value"] = vals.apply(
-        lambda x:
-        _calc_q(
-            x["NES(S)"],
-            pos_pdf if x["NES(S)"] > 0 else neg_pdf,
-            pos_pi_pdf if x["NES(S)"] > 0 else neg_pi_pdf,
-        ),
-        axis=1,
-    )
+        vals["q-value"] = vals.apply(
+            lambda x:
+            _calc_q(
+                x["NES(S)"],
+                pos_pdf if x["NES(S)"] > 0 else neg_pdf,
+                pos_pi_pdf if x["NES(S)"] > 0 else neg_pi_pdf,
+            ),
+            axis=1,
+        )
 
     LOGGER.info("Calculated p, q values")
     return vals
@@ -371,7 +385,7 @@ def plot_enrichment(
     p=1,
     cols=5,
     min_hits=10,
-    min_abs_score=0.4,
+    min_abs_score=.3,
     max_pval=1,
     max_qval=1,
     pval=False,
@@ -423,6 +437,9 @@ def plot_enrichment(
         p_iter=p_iter,
         metric=metric,
     )
+
+    if vals.shape[0] < 1:
+        return vals
 
     filtered_vals = vals[
         vals.apply(
