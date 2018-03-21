@@ -56,7 +56,9 @@ def enriched_neighborhood(
                 n=nmer_length,
             )
         ],
-        normed=True, alpha=0.5, color="green",
+        density=True,
+        alpha=0.5,
+        color="green",
         bins=range(0, nmer_length, 1),
         label="background",
     )
@@ -71,7 +73,9 @@ def enriched_neighborhood(
                 all_matches=False,
             )
         ],
-        normed=True, alpha=0.7, color="orange",
+        density=True,
+        alpha=0.7,
+        color="orange",
         bins=range(0, nmer_length, 1),
         label=plogo.format_title(f=f),
     )
