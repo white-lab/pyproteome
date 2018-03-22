@@ -118,7 +118,6 @@ $RECYCLE.BIN/
 .uniprot_cache/
 cache
 *.exe
-CAMV/
 ~$*
 *.xlsx
 *.pickle

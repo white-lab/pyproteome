@@ -8,20 +8,13 @@ Subpackages
 
     pyproteome.analysis
     pyproteome.bca
+    pyproteome.camv
     pyproteome.cluster
     pyproteome.discoverer
     pyproteome.motifs
 
 Submodules
 ----------
-
-pyproteome.camv module
-----------------------
-
-.. automodule:: pyproteome.camv
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 pyproteome.data_sets module
 ---------------------------
