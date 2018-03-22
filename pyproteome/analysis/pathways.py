@@ -371,11 +371,13 @@ def gsea(
     Parameters
     ----------
     ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+        The data set to perform enrichment analysis on.
     phenotype : :class:`pandas.Series`, optional
         A series object with index values equal to the quantification columns
         in the data set. This object is used when calculating correlation
         statistics for each peptide.
     name : str, optional
+        The name of this analysis. Defaults to `ds.name`.
     metric : str, optional
         Correlation metric to use.
 
@@ -396,14 +398,16 @@ def gsea(
         Each element of set should be a Python set() object containing all the
         gene IDs for each gene set.
 
-        Gene IDs are Entrez Gene IDs for protein sets and
-        <Entrez>,<letter><pos>-p (i.e. "8778,Y544-p") for phosphosets.
+        Gene IDs should be strings of Entrez Gene IDs for protein sets and
+        strings of "<Entrez>,<letter><pos>-p" (i.e. "8778,Y544-p") for
+        phosphosets.
     folder_name : str, optional
+        Save figures and tables to this folder. Defaults to `<ds.name>/GSEA`
     """
     folder_name = pyp.utils.make_folder(
         data=ds,
         folder_name=folder_name,
-        sub="Volcano",
+        sub="GSEA",
     )
 
     ds = _filter_ambiguous_peptides(ds)
