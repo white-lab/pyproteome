@@ -67,7 +67,7 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
-    "matplotlib": ("https://matplotlib.org/api/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
 }
 
 autodoc_mock_imports = [
@@ -78,7 +78,6 @@ autodoc_mock_imports = [
     "sklearn",
     "IPython", "IPython.display",
     "scipy.stats", "scipy.misc",
-    "Bio", "Bio.Alphabet", "Bio.Alphabet.IUPAC", "Bio.Seq", "Bio.motifs",
     "adjustText.adjustText",
 ]
 

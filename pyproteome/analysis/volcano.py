@@ -392,7 +392,7 @@ def plot_volcano_filtered(data, f, **kwargs):
 
     Parameters
     ----------
-    data : :class:`pyproteome.data_sets.DataSet`
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     f : dict or list of dict
         Filters passed to data.filter().
 
