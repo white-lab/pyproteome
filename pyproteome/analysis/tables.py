@@ -77,7 +77,7 @@ def motif_table(
 
     See Also
     --------
-    :func:`run_motif_enrichment<pyproteome.motifs.motif.run_motif_enrichment>`
+    :func:`pyproteome.motifs.motif.run_motif_enrichment`
     """
     csv_name = _prep_csv(
         data=data,
