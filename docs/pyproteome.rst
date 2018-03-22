@@ -9,6 +9,7 @@ Subpackages
     pyproteome.analysis
     pyproteome.bca
     pyproteome.cluster
+    pyproteome.discoverer
     pyproteome.motifs
 
 Submodules
@@ -26,14 +27,6 @@ pyproteome.data_sets module
 ---------------------------
 
 .. automodule:: pyproteome.data_sets
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.discoverer module
-----------------------------
-
-.. automodule:: pyproteome.discoverer
     :members:
     :undoc-members:
     :show-inheritance:
