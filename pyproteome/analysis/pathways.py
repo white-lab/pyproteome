@@ -470,7 +470,7 @@ def gsea(
     folder_name = pyp.utils.make_folder(
         data=ds,
         folder_name=folder_name,
-        sub="GSEA",
+        sub="PSEA" if p_sites else "GSEA",
     )
 
     ds = _filter_ambiguous_peptides(ds)
