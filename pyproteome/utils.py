@@ -6,6 +6,7 @@ import copy
 import difflib
 import functools
 import os
+import pickle
 import types
 
 import numpy as np
@@ -218,3 +219,19 @@ def memoize(func):
         return cache[key]
 
     return memoized_func
+
+
+def save_load(name, val=None):
+    filename = "{}.pkl".format(name)
+
+    if val:
+        with open(filename, "wb") as f:
+            pickle.dump(val, f)
+    else:
+        try:
+            with open(filename, "rb") as f:
+                val = pickle.load(f)
+        except:
+            pass
+
+    return val
