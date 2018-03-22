@@ -439,6 +439,10 @@ def enrichment_scores(
     pval : bool, optional
     recorrelate : bool, optional
     p_iter : int, optional
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`
     """
     assert metric in CORRELATION_METRICS
 
@@ -492,6 +496,20 @@ def enrichment_scores(
 
 
 def filter_gene_sets(gene_sets, ds, min_hits=10):
+    """
+    Filter gene sets to include only those with at least a given number of
+    hits in a data set.
+
+    Parameters
+    ----------
+    gene_sets : :class:`pandas.DataFrame`, optional
+    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    min_hits : int, optional
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`
+    """
     LOGGER.info("Filtering gene sets")
 
     total_sets = gene_sets
@@ -519,6 +537,21 @@ def filter_vals(
     max_pval=1,
     max_qval=1,
 ):
+    """
+    Filter gene set enrichment scores using give ES(S) / p-value / q-value
+    cutoffs.
+
+    Parameters
+    ----------
+    vals : :class:`pandas.DataFrame`
+    min_abs_score : float, optional
+    max_pval : float, optional
+    max_qval : float, optional
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`
+    """
     filtered_vals = vals[
         vals.apply(
             lambda x:
