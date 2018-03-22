@@ -68,6 +68,17 @@ ORGANISM_MAPPING = {
 
 @pyp.utils.memoize
 def get_gskb_pathways(species):
+    """
+    Download gene sets from GSKB.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
     LOGGER.info("Fetching GSKB pathways")
 
     url = GSKB_URL
@@ -96,6 +107,17 @@ def get_gskb_pathways(species):
 
 @pyp.utils.memoize
 def get_pathway_common(species):
+    """
+    Download gene sets from Pathway Commons.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
     LOGGER.info("Fetching Pathways Common")
 
     url = PATHWAYS_COMMON_URL
@@ -140,6 +162,17 @@ def get_pathway_common(species):
 
 @pyp.utils.memoize
 def get_wikipathways(species):
+    """
+    Download gene sets from WikiPathways.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
     LOGGER.info("Fetching WikiPathways")
 
     url = WIKIPATHWAYS_URL.format("_".join(species.split(" ")))
@@ -264,6 +297,17 @@ def _get_protein_ids(ds, species):
 
 @pyp.utils.memoize
 def get_phosphosite(species):
+    """
+    Download phospho sets from PhophoSite Plus.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
     LOGGER.info("Getting phosphosite data for {}".format(species))
 
     species = ORGANISM_MAPPING.get(species, species)
@@ -297,6 +341,18 @@ def get_phosphosite(species):
 
 
 def get_pathways(species, p_sites=False):
+    """
+    Download all default gene sets and phospho sets.
+
+    Parameters
+    ----------
+    species : str
+    p_sites : bool, optional
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
     LOGGER.info("building gene sets")
 
     if p_sites:
@@ -400,9 +456,13 @@ def gsea(
 
         Gene IDs should be strings of Entrez Gene IDs for protein sets and
         strings of "<Entrez>,<letter><pos>-p" (i.e. "8778,Y544-p") for
-        phosphosets.
+        phospho sets.
     folder_name : str, optional
         Save figures and tables to this folder. Defaults to `<ds.name>/GSEA`
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
     """
     folder_name = pyp.utils.make_folder(
         data=ds,
