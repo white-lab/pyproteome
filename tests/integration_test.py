@@ -349,14 +349,14 @@ class IntegrationTest(TestCase):
 
             cluster.plot.show_cluster(
                 data, y_pred,
-                protein="Pkm",
+                protein="Mbp",
             )
 
             cluster.plot.show_peptide_clusters(
                 data, y_pred,
                 [
                     {"seq": "AAVPDAVGK"},
-                    {"protein": "Pkm"},
+                    {"protein": "Mbp"},
                 ],
             )
 
