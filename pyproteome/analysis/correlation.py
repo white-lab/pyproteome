@@ -7,19 +7,14 @@ Functions include volcano plots, sorted tables, and plotting sequence levels.
 
 from __future__ import absolute_import, division
 
-# Built-ins
 import logging
 import os
 
-# Core data analysis libraries
+from adjustText.adjustText import adjust_text
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr, spearmanr
-
-# Misc extras
-from adjustText.adjustText import adjust_text
-
 import pyproteome as pyp
 
 
