@@ -4,16 +4,14 @@ This module provides functionality for interacting with CAMV.
 Currently limited to importing and outputing scan lists.
 """
 
-# Built-ins
 from __future__ import absolute_import, division
 
 import logging
 import os
 
-# Core data analysis libraries
 import pandas as pd
 
-from . import paths, utils
+import pyproteome as pyp
 
 try:
     FileNotFoundError
@@ -22,7 +20,7 @@ except NameError:
 
 LOGGER = logging.getLogger("pyproteome.camv")
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-CAMV_PATH = utils.which("CAMV.exe")
+CAMV_PATH = pyp.utils.which("CAMV.exe")
 
 if CAMV_PATH is None:
     CAMV_PATH = os.path.abspath(
@@ -73,13 +71,13 @@ def load_camv_validation(basename):
             return df
 
     try:
-        files = os.listdir(paths.CAMV_OUT_DIR)
+        files = os.listdir(pyp.paths.CAMV_OUT_DIR)
     except FileNotFoundError:
         return accepted, maybed, rejected
 
     for filename in files:
         if filename.startswith(basename):
-            base_dir = os.path.join(paths.CAMV_OUT_DIR, filename)
+            base_dir = os.path.join(pyp.paths.CAMV_OUT_DIR, filename)
 
             accept_path = os.path.join(base_dir, "accept.xls")
             maybe_path = os.path.join(base_dir, "maybe.xls")
