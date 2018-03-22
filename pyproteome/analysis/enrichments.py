@@ -587,7 +587,7 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
 
     Returns
     -------
-    f : :class:`matplotlib.figure`
+    f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     """
     f, ax = plt.subplots()
@@ -627,7 +627,7 @@ def plot_nes(vals, max_pval=.1, max_qval=1):
 
     Returns
     -------
-    f : :class:`matplotlib.figure`
+    f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     """
     f, ax = plt.subplots()
@@ -713,7 +713,7 @@ def plot_correlations(gene_changes):
 
     Returns
     -------
-    f : :class:`matplotlib.figure`
+    f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     """
     LOGGER.info("Plotting gene correlations")
@@ -831,7 +831,7 @@ def plot_gsea(
     Returns
     -------
     vals : :class:`pandas.DataFrame`
-    figs : list of :class:`matplotlib.figure`
+    figs : list of :class:`matplotlib.figure.Figure`
     """
     es_args = es_args or {}
     es_plot_args = es_plot_args or {}

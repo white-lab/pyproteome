@@ -98,7 +98,7 @@ def plot_volcano(
 
     Returns
     -------
-    f : :class:`matplotlib.Figure`
+    f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     folder_name : str
     filename : str
@@ -398,7 +398,7 @@ def plot_volcano_filtered(data, f, **kwargs):
 
     Returns
     -------
-    f : :class:`matplotlib.Figure`
+    f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     """
     data = data.copy()
