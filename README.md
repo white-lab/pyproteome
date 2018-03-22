@@ -66,7 +66,10 @@ dilution.
 ...     groups=ck_groups,
 ... )
 >>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_global)
->>> tables.changes_table(ck_h1_py_norm.filter(p=0.05), sort="Fold Change"))
+>>> tables.changes_table(
+...     ck_h1_py_norm.filter(p=0.05),
+...     sort="Fold Change",
+... )
 ```
 
 ## Directory Hierarchy
