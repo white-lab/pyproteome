@@ -1,6 +1,11 @@
 pyproteome.motifs package
 =========================
 
+.. automodule:: pyproteome.motifs
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
@@ -56,15 +61,6 @@ pyproteome.motifs.weblogo module
 --------------------------------
 
 .. automodule:: pyproteome.motifs.weblogo
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyproteome.motifs
     :members:
     :undoc-members:
     :show-inheritance:

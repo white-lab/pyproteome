@@ -1,6 +1,11 @@
 pyproteome.cluster package
 ==========================
 
+.. automodule:: pyproteome.cluster
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
@@ -24,15 +29,6 @@ pyproteome.cluster.plot module
 ------------------------------
 
 .. automodule:: pyproteome.cluster.plot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyproteome.cluster
     :members:
     :undoc-members:
     :show-inheritance:

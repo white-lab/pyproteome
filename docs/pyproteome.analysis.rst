@@ -1,6 +1,11 @@
 pyproteome.analysis package
 ===========================
 
+.. automodule:: pyproteome.analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
@@ -48,15 +53,6 @@ pyproteome.analysis.volcano module
 ----------------------------------
 
 .. automodule:: pyproteome.analysis.volcano
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyproteome.analysis
     :members:
     :undoc-members:
     :show-inheritance:
