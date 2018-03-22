@@ -1,10 +1,10 @@
-pyproteome.bca package
+pyproteome.pypuniprot package
 ===========================
 
 Module contents
 ---------------
 
-.. automodule:: pyproteome.bca
+.. automodule:: pyproteome.pypuniprot
     :members:
     :undoc-members:
     :show-inheritance:

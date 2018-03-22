@@ -450,7 +450,7 @@ def gsea(
         "Mus musculus").
 
         If different from that of the input data set, IDs will be mapped to
-        this target using Phosphosite Plus's database.
+        the target species using Phosphosite Plus's database.
     gene_sets : :class:`pandas.DataFrame`, optional
         A dataframe with two columns: "name" and "set".
 

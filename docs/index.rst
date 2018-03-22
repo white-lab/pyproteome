@@ -78,6 +78,13 @@ to manage their Python environment and provide pyproteome's dependencies.
           {"p": .001},
       )
 
+      # Perform Phospho Set Enrichment Analysis (PSEA)
+      pathways.gsea(
+          datas["CK-H1-pST"],
+          metric="zscore",
+          p_sites=True,
+      )
+
 Contents
 ========
 
