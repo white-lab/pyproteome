@@ -9,6 +9,7 @@ except ImportError:
 
 from . import motif
 
+
 WEBLOGO_URL = "http://weblogo.threeplusone.com/create.cgi"
 
 

@@ -17,6 +17,7 @@ import pyproteome as pyp
 
 from . import clusterer
 
+
 COLOR_MAP = plt.cm.rainbow
 CORR_COLOR_MAP = plt.cm.Spectral_r
 

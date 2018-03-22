@@ -14,6 +14,7 @@ except ImportError:
 
 from . import motif
 
+
 LOGGER = logging.getLogger("pyproteome.plogo")
 PLOGO_BASE = "https://plogo.uconn.edu/main"
 

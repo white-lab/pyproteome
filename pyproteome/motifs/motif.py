@@ -6,7 +6,6 @@ Functionality includes n-mer generation.
 
 from __future__ import division
 
-# Built-ins
 from collections import defaultdict, Iterable
 from functools import partial
 import logging
@@ -15,7 +14,6 @@ import pickle
 import random
 import re
 
-# Core data analysis libraries
 import pandas as pd
 from scipy.stats import hypergeom
 

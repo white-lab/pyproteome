@@ -10,6 +10,7 @@ import pandas as pd
 import pyproteome as pyp
 from . import motif, logo
 
+
 DATA_URL = "https://www.phosphosite.org/downloads/Kinase_Substrate_Dataset.gz"
 
 

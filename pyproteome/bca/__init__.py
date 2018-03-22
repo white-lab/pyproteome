@@ -5,13 +5,11 @@ This module provides functionality for interpreting BCA assays.
 
 from __future__ import absolute_import, division
 
-# Built-ins
 from collections import OrderedDict
 import logging
 import os
 import re
 
-# Core data analysis libraries
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
@@ -19,6 +17,7 @@ import pandas as pd
 from scipy.stats import linregress
 
 import pyproteome as pyp
+
 
 LOGGER = logging.getLogger("pyproteome.bca")
 RE_ROW_COL = re.compile(r"([A-Z]+)(\d+)")

@@ -11,6 +11,7 @@ except ImportError:
 
 from . import motif
 
+
 LOGGER = logging.getLogger("pyproteome.icelogo")
 ICELOGO_BASE = "http://iomics.ugent.be/icelogoserver"
 
