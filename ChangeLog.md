@@ -2,13 +2,14 @@
 
 ## 0.7.0 (2018-\*-\*)
 
-## 0.6.0 (2018-02-13)
+## 0.6.0 (2018-03-22)
 
 Features
 
   - Improvements to ProteomeDiscoverer feature support (percolator, phosphoRS).
   - Many organizational changes.
   - Improvements to clustering module.
+  - Added pathways module for GSEA / PSEA.
 
 ## 0.5.0 (2018-01-20)
 
