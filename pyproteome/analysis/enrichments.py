@@ -261,7 +261,7 @@ def get_gene_changes(ds):
 def _calc_essdist(phen, ds=None, gene_sets=None, p=1, metric="spearman"):
     assert metric in CORRELATION_METRICS
 
-    if phen:
+    if phen is not None:
         phen = _shuffle(phen)
 
     if metric in ["fold", "zscore"]:
