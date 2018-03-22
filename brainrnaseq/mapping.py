@@ -33,7 +33,7 @@ def get_symbol_mapping(gene, species="Mouse"):
     data = cache.get_mapping_data(species=species)
 
     row = _find_uniprot_gene(gene, data)
-    return row.index if row is not None else None
+    return row.name if row is not None else None
 
 
 @utils.memoize
