@@ -115,11 +115,14 @@ class BrainRNASeqTest(TestCase):
     def test_enrichments(self):
         items = {
             "Homo sapiens": {
+                "AGT": "Astrocyte",
                 "GFAP": "Astrocyte",
                 "IDI2-AS1": "Astrocyte",
+                "CD34": "Endothelia",
                 "RNU11": "Endothelia",
                 "CCL3L1": "Microglia",
                 "CD33": "Microglia",
+                "INPP5D": "Microglia",
                 "SIGLEC5": "Microglia",
                 "SIGLEC8": "Microglia",
                 "SIGLEC9": "Microglia",
@@ -129,6 +132,7 @@ class BrainRNASeqTest(TestCase):
                 "CD22": "Myelinating Oligodendrocytes",
                 "MAG": "Myelinating Oligodendrocytes",
                 "GAD2": "Neuron",
+                "SYT4": "Neuron",
             },
             "Mus musculus": {
                 "Sumo2": "Astrocyte",
