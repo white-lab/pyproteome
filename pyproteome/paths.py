@@ -44,6 +44,14 @@ DIR_NAMES = (
 
 
 def set_base_dir(path):
+    """
+    Set the base directory containing the search / raw / scripts / figures
+    folders.
+
+    Parameters
+    ----------
+    path : str
+    """
     global \
         BCA_ASSAY_DIR, CAMV_OUT_DIR, CAMV_SESS_DIR, MASCOT_XML_DIR, \
         MS_SEARCHED_DIR, MS_RAW_DIR, SCRIPTS_DIR, FIGURES_DIR
@@ -58,6 +66,14 @@ def set_base_dir(path):
 
 
 def find_base_dir():
+    """
+    Finds the base directory containing the search / raw / scripts / figures
+    folders. May be the current working directory or a parent of it.
+
+    Returns
+    -------
+    str
+    """
     for opt in BASE_DIR_OPTS:
         if any(
             os.path.exists(os.path.join(opt, i))

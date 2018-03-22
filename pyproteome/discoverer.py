@@ -599,7 +599,7 @@ def _get_species(cursor):
     return species
 
 
-def update_label_names(cursor):
+def _update_label_names(cursor):
     fields = cursor.execute(
         """
         SELECT
@@ -665,7 +665,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     with sqlite3.connect(msf_path) as conn:
         cursor = conn.cursor()
 
-        update_label_names(cursor)
+        _update_label_names(cursor)
 
         # Get any N-terminal quantification tags
         quantification = cursor.execute(
