@@ -368,5 +368,5 @@ class IntegrationTest(TestCase):
             ]:
                 cluster.auto.auto_clusterer(
                     d,
-                    cluster_kwargs={"n_clusters": 10},
+                    cluster_kwargs={"n_clusters": 5},
                 )
