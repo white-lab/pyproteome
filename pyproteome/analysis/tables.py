@@ -58,6 +58,27 @@ def motif_table(
     csv_name=None,
     **kwargs
 ):
+    """
+    Run a motif enrichment algorithm on a data set and display the
+    significantly enriched motifs.
+
+    Parameters
+    ----------
+    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    f : dict or list of dict
+    p : float, optional
+    sort : str, optional
+    folder_name : str, optional
+    csv_name : str, optional
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`
+
+    See Also
+    --------
+    :func:`run_motif_enrichment<pyproteome.motifs.motif.run_motif_enrichment>`
+    """
     csv_name = _prep_csv(
         data=data,
         folder_name=folder_name,
