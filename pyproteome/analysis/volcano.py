@@ -439,7 +439,7 @@ def plot_volcano_filtered(data, f, **kwargs):
         (-0.1, np.ceil(max(pvals + [1]))),
     )
 
-    f, ax, folder_name, filename = volcano_plot(
+    f, ax, folder_name, filename = plot_volcano(
         d,
         xminmax=xminmax,
         yminmax=yminmax,
@@ -469,4 +469,4 @@ def plot_volcano_filtered(data, f, **kwargs):
 
 def volcano_plot(*args, **kwargs):
     LOGGER.warning("volcano_plot is depracated. Use plot_volcano instead.")
-    plot_volcano(*args, **kwargs)
+    return plot_volcano(*args, **kwargs)

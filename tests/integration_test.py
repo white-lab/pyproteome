@@ -277,7 +277,7 @@ class IntegrationTest(TestCase):
 
     def test_volcano_plot(self):
         for data in self.data.values():
-            volcano.volcano_plot(data)
+            volcano.plot_volcano(data)
 
     def test_plot_volcano_filtered(self):
         for data in self.data.values():
