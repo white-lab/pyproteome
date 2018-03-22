@@ -2,6 +2,12 @@
 
 ## 0.7.0 (2018-\*-\*)
 
+## 0.6.1 (2018-03-22)
+
+Bug fixes
+
+  - Fixed PyPI deployment issues.
+
 ## 0.6.0 (2018-03-22)
 
 Features

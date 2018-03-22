@@ -60,7 +60,7 @@ dilution.
 ...     channels=ck_channels,
 ...     groups=ck_groups,
 ... )
-... ck_h1_global = data_sets.DataSet(
+>>> ck_h1_global = data_sets.DataSet(
 ...     name="CK-H1-Global",
 ...     channels=ck_channels,
 ...     groups=ck_groups,
