@@ -1,4 +1,9 @@
+"""
+This module does most of the heavy lifting for the pathways module.
 
+It includes functions for calculating enrichment scores and generating plots
+for GSEA / PSEA.
+"""
 from __future__ import division
 
 from collections import defaultdict
@@ -15,6 +20,10 @@ from sklearn.utils import shuffle
 
 LOGGER = logging.getLogger("pyproteome.enrichments")
 MIN_PERIODS = 5
+"""
+Minimum number of samples with peptide quantification and phenotypic
+measurements needed to generate a correlation metric score.
+"""
 CORRELATION_METRICS = [
     "spearman",
     "pearson",
@@ -22,6 +31,14 @@ CORRELATION_METRICS = [
     "fold",
     "zscore",
 ]
+"""
+Correlation metrics used for enrichment analysis. "spearman", "pearson", and
+"kendall" are all calculated using `pandas.Series.corr()`.
+
+"fold" takes ranking values direction from the "Fold Change" column.
+
+"zscore" takes ranking values from a z-scored "Fold Change" column.
+"""
 
 
 def _calc_p(ess, ess_pi):
@@ -244,9 +261,10 @@ def get_gene_changes(ds):
 def _calc_essdist(phen, ds=None, gene_sets=None, p=1, metric="spearman"):
     assert metric in CORRELATION_METRICS
 
-    if metric in ["spearman", "pearson", "kendall"]:
+    if phen:
         phen = _shuffle(phen)
-    else:
+
+    if metric in ["fold", "zscore"]:
         ds = ds.copy()
         ds.psms["Fold Change"] = _shuffle(ds.psms["Fold Change"])
 
@@ -322,17 +340,30 @@ def calculate_es_s(gene_changes, gene_set, p=1):
 
 def enrichment_scores(
     ds, gene_sets,
+    metric="spearman",
     phenotype=None,
     p=1,
     pval=True,
     recorrelate=False,
     p_iter=1000,
-    metric="spearman",
 ):
     """
-    Here is the function for calculating gene set enrichment scores.
-    It calculates the association of each gene with a given phenotype
-    and then generates the ES(S) scores for a given gene set.
+    Calculate enrichment scores for each gene set.
+
+    p-values and q-values are calculated by scrambling the phenotypes assigned
+    to each sample or scrambling peptides' fold changes, depending on the
+    correlation metric used.
+
+    Parameters
+    ----------
+    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    gene_sets : :class:`pandas.DataFrame`, optional
+    metric : str, optional
+    phenotype : :class:`pandas.Series`, optional
+    p : float, optional
+    pval : bool, optional
+    recorrelate : bool, optional
+    p_iter : int, optional
     """
     assert metric in CORRELATION_METRICS
 
@@ -341,7 +372,7 @@ def enrichment_scores(
 
     gene_changes = get_gene_changes(ds)
 
-    cols = ["name", "cumscore", "ES(S)", "hits", "hit_list", "n_hits"]
+    cols = ["name", "set", "cumscore", "ES(S)", "hits", "hit_list", "n_hits"]
     vals = pd.DataFrame(
         columns=cols,
     )
@@ -356,6 +387,7 @@ def enrichment_scores(
             pd.Series(
                 [
                     row["name"],
+                    row["set"],
                     cumscore,
                     ess,
                     hits,
@@ -385,6 +417,18 @@ def enrichment_scores(
 
 
 def plot_nes(vals, max_pval=.1, max_qval=1):
+    """
+    Plot the ranked normalized enrichment score values.
+
+    Annotates significant gene sets with their name on the figure.
+
+    Parameters
+    ----------
+    vals : :class:`pandas.DataFrame`
+        The gene sets and scores calculated by enrichment_scores().
+    max_pval : float, optional
+    max_qval : float, optional
+    """
     f, ax = plt.subplots()
     v = vals.copy()
     v = v.sort_values("NES(S)")
@@ -460,6 +504,11 @@ def plot_nes(vals, max_pval=.1, max_qval=1):
 def plot_correlations(gene_changes):
     """
     Plot the ranked list of correlations.
+
+    Parameters
+    ----------
+    gene_changes : :class:`pandas.DataFrame`
+        Genes and their correlation values as calculated by get_gene_changes().
     """
     LOGGER.info("Plotting gene correlations")
     f, ax = plt.subplots()
@@ -527,9 +576,18 @@ def filter_vals(
 
 
 def plot_enrichment(
-    vals, gene_sets,
+    vals,
     cols=5,
 ):
+    """
+    Plot enrichment score curves for each gene set.
+
+    Parameters
+    ----------
+    vals : :class:`pandas.DataFrame`
+        The gene sets and scores calculated by enrichment_scores().
+    cols : int, optional
+    """
     rows = max([int(np.ceil(len(vals) / cols)), 1])
     scale = 6
 
@@ -554,7 +612,7 @@ def plot_enrichment(
             if hit:
                 ax.axvline(ind, linestyle=":", alpha=.25)
 
-        name = gene_sets.loc[set_id]["name"]
+        name = row["name"]
         name = name if len(name) < 35 else name[:35] + "..."
 
         ax.set_title(
@@ -588,21 +646,30 @@ def plot_enrichment(
     return f, axes
 
 
-# Here's a helper function to generate the plots seen below
 def plot_gsea(
     ds, gene_sets,
-    phenotype=None,
-    p=1,
-    cols=5,
+    es_args=None,
+    es_plot_args=None,
     min_hits=10,
     min_abs_score=.3,
     max_pval=1,
     max_qval=1,
-    pval=False,
-    p_iter=1000,
-    metric="spearman",
 ):
-    assert metric in CORRELATION_METRICS
+    """
+    Run set enrichment analysis on a data set and generate all figures
+    associated with that analysis.
+
+    Parameters
+    ----------
+    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    gene_sets : :class:`pandas.DataFrame`, optional
+    es_args : dict, optional
+        Keyword arguments passed to enrichment_scores().
+    es_plot_args : dict, optional
+        Keyword arguments passed to plot_enrichment().
+    """
+    es_args = es_args or {}
+    es_plot_args = es_plot_args or {}
 
     gene_changes = get_gene_changes(ds)
 
@@ -618,32 +685,25 @@ def plot_gsea(
     vals = enrichment_scores(
         ds,
         gene_sets,
-        phenotype=phenotype,
-        p=p,
-        pval=pval,
-        p_iter=p_iter,
-        metric=metric,
+        **es_args
     )
 
-    if vals.shape[0] < 1:
-        return vals, figs
-
-    figs += plot_enrichment(
-        filter_vals(
-            vals,
-            min_abs_score=min_abs_score,
-            max_pval=max_pval,
-            max_qval=max_qval,
-        ),
-        gene_sets,
-        cols=cols,
-    )[0],
-
-    if pval:
-        figs += plot_nes(
-            vals,
-            max_pval=max_pval,
-            max_qval=max_qval,
+    if vals.shape[0] > 0:
+        figs += plot_enrichment(
+            filter_vals(
+                vals,
+                min_abs_score=min_abs_score,
+                max_pval=max_pval,
+                max_qval=max_qval,
+            ),
+            **es_plot_args
         )[0],
+
+        if "NES(S)" in vals.columns:
+            figs += plot_nes(
+                vals,
+                max_pval=max_pval,
+                max_qval=max_qval,
+            )[0],
 
     return vals, figs

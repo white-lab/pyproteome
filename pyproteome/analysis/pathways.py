@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 """
-This module provides functionality for data set analysis.
+This module provides functionality for signal pathway analysis.
 
-Functions include volcano plots, sorted tables, and plotting sequence levels.
+It includes functions for Gene Set Enrichment Analysis (GSEA) as well as
+Phospho Set Enrichment Analysis (PSEA).
 """
 
 from __future__ import absolute_import, division
 
-# Built-ins
 import gzip
 import io
 import logging
@@ -15,8 +15,6 @@ import os
 import re
 import requests
 
-# Core data analysis libraries
-# from matplotlib import pyplot as plt
 import pandas as pd
 
 
@@ -69,7 +67,7 @@ ORGANISM_MAPPING = {
 
 
 @pyp.utils.memoize
-def _get_gskb_pathways(species):
+def get_gskb_pathways(species):
     LOGGER.info("Fetching GSKB pathways")
 
     url = GSKB_URL
@@ -97,7 +95,7 @@ def _get_gskb_pathways(species):
 
 
 @pyp.utils.memoize
-def _get_pathway_common(species):
+def get_pathway_common(species):
     LOGGER.info("Fetching Pathways Common")
 
     url = PATHWAYS_COMMON_URL
@@ -141,7 +139,7 @@ def _get_pathway_common(species):
 
 
 @pyp.utils.memoize
-def _get_wikipathways(species):
+def get_wikipathways(species):
     LOGGER.info("Fetching WikiPathways")
 
     url = WIKIPATHWAYS_URL.format("_".join(species.split(" ")))
@@ -238,6 +236,8 @@ def _get_psite_ids(ds, species):
     def _split_rows(row):
         mods = row["Modifications"].get_mods("Phospho")
 
+        # Generate rows for each phosphosite on a peptide mapped to each
+        # possible protein for ambiguous peptides.
         for mod in mods:
             for gene, abs_pos in zip(row["Proteins"].accessions, mod.abs_pos):
                 new_row = row.to_dict()
@@ -263,7 +263,7 @@ def _get_protein_ids(ds, species):
 
 
 @pyp.utils.memoize
-def _get_phosphosite(species):
+def get_phosphosite(species):
     LOGGER.info("Getting phosphosite data for {}".format(species))
 
     species = ORGANISM_MAPPING.get(species, species)
@@ -281,9 +281,11 @@ def _get_phosphosite(species):
                     ].apply(
                         lambda x:
                         ",".join([
+                            # XXX: Accession IDs can include a "-#" for
+                            # different protein isoforms
                             x["SUB_ACC_ID"].split("-")[0],
-                            x["SUB_MOD_RSD"],
-                        ]) + "-p",
+                            x["SUB_MOD_RSD"] + "-p",
+                        ]),
                         axis=1,
                     )
                 )
@@ -294,19 +296,19 @@ def _get_phosphosite(species):
     )
 
 
-def _get_pathways(species, p_sites=False):
+def get_pathways(species, p_sites=False):
     LOGGER.info("building gene sets")
 
     if p_sites:
-        pathways_df = _get_phosphosite(species)
+        pathways_df = get_phosphosite(species)
     else:
-        pathways_df = _get_wikipathways(species)
+        pathways_df = get_wikipathways(species)
 
         # if species in ["Homo sapiens"]:
-        #     pathways_df = pathways_df.append(_get_pathway_common(species))
+        #     pathways_df = pathways_df.append(get_pathway_common(species))
 
         # if species in ["Mus musculus"]:
-        #     pathways_df = pathways_df.append(_get_gskb_pathways(species))
+        #     pathways_df = pathways_df.append(get_gskb_pathways(species))
 
     LOGGER.info("Loaded {} gene sets".format(pathways_df.shape[0]))
 
@@ -359,9 +361,45 @@ def gsea(
     metric="spearman",
     p_sites=False,
     species=None,
+    gene_sets=None,
     folder_name=None,
     **kwargs
 ):
+    """
+    Perform Gene Set Enrichment Analysis (GSEA) on a data set.
+
+    Parameters
+    ----------
+    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    phenotype : :class:`pandas.Series`, optional
+        A series object with index values equal to the quantification columns
+        in the data set. This object is used when calculating correlation
+        statistics for each peptide.
+    name : str, optional
+    metric : str, optional
+        Correlation metric to use.
+
+        Can be one of ["zscore", "fold", "spearman", "pearson", "kendall"].
+    p_sites : bool, optional
+        Perform Phospho Set Enrichment Analysis (PSEA) on data set.
+    species : str, optional
+        The species used to generate gene sets.
+
+        Value should be in binomial nomenclature (i.e. "Homo sapiens",
+        "Mus musculus").
+
+        If different from that of the input data set, IDs will be mapped to
+        this target using Phosphosite Plus's database.
+    gene_sets : :class:`pandas.DataFrame`, optional
+        A dataframe with two columns: "name" and "set".
+
+        Each element of set should be a Python set() object containing all the
+        gene IDs for each gene set.
+
+        Gene IDs are Entrez Gene IDs for protein sets and
+        <Entrez>,<letter><pos>-p (i.e. "8778,Y544-p") for phosphosets.
+    folder_name : str, optional
+    """
     folder_name = pyp.utils.make_folder(
         data=ds,
         folder_name=folder_name,
@@ -376,11 +414,13 @@ def gsea(
         ds.psms["ID"] = _get_protein_ids(ds, species)
 
     if species is not None:
-        ds = _remap_data(ds, species)
+        if species not in ds.species:
+            ds = _remap_data(ds, species)
     else:
         species = list(ds.species)[0]
 
-    pathways_df = _get_pathways(species, p_sites=p_sites)
+    if gene_sets is None:
+        gene_sets = get_pathways(species, p_sites=p_sites)
 
     ds = _get_scores(
         ds,
@@ -389,7 +429,7 @@ def gsea(
     )
 
     vals, figs = enrichments.plot_gsea(
-        ds, pathways_df,
+        ds, gene_sets,
         phenotype=phenotype,
         metric=metric,
         **kwargs
