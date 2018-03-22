@@ -71,7 +71,7 @@ class BrainRNASeqTest(TestCase):
                 self.assertEqual(
                     brs.mapping.get_symbol_mapping(
                         gene=gene,
-                        species="Human",
+                        species="Homo sapiens",
                     ),
                     "JAK2",
                 )
