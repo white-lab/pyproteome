@@ -5,7 +5,7 @@ PRIDE / Proteome Xchange.
 
 import os
 # XXX: This should be a safer alternative package. Otherwise users could be
-# DOS-d by a MITM attack
+# vulnerable to a MITM attack
 import xml.etree.ElementTree as ET
 
 import requests

@@ -4,19 +4,16 @@ This module provides functionality for fetching protein data from UniProt.
 Caches fetched protein data for faster re-use.
 """
 
-# Built-ins
 import os
 import re
 import shutil
 import sqlite3
 import tempfile
 
-# Core data analysis libraries
 import pandas as pd
-
 import uniprot
 
-from . import paths
+import pyproteome as pyp
 
 
 RE_ACCESSION = re.compile("\[([A-Za-z0-9]+_[A-Z]+)\]")
@@ -66,11 +63,11 @@ def prefetch_all_uniprot():
     """
     accessions = set()
 
-    for filename in os.listdir(paths.MS_SEARCHED_DIR):
+    for filename in os.listdir(pyp.paths.MS_SEARCHED_DIR):
         if not filename.endswith("_psms.txt"):
             continue
 
-        psms = pd.read_table(os.path.join(paths.MS_SEARCHED_DIR, filename))
+        psms = pd.read_table(os.path.join(pyp.paths.MS_SEARCHED_DIR, filename))
         psms.dropna(
             subset=["Protein Group Accessions"],
             inplace=True,

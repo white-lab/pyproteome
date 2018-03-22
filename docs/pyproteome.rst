@@ -38,14 +38,6 @@ pyproteome.discoverer module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.fetch_data module
-----------------------------
-
-.. automodule:: pyproteome.fetch_data
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.levels module
 ------------------------
 
@@ -74,14 +66,6 @@ pyproteome.paths module
 -----------------------
 
 .. automodule:: pyproteome.paths
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.pride module
------------------------
-
-.. automodule:: pyproteome.pride
     :members:
     :undoc-members:
     :show-inheritance:

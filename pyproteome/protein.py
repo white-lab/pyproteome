@@ -4,7 +4,7 @@ This module provides functionality for interfacing with protein data.
 
 import logging
 
-from . import fetch_data
+from . import pypuniprot
 
 
 LOGGER = logging.getLogger("pyproteome.protein")
@@ -92,7 +92,7 @@ class Protein:
         self.full_sequence = full_sequence
 
         if any(i is None for i in [gene, description, full_sequence]):
-            up_data = fetch_data.get_uniprot_data(accession)
+            up_data = pypuniprot.get_uniprot_data(accession)
 
             if "gene" in up_data:
                 self.gene = up_data["gene"]
