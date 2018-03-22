@@ -602,8 +602,10 @@ def plot_enrichment(
 
     nes = "NES(S)" if "NES(S)" in vals.columns else "ES(S)"
 
+    ax_iter = iter(axes)
+
     for (index, ax), (set_id, row) in zip(
-        enumerate(axes),
+        enumerate(ax_iter),
         vals.iterrows(),
     ):
         ax.plot(row["cumscore"])
@@ -642,6 +644,9 @@ def plot_enrichment(
             ax.set_ylabel("ES(S)", fontsize=20)
 
         ax.set_ylim(-1, 1)
+
+    for ax in ax_iter:
+        ax.axis('off')
 
     return f, axes
 
