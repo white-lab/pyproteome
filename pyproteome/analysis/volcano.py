@@ -95,6 +95,13 @@ def plot_volcano(
     adjust : bool, optional
     compress_dups : bool, optional
     full_site_labels : bool, optional
+
+    Returns
+    -------
+    f : :class:`matplotlib.Figure`
+    ax : :class:`matplotlib.axes.Axes`
+    folder_name : str
+    filename : str
     """
     (channels_a, channels_b), (label_a, label_b), _ = data.get_groups(
         group_a=group_a,
@@ -377,6 +384,23 @@ def plot_volcano(
 
 
 def plot_volcano_filtered(data, f, **kwargs):
+    """
+    Display a volcano plot, showing only peptides that are included by a given
+    filter.
+
+    All extra arguments will be passed directly to `plot_volcano`.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.DataSet`
+    f : dict or list of dict
+        Filters passed to data.filter().
+
+    Returns
+    -------
+    f : :class:`matplotlib.Figure`
+    ax : :class:`matplotlib.axes.Axes`
+    """
     data = data.copy()
     data.update_group_changes(
         group_a=kwargs.get("group_a", None),
