@@ -42,50 +42,43 @@ def enriched_neighborhood(
         min([k, n]) - 1
     )
 
-    print("K={}, N={}, k={}, n={}".format(K, N, k, n))
-    print("p-value={:.3e}".format(pval))
-
     fig, ax = plt.subplots(figsize=(4, 4))
 
-    ax.hist(
-        [
-            sum(i.count(j) for j in residues)
-            for i in motif.generate_n_mers(
-                data["Sequence"],
-                letter_mod_types=[(None, "Phospho")],
-                n=nmer_length,
-            )
-        ],
-        density=True,
-        alpha=0.5,
-        color="green",
-        bins=range(0, nmer_length, 1),
-        label="background",
-    )
+    if background:
+        ax.hist(
+            [
+                sum(i.count(j) for j in residues)
+                for i in background
+            ],
+            density=True,
+            alpha=0.5,
+            color="green",
+            bins=range(0, nmer_length, 1),
+            label="background",
+        )
 
-    ax.hist(
-        [
-            sum(i.count(j) for j in residues)
-            for i in motif.generate_n_mers(
-                data.filter(f)["Sequence"],
-                letter_mod_types=[(None, "Phospho")],
-                n=nmer_length,
-                all_matches=False,
-            )
-        ],
-        density=True,
-        alpha=0.7,
-        color="orange",
-        bins=range(0, nmer_length, 1),
-        label=plogo.format_title(f=f),
-    )
+    if foreground:
+        ax.hist(
+            [
+                sum(i.count(j) for j in residues)
+                for i in foreground
+            ],
+            density=True,
+            alpha=0.7,
+            color="orange",
+            bins=range(0, nmer_length, 1),
+            label=plogo.format_title(f=f),
+        )
+        ax.legend()
 
-    ax.set_title("SFK Substrate Enrichment\np = {:.2e}".format(pval))
+    ax.set_title(
+        "SFK Substrate Enrichment\np = {:.2e}\nK={}, N={}, k={}, n={}"
+        .format(pval, K, N, k, n)
+    )
     ax.set_xlabel(
         "# of acidic residues within {} residues of pY"
         .format(nmer_length // 2)
     )
-    ax.set_ylabel("Freuency")
-    ax.legend()
+    ax.set_ylabel("Frequency")
 
-    return f, ax, pval
+    return fig, ax, pval
