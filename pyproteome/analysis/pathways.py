@@ -408,16 +408,16 @@ def gsea(
 
     ds = _filter_ambiguous_peptides(ds)
 
-    if p_sites:
-        ds.psms = _get_psite_ids(ds, species)
-    else:
-        ds.psms["ID"] = _get_protein_ids(ds, species)
-
     if species is not None:
         if species not in ds.species:
             ds = _remap_data(ds, species)
     else:
         species = list(ds.species)[0]
+
+    if p_sites:
+        ds.psms = _get_psite_ids(ds, species)
+    else:
+        ds.psms["ID"] = _get_protein_ids(ds, species)
 
     if gene_sets is None:
         gene_sets = get_pathways(species, p_sites=p_sites)
