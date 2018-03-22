@@ -4,7 +4,6 @@ from scipy.stats import zscore
 import numpy as np
 import pandas as pd
 import sklearn
-from scipy.stats import pearsonr, spearmanr
 import sklearn.decomposition
 import sklearn.cluster
 

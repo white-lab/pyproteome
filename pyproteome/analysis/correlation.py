@@ -14,7 +14,6 @@ from adjustText.adjustText import adjust_text
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr, spearmanr
 import pyproteome as pyp
 
 
@@ -124,14 +123,20 @@ def correlate_data_sets(
     ax.set_xlabel("$log_2$ Fold Change -- {}".format(name1))
     ax.set_ylabel("$log_2$ Fold Change -- {}".format(name2))
 
-    pear_corr = pearsonr(merged["Fold Change_x"], merged["Fold Change_y"])
-    spear_corr = spearmanr(merged["Fold Change_x"], merged["Fold Change_y"])
+    pear_corr = merged["Fold Change_x"].corr(
+        merged["Fold Change_y"],
+        method="pearson",
+    )
+    spear_corr = merged["Fold Change_x"].corr(
+        merged["Fold Change_y"],
+        method="spearman",
+    )
 
     ax.set_title(
         (
             r"Pearson's: $\rho$={:.2f}, "
             r"Spearman's: $\rho$={:.2f}"
-        ).format(pear_corr[0], spear_corr[0])
+        ).format(pear_corr, spear_corr)
     )
 
     if filename:
@@ -140,24 +145,6 @@ def correlate_data_sets(
             transparent=True,
             dpi=pyp.DEFAULT_DPI,
         )
-
-
-def pearsonr_nan(a, b, min_length=5):
-    mask = ~(pd.isnull(a) | pd.isnull(b))
-
-    if mask.sum() < min_length:
-        return (np.nan, np.nan)
-
-    return pearsonr(a[mask], b[mask])
-
-
-def spearmanr_nan(a, b, min_length=5):
-    mask = ~(pd.isnull(a) | pd.isnull(b))
-
-    if mask.sum() < min_length:
-        return spearmanr(np.nan, np.nan)
-
-    return spearmanr(a[mask], b[mask])
 
 
 def _scatter_plots(
@@ -238,7 +225,7 @@ def _scatter_plots(
 
 def correlate_signal(
     data, signal,
-    p=0.01,
+    corr_cutoff=0.8,
     scatter_cols=3,
     options=None,
     folder_name=None,
@@ -286,48 +273,45 @@ def correlate_signal(
         chan in cols
     ]
     data_chans = [
-        data.channels[chan]
+        cp.channels[chan]
         for chan in signal_chans
     ]
 
-    corr = data.psms.apply(
+    cp.psms["Correlation"] = cp.psms.apply(
         lambda row:
-        spearmanr_nan(
-            row[data_chans],
-            signal[signal_chans],
+        signal[signal_chans].corr(
+            pd.to_numeric(row[data_chans]),
+            method="spearman",
+            min_periods=5,
         ),
         axis=1,
     )
-
-    cp.psms["Correlation"] = corr.apply(lambda x: x.correlation)
-    cp.psms["corr p-value"] = corr.apply(lambda x: x.pvalue)
 
     f_corr, ax = plt.subplots(figsize=figsize)
     x, y, colors = [], [], []
     sig_x, sig_y, sig_labels = [], [], []
 
-    for _, row in cp.psms.iterrows():
+    for index, (_, row) in enumerate(cp.psms.iterrows()):
         if (
             row["Correlation"] == 0 or
-            row["corr p-value"] == 0 or
             np.isinf(row["Correlation"]) or
-            np.isnan(row["Correlation"]) or
-            np.isinf(-np.log10(row["corr p-value"])) or
-            np.isnan(-np.log10(row["corr p-value"]))
+            np.isnan(row["Correlation"])
         ):
             continue
 
-        x.append(row["Correlation"])
-        y.append(-np.log10(row["corr p-value"]))
+        x.append(index)
+        y.append(row["Correlation"])
 
-        if row["corr p-value"] < p:
-            sig_x.append(row["Correlation"])
-            sig_y.append(-np.log10(row["corr p-value"]))
+        sig = abs(row["Correlation"]) >= corr_cutoff
+
+        if sig:
+            sig_x.append(index)
+            sig_y.append(row["Correlation"])
             sig_labels.append(" / ".join(sorted(row["Proteins"].genes)))
 
         colors.append(
             "blue"
-            if row["corr p-value"] < p else
+            if sig else
             "{:.2f}".format(
                 max([len(row[data_chans].dropna()) / len(data_chans) - .25, 0])
             )
@@ -396,7 +380,7 @@ def correlate_signal(
     if title:
         ax.set_title(title, fontsize=32)
 
-    cp.psms = cp.psms[cp.psms["corr p-value"] < p]
+    cp.psms = cp.psms[cp.psms["Correlation"].apply(abs) >= corr_cutoff]
 
     f_scatter, _ = _scatter_plots(
         cp, signal, data_chans, signal_chans, signal_groups,
