@@ -207,6 +207,26 @@ class DefaultOrderedDict(OrderedDict):
 
 
 def memoize(func):
+    """
+    Memoize a function, saving its returned value for a given set of parameters
+    in an in-memory cache.
+
+    Examples
+    --------
+    >>> from pyproteome import utils
+    >>> @utils.memoize
+    ... def download_data(species):
+    ...    ...  # Fetch / calculate the return value once
+
+
+    Parameters
+    ----------
+    func : function
+
+    Returns
+    -------
+    function
+    """
     cache = func.cache = {}
 
     @functools.wraps(func)
@@ -222,6 +242,19 @@ def memoize(func):
 
 
 def save_load(name, val=None):
+    """
+    Save or load a variable using the pickle module.
+
+    Parameters
+    ----------
+    name : str
+        The name to use for data storage.
+    val : object, optional
+
+    Returns
+    -------
+    val : object
+    """
     filename = "{}.pkl".format(name)
 
     if val:
