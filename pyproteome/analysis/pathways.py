@@ -428,10 +428,19 @@ def gsea(
         metric=metric,
     )
 
+    es_args = {
+        "phenotype": phenotype,
+        "metric": metric,
+    }
+    es_args.update({
+        i: kwargs.pop(i)
+        for i in ["p", "pval", "p_iter"]
+        if i in kwargs
+    })
+
     vals, figs = enrichments.plot_gsea(
         ds, gene_sets,
-        phenotype=phenotype,
-        metric=metric,
+        es_args=es_args,
         **kwargs
     )
 
