@@ -18,8 +18,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import linregress
 
-from . import paths
-from .utils import DefaultOrderedDict
+import pyproteome as pyp
 
 LOGGER = logging.getLogger("pyproteome.bca")
 RE_ROW_COL = re.compile(r"([A-Z]+)(\d+)")
@@ -133,7 +132,7 @@ def interpret_bca_assay(
     elif isinstance(volumes, int) or isinstance(volumes, float):
         volumes = {i[0]: volumes for i in samples}
 
-    xls_path = os.path.join(paths.BCA_ASSAY_DIR, xls_path)
+    xls_path = os.path.join(pyp.paths.BCA_ASSAY_DIR, xls_path)
 
     xls = pd.read_excel(
         xls_path,
@@ -216,8 +215,8 @@ def interpret_bca_assay(
         raise Exception("R^2 of standards = {:.2f} (< 0.95)".format(r ** 2))
 
     # Extract out sample absorbances and concentrations
-    absorbances = DefaultOrderedDict(list)
-    concentrations = DefaultOrderedDict(list)
+    absorbances = pyp.utils.DefaultOrderedDict(list)
+    concentrations = pyp.utils.DefaultOrderedDict(list)
     total_protein = OrderedDict()
 
     for name, dilution, pos in samples:

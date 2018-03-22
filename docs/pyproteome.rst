@@ -7,19 +7,12 @@ Subpackages
 .. toctree::
 
     pyproteome.analysis
+    pyproteome.bca
     pyproteome.cluster
     pyproteome.motifs
 
 Submodules
 ----------
-
-pyproteome.bca module
----------------------
-
-.. automodule:: pyproteome.bca
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 pyproteome.camv module
 ----------------------
