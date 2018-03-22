@@ -51,7 +51,7 @@ def _get_color(txt, x, y):
     return "#BFEE90" if x > 0 else "#FFC1C1"
 
 
-def volcano_plot(
+def plot_volcano(
     data,
     group_a=None,
     group_b=None,
@@ -441,3 +441,8 @@ def plot_volcano_filtered(data, f, **kwargs):
         )
 
     return f, ax
+
+
+def volcano_plot(*args, **kwargs):
+    LOGGER.warning("volcano_plot is depracated. Use plot_volcano instead.")
+    plot_volcano(*args, **kwargs)
