@@ -39,6 +39,8 @@ Correlation metrics used for enrichment analysis. "spearman", "pearson", and
 
 "zscore" takes ranking values from a z-scored "Fold Change" column.
 """
+DEFAULT_RANK_CPUS = 6
+DEFAULT_CORR_CPUS = 4
 
 
 class PrPDF(object):
@@ -115,6 +117,7 @@ def simulate_es_s_pi(
     p=1,
     metric="spearman",
     p_iter=1000,
+    n_cpus=None,
 ):
     """
     Simulate ES(S, pi) by scrambling the phenotype / correlation values for a
@@ -129,25 +132,28 @@ def simulate_es_s_pi(
     p : float, optional
     metric : str, optional
     p_iter : int, optional
+    n_cpus : int, optional
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`
     """
     assert metric in CORRELATION_METRICS
 
     LOGGER.info(
         "Calculating ES(S, pi) for {} gene sets".format(len(gene_sets))
     )
-    n_cpus = 6
+    if n_cpus is None:
+        n_cpus = DEFAULT_RANK_CPUS
 
     if metric in ["spearman", "pearson", "kendall"]:
-        n_cpus = 4
+        n_cpus = DEFAULT_CORR_CPUS
 
-    pool = multiprocessing.Pool(
-        processes=n_cpus,
-    )
-
-    ess_dist = defaultdict(list)
-
-    for ind, ess in enumerate(
-        pool.imap_unordered(
+    if n_cpus > 1:
+        pool = multiprocessing.Pool(
+            processes=n_cpus,
+        )
+        gen = pool.imap_unordered(
             partial(
                 _calc_essdist,
                 ds=ds,
@@ -156,7 +162,23 @@ def simulate_es_s_pi(
                 metric=metric,
             ),
             [phenotype for _ in range(p_iter)],
-        ),
+        )
+    else:
+        gen = (
+            _calc_essdist(
+                phen=phenotype,
+                ds=ds,
+                gene_sets=gene_sets,
+                p=p,
+                metric=metric,
+            )
+            for _ in range(p_iter)
+        )
+
+    ess_dist = defaultdict(list)
+
+    for ind, ess in enumerate(
+        gen,
         start=1,
     ):
         for key, val in ess.items():
@@ -421,6 +443,7 @@ def enrichment_scores(
     pval=True,
     recorrelate=False,
     p_iter=1000,
+    n_cpus=None,
 ):
     """
     Calculate enrichment scores for each gene set.
@@ -439,6 +462,7 @@ def enrichment_scores(
     pval : bool, optional
     recorrelate : bool, optional
     p_iter : int, optional
+    n_cpus : int, optional
 
     Returns
     -------
@@ -485,6 +509,7 @@ def enrichment_scores(
             p=p,
             metric=metric,
             p_iter=p_iter,
+            n_cpus=n_cpus,
         )
 
         vals = estimate_pq(vals)

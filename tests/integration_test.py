@@ -265,6 +265,29 @@ class IntegrationTest(TestCase):
                 .iloc[0][list(data.channels.values())],
             )
 
+    def test_gsea(self):
+        for data in self.data.values():
+            analysis.pathways.gsea(
+                data,
+                metric="zscore",
+                n_cpus=1,
+                min_hits=15,
+                pval=True,
+                p_iter=10,
+            )
+
+    def test_psea(self):
+        for data in self.data.values():
+            analysis.pathways.gsea(
+                data,
+                metric="zscore",
+                n_cpus=1,
+                min_hits=15,
+                p_sites=True,
+                pval=True,
+                p_iter=10,
+            )
+
     def test_clustermap(self):
         for data in self.data.values():
             cluster.plot.hierarchical_heatmap(

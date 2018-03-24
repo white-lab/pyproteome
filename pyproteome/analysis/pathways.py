@@ -425,7 +425,8 @@ def gsea(
     Perform Gene Set Enrichment Analysis (GSEA) on a data set.
 
     Parameters not listed below will be passed on to the underlying enrichments
-    module. See `enrichments.plot_gsea` for a full list of arguments.
+    module. See :func:`pyproteome.analysis.enrichments.plot_gsea` for a full
+    list of arguments.
 
     Parameters
     ----------
@@ -501,7 +502,7 @@ def gsea(
     }
     es_args.update({
         i: kwargs.pop(i)
-        for i in ["p", "pval", "p_iter"]
+        for i in ["p", "pval", "p_iter", "n_cpus"]
         if i in kwargs
     })
 
