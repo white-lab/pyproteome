@@ -319,15 +319,13 @@ def get_gene_changes(ds):
     gene_changes = ds.psms[["ID", "Correlation"]]
     gene_changes.is_copy = None
 
-    # gene_changes["Abs Corr"] = gene_changes["Correlation"].apply(abs)
-    # gene_changes = gene_changes.sort_values(by="Abs Corr", ascending=True)
-    # gene_changes = gene_changes.drop_duplicates(subset="ID", keep="last")
-    gene_changes = gene_changes.groupby(
-        "ID",
-        as_index=False,
-    ).agg({
-        "Correlation": np.mean,
-    })
+    if gene_changes.shape[0] > 0:
+        gene_changes = gene_changes.groupby(
+            "ID",
+            as_index=False,
+        ).agg({
+            "Correlation": np.mean,
+        })
 
     gene_changes = gene_changes.sort_values(by="Correlation", ascending=False)
     gene_changes = gene_changes.set_index(keys="ID")
@@ -617,13 +615,14 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
     """
     f, ax = plt.subplots()
 
-    ax.hist(
-        nes_pi_vals,
-        bins=100,
-        color='k',
-        alpha=.5,
-        density=True,
-    )
+    if nes_pi_vals.shape[0] > 0:
+        ax.hist(
+            nes_pi_vals,
+            bins=100,
+            color='k',
+            alpha=.5,
+            density=True,
+        )
 
     if nes_vals.shape[0] > 0:
         ax.hist(

@@ -282,7 +282,9 @@ def _get_psite_ids(ds, species):
 
     ds.psms.apply(_split_rows, axis=1)
 
-    return pd.DataFrame(new_rows)
+    df = pd.DataFrame(new_rows, columns=list(ds.psms.columns) + ["ID"])
+
+    return df
 
 
 def _get_protein_ids(ds, species):
