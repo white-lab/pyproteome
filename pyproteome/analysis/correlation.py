@@ -392,7 +392,8 @@ def correlate_signal(
     if f_corr:
         f_corr.savefig(
             os.path.join(folder_name, "Correlation.png"),
-            bbox_inches="tight", dpi=300,
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
 
@@ -400,6 +401,7 @@ def correlate_signal(
         f_scatter.savefig(
             os.path.join(folder_name, "Correlation Scatter.png"),
             bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
 

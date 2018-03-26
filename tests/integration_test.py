@@ -7,10 +7,12 @@ import shutil
 
 import pylab
 
+import pyproteome as pyp
 from pyproteome import (
     analysis, cluster, correlation, data_sets, logo, motif, motifs, paths,
     tables, volcano, phosphosite,
 )
+
 
 from . import utils
 
@@ -40,6 +42,7 @@ class IntegrationTest(TestCase):
         )
 
         pylab.rcParams['figure.max_open_warning'] = 0
+        pyp.DEFAULT_DPI = 100
 
     def setUp(self):
         ck_channels = OrderedDict(
