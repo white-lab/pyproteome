@@ -12,7 +12,10 @@ LABEL_NAME_TARGETS = (
     "TMT", "ITRAQ", "plex",
 )
 LABEL_NAMES = defaultdict(set)
+LABEL_NAMES["TMT10"].add("K")
 LABEL_NAMES["TMT10"].add("N-term")
+LABEL_NAMES["TMT6"].add("K")
+LABEL_NAMES["TMT6"].add("N-term")
 
 
 class Modifications:
