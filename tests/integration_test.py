@@ -301,7 +301,7 @@ class IntegrationTest(TestCase):
         for data in self.data.values():
             tables.changes_table(data)
 
-    def test_volcano_plot(self):
+    def test_plot_volcano(self):
         for data in self.data.values():
             volcano.plot_volcano(data)
 

@@ -465,8 +465,3 @@ def plot_volcano_filtered(data, f, **kwargs):
         )
 
     return f, ax
-
-
-def volcano_plot(*args, **kwargs):
-    LOGGER.warning("volcano_plot is depracated. Use plot_volcano instead.")
-    return plot_volcano(*args, **kwargs)
