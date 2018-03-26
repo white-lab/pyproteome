@@ -80,6 +80,7 @@ def hierarchical_heatmap(
     map.ax_heatmap.set_xticklabels(
         map.ax_heatmap.get_xticklabels(),
         rotation=45,
+        horizontalalignment="right",
     )
 
     if not show_y:
