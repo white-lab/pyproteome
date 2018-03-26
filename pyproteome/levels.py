@@ -61,9 +61,12 @@ def get_channel_levels(
         figsize=(2 * rows, 6 * cols),
     )
     axes = [i for j in axes for i in j]
+    ax_iter = iter(axes)
 
-    for ax, col_name, col in zip(list(axes), channel_names[1:], channels[1:]):
-        points = (data.psms[col] / data.psms[base]).dropna().as_matrix()
+    means = data.psms[channels].mean(axis=1)
+
+    for ax, col_name, col in zip(ax_iter, channel_names, channels):
+        points = (data.psms[col] / means).dropna()
 
         # Filter ratios > 30, those are likely an error in quantification and
         # may throw off histogram binning
@@ -77,10 +80,13 @@ def get_channel_levels(
                 ).format(data.name, points.shape[0], col_name, col)
             )
 
-        med = np.median(points)
+        med = points.median()
         channel_levels[col] = med
 
-        ax.hist(points, bins=40)
+        ax.hist(
+            points,
+            bins=40,
+        )
         ax.set_title(
             r"{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
                 "{} ({})".format(col_name, col)
@@ -88,14 +94,17 @@ def get_channel_levels(
                 col,
                 med,
                 points.std(ddof=1),
-            )
+            ),
         )
         ax.axvline(med, color='k', linestyle='--')
 
-    for ax in axes[len(data.channels) - 1:]:
-        ax.set_axis_off()
+    for ax in ax_iter:
+        ax.axis("off")
 
-    f.suptitle("{}".format(data.name))
+    f.suptitle(
+        "{}".format(data.name),
+        fontsize=20,
+    )
 
     if file_name:
         f.savefig(
