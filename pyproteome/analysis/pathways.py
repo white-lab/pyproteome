@@ -133,7 +133,7 @@ def get_pathway_common(species):
     )
 
     def _get_data(line):
-        line = line.decode("windows-1252")
+        line = line.decode("utf-8")
         _, name, genes = line.split("\t", 2)
         name = name_re.match(name)
 
