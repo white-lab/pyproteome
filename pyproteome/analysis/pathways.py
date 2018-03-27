@@ -202,7 +202,7 @@ def get_wikipathways(species):
 
 
 @pyp.utils.memoize
-def _get_phosphomap_data():
+def get_phosphomap_data():
     LOGGER.info("Fetching Phosphosite Plus mapping data")
 
     url = PSP_SITE_MAPPING_URL
@@ -228,7 +228,7 @@ def _remap_data(ds, species):
         "Remapping phosphosites from {} to {}".format(old_species, species)
     )
 
-    mapping = _get_phosphomap_data()
+    mapping = get_phosphomap_data()
 
     acc_mapping = mapping.set_index(["ACC_ID", "MOD_RSD", "ORGANISM"])
     site_mapping = mapping.set_index(["SITE_GRP_ID", "ORGANISM"])
@@ -348,7 +348,7 @@ def get_phosphosite(species):
 
 @pyp.utils.memoize
 def _remap_kinase(kinase, old_species, species):
-    mapping = _get_phosphomap_data()
+    mapping = get_phosphomap_data()
 
     sites = mapping[
         (mapping["PROTEIN"] == kinase) & (mapping["ORGANISM"] == old_species)
@@ -390,7 +390,7 @@ def get_phosphosite_remap(species):
     species = ORGANISM_MAPPING.get(species, species)
 
     psp = pyp.motifs.phosphosite.get_data()
-    mapping = _get_phosphomap_data()
+    mapping = get_phosphomap_data()
 
     mod_mapping = mapping.set_index(["ACC_ID", "MOD_RSD", "ORGANISM"])
     site_mapping = mapping.set_index(["SITE_GRP_ID", "ORGANISM"])
