@@ -1304,6 +1304,13 @@ def norm_all_data(datas, norm_mapping):
     mapped_names = OrderedDict()
     datas_new = datas.copy()
 
+    if norm_mapping in ["self"]:
+        norm_mapping = {
+            name: name
+            for name in datas.keys()
+            if not name.endswith("-norm")
+        }
+
     for key, val in norm_mapping.items():
         for name, data in datas.items():
             if not name.startswith(key) or name.endswith("-norm"):
