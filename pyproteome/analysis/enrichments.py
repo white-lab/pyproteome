@@ -412,11 +412,11 @@ def calculate_es_s(gene_changes, gene_set, p=1):
     p : float, optional
     """
     n = len(gene_changes)
-    gene_set = [
+    gene_set = set(
         gene
         for gene in gene_set
         if gene in gene_changes.index
-    ]
+    )
     hits = gene_changes.index.isin(gene_set)
     hit_list = gene_changes[hits].index.tolist()
 

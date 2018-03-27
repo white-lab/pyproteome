@@ -6,7 +6,7 @@ from pyproteome.analysis import pathways
 
 class PathwaysTest(TestCase):
     def test_gskb_pathways(self):
-        for species in ["Homo sapiens", "Mus musculus"]:
+        for species in ["Mus musculus"]:
             gene_sets = pathways.get_gskb_pathways(species)
 
             for col in ["name", "set"]:
