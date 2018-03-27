@@ -373,6 +373,10 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
     ds = ds.copy()
 
     if metric in ["spearman", "pearson", "kendall"]:
+        LOGGER.info(
+            "Calculating correlations (samples: {})"
+            .format(list(phenotype.index))
+        )
         ds.psms["Correlation"] = ds.psms.apply(
             lambda row:
             phenotype.corr(
@@ -383,6 +387,9 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
             axis=1,
         )
     else:
+        LOGGER.info(
+            "Calculating ranks (groups: {}, {})".format(ds.group_a, ds.group_b)
+        )
         new = ds.psms["Fold Change"]
         new = new.apply(np.log2)
 
@@ -783,10 +790,9 @@ def plot_enrichment(
 
     ax_iter = iter(axes)
 
-    for (index, ax), (set_id, row) in zip(
-        enumerate(ax_iter),
-        vals.iterrows(),
-    ):
+    for index, (set_id, row) in enumerate(vals.iterrows()):
+        ax = next(ax_iter)
+
         ax.plot(row["cumscore"])
 
         for ind, hit in enumerate(row["hits"]):
