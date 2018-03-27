@@ -64,6 +64,10 @@ ORGANISM_MAPPING = {
     # 'turkey': ,
     # 'water buffalo': ,
 }
+INV_ORGANISM_MAPPING = {
+    val: key
+    for key, val in ORGANISM_MAPPING.items()
+}
 
 
 @pyp.utils.memoize
@@ -342,6 +346,122 @@ def get_phosphosite(species):
     )
 
 
+@pyp.utils.memoize
+def _remap_kinase(kinase, old_species, species):
+    mapping = _get_phosphomap_data()
+
+    sites = mapping[
+        (mapping["PROTEIN"] == kinase) & (mapping["ORGANISM"] == old_species)
+    ]
+
+    if sites.shape[0] < 1:
+        sites = mapping[mapping["PROTEIN"] == kinase]
+
+    if sites.shape[0] < 1:
+        sites = mapping[mapping["PROTEIN"] == kinase.split(" ")[0]]
+
+    sites = set(sites["SITE_GRP_ID"])
+
+    kinases = mapping[mapping["ORGANISM"] == species]
+    kinases = kinases[kinases["SITE_GRP_ID"].isin(sites)]
+
+    if kinases.shape[0] > 0:
+        kinase = kinases.iloc[0]["PROTEIN"]
+
+    return kinase
+
+
+@pyp.utils.memoize
+def get_phosphosite_remap(species):
+    """
+    Download phospho sets from PhophoSite Plus. Remaps kinases-substrate
+    assocations from other species to the target species.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
+    LOGGER.info("Getting remapped phosphosite data for {}".format(species))
+
+    species = ORGANISM_MAPPING.get(species, species)
+
+    psp = pyp.motifs.phosphosite.get_data()
+    mapping = _get_phosphomap_data()
+
+    mod_mapping = mapping.set_index(["ACC_ID", "MOD_RSD", "ORGANISM"])
+    site_mapping = mapping.set_index(["SITE_GRP_ID", "ORGANISM"])
+
+    mod_mapping = mod_mapping.sort_index()
+    site_mapping = site_mapping.sort_index()
+
+    new_index = ["SUB_ORGANISM", "KINASE", "SUB_ACC_ID", "SUB_MOD_RSD"]
+
+    def _remap(row):
+        kinase, acc, mod, old_species = row[
+            ["KINASE", "SUB_ACC_ID", "SUB_MOD_RSD", "SUB_ORGANISM"]
+        ]
+        # acc = acc.split("-")[0]
+        mod += "-p"
+
+        if old_species != species:
+            # Remap the phosphorylation site if possible
+            try:
+                site = mod_mapping.loc[acc, mod, old_species]
+            except KeyError:
+                pass
+            else:
+                site = site.iloc[0]["SITE_GRP_ID"]
+
+                try:
+                    re_map = site_mapping.loc[site, species]
+                except KeyError:
+                    pass
+                else:
+                    re_map = re_map.iloc[0]
+                    acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
+
+                    # Remap the kinase if possible
+                    # kinase = _remap_kinase(kinase, old_species, species)
+
+        return pd.Series([
+            species,
+            kinase,
+            acc,
+            mod,
+        ], index=new_index)
+
+    psp = psp.apply(_remap, axis=1)
+    psp = psp[psp["SUB_ORGANISM"] == species]
+
+    return pd.DataFrame(
+        [
+            (
+                kinase,
+                set(
+                    psp[
+                        psp["KINASE"] == kinase
+                    ].apply(
+                        lambda x:
+                        ",".join([
+                            # XXX: Accession IDs can include a "-#" for
+                            # different protein isoforms
+                            x["SUB_ACC_ID"].split("-")[0],
+                            x["SUB_MOD_RSD"],
+                        ]),
+                        axis=1,
+                    )
+                )
+            )
+            for kinase in set(psp["KINASE"])
+        ],
+        columns=["name", "set"]
+    )
+
+
 def get_pathways(species, p_sites=False):
     """
     Download all default gene sets and phospho sets.
@@ -412,14 +532,55 @@ def _get_scores(ds, phenotype=None, metric="spearman"):
     return ds
 
 
+def filter_fn(vals):
+    def _p_site_isin(row):
+        return any([
+            (acc, mod.letter, abs_pos + 1) in v_set
+            for acc in row["Proteins"].accessions
+            for mod in row["Sequence"].modifications.mods
+            for abs_pos in mod.abs_pos
+        ])
+
+    def _gene_isin(row):
+        return any([
+            acc in v_set
+            for acc in row["Proteins"].accessions
+        ])
+
+    if vals.shape[0] > 0 and "," in list(vals.iloc[0]["set"])[0]:
+        v_set = set(
+            tup
+            for set in vals["set"].apply(
+                lambda x:
+                (
+                    x.split(",")[0],
+                    x.split(",")[1][0],
+                    int(x.split(",")[1][1:].split("-")[0]),
+                ),
+                axis=1,
+            )
+            for tup in set
+        )
+        fn = _p_site_isin
+    else:
+        v_set = set(
+            acc
+            for set in vals["set"]
+            for acc in set
+        )
+        fn = _gene_isin
+
+    return fn
+
+
 def gsea(
     ds,
-    phenotype=None,
-    name=None,
-    metric="spearman",
-    p_sites=False,
-    species=None,
     gene_sets=None,
+    metric="spearman",
+    phenotype=None,
+    species=None,
+    p_sites=False,
+    name=None,
     folder_name=None,
     **kwargs
 ):
@@ -536,3 +697,18 @@ def gsea(
         )
 
     return vals
+
+
+def psea(*args, **kwargs):
+    """
+    Perform Gene Set Enrichment Analysis (GSEA) on a data set.
+
+    See :func:`pyproteome.analysis.pathways.gsea` for documentation and a full
+    list of arguments.
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
+    kwargs["p_sites"] = True
+    return gsea(*args, **kwargs)
