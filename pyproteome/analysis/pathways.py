@@ -184,7 +184,7 @@ def get_wikipathways(species):
     response.raise_for_status()
 
     def _get_data(line):
-        line = line.decode()
+        line = line.decode("utf-8")
         name, _, genes = line.split("\t", 2)
         name, _, _, spec = name.split("%")
         assert species == spec
