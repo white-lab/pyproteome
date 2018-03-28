@@ -41,8 +41,8 @@ install:
 - python setup.py install
 
 script:
-# - travis_wait 90 coverage run --source=pyproteome,brainrnaseq setup.py test
-- coverage run --source=pyproteome,brainrnaseq setup.py test
+- travis_wait 30 coverage run --source=pyproteome,brainrnaseq setup.py test
+# - coverage run --source=pyproteome,brainrnaseq setup.py test
 
 after_success:
 - coveralls
