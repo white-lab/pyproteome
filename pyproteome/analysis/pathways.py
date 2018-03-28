@@ -369,11 +369,15 @@ def get_phosphosite_remap(species):
     mapping = get_phosphomap_data()
     print("mapping", mapping.shape)
 
-    mod_mapping = mapping.set_index(
+    mod_mapping = mapping[
+        mapping["ACC_ID"].isin(psp["SUB_ACC_ID"])
+    ].set_index(
         ["ACC_ID", "MOD_RSD", "ORGANISM"]
     ).sort_index()
     print("mod_mapping", mod_mapping.shape)
-    site_mapping = mapping.set_index(
+    site_mapping = mapping[
+        mapping["ORGANISM"] == species
+    ].set_index(
         ["SITE_GRP_ID", "ORGANISM"]
     ).sort_index()
     print("site_mapping", site_mapping.shape)
