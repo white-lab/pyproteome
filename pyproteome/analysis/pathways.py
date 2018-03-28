@@ -365,14 +365,18 @@ def get_phosphosite_remap(species):
     species = ORGANISM_MAPPING.get(species, species)
 
     psp = pyp.motifs.phosphosite.get_data()
+    print("psp", psp.shape)
     mapping = get_phosphomap_data()
+    print("mapping", mapping.shape)
 
     mod_mapping = mapping.set_index(
         ["ACC_ID", "MOD_RSD", "ORGANISM"]
     ).sort_index()
+    print("mod_mapping", mod_mapping.shape)
     site_mapping = mapping.set_index(
         ["SITE_GRP_ID", "ORGANISM"]
     ).sort_index()
+    print("site_mapping", site_mapping.shape)
     del mapping
 
     new_index = ["SUB_ORGANISM", "KINASE", "SUB_ACC_ID", "SUB_MOD_RSD"]
