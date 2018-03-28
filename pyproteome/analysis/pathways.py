@@ -347,31 +347,6 @@ def get_phosphosite(species):
 
 
 @pyp.utils.memoize
-def _remap_kinase(kinase, old_species, species):
-    mapping = get_phosphomap_data()
-
-    sites = mapping[
-        (mapping["PROTEIN"] == kinase) & (mapping["ORGANISM"] == old_species)
-    ]
-
-    if sites.shape[0] < 1:
-        sites = mapping[mapping["PROTEIN"] == kinase]
-
-    if sites.shape[0] < 1:
-        sites = mapping[mapping["PROTEIN"] == kinase.split(" ")[0]]
-
-    sites = set(sites["SITE_GRP_ID"])
-
-    kinases = mapping[mapping["ORGANISM"] == species]
-    kinases = kinases[kinases["SITE_GRP_ID"].isin(sites)]
-
-    if kinases.shape[0] > 0:
-        kinase = kinases.iloc[0]["PROTEIN"]
-
-    return kinase
-
-
-@pyp.utils.memoize
 def get_phosphosite_remap(species):
     """
     Download phospho sets from PhophoSite Plus. Remaps kinases-substrate
@@ -392,11 +367,13 @@ def get_phosphosite_remap(species):
     psp = pyp.motifs.phosphosite.get_data()
     mapping = get_phosphomap_data()
 
-    mod_mapping = mapping.set_index(["ACC_ID", "MOD_RSD", "ORGANISM"])
-    site_mapping = mapping.set_index(["SITE_GRP_ID", "ORGANISM"])
-
-    mod_mapping = mod_mapping.sort_index()
-    site_mapping = site_mapping.sort_index()
+    mod_mapping = mapping.set_index(
+        ["ACC_ID", "MOD_RSD", "ORGANISM"]
+    ).sort_index()
+    site_mapping = mapping.set_index(
+        ["SITE_GRP_ID", "ORGANISM"]
+    ).sort_index()
+    del mapping
 
     new_index = ["SUB_ORGANISM", "KINASE", "SUB_ACC_ID", "SUB_MOD_RSD"]
 
@@ -423,9 +400,6 @@ def get_phosphosite_remap(species):
                 else:
                     re_map = re_map.iloc[0]
                     acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
-
-                    # Remap the kinase if possible
-                    # kinase = _remap_kinase(kinase, old_species, species)
 
         return pd.Series([
             species,
