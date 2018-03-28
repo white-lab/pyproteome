@@ -579,6 +579,7 @@ def gsea(
     metric="spearman",
     phenotype=None,
     species=None,
+    min_hits=10,
     p_sites=False,
     name=None,
     folder_name=None,
@@ -615,6 +616,7 @@ def gsea(
 
         If different from that of the input data set, IDs will be mapped to
         the target species using Phosphosite Plus's database.
+    min_hits : int, optional
     gene_sets : :class:`pandas.DataFrame`, optional
         A dataframe with two columns: "name" and "set".
 
@@ -627,9 +629,15 @@ def gsea(
     folder_name : str, optional
         Save figures and tables to this folder. Defaults to `<ds.name>/GSEA`
 
+    See Also
+    --------
+    :func:`pyproteome.analysis.enrichments.enrichment_scores`
+    :func:`pyproteome.analysis.enrichments.plot_gsea`
+
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    vals : :class:`pandas.DataFrame`
+    gene_changes : :class:`pandas.DataFrame`
     """
     folder_name = pyp.utils.make_folder(
         data=ds,
@@ -669,9 +677,21 @@ def gsea(
         if i in kwargs
     })
 
-    vals, figs = enrichments.plot_gsea(
-        ds, gene_sets,
-        es_args=es_args,
+    gene_changes = enrichments.get_gene_changes(ds)
+
+    gene_sets = enrichments.filter_gene_sets(
+        gene_sets, ds,
+        min_hits=min_hits,
+    )
+
+    vals = enrichments.enrichment_scores(
+        ds,
+        gene_sets,
+        **es_args
+    )
+
+    figs = enrichments.plot_gsea(
+        vals, gene_changes,
         **kwargs
     )
 
@@ -696,7 +716,7 @@ def gsea(
             transparent=True,
         )
 
-    return vals
+    return vals, gene_changes
 
 
 def psea(*args, **kwargs):

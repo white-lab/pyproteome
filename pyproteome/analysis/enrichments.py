@@ -532,7 +532,7 @@ def filter_gene_sets(gene_sets, ds, min_hits=10):
 
     Parameters
     ----------
-    gene_sets : :class:`pandas.DataFrame`, optional
+    gene_sets : :class:`pandas.DataFrame`
     ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
     min_hits : int, optional
 
@@ -837,13 +837,11 @@ def plot_enrichment(
 
 
 def plot_gsea(
-    ds, gene_sets,
-    es_args=None,
-    es_plot_args=None,
-    min_hits=10,
+    vals, gene_changes,
     min_abs_score=.3,
     max_pval=1,
     max_qval=1,
+    **kwargs
 ):
     """
     Run set enrichment analysis on a data set and generate all figures
@@ -851,37 +849,17 @@ def plot_gsea(
 
     Parameters
     ----------
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    gene_sets : :class:`pandas.DataFrame`, optional
-    es_args : dict, optional
-        Keyword arguments passed to enrichment_scores().
-    es_plot_args : dict, optional
-        Keyword arguments passed to plot_enrichment().
+    vals : :class:`pandas.DataFrame`
+    gene_changes : :class:`pandas.DataFrame`
 
     Returns
     -------
-    vals : :class:`pandas.DataFrame`
     figs : list of :class:`matplotlib.figure.Figure`
     """
-    es_args = es_args or {}
-    es_plot_args = es_plot_args or {}
-
-    gene_changes = get_gene_changes(ds)
 
     figs = ()
 
     figs += plot_correlations(gene_changes)[0],
-
-    gene_sets = filter_gene_sets(
-        gene_sets, ds,
-        min_hits=min_hits,
-    )
-
-    vals = enrichment_scores(
-        ds,
-        gene_sets,
-        **es_args
-    )
 
     if vals.shape[0] > 0:
         figs += plot_enrichment(
@@ -891,7 +869,7 @@ def plot_gsea(
                 max_pval=max_pval,
                 max_qval=max_qval,
             ),
-            **es_plot_args
+            **kwargs
         )[0],
 
         if "NES(S)" in vals.columns:
@@ -901,4 +879,4 @@ def plot_gsea(
                 max_qval=max_qval,
             )[0],
 
-    return vals, figs
+    return figs
