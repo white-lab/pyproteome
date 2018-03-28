@@ -15,6 +15,7 @@ from collections import OrderedDict
 # Core data analysis libraries
 from matplotlib import pyplot as plt
 import numpy as np
+from scipy import stats
 
 from . import utils
 
@@ -65,7 +66,7 @@ def get_channel_levels(
 
     means = data.psms[channels].mean(axis=1)
 
-    for ax, col_name, col in zip(ax_iter, channel_names, channels):
+    for col_name, col in zip(channel_names, channels):
         points = (data.psms[col] / means).dropna()
 
         # Filter ratios > 30, those are likely an error in quantification and
@@ -80,8 +81,15 @@ def get_channel_levels(
                 ).format(data.name, points.shape[0], col_name, col)
             )
 
-        med = points.median()
+        # Fit a guassian and find its maximum
+        gaus = stats.kde.gaussian_kde(points)
+        x = np.arange(0, 10, .01)
+        y = gaus.pdf(x)
+        med = x[y == y.max()][0]
+
         channel_levels[col] = med
+
+        ax = next(ax_iter)
 
         ax.hist(
             points,
