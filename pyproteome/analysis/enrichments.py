@@ -620,6 +620,8 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     """
+    LOGGER.info("Plotting NES(S) and NES(S, pi) distributions")
+
     f, ax = plt.subplots()
 
     if nes_pi_vals.shape[0] > 0:
@@ -661,6 +663,8 @@ def plot_nes(vals, max_pval=.1, max_qval=1):
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
     """
+    LOGGER.info("Plotting ranked NES(S) values")
+
     f, ax = plt.subplots()
     v = vals.copy()
     v = v.sort_values("NES(S)")
@@ -748,6 +752,7 @@ def plot_correlations(gene_changes):
     ax : :class:`matplotlib.axes.Axes`
     """
     LOGGER.info("Plotting gene correlations")
+
     f, ax = plt.subplots()
 
     ax.plot(
@@ -774,6 +779,8 @@ def plot_enrichment(
         The gene sets and scores calculated by enrichment_scores().
     cols : int, optional
     """
+    LOGGER.info("Plotting ES(S) graphs")
+
     rows = max([int(np.ceil(len(vals) / cols)), 1])
     scale = 6
 

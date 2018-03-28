@@ -547,27 +547,52 @@ def filter_fn(vals):
             for acc in row["Proteins"].accessions
         ])
 
-    if vals.shape[0] > 0 and "," in list(vals.iloc[0]["set"])[0]:
-        v_set = set(
-            tup
-            for set in vals["set"].apply(
-                lambda x:
+    if isinstance(vals, pd.Series):
+        p_sites = any("," in i for i in vals["set"])
+    else:
+        p_sites = (
+            vals.shape[0] > 0 and "," in list(vals.iloc[0]["set"])[0]
+        )
+
+    if p_sites:
+        if isinstance(vals, pd.Series):
+            v_set = set(
                 (
                     x.split(",")[0],
                     x.split(",")[1][0],
                     int(x.split(",")[1][1:].split("-")[0]),
-                ),
-                axis=1,
+                )
+                for x in vals["set"]
             )
-            for tup in set
-        )
+        else:
+            v_set = set(
+                tup
+                for set in vals["set"].apply(
+                    lambda s:
+                    set(
+                        (
+                            x.split(",")[0],
+                            x.split(",")[1][0],
+                            int(x.split(",")[1][1:].split("-")[0]),
+                        )
+                        for x in s
+                    ),
+                )
+                for s in set
+                for tup in s
+            )
+
         fn = _p_site_isin
     else:
-        v_set = set(
-            acc
-            for set in vals["set"]
-            for acc in set
-        )
+        if isinstance(vals, pd.Series):
+            v_set = vals["set"]
+        else:
+            v_set = set(
+                acc
+                for set in vals["set"]
+                for acc in set
+            )
+
         fn = _gene_isin
 
     return fn
