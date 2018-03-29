@@ -246,12 +246,16 @@ def _remap_data(ds, species):
     )
 
     mapping = get_phosphomap_data()
+    mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
 
-    acc_mapping = mapping.set_index(["ACC_ID", "MOD_RSD", "ORGANISM"])
-    site_mapping = mapping.set_index(["SITE_GRP_ID", "ORGANISM"])
+    acc_mapping = mapping.set_index(
+        ["ACC_ID", "MOD_RSD", "ORGANISM"]
+    ).sort_index()
+    site_mapping = mapping.set_index(
+        ["SITE_GRP_ID", "ORGANISM"]
+    ).sort_index()
 
-    acc_mapping = acc_mapping.sort_index()
-    site_mapping = site_mapping.sort_index()
+    del mapping
 
     def _remap(val):
         acc, mod = val.split(",")
@@ -325,17 +329,28 @@ def _remap_psp(
     append_mod="-p",
 ):
     mapping = get_phosphomap_data()
+    # mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
 
-    mod_mapping = mapping[
-        mapping["ACC_ID"].isin(psp[acc_col])
-    ].set_index(
-        ["ACC_ID", "MOD_RSD", "ORGANISM"]
-    ).sort_index()
-    site_mapping = mapping[
-        mapping["ORGANISM"] == species
-    ].set_index(
-        ["SITE_GRP_ID", "ORGANISM"]
-    ).sort_index()
+    mod_mapping = {
+        (row["ACC_ID"], row["MOD_RSD"], row["ORGANISM"]): row["SITE_GRP_ID"]
+        for row in mapping.iterrows()
+    }
+    site_mapping = {
+        row["SITE_GRP_ID"]: (row["ACC_ID"], row["MOD_RSD"])
+        for row in mapping.iterrows()
+        if row["ORGANISM"] == species
+    }
+
+    # mod_mapping = mapping[
+    #     mapping["ACC_ID"].isin(psp[acc_col])
+    # ].set_index(
+    #     ["ACC_ID", "MOD_RSD", "ORGANISM"]
+    # ).sort_index()
+    # site_mapping = mapping[
+    #     mapping["ORGANISM"] == species
+    # ].set_index(
+    #     ["SITE_GRP_ID", "ORGANISM"]
+    # ).sort_index()
     del mapping
 
     new_index = [org_col, set_col, acc_col, mod_col]
@@ -348,20 +363,10 @@ def _remap_psp(
 
         if old_species != species:
             # Remap the phosphorylation site if possible
-            try:
-                site = mod_mapping.loc[acc, mod, old_species]
-            except KeyError:
-                pass
-            else:
-                site = site.iloc[0]["SITE_GRP_ID"]
+            site = mod_mapping.get((acc, mod, old_species), None)
 
-                try:
-                    re_map = site_mapping.loc[site, species]
-                except KeyError:
-                    pass
-                else:
-                    re_map = re_map.iloc[0]
-                    acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
+            if site and site in site_mapping:
+                acc, mod = site_mapping[site]
 
         return pd.Series([
             species,
