@@ -517,7 +517,6 @@ def get_pathways(species, p_sites=False, remap=False):
 
     if p_sites:
         pathways_df = get_phosphosite(species, remap=remap)
-        pathways_df.append(get_phosphosite_regulation(species, remap=remap))
     else:
         pathways_df = get_wikipathways(species)
 
@@ -572,6 +571,11 @@ def _get_scores(ds, phenotype=None, metric="spearman"):
 
 
 def filter_fn(vals):
+    if isinstance(vals, pd.Series):
+        col_name = "hit_list" if "hit_list" in vals.index else "set"
+    else:
+        col_name = "hit_list" if "hit_list" in vals.columns else "set"
+
     def _p_site_isin(row):
         return any([
             (acc, mod.letter, abs_pos + 1) in v_set
@@ -587,10 +591,10 @@ def filter_fn(vals):
         ])
 
     if isinstance(vals, pd.Series):
-        p_sites = any("," in i for i in vals["set"])
+        p_sites = any("," in i for i in vals[col_name])
     else:
         p_sites = (
-            vals.shape[0] > 0 and "," in list(vals.iloc[0]["set"])[0]
+            vals.shape[0] > 0 and "," in list(vals.iloc[0][col_name])[0]
         )
 
     if p_sites:
@@ -601,12 +605,12 @@ def filter_fn(vals):
                     x.split(",")[1][0],
                     int(x.split(",")[1][1:].split("-")[0]),
                 )
-                for x in vals["set"]
+                for x in vals[col_name]
             )
         else:
             v_set = set(
                 tup
-                for set in vals["set"].apply(
+                for set in vals[col_name].apply(
                     lambda s:
                     set(
                         (
@@ -623,11 +627,11 @@ def filter_fn(vals):
         fn = _p_site_isin
     else:
         if isinstance(vals, pd.Series):
-            v_set = vals["set"]
+            v_set = vals[col_name]
         else:
             v_set = set(
                 acc
-                for set in vals["set"]
+                for set in vals[col_name]
                 for acc in set
             )
 
