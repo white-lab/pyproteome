@@ -327,7 +327,7 @@ def _remap_psp(
     mapping = get_phosphomap_data()
 
     mod_mapping = mapping[
-        mapping["ACC_ID"].isin(psp["SUB_ACC_ID"])
+        mapping["ACC_ID"].isin(psp[acc_col])
     ].set_index(
         ["ACC_ID", "MOD_RSD", "ORGANISM"]
     ).sort_index()
