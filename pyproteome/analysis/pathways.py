@@ -333,11 +333,11 @@ def _remap_psp(
 
     mod_mapping = {
         (row["ACC_ID"], row["MOD_RSD"], row["ORGANISM"]): row["SITE_GRP_ID"]
-        for row in mapping.iterrows()
+        for _, row in mapping.iterrows()
     }
     site_mapping = {
         row["SITE_GRP_ID"]: (row["ACC_ID"], row["MOD_RSD"])
-        for row in mapping.iterrows()
+        for _, row in mapping.iterrows()
         if row["ORGANISM"] == species
     }
 
