@@ -40,28 +40,40 @@ class PathwaysTest(TestCase):
 
     def test_phosphosite(self):
         for species in ["Homo sapiens", "Mus musculus"]:
-            gene_sets = pathways.get_phosphosite(species)
-
-            for col in ["name", "set"]:
-                self.assertIn(col, gene_sets.columns)
-
-            self.assertGreater(gene_sets.shape[0], 0)
-
-    def test_phosphosite_remap(self):
-        for species in ["Homo sapiens", "Mus musculus"]:
-            gene_sets = pathways.get_phosphosite_remap(species)
-
-            for col in ["name", "set"]:
-                self.assertIn(col, gene_sets.columns)
-
-            self.assertGreater(gene_sets.shape[0], 0)
-
-    def test_pathways(self):
-        for p_sites in [True, False]:
-            for species in ["Homo sapiens", "Mus musculus"]:
-                gene_sets = pathways.get_pathways(species, p_sites=p_sites)
+            for remap in [False, True]:
+                gene_sets = pathways.get_phosphosite(species, remap=remap)
 
                 for col in ["name", "set"]:
                     self.assertIn(col, gene_sets.columns)
 
                 self.assertGreater(gene_sets.shape[0], 0)
+
+    def test_phosphosite_regulation(self):
+        for species in ["Homo sapiens", "Mus musculus"]:
+            for remap in [False, True]:
+                gene_sets = pathways.get_phosphosite_regulation(
+                    species, remap=remap,
+                )
+
+                for col in ["name", "set"]:
+                    self.assertIn(col, gene_sets.columns)
+
+                self.assertGreater(gene_sets.shape[0], 0)
+
+    def test_pathways(self):
+        for p_sites in [True, False]:
+            for species in ["Homo sapiens", "Mus musculus"]:
+                for remap in [False, True]:
+                    if not p_sites and remap:
+                        continue
+
+                    gene_sets = pathways.get_pathways(
+                        species,
+                        p_sites=p_sites,
+                        remap=remap,
+                    )
+
+                    for col in ["name", "set"]:
+                        self.assertIn(col, gene_sets.columns)
+
+                    self.assertGreater(gene_sets.shape[0], 0)

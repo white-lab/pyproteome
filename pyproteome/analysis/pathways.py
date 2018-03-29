@@ -318,14 +318,70 @@ def _get_protein_ids(ds, species):
     )
 
 
+def _remap_psp(
+    psp, species,
+    set_col="KINASE",
+    acc_col="ACC_ID", mod_col="MOD_RSD", org_col="ORGANISM",
+    append_mod="-p",
+):
+    mapping = get_phosphomap_data()
+
+    mod_mapping = mapping[
+        mapping["ACC_ID"].isin(psp["SUB_ACC_ID"])
+    ].set_index(
+        ["ACC_ID", "MOD_RSD", "ORGANISM"]
+    ).sort_index()
+    site_mapping = mapping[
+        mapping["ORGANISM"] == species
+    ].set_index(
+        ["SITE_GRP_ID", "ORGANISM"]
+    ).sort_index()
+    del mapping
+
+    new_index = [org_col, set_col, acc_col, mod_col]
+
+    def _remap(row):
+        kinase, acc, mod, old_species = row[
+            [set_col, acc_col, mod_col, org_col]
+        ]
+        mod += append_mod
+
+        if old_species != species:
+            # Remap the phosphorylation site if possible
+            try:
+                site = mod_mapping.loc[acc, mod, old_species]
+            except KeyError:
+                pass
+            else:
+                site = site.iloc[0]["SITE_GRP_ID"]
+
+                try:
+                    re_map = site_mapping.loc[site, species]
+                except KeyError:
+                    pass
+                else:
+                    re_map = re_map.iloc[0]
+                    acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
+
+        return pd.Series([
+            species,
+            kinase,
+            acc,
+            mod,
+        ], index=new_index)
+
+    return psp.apply(_remap, axis=1)
+
+
 @pyp.utils.memoize
-def get_phosphosite(species):
+def get_phosphosite(species, remap=False):
     """
     Download phospho sets from PhophoSite Plus.
 
     Parameters
     ----------
     species : str
+    remap : bool, optional
 
     Returns
     -------
@@ -336,6 +392,15 @@ def get_phosphosite(species):
     species = ORGANISM_MAPPING.get(species, species)
 
     psp = pyp.motifs.phosphosite.get_data()
+
+    if remap:
+        psp = _remap_psp(
+            psp, species,
+            acc_col="SUB_ACC_ID",
+            mod_col="SUB_MOD_RSD",
+            org_col="SUB_ORGANISM",
+        )
+
     psp = psp[psp["SUB_ORGANISM"] == species]
 
     return pd.DataFrame(
@@ -364,13 +429,14 @@ def get_phosphosite(species):
 
 
 @pyp.utils.memoize
-def get_phosphosite_regulation(species):
+def get_phosphosite_regulation(species, remap=False):
     """
     Download phospho sets from PhophoSite Plus.
 
     Parameters
     ----------
     species : str
+    remap : bool, optional
 
     Returns
     -------
@@ -381,6 +447,17 @@ def get_phosphosite_regulation(species):
     species = ORGANISM_MAPPING.get(species, species)
 
     psp = get_phosphoreg_data()
+
+    if remap:
+        psp = _remap_psp(
+            psp, species,
+            set_col="ON_PROCESS",
+            acc_col="ACC_ID",
+            mod_col="MOD_RSD",
+            org_col="ORGANISM",
+            append_mod="",
+        )
+
     psp = psp[psp["ORGANISM"] == species]
 
     paths = set(
@@ -422,101 +499,7 @@ def get_phosphosite_regulation(species):
     )
 
 
-@pyp.utils.memoize
-def get_phosphosite_remap(species):
-    """
-    Download phospho sets from PhophoSite Plus. Remaps kinases-substrate
-    assocations from other species to the target species.
-
-    Parameters
-    ----------
-    species : str
-
-    Returns
-    -------
-    :class:`pandas.DataFrame`, optional
-    """
-    LOGGER.info("Getting remapped phosphosite data for {}".format(species))
-
-    species = ORGANISM_MAPPING.get(species, species)
-
-    psp = pyp.motifs.phosphosite.get_data()
-    mapping = get_phosphomap_data()
-
-    mod_mapping = mapping[
-        mapping["ACC_ID"].isin(psp["SUB_ACC_ID"])
-    ].set_index(
-        ["ACC_ID", "MOD_RSD", "ORGANISM"]
-    ).sort_index()
-    site_mapping = mapping[
-        mapping["ORGANISM"] == species
-    ].set_index(
-        ["SITE_GRP_ID", "ORGANISM"]
-    ).sort_index()
-    del mapping
-
-    new_index = ["SUB_ORGANISM", "KINASE", "SUB_ACC_ID", "SUB_MOD_RSD"]
-
-    def _remap(row):
-        kinase, acc, mod, old_species = row[
-            ["KINASE", "SUB_ACC_ID", "SUB_MOD_RSD", "SUB_ORGANISM"]
-        ]
-        # acc = acc.split("-")[0]
-        mod += "-p"
-
-        if old_species != species:
-            # Remap the phosphorylation site if possible
-            try:
-                site = mod_mapping.loc[acc, mod, old_species]
-            except KeyError:
-                pass
-            else:
-                site = site.iloc[0]["SITE_GRP_ID"]
-
-                try:
-                    re_map = site_mapping.loc[site, species]
-                except KeyError:
-                    pass
-                else:
-                    re_map = re_map.iloc[0]
-                    acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
-
-        return pd.Series([
-            species,
-            kinase,
-            acc,
-            mod,
-        ], index=new_index)
-
-    psp = psp.apply(_remap, axis=1)
-    psp = psp[psp["SUB_ORGANISM"] == species]
-
-    return pd.DataFrame(
-        [
-            (
-                kinase,
-                set(
-                    psp[
-                        psp["KINASE"] == kinase
-                    ].apply(
-                        lambda x:
-                        ",".join([
-                            # XXX: Accession IDs can include a "-#" for
-                            # different protein isoforms
-                            x["SUB_ACC_ID"].split("-")[0],
-                            x["SUB_MOD_RSD"],
-                        ]),
-                        axis=1,
-                    )
-                )
-            )
-            for kinase in set(psp["KINASE"])
-        ],
-        columns=["name", "set"]
-    )
-
-
-def get_pathways(species, p_sites=False):
+def get_pathways(species, p_sites=False, remap=False):
     """
     Download all default gene sets and phospho sets.
 
@@ -524,6 +507,7 @@ def get_pathways(species, p_sites=False):
     ----------
     species : str
     p_sites : bool, optional
+    remap : bool, optional
 
     Returns
     -------
@@ -532,8 +516,8 @@ def get_pathways(species, p_sites=False):
     LOGGER.info("building gene sets")
 
     if p_sites:
-        pathways_df = get_phosphosite_remap(species)
-        pathways_df.append(get_phosphosite_regulation(species))
+        pathways_df = get_phosphosite(species, remap=remap)
+        pathways_df.append(get_phosphosite_regulation(species, remap=remap))
     else:
         pathways_df = get_wikipathways(species)
 
