@@ -246,35 +246,31 @@ def _remap_data(ds, species):
     )
 
     mapping = get_phosphomap_data()
-    mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
 
-    acc_mapping = mapping.set_index(
-        ["ACC_ID", "MOD_RSD", "ORGANISM"]
-    ).sort_index()
-    site_mapping = mapping.set_index(
-        ["SITE_GRP_ID", "ORGANISM"]
-    ).sort_index()
+    mod_mapping = {
+        (row["ACC_ID"], row["MOD_RSD"], row["ORGANISM"]): row["SITE_GRP_ID"]
+        for _, row in mapping.iterrows()
+        if row["ORGANISM"] == old_species
+    }
+    site_mapping = {
+        row["SITE_GRP_ID"]: (row["ACC_ID"], row["MOD_RSD"])
+        for _, row in mapping.iterrows()
+        if row["ORGANISM"] == species
+    }
 
     del mapping
 
     def _remap(val):
         acc, mod = val.split(",")
 
-        try:
-            site = acc_mapping.loc[acc, mod, old_species]
-        except KeyError:
+        site = mod_mapping.get((acc, mod, old_species), None)
+
+        if site and site in site_mapping:
+            acc, mod = site_mapping[site]
+        else:
             return None
 
-        site = site.iloc[0]["SITE_GRP_ID"]
-
-        try:
-            re_map = site_mapping.loc[site, species]
-        except KeyError:
-            return None
-
-        re_map = re_map.iloc[0]
-
-        return ",".join([re_map["ACC_ID"], re_map["MOD_RSD"]])
+        return ",".join([acc, mod])
 
     new.psms["ID"] = new.psms["ID"].apply(_remap)
     new.psms = new.psms[~(new.psms["ID"].isnull())]
@@ -329,11 +325,11 @@ def _remap_psp(
     append_mod="-p",
 ):
     mapping = get_phosphomap_data()
-    # mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
 
     mod_mapping = {
         (row["ACC_ID"], row["MOD_RSD"], row["ORGANISM"]): row["SITE_GRP_ID"]
         for _, row in mapping.iterrows()
+        if row["ORGANISM"] != species
     }
     site_mapping = {
         row["SITE_GRP_ID"]: (row["ACC_ID"], row["MOD_RSD"])
@@ -341,16 +337,6 @@ def _remap_psp(
         if row["ORGANISM"] == species
     }
 
-    # mod_mapping = mapping[
-    #     mapping["ACC_ID"].isin(psp[acc_col])
-    # ].set_index(
-    #     ["ACC_ID", "MOD_RSD", "ORGANISM"]
-    # ).sort_index()
-    # site_mapping = mapping[
-    #     mapping["ORGANISM"] == species
-    # ].set_index(
-    #     ["SITE_GRP_ID", "ORGANISM"]
-    # ).sort_index()
     del mapping
 
     new_index = [org_col, set_col, acc_col, mod_col]
