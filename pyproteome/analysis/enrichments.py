@@ -693,13 +693,15 @@ def plot_nes(vals, max_pval=.1, max_qval=1):
         color="k",
     )
     ax.set_ylabel("Normalized Enrichment Score (NES)")
+    x_pad = ind.max() / 10
     ax.set_xlim(
-        left=ind.min() - 5,
-        right=ind.max() + 5,
+        left=ind.min() - x_pad,
+        right=ind.max() + x_pad,
     )
+    y_pad = max([nes.abs().min(), nes.abs().max()]) / 4
     ax.set_ylim(
-        bottom=nes.min() - .5,
-        top=nes.max() + .5,
+        bottom=nes.min() - y_pad,
+        top=nes.max() + y_pad,
     )
 
     texts = []
