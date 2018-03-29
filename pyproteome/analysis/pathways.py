@@ -413,10 +413,8 @@ def get_phosphosite(species, remap=False):
                     ].apply(
                         lambda x:
                         ",".join([
-                            # XXX: Accession IDs can include a "-#" for
-                            # different protein isoforms
-                            x["SUB_ACC_ID"].split("-")[0],
-                            x["SUB_MOD_RSD"] + "-p",
+                            x["SUB_ACC_ID"],
+                            x["SUB_MOD_RSD"] + ("" if remap else "-p"),
                         ]),
                         axis=1,
                     )
@@ -484,9 +482,7 @@ def get_phosphosite_regulation(species, remap=False):
                     ].apply(
                         lambda x:
                         ",".join([
-                            # XXX: Accession IDs can include a "-#" for
-                            # different protein isoforms
-                            x["ACC_ID"].split("-")[0],
+                            x["ACC_ID"],
                             x["MOD_RSD"],
                         ]),
                         axis=1,
