@@ -35,6 +35,9 @@ PATHWAYS_COMMON_URL = (
 GSKB_URL = (
     "http://ge-lab.org/gskb/2-MousePath/mGSKB_Entrez.gmt"
 )
+PSP_REGULATORY_URL = (
+    "https://www.phosphosite.org/downloads/Regulatory_sites.gz"
+)
 PSP_SITE_MAPPING_URL = (
     "https://www.phosphosite.org/downloads/Phosphorylation_site_dataset.gz"
 )
@@ -215,6 +218,20 @@ def get_phosphomap_data():
     return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t")
 
 
+@pyp.utils.memoize
+def get_phosphoreg_data():
+    LOGGER.info("Fetching Phosphosite Plus regulation data")
+
+    url = PSP_REGULATORY_URL
+
+    r = requests.get(url, stream=True)
+    r.raise_for_status()
+
+    gz = gzip.GzipFile(fileobj=io.BytesIO(r.raw.read()))
+
+    return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t", usecols=range(21))
+
+
 def _remap_data(ds, species):
     new = ds.copy()
     old_species = list(new.species)[0]
@@ -347,6 +364,65 @@ def get_phosphosite(species):
 
 
 @pyp.utils.memoize
+def get_phosphosite_regulation(species):
+    """
+    Download phospho sets from PhophoSite Plus.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
+    LOGGER.info("Getting phosphosite regulation data for {}".format(species))
+
+    species = ORGANISM_MAPPING.get(species, species)
+
+    psp = get_phosphoreg_data()
+    psp = psp[psp["ORGANISM"] == species]
+
+    paths = set(
+        proc.strip()
+        for row in psp["ON_PROCESS"]
+        if pd.notna(row)
+        for proc in row.split(";")
+        if proc.strip()
+    )
+
+    return pd.DataFrame(
+        [
+            (
+                path,
+                set(
+                    psp[
+                        psp["ON_PROCESS"].apply(
+                            lambda x:
+                            pd.notna(x) and any([
+                                path in i.strip()
+                                for i in x.split(";")
+                            ])
+                        )
+                    ].apply(
+                        lambda x:
+                        ",".join([
+                            # XXX: Accession IDs can include a "-#" for
+                            # different protein isoforms
+                            x["ACC_ID"].split("-")[0],
+                            x["MOD_RSD"],
+                        ]),
+                        axis=1,
+                    )
+                )
+            )
+            for path in paths
+        ],
+        columns=["name", "set"]
+    )
+
+
+@pyp.utils.memoize
 def get_phosphosite_remap(species):
     """
     Download phospho sets from PhophoSite Plus. Remaps kinases-substrate
@@ -365,22 +441,18 @@ def get_phosphosite_remap(species):
     species = ORGANISM_MAPPING.get(species, species)
 
     psp = pyp.motifs.phosphosite.get_data()
-    print("psp", psp.shape)
     mapping = get_phosphomap_data()
-    print("mapping", mapping.shape)
 
     mod_mapping = mapping[
         mapping["ACC_ID"].isin(psp["SUB_ACC_ID"])
     ].set_index(
         ["ACC_ID", "MOD_RSD", "ORGANISM"]
     ).sort_index()
-    print("mod_mapping", mod_mapping.shape)
     site_mapping = mapping[
         mapping["ORGANISM"] == species
     ].set_index(
         ["SITE_GRP_ID", "ORGANISM"]
     ).sort_index()
-    print("site_mapping", site_mapping.shape)
     del mapping
 
     new_index = ["SUB_ORGANISM", "KINASE", "SUB_ACC_ID", "SUB_MOD_RSD"]
@@ -460,7 +532,8 @@ def get_pathways(species, p_sites=False):
     LOGGER.info("building gene sets")
 
     if p_sites:
-        pathways_df = get_phosphosite(species)
+        pathways_df = get_phosphosite_remap(species)
+        pathways_df.append(get_phosphosite_regulation(species))
     else:
         pathways_df = get_wikipathways(species)
 
@@ -525,8 +598,8 @@ def filter_fn(vals):
 
     def _gene_isin(row):
         return any([
-            acc in v_set
-            for acc in row["Proteins"].accessions
+            brs.mapping.get_entrez_mapping(gene, species="Homo sapiens") in v_set
+            for gene in row["Proteins"].genes
         ])
 
     if isinstance(vals, pd.Series):
@@ -560,8 +633,7 @@ def filter_fn(vals):
                         for x in s
                     ),
                 )
-                for s in set
-                for tup in s
+                for tup in set
             )
 
         fn = _p_site_isin
