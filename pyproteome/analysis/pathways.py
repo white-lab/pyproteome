@@ -517,6 +517,9 @@ def get_pathways(species, p_sites=False, remap=False):
 
     if p_sites:
         pathways_df = get_phosphosite(species, remap=remap)
+        # pathways_df = pathways_df.append(
+        #     get_phosphosite_regulation(species, remap=remap)
+        # )
     else:
         pathways_df = get_wikipathways(species)
 
@@ -648,6 +651,7 @@ def gsea(
     species=None,
     min_hits=10,
     p_sites=False,
+    remap=True,
     name=None,
     folder_name=None,
     **kwargs
@@ -675,6 +679,8 @@ def gsea(
         Can be one of ["zscore", "fold", "spearman", "pearson", "kendall"].
     p_sites : bool, optional
         Perform Phospho Set Enrichment Analysis (PSEA) on data set.
+    remap : bool, optional
+        Remap database of phosphosites using information from all species.
     species : str, optional
         The species used to generate gene sets.
 
@@ -726,7 +732,7 @@ def gsea(
         ds = _remap_data(ds, species)
 
     if gene_sets is None:
-        gene_sets = get_pathways(species, p_sites=p_sites)
+        gene_sets = get_pathways(species, p_sites=p_sites, remap=remap)
 
     ds = _get_scores(
         ds,
