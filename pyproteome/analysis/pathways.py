@@ -361,7 +361,7 @@ def _remap_psp(
             except KeyError:
                 pass
             else:
-                site = site.iloc[0]["SITE_GRP_ID"]
+                site = site["SITE_GRP_ID"]
 
                 try:
                     re_map = site_mapping.loc[site]
