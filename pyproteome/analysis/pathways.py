@@ -370,7 +370,6 @@ def _remap_psp(
                 except KeyError:
                     pass
                 else:
-                    re_map = re_map.iloc[0]
                     acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
 
         return pd.Series([
