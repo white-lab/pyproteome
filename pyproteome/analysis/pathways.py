@@ -276,8 +276,6 @@ def _remap_data(ds, species):
         except KeyError:
             return None
 
-        re_map = re_map.iloc[0]
-
         return ",".join([re_map["ACC_ID"], re_map["MOD_RSD"]])
 
     new.psms["ID"] = new.psms["ID"].apply(_remap)
