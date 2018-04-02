@@ -335,7 +335,7 @@ def _remap_psp(
 
     mod_mapping = mapping[
         (mapping["ORGANISM"] != species) &
-        (mapping["ACC_ID"].isin(psp[acc_col]))
+        (mapping["ACC_ID"].isin(set(psp[acc_col])))
     ].set_index(
         ["ACC_ID", "MOD_RSD", "ORGANISM"]
     ).sort_index()

@@ -241,7 +241,7 @@ def memoize(func):
     return memoized_func
 
 
-def save_load(name, val=None):
+def save_load(name, val=None, default=None):
     """
     Save or load a variable using the pickle module.
 
@@ -250,6 +250,7 @@ def save_load(name, val=None):
     name : str
         The name to use for data storage.
     val : object, optional
+    default : object, optional
 
     Returns
     -------
@@ -265,6 +266,6 @@ def save_load(name, val=None):
             with open(filename, "rb") as f:
                 val = pickle.load(f)
         except:
-            pass
+            val = default
 
     return val
