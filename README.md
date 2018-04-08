@@ -72,6 +72,9 @@ dilution.
 ... )
 ```
 
+For other functionality, refer to the
+[online documentation](https://pyproteome.readthedocs.io/en/latest/).
+
 ## Directory Hierarchy
 
 pyproteome expects a certain directory hierarchy in order to import data files
