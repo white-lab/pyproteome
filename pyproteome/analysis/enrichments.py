@@ -563,6 +563,7 @@ def filter_gene_sets(gene_sets, ds, min_hits=10):
 
 def filter_vals(
     vals,
+    min_hits=0,
     min_abs_score=.3,
     max_pval=1,
     max_qval=1,
@@ -574,6 +575,7 @@ def filter_vals(
     Parameters
     ----------
     vals : :class:`pandas.DataFrame`
+    min_hits : int, optional
     min_abs_score : float, optional
     max_pval : float, optional
     max_qval : float, optional
@@ -585,6 +587,7 @@ def filter_vals(
     filtered_vals = vals[
         vals.apply(
             lambda x:
+            x["n_hits"] >= min_hits and
             abs(x["ES(S)"]) >= min_abs_score and (
                 (x["p-value"] <= max_pval)
                 if "p-value" in x.index else
@@ -645,7 +648,13 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
     return f, ax
 
 
-def plot_nes(vals, max_pval=.1, max_qval=1):
+def plot_nes(
+    vals,
+    min_hits=0,
+    min_abs_score=0,
+    max_pval=.1,
+    max_qval=1,
+):
     """
     Plot the ranked normalized enrichment score values.
 
@@ -655,6 +664,8 @@ def plot_nes(vals, max_pval=.1, max_qval=1):
     ----------
     vals : :class:`pandas.DataFrame`
         The gene sets and scores calculated by enrichment_scores().
+    min_hits : int, optional
+    min_abs_score : float, optional
     max_pval : float, optional
     max_qval : float, optional
 
@@ -669,6 +680,8 @@ def plot_nes(vals, max_pval=.1, max_qval=1):
     v = vals.copy()
     v = v.sort_values("NES(S)")
     mask = (
+        (v["n_hits"] >= min_hits) &
+        (v["ES(S)"].abs() >= min_abs_score) &
         (v["p-value"] < max_pval) &
         (v["q-value"] < max_qval)
     )
@@ -847,6 +860,7 @@ def plot_enrichment(
 
 def plot_gsea(
     vals, gene_changes,
+    min_hits=0,
     min_abs_score=.3,
     max_pval=1,
     max_qval=1,
@@ -877,6 +891,7 @@ def plot_gsea(
                 min_abs_score=min_abs_score,
                 max_pval=max_pval,
                 max_qval=max_qval,
+                min_hits=min_hits,
             ),
             **kwargs
         )[0],
@@ -884,6 +899,8 @@ def plot_gsea(
         if "NES(S)" in vals.columns:
             figs += plot_nes(
                 vals,
+                min_hits=min_hits,
+                min_abs_score=min_abs_score,
                 max_pval=max_pval,
                 max_qval=max_qval,
             )[0],
