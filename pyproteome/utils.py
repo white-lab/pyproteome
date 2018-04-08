@@ -258,7 +258,7 @@ def save_load(name, val=None, default=None):
     """
     filename = "{}.pkl".format(name)
 
-    if val:
+    if val is not None:
         with open(filename, "wb") as f:
             pickle.dump(val, f)
     else:
