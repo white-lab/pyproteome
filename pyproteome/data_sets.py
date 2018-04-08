@@ -889,7 +889,7 @@ class DataSet:
             if isinstance(val, (list, set, tuple, pd.Series)) else
             psms["Sequence"] == val,
 
-            "mod_types": lambda val, psms:
+            "mod": lambda val, psms:
             psms["Modifications"].apply(
                 lambda x: bool(list(x.get_mods(val).skip_labels_iter()))
             ),
