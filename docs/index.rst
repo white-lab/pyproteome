@@ -74,15 +74,14 @@ to manage their Python environment and provide pyproteome's dependencies.
 
       # and show a table listing significantly changing peptides
       tables.changes_table(
-          datas["CK-H1-pST"],
-          {"p": .001},
+          datas["CK-H1-pST"].filter(p=.001),
+          sort="Fold Change",
       )
 
       # Perform Phospho Set Enrichment Analysis (PSEA)
-      pathways.gsea(
+      pathways.psea(
           datas["CK-H1-pST"],
           metric="zscore",
-          p_sites=True,
       )
 
 Contents

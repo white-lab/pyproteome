@@ -778,7 +778,7 @@ class DataSet:
         motif               Filter for motif.
         protein             Filter for protein or list of proteins.
         sequence            Filter for sequence or list of sequences.
-        mod_types           Filter for modifications.
+        mod                 Filter for modifications.
         only_validated      Use rows validated by CAMV.
         inverse             Use all rows that are rejected by a filter.
         rename              Change the new data sets name to a new value.
@@ -872,7 +872,7 @@ class DataSet:
                     val.match(nmer)
                     for nmer in pymotif.generate_n_mers(
                         x,
-                        letter_mod_types=f.get("mod_types", None),
+                        letter_mod_types=f.get("mod", None),
                     )
                 )
             ),
@@ -1157,9 +1157,9 @@ class DataSet:
         return new
 
     def log_stats(self):
-        data_p = self.filter(mod_types=[(None, "Phospho")])
-        data_pst = self.filter(mod_types=[("S", "Phospho"), ("T", "Phospho")])
-        data_py = self.filter(mod_types=[("Y", "Phospho")])
+        data_p = self.filter(mod=[(None, "Phospho")])
+        data_pst = self.filter(mod=[("S", "Phospho"), ("T", "Phospho")])
+        data_py = self.filter(mod=[("Y", "Phospho")])
 
         LOGGER.info(
             (
