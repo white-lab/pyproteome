@@ -676,7 +676,7 @@ def plot_nes(
     """
     LOGGER.info("Plotting ranked NES(S) values")
 
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(figsize=(12, 8))
     v = vals.copy()
     v = v.sort_values("NES(S)")
     mask = (
