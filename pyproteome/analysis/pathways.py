@@ -589,7 +589,7 @@ def _get_scores(ds, phenotype=None, metric="spearman"):
     return ds
 
 
-def filter_fn(vals):
+def filter_fn(vals, ds=None, species=None):
     if isinstance(vals, pd.Series):
         col_name = "hit_list" if "hit_list" in vals.index else "set"
     else:
@@ -603,9 +603,12 @@ def filter_fn(vals):
             for abs_pos in mod.abs_pos
         ])
 
+    if not species and ds:
+        species = list(ds.species)[0]
+
     def _gene_isin(row):
         return any([
-            brs.mapping.get_entrez_mapping(gene, species="Homo sapiens") in v_set
+            brs.mapping.get_entrez_mapping(gene, species=species) in v_set
             for gene in row["Proteins"].genes
         ])
 
