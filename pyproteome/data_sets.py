@@ -171,6 +171,9 @@ class DataSet:
             if pd.isnull(self.psms["q-value"]).all() and "q" in filter_bad:
                 del filter_bad["q"]
 
+            if pd.isnull(self.psms[list(self.channels.values())]).all().all():
+                del filter_bad["median_quant"]
+
         if log_stats:
             self.log_stats()
 
