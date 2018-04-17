@@ -1466,6 +1466,91 @@ def merge_data(
     return new
 
 
+def merge_proteins(ds, inplace=False):
+    new = ds
+
+    if not inplace:
+        new = new.copy()
+
+    if len(new.psms) < 1:
+        return new
+
+    channels = list(new.channels.values())
+    agg_dict = {}
+
+    for channel in channels:
+        weight = "{}_weight".format(channel)
+
+        if weight in new.psms.columns:
+            # XXX: Use weight corresponding to median channel value?
+            # (not median weight)
+            agg_dict[weight] = _nan_median
+
+        agg_dict[channel] = _nan_median
+
+    def _unfirst(x):
+        return x.values[0]
+
+    def _first(x):
+        if not all(i == x.values[0] for i in x.values):
+            LOGGER.warning(
+                "{}: Mismatch between peptide data: '{}' not in {}"
+                .format(
+                    new.name,
+                    x.values[0],
+                    [str(i) for i in x.values[1:]],
+                )
+            )
+
+        return x.values[0]
+
+    agg_dict["Sequence"] = _unfirst
+    agg_dict["Modifications"] = _unfirst
+    agg_dict["Missed Cleavages"] = _unfirst
+    agg_dict["Validated"] = all
+
+    agg_dict["Scan Paths"] = _unfirst
+    agg_dict["Raw Paths"] = _unfirst
+
+    agg_dict["Ambiguous"] = _unfirst
+
+    agg_dict["Masses"] = _unfirst
+    agg_dict["Charges"] = _unfirst
+    agg_dict["Intensities"] = _unfirst
+    agg_dict["RTs"] = _unfirst
+
+    agg_dict["Scan"] = _unfirst
+    agg_dict["Ion Score"] = max
+    agg_dict["q-value"] = min
+    agg_dict["Confidence Level"] = partial(
+        max,
+        key=lambda x: ["Low", "Medium", "High"].index(x),
+    )
+    agg_dict["Isolation Interference"] = min
+    agg_dict["Unique Peptides"] = len
+
+    new.psms["Unique Peptides"] = np.nan
+
+    new.psms = new.psms.groupby(
+        by=[
+            "Proteins",
+        ],
+        sort=False,
+        as_index=False,
+    ).agg(agg_dict)
+
+    new.update_group_changes()
+
+    return new
+
+
+def _nan_median(lst):
+    if all(np.isnan(i) for i in lst):
+        return np.nan
+    else:
+        return np.nanmedian(lst)
+
+
 def _nan_sum(lst):
     if all(np.isnan(i) for i in lst):
         return np.nan
