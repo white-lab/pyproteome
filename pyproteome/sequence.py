@@ -94,6 +94,9 @@ class Sequence:
 
         return self.to_tuple() == other.to_tuple()
 
+    def __lt__(self, other):
+        return self.pep_seq < other.pep_seq
+
     def __contains__(self, other):
         if isinstance(other, str):
             return other in self._seq_with_modifications()
@@ -235,5 +238,3 @@ def extract_sequence(proteins, sequence_string):
         pep_seq=sequence_string,
         protein_matches=prot_matches,
     )
-
-

@@ -26,6 +26,9 @@ class Proteins:
     def __iter__(self):
         return iter(self.proteins)
 
+    def __len__(self):
+        return len(self.proteins)
+
     def __hash__(self):
         return hash(
             self.proteins,
