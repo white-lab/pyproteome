@@ -93,7 +93,7 @@ def plot_volcano(
     title : str, optional
     figsize : tuple of float, float
     adjust : bool, optional
-    compress_dups : bool, optional
+    show_duplicates : bool, optional
     full_site_labels : bool, optional
 
     Returns
@@ -238,7 +238,7 @@ def plot_volcano(
 
         colors.append(color)
 
-    if compress_dups:
+    if not show_duplicates:
         labels = _remove_lesser_dups(labels, compress_sym=compress_sym)
 
     # Draw the figure

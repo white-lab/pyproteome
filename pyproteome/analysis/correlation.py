@@ -260,7 +260,7 @@ def correlate_signal(
     options=None,
     folder_name=None,
     title=None,
-    show_duplicates=True,
+    show_duplicates=False,
     scatter_colors=None,
     scatter_symbols=None,
     figsize=(12, 10),
@@ -355,7 +355,7 @@ def correlate_signal(
 
     labels = zip(sig_x, sig_y, sig_labels)
 
-    if show_duplicates:
+    if not show_duplicates:
         labels = _remove_lesser_dups(labels)
 
     texts = []
