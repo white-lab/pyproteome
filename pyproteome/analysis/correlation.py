@@ -193,10 +193,9 @@ def _scatter_plots(
         )
 
         ax.set_xlabel(
-            "{}\n$\\rho = {:.2f}; p = {:.2E}$".format(
+            "{}\n$\\rho = {:.2f}$".format(
                 xlabel,
                 row["Correlation"],
-                row["corr p-value"],
             ),
             fontsize=22,
         )
@@ -223,6 +222,37 @@ def _scatter_plots(
     return f_scatter, ax
 
 
+def _remove_lesser_dups(labels, compress_sym=False):
+    new_labels = []
+    labels = list(labels)
+
+    for index, (x, y, label) in enumerate(labels):
+        for o_index, (o_x, o_y, o_label) in enumerate(labels):
+            if index == o_index:
+                continue
+            if label != o_label:
+                continue
+            if not compress_sym and (y < 0) != (y < 0):
+                continue
+
+            mul = 1 if y >= 0 else -1
+            o_mul = 1 if o_y >= 0 else -1
+
+            if (
+                mul * y < o_mul * o_y
+            ) or (
+                (
+                    mul * y <= o_mul * o_y
+                ) and
+                index < o_index
+            ):
+                break
+        else:
+            new_labels.append((x, y, label))
+
+    return new_labels
+
+
 def correlate_signal(
     data, signal,
     corr_cutoff=0.8,
@@ -230,6 +260,7 @@ def correlate_signal(
     options=None,
     folder_name=None,
     title=None,
+    show_duplicates=True,
     scatter_colors=None,
     scatter_symbols=None,
     figsize=(12, 10),
@@ -254,6 +285,7 @@ def correlate_signal(
         title = data.name
 
     cp = data.copy()
+    cp = cp.rename_channels()
 
     cols = getattr(signal, "columns", getattr(signal, "index", []))
 
@@ -321,9 +353,14 @@ def correlate_signal(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
+    labels = zip(sig_x, sig_y, sig_labels)
+
+    if show_duplicates:
+        labels = _remove_lesser_dups(labels)
+
     texts = []
 
-    for xs, ys, txt in zip(sig_x, sig_y, sig_labels):
+    for xs, ys, txt in labels:
         if any(i.strip() in hide for i in txt.split("/")):
             continue
 
@@ -365,15 +402,15 @@ def correlate_signal(
     )
 
     ax.set_xlabel(
-        "Correlation",
+        "Index",
         fontsize=20,
     )
-    ax.set_yticklabels(
-        "{:.3}".format(i)
-        for i in np.power(1/10, ax.get_yticks())
-    )
+    # ax.set_yticklabels(
+    #     "{:.3}".format(i)
+    #     for i in np.power(1/10, ax.get_yticks())
+    # )
     ax.set_ylabel(
-        "p-value",
+        "Correlation",
         fontsize=20,
     )
 

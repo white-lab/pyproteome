@@ -65,7 +65,7 @@ def plot_volcano(
     folder_name=None,
     figsize=(12, 10),
     adjust=True,
-    compress_dups=True,
+    show_duplicates=False,
     compress_sym=False,
     show_xlabel=True,
     show_ylabel=True,
