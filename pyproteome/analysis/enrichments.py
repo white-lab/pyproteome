@@ -584,28 +584,31 @@ def filter_vals(
     -------
     :class:`pandas.DataFrame`
     """
-    filtered_vals = vals[
-        vals.apply(
-            lambda x:
-            x["n_hits"] >= min_hits and
-            abs(x["ES(S)"]) >= min_abs_score and (
-                (x["p-value"] <= max_pval)
-                if "p-value" in x.index else
-                True
-            ) and (
-                (x["q-value"] <= max_qval)
-                if "q-value" in x.index else
-                True
-            ),
-            axis=1,
-        )
-    ]
+    n_len = len(vals)
+    if vals.shape[0] > 0:
+        vals = vals[
+            vals.apply(
+                lambda x:
+                x["n_hits"] >= min_hits and
+                abs(x["ES(S)"]) >= min_abs_score and (
+                    (x["p-value"] <= max_pval)
+                    if "p-value" in x.index else
+                    True
+                ) and (
+                    (x["q-value"] <= max_qval)
+                    if "q-value" in x.index else
+                    True
+                ),
+                axis=1,
+            )
+        ]
+
     LOGGER.info(
         "Filtered {} gene sets down to {} after cutoffs"
-        .format(len(vals), len(filtered_vals))
+        .format(n_len, len(vals))
     )
 
-    return filtered_vals
+    return vals
 
 
 def plot_nes_dist(nes_vals, nes_pi_vals):
