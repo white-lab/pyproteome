@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import pyproteome as pyp
+import seaborn as sns
 
 
 LOGGER = logging.getLogger("pyproteome.correlation")
@@ -150,7 +151,7 @@ def correlate_data_sets(
 def _scatter_plots(
     cp, signal,
     data_chans, signal_chans, signal_groups,
-    scatter_cols=3,
+    scatter_cols=4,
     xlabel="",
     scatter_colors=None,
     scatter_symbols=None,
@@ -159,50 +160,64 @@ def _scatter_plots(
     scatter_symbols = scatter_symbols or {}
 
     if cp.shape[0] < 1:
-        return None, None
+        return None
 
-    f_scatter, axes = plt.subplots(
-        int(np.ceil(cp.shape[0] / scatter_cols)), scatter_cols,
-        figsize=(6 * scatter_cols, cp.shape[0] * 2),
-    )
-
-    for index, (ax, (_, row)) in enumerate(
-        zip(
-            axes.ravel(),
-            cp.psms.sort_values("Correlation").iterrows(),
-        )
-    ):
-        for data_chan, sig_chan, sig_group in zip(
-            data_chans, signal_chans, signal_groups,
-        ):
-            ax.scatter(
-                x=signal[sig_chan],
-                y=row[data_chan],
-                facecolors=scatter_colors.get(sig_group, "black"),
-                edgecolors="black",
-                marker=scatter_symbols.get(sig_group, "o"),
-                s=200,
+    df = pd.DataFrame(
+        [
+            (
+                row,
+                str(row["Sequence"]),
+                signal[sig_chan],
+                row[data_chan],
+                sig_group,
+                scatter_colors.get(sig_group, "black"),
             )
+            for _, row in cp.psms.sort_values("Correlation").iterrows()
+            for data_chan, sig_chan, sig_group in zip(
+                data_chans, signal_chans, signal_groups,
+            )
+        ],
+        columns=("row", "sequence", "x", "y", "group", "color"),
+    )
+    g = sns.lmplot(
+        x="x",
+        y="y",
+        hue="group",
+        col="sequence",
+        col_wrap=scatter_cols,
+        data=df,
+        sharey=False,
+        fit_reg=False,
+    )
+    for ax in g.axes:
+        seq = ax.get_title().split("=", 1)[1].strip()
+        df_cp = df[df["sequence"] == seq]
+        row = df_cp["row"].iloc[0]
 
         row_title = " / ".join(str(i.gene) for i in row["Proteins"])
-
-        ax.set_title(
-            row_title[:20] + ("..." if len(row_title) > 20 else ""),
-            fontsize=28,
-            fontweight="bold",
-        )
-
-        ax.set_xlabel(
-            "{}\n$\\rho = {:.2f}$".format(
-                xlabel,
-                row["Correlation"],
-            ),
-            fontsize=22,
-        )
-
         row_seq = str(row["Sequence"])
         row_mods = str(row["Modifications"].get_mods([(None, "Phospho")]))
 
+        sns.regplot(
+            x="x",
+            y="y",
+            data=df_cp,
+            scatter=False,
+            ax=ax,
+        )
+
+        ax.set_title(
+            row_title[:20] + ("..." if len(row_title) > 20 else ""),
+            # fontsize=28,
+            # fontweight="bold",
+        )
+        # ax.set_xlabel(
+        #     "{}\n$\\rho = {:.2f}$".format(
+        #         xlabel,
+        #         row["Correlation"],
+        #     ),
+        #     fontsize=22,
+        # )
         ax.set_ylabel(
             row_seq[:20] + (
                 "..." if len(row_seq) > 20 else ""
@@ -211,15 +226,15 @@ def _scatter_plots(
                     row_mods[:20] + ("..." if len(row_mods) > 20 else "")
                 ) if row_mods else ""
             ),
-            fontsize=20,
+            # fontsize=20,
         )
 
-        for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
-            tick.label.set_fontsize(20)
+        # for tick in ax.xaxis.get_major_ticks() + ax.yaxis.get_major_ticks():
+        #     tick.label.set_fontsize(20)
 
-    f_scatter.tight_layout(pad=2)
+        ax.legend(loc="best")
 
-    return f_scatter, ax
+    return g
 
 
 def _remove_lesser_dups(labels, compress_sym=False):
@@ -256,7 +271,7 @@ def _remove_lesser_dups(labels, compress_sym=False):
 def correlate_signal(
     data, signal,
     corr_cutoff=0.8,
-    scatter_cols=3,
+    scatter_cols=4,
     options=None,
     folder_name=None,
     title=None,
@@ -354,6 +369,7 @@ def correlate_signal(
     ax.spines["right"].set_visible(False)
 
     labels = zip(sig_x, sig_y, sig_labels)
+    LOGGER.info("Showing names for {} genes".format(len(sig_x)))
 
     if not show_duplicates:
         labels = _remove_lesser_dups(labels)
@@ -419,13 +435,6 @@ def correlate_signal(
 
     cp.psms = cp.psms[cp.psms["Correlation"].apply(abs) >= corr_cutoff]
 
-    f_scatter, _ = _scatter_plots(
-        cp, signal, data_chans, signal_chans, signal_groups,
-        scatter_cols=scatter_cols,
-        scatter_colors=scatter_colors,
-        scatter_symbols=scatter_symbols,
-    )
-
     if f_corr:
         f_corr.savefig(
             os.path.join(folder_name, "Correlation.png"),
@@ -434,11 +443,19 @@ def correlate_signal(
             transparent=True,
         )
 
+    f_scatter = _scatter_plots(
+        cp, signal, data_chans, signal_chans, signal_groups,
+        scatter_cols=scatter_cols,
+        scatter_colors=scatter_colors,
+        scatter_symbols=scatter_symbols,
+    )
+
     if f_scatter:
         f_scatter.savefig(
             os.path.join(folder_name, "Correlation Scatter.png"),
             bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
+            # dpi=pyp.DEFAULT_DPI,
+            dpi=pyp.DEFAULT_DPI / 4,
             transparent=True,
         )
 
