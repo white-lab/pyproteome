@@ -564,7 +564,7 @@ def _filter_ambiguous_peptides(ds):
 
 
 def _get_scores(ds, phenotype=None, metric="spearman"):
-    LOGGER.info("building correlations")
+    LOGGER.info("building correlations using metric '{}'".format(metric))
 
     ds.psms = ds.psms[~ds.psms["ID"].isnull()]
 
