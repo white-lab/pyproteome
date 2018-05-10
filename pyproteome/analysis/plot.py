@@ -15,6 +15,7 @@ import re
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from scipy.stats import ttest_ind
 
 import pyproteome as pyp
@@ -27,7 +28,7 @@ def plot(
     data, f=None,
     title=None,
     folder_name=None,
-    figsize=(12, 8),
+    figsize=None,
 ):
     """
     Plot the levels of a sequence across multiple channels.
@@ -37,7 +38,7 @@ def plot(
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     sequence : str or :class:`Sequence<pyproteome.sequence.Sequence>`
     title : str, optional
-    figsize : tuple of int, int
+    figsize : tuple of (int, int), optional
     """
     folder_name = pyp.utils.make_folder(
         data=data,
@@ -57,6 +58,9 @@ def plot(
         for channel_name in channel_names
     ]
 
+    if figsize is None:
+        figsize = (len(channels) / 2, 6 / 2)
+
     if f:
         data = data.filter(f)
 
@@ -73,16 +77,38 @@ def plot(
 
         fig, ax = plt.subplots(figsize=figsize)
 
-        indices = np.arange(len(values))
-        bar_width = .35
-        ax.bar(indices, values.as_matrix(), bar_width)
-        ax.set_xticks(indices)
+        df = pd.DataFrame(
+            [
+                (
+                    name,
+                    val,
+                    [
+                        group_name
+                        for group_name, group in data.groups.items()
+                        if name in group
+                    ][0],
+                )
+                for name, val in zip(names, values)
+            ],
+            columns=("name", "val", "group"),
+        )
+
+        sns.barplot(
+            x="name",
+            y="val",
+            hue="group",
+            data=df,
+            ax=ax,
+            dodge=False,
+        )
         ax.set_xticklabels(
-            names,
-            fontsize=20,
+            ax.get_xticklabels(),
+            # fontsize=20,
             rotation=45,
             horizontalalignment="right",
         )
+        ax.set_xlabel("")
+        ax.get_legend().set_title("")
 
         mod_str = row["Modifications"].__str__(prot_index=0)
 
@@ -93,16 +119,22 @@ def plot(
                 seq,
                 " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
-            )
+            ),
+            fontsize=28,
         )
+
+        if data.cmp_groups:
+            ylabel = "Relative Intensity"
+        else:
+            ylabel = (
+                "Cummulative Intensity" +
+                (" (Normalized)" if data.intra_normalized else "")
+            )
 
         ax.set_ylabel(
-            "Cummulative Intensity" +
-            (" (Normalized)" if data.intra_normalized else "")
+            ylabel,
+            fontsize=20,
         )
-
-        ax.title.set_fontsize(28)
-        ax.yaxis.label.set_fontsize(20)
 
         fig.savefig(
             os.path.join(
@@ -132,7 +164,7 @@ def plot_group(
     cmp_groups=None,
     title=None,
     folder_name=None,
-    figsize=(12, 4),
+    figsize=(8, 4),
 ):
     """
     Plot the levels of a sequence across each group.
@@ -191,7 +223,7 @@ def plot_group(
             ):
                 continue
 
-            normalize = group_vals.iloc[0].mean()
+            normalize = group_vals.iloc[0].median()
 
             group_vals = pd.Series([
                 group / normalize
@@ -206,29 +238,58 @@ def plot_group(
             for name in group.index
         ]
 
+        # print(values)
+        fig, ax = plt.subplots(figsize=figsize)
+
+        x = [
+            ind
+            for ind, l in enumerate(
+                j
+                for i in values
+                for j in i.values
+            )
+            for k in l
+        ]
+        y = np.concatenate([
+            np.log2(j.astype(float))
+            for i in values
+            for j in i.values
+        ])
+        sns.boxplot(
+            x=x,
+            y=y,
+            ax=ax,
+            boxprops=dict(alpha=.3),
+        )
+        sns.swarmplot(
+            x=x,
+            y=y,
+            color=".25",
+            ax=ax,
+            size=10,
+        )
+        ax.axhline(
+            0,
+            linestyle="--",
+            alpha=.25,
+        )
+
         means = [
             i.mean()
             for vals in values
             for i in vals
         ]
-
-        errs = [
-            i.std() if len(i) > 1 else 0
+        means = [
+            np.log2(i.mean())
             for vals in values
             for i in vals
         ]
 
-        fig, ax = plt.subplots(figsize=figsize)
-
-        indices = np.arange(len(means))
-        width = .5
-        ax.bar(
-            indices,
-            means,
-            width=width,
-            yerr=errs,
-            # error_kw=dict(ecolor='k', lw=.25, capsize=.25, capthick=.25),
-        )
+        errs = [
+            np.log2(i.std()) if len(i) > 1 else 0
+            for vals in values
+            for i in vals
+        ]
 
         ax.set_ylabel(
             "{} Signal".format(
@@ -236,12 +297,12 @@ def plot_group(
             ),
             fontsize=20,
         )
-        ax.ticklabel_format(style="plain")
 
-        for label in ax.get_yticklabels():
-            label.set_fontsize(20)
+        ax.set_yticklabels(
+            ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
+            fontsize=20,
+        )
 
-        ax.set_xticks(indices)
         ax.set_xticklabels(
             labels,
             fontsize=20,
@@ -319,39 +380,40 @@ def plot_group(
                     values_b.as_matrix(),
                 ).pvalue
 
-                if pval < 0.05:
-                    ax.set_ylim(
-                        ymax=max([
-                            ax.get_ylim()[1],
-                            y_max * (1 + offset * 0.1 + 0.15),
-                        ]),
-                    )
-                    ax.annotate(
-                        "",
-                        xy=(
-                            index_a,
-                            y_max * (1.05 + offset * 0.1)
-                        ),
-                        xytext=(
-                            index_b,
-                            y_max * (1.05 + offset * 0.1)
-                        ),
-                        xycoords='data',
-                        textcoords='data',
-                        arrowprops=dict(
-                            arrowstyle="-",
-                            ec='#000000',
-                        ),
-                    )
-                    ax.text(
-                        x=np.mean([index_a, index_b]),
-                        y=y_max * (1.07 + offset * 0.1),
-                        s=stars(pval),
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                    )
-
-                    offset += 1
+                # if pval < 0.05:
+                #     ax.set_ylim(
+                #         ymin=ax.get_ylim()[0],
+                #         ymax=max([
+                #             ax.get_ylim()[1],
+                #             y_max * (1 + offset * 0.1 + 0.15),
+                #         ]),
+                #     )
+                #     ax.annotate(
+                #         "",
+                #         xy=(
+                #             index_a,
+                #             y_max * (1.05 + offset * 0.1)
+                #         ),
+                #         xytext=(
+                #             index_b,
+                #             y_max * (1.05 + offset * 0.1)
+                #         ),
+                #         xycoords='data',
+                #         textcoords='data',
+                #         arrowprops=dict(
+                #             arrowstyle="-",
+                #             ec='#000000',
+                #         ),
+                #     )
+                #     ax.text(
+                #         x=np.mean([index_a, index_b]),
+                #         y=y_max * (1.07 + offset * 0.1),
+                #         s=stars(pval),
+                #         horizontalalignment='center',
+                #         verticalalignment='center',
+                #     )
+                #
+                #     offset += 1
 
         fig.savefig(
             os.path.join(
