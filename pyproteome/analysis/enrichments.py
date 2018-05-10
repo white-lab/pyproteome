@@ -189,7 +189,7 @@ def simulate_es_s_pi(
                 "Calculated {}/{} pvals".format(ind, p_iter)
             )
 
-    LOGGER.info("Calculating ES(S, pi)")
+    LOGGER.info("Calculating ES(S, pi) using {} cpus".format(n_cpus))
 
     vals["ES(S, pi)"] = vals.index.map(
         lambda row: ess_dist[row],
@@ -374,8 +374,8 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
 
     if metric in ["spearman", "pearson", "kendall"]:
         LOGGER.info(
-            "Calculating correlations (samples: {})"
-            .format(list(phenotype.index))
+            "Calculating correlations using metric '{}' (samples: {})"
+            .format(metric, list(phenotype.index))
         )
         ds.psms["Correlation"] = ds.psms.apply(
             lambda row:
@@ -554,7 +554,7 @@ def filter_gene_sets(gene_sets, ds, min_hits=10):
     ]
 
     LOGGER.info(
-        "Filtered {} gene sets down to {} with {} or more genes present"
+        "Filtered {} gene sets down to {} with ≥ {} genes present"
         .format(total_sets.shape[0], gene_sets.shape[0], min_hits)
     )
 
