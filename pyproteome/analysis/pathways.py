@@ -24,6 +24,33 @@ from . import enrichments
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
+
+MSIGDB_URL = (
+    "https://raw.githubusercontent.com/white-lab/pyproteome-data"
+    "/master/msigdb/"
+)
+MSIGDB_FILES = (
+    "h.all.v6.1.entrez.gmt",
+    "c1.all.v6.1.entrez.gmt",
+    "c2.all.v6.1.entrez.gmt",
+    "c2.cgp.v6.1.entrez.gmt",
+    # "c2.cp.biocarta.v6.1.entrez.gmt",
+    # "c2.cp.kegg.v6.1.entrez.gmt",
+    # "c2.cp.reactome.v6.1.entrez.gmt",
+    # "c2.cp.v6.1.entrez.gmt",
+    # "c3.all.v6.1.entrez.gmt",
+    # "c3.mir.v6.1.entrez.gmt",
+    # "c3.tft.v6.1.entrez.gmt",
+    # "c4.all.v6.1.entrez.gmt",
+    # "c4.cgn.v6.1.entrez.gmt",
+    # "c4.cm.v6.1.entrez.gmt",
+    # "c5.all.v6.1.entrez.gmt",
+    # "c5.bp.v6.1.entrez.gmt",
+    # "c5.cc.v6.1.entrez.gmt",
+    # "c5.mf.v6.1.entrez.gmt",
+    # "c6.all.v6.1.entrez.gmt",
+    # "c7.all.v6.1.entrez.gmt",
+)
 WIKIPATHWAYS_URL = (
     "http://data.wikipathways.org/20180210/gmt/"
     "wikipathways-20180210-gmt-{}.gmt"
@@ -71,6 +98,52 @@ INV_ORGANISM_MAPPING = {
     val: key
     for key, val in ORGANISM_MAPPING.items()
 }
+
+
+@pyp.utils.memoize
+def get_msigdb_pathways(species):
+    """
+    Download gene sets from MSigDB. Currently downloads v6.1 of the gene
+    signature repositories.
+
+    Parameters
+    ----------
+    species : str
+
+    Returns
+    -------
+    :class:`pandas.DataFrame`, optional
+    """
+    LOGGER.info("Fetching MSigDB pathways")
+
+    def _get_requests():
+        for file in MSIGDB_FILES:
+            url = MSIGDB_URL + file
+
+            LOGGER.info("Fetching {}".format(url))
+
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+
+            yield response
+
+    def _get_data(line):
+        line = line.decode("utf-8")
+        name, _, genes = line.split("\t", 2)
+        # name, _, _, spec = name.split("%")
+        # assert species == spec
+        return name, set(i for i in genes.split("\t"))
+
+    pathways_df = pd.DataFrame(
+        data=[
+            _get_data(line)
+            for response in _get_requests()
+            for line in response.iter_lines()
+        ],
+        columns=["name", "set"],
+    )
+
+    return pathways_df
 
 
 @pyp.utils.memoize
@@ -181,6 +254,8 @@ def get_wikipathways(species):
     :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Fetching WikiPathways")
+
+    species = INV_ORGANISM_MAPPING.get(species, species)
 
     url = WIKIPATHWAYS_URL.format("_".join(species.split(" ")))
     response = requests.get(url, stream=True)
@@ -539,8 +614,9 @@ def get_pathways(species, p_sites=False, remap=False):
     else:
         pathways_df = get_wikipathways(species)
 
-        # if species in ["Homo sapiens"]:
-        #     pathways_df = pathways_df.append(get_pathway_common(species))
+        if species in ["Homo sapiens"]:
+            # pathways_df = pathways_df.append(get_pathway_common(species))
+            pathways_df = pathways_df.append(get_msigdb_pathways(species))
 
         # if species in ["Mus musculus"]:
         #     pathways_df = pathways_df.append(get_gskb_pathways(species))
