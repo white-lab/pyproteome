@@ -74,6 +74,7 @@ def plot(
 
         names = pd.Series(channel_names, index=values.index)[mask]
         values = values[mask]
+        values = values / values[0]
 
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -123,13 +124,13 @@ def plot(
             fontsize=28,
         )
 
-        if data.cmp_groups:
-            ylabel = "Relative Intensity"
-        else:
-            ylabel = (
-                "Cummulative Intensity" +
-                (" (Normalized)" if data.intra_normalized else "")
-            )
+        ylabel = "Intensity"
+        # if data.cmp_groups:
+        # else:
+        #     ylabel = (
+        #         "Cummulative Intensity" +
+        #         (" (Normalized)" if data.intra_normalized else "")
+        #     )
 
         ax.set_ylabel(
             ylabel,
