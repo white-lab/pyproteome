@@ -298,11 +298,12 @@ def plot_volcano(
     )
 
     if show_xlabel:
+        max_len = 25
         ax.set_xlabel(
-            "Fold Change {} (n={}) / {} (n={})".format(
-                label_a[:50] + ("..." if len(label_a) > 50 else ""),
+            "{} (n={}) / {} (n={})".format(
+                label_a[:max_len] + ("..." if len(label_a) > max_len else ""),
                 len(channels_a),
-                label_b[:50] + ("..." if len(label_b) > 50 else ""),
+                label_b[:max_len] + ("..." if len(label_b) > max_len else ""),
                 len(channels_b),
             ),
             fontsize=20,
