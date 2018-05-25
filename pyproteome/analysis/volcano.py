@@ -182,7 +182,7 @@ def plot_volcano(
             row_label = " / ".join(
                 sorted(
                     "{} {}".format(
-                        gene,
+                        rename.get(gene, gene),
                         row["Modifications"].__str__(prot_index=index),
                     )
                     for index, gene in enumerate(row["Proteins"].genes)
