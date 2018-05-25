@@ -226,6 +226,7 @@ class DataSet:
         new.psms = new.psms.copy()
         new.channels = new.channels.copy()
         new.groups = new.groups.copy()
+        new.species = new.species.copy()
 
         return new
 
