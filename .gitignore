@@ -132,3 +132,4 @@ lib64
 Figures/
 tests_output/
 for_redistribution_files_only/
+*.dat-pride.xml.gz
