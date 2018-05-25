@@ -1,7 +1,5 @@
 
 import os
-from pip.req import parse_requirements
-from pip.download import PipSession
 from setuptools import setup, find_packages
 
 from pyproteome import version
@@ -24,8 +22,24 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["*.tests", "tests"]),
     install_requires=[
-        str(i.req)
-        for i in parse_requirements(REQUIREMENTS_PATH, session=PipSession())
+        "adjustText>=0.6.1",
+        "fastcluster>=1.1.23",
+        "genemap",
+        "ipython>=5.4.1",
+        "matplotlib>=2.2.0",
+        "numpy>=1.13.0",
+        "numpydoc>=0.7",
+        "pandas>=0.22.0",
+        "scikit-learn>=0.19.1",
+        "scipy>=1.0.0",
+        "seaborn>=0.8.1",
+        "uniprot==1.3",
+        "xlrd>=1.1.0",
+        "xlwt>=1.3.0",
+        "xlsxwriter>=1.0.2",
+    ],
+    dependency_links=[
+        "git+https://github.com/jrderuiter/genemap.git#egg=genemap",
     ],
     classifiers=[
         "License :: OSI Approved :: BSD License",

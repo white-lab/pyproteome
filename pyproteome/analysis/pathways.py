@@ -16,6 +16,7 @@ import re
 import requests
 
 import pandas as pd
+from genemap.mappers import EnsemblMapper
 
 
 import pyproteome as pyp
@@ -32,8 +33,8 @@ MSIGDB_URL = (
 MSIGDB_FILES = (
     "h.all.v6.1.entrez.gmt",
     "c1.all.v6.1.entrez.gmt",
-    "c2.all.v6.1.entrez.gmt",
-    "c2.cgp.v6.1.entrez.gmt",
+    # "c2.all.v6.1.entrez.gmt",
+    # "c2.cgp.v6.1.entrez.gmt",
     # "c2.cp.biocarta.v6.1.entrez.gmt",
     # "c2.cp.kegg.v6.1.entrez.gmt",
     # "c2.cp.reactome.v6.1.entrez.gmt",
@@ -101,7 +102,7 @@ INV_ORGANISM_MAPPING = {
 
 
 @pyp.utils.memoize
-def get_msigdb_pathways(species):
+def get_msigdb_pathways(species, remap=None):
     """
     Download gene sets from MSigDB. Currently downloads v6.1 of the gene
     signature repositories.
@@ -142,6 +143,24 @@ def get_msigdb_pathways(species):
         ],
         columns=["name", "set"],
     )
+
+    if remap and species not in ["Homo sapiens"]:
+        to_name = "{}{}".format(
+            species.split(" ")[0][0],
+            species.split(" ")[1],
+        ).lower()
+
+        LOGGER.info("Remapping MSigDB to {} ({})".format(species, to_name))
+
+        mapper = EnsemblMapper(
+            from_type='entrez',
+            to_type='entrez',
+            from_organism='hsapiens',
+            to_organism=to_name,
+        )
+        pathways_df["set"] = pathways_df["set"].apply(
+            lambda row: set(mapper.map_ids(row))
+        )
 
     return pathways_df
 
@@ -614,9 +633,11 @@ def get_pathways(species, p_sites=False, remap=False):
     else:
         pathways_df = get_wikipathways(species)
 
-        if species in ["Homo sapiens"]:
+        if species in ["Homo sapiens"] or remap:
             # pathways_df = pathways_df.append(get_pathway_common(species))
-            pathways_df = pathways_df.append(get_msigdb_pathways(species))
+            pathways_df = pathways_df.append(
+                get_msigdb_pathways(species, remap=remap)
+            )
 
         # if species in ["Mus musculus"]:
         #     pathways_df = pathways_df.append(get_gskb_pathways(species))
