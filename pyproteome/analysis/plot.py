@@ -292,25 +292,6 @@ def plot_group(
             for i in vals
         ]
 
-        ax.set_ylabel(
-            "{} Signal".format(
-                "Relative" if cmp_groups else "Cumulative",
-            ),
-            fontsize=20,
-        )
-
-        ax.set_yticklabels(
-            ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
-            fontsize=20,
-        )
-
-        ax.set_xticklabels(
-            labels,
-            fontsize=20,
-            rotation=45,
-            horizontalalignment="right",
-        )
-
         mod_str = row["Modifications"].__str__(prot_index=0)
 
         ax.set_title(
@@ -340,7 +321,7 @@ def plot_group(
         #     ])
         #     return f, ax
 
-        y_max = max(means) + max(errs)
+        y_max = y.max()
 
         def stars(p):
             if p < 0.0001:
@@ -361,7 +342,7 @@ def plot_group(
         ]
 
         for grp_set in cmp_groups:
-            offset = 0
+            offset = y_max / 10
 
             for label_a, label_b in itertools.combinations(grp_set, 2):
                 if label_a not in labels or label_b not in labels:
@@ -381,40 +362,59 @@ def plot_group(
                     values_b.as_matrix(),
                 ).pvalue
 
-                # if pval < 0.05:
-                #     ax.set_ylim(
-                #         ymin=ax.get_ylim()[0],
-                #         ymax=max([
-                #             ax.get_ylim()[1],
-                #             y_max * (1 + offset * 0.1 + 0.15),
-                #         ]),
-                #     )
-                #     ax.annotate(
-                #         "",
-                #         xy=(
-                #             index_a,
-                #             y_max * (1.05 + offset * 0.1)
-                #         ),
-                #         xytext=(
-                #             index_b,
-                #             y_max * (1.05 + offset * 0.1)
-                #         ),
-                #         xycoords='data',
-                #         textcoords='data',
-                #         arrowprops=dict(
-                #             arrowstyle="-",
-                #             ec='#000000',
-                #         ),
-                #     )
-                #     ax.text(
-                #         x=np.mean([index_a, index_b]),
-                #         y=y_max * (1.07 + offset * 0.1),
-                #         s=stars(pval),
-                #         horizontalalignment='center',
-                #         verticalalignment='center',
-                #     )
-                #
-                #     offset += 1
+                if pval < 0.05:
+                    ax.annotate(
+                        "",
+                        xy=(
+                            index_a,
+                            y_max + offset,
+                        ),
+                        xytext=(
+                            index_b,
+                            y_max + offset,
+                        ),
+                        xycoords='data',
+                        textcoords='data',
+                        arrowprops=dict(
+                            arrowstyle="-",
+                            ec='#000000',
+                        ),
+                    )
+                    ax.text(
+                        x=np.mean([index_a, index_b]),
+                        y=y_max + offset + y_max / 40,
+                        s=stars(pval),
+                        horizontalalignment='center',
+                        verticalalignment='center',
+                    )
+                    offset += y_max / 10
+
+            ax.set_ylim(
+                ymin=ax.get_ylim()[0],
+                ymax=max([
+                    ax.get_ylim()[1],
+                    y_max + offset,
+                ]),
+            )
+
+        ax.set_ylabel(
+            "{} Signal".format(
+                "Relative" if cmp_groups else "Cumulative",
+            ),
+            fontsize=20,
+        )
+
+        ax.set_yticklabels(
+            ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
+            fontsize=20,
+        )
+
+        ax.set_xticklabels(
+            labels,
+            fontsize=20,
+            rotation=45,
+            horizontalalignment="right",
+        )
 
         fig.savefig(
             os.path.join(
