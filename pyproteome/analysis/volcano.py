@@ -352,11 +352,11 @@ def plot_volcano(
 
     if adjust:
         adjust_text(
-            x=[i[0] for i in labels],
-            y=[i[1] for i in labels],
+            x=[i._x for i in texts],
+            y=[i._y for i in texts],
             texts=texts,
             ax=ax,
-            lim=500,
+            lim=100,
             force_text=0.5,
             force_points=0.01,
             arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
