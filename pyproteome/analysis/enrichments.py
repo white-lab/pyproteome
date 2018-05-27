@@ -679,7 +679,10 @@ def plot_nes(
     """
     LOGGER.info("Plotting ranked NES(S) values")
 
-    f, ax = plt.subplots(figsize=(12, 8))
+    if figsize is None:
+        figsize = (12, 8)
+
+    f, ax = plt.subplots(figsize=figsize)
     v = vals.copy()
     v = v.sort_values("NES(S)")
     mask = (
@@ -721,28 +724,25 @@ def plot_nes(
     )
 
     texts = []
-    labels = []
 
-    for m, x, (_, row) in zip(mask, ind, v.iterrows()):
-        y = row["NES(S)"]
-        labels.append(
-            (x, y)
-        )
+    for x, (_, row) in zip(ind[mask], v[mask].iterrows()):
         texts.append(
             ax.text(
                 x=x,
-                y=y,
-                s=row["name"] if m else "",
+                y=row["NES(S)"],
+                s=row["name"],
                 horizontalalignment='right',
             )
         )
 
+    LOGGER.info("Adjusting positions for {} labels".format(len(texts)))
+
     adjust_text(
-        x=[i[0] for i in labels],
-        y=[i[1] for i in labels],
+        x=[i._x for i in texts],
+        y=[i._y for i in texts],
         texts=texts,
         ax=ax,
-        lim=500,
+        lim=100,
         force_text=0.5,
         force_points=0.1,
         arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),

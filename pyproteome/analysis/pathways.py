@@ -16,7 +16,11 @@ import re
 import requests
 
 import pandas as pd
-from genemap.mappers import EnsemblMapper
+
+try:
+    from genemap.mappers import EnsemblMapper
+except ImportError:
+    pass
 
 
 import pyproteome as pyp
