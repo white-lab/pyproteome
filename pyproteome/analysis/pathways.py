@@ -36,14 +36,14 @@ MSIGDB_URL = (
 )
 MSIGDB_FILES = (
     "h.all.v6.1.entrez.gmt",
-    "c1.all.v6.1.entrez.gmt",
+    # "c1.all.v6.1.entrez.gmt",
     # "c2.all.v6.1.entrez.gmt",
     # "c2.cgp.v6.1.entrez.gmt",
     # "c2.cp.biocarta.v6.1.entrez.gmt",
     # "c2.cp.kegg.v6.1.entrez.gmt",
     # "c2.cp.reactome.v6.1.entrez.gmt",
     # "c2.cp.v6.1.entrez.gmt",
-    # "c3.all.v6.1.entrez.gmt",
+    "c3.all.v6.1.entrez.gmt",
     # "c3.mir.v6.1.entrez.gmt",
     # "c3.tft.v6.1.entrez.gmt",
     # "c4.all.v6.1.entrez.gmt",
@@ -883,11 +883,6 @@ def gsea(
         **es_args
     )
 
-    figs = enrichments.plot_gsea(
-        vals, gene_changes,
-        **kwargs
-    )
-
     if name is None:
         name = "{}-{}".format(
             ds.name,
@@ -899,6 +894,11 @@ def gsea(
             folder_name,
             name + ".csv",
         ),
+    )
+
+    figs = enrichments.plot_gsea(
+        vals, gene_changes,
+        **kwargs
     )
 
     for index, fig in enumerate(figs):
