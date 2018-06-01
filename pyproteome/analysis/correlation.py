@@ -51,10 +51,17 @@ def correlate_data_sets(
         on="Sequence",
     ).dropna(subset=("Fold Change_x", "Fold Change_y"))
 
-    f, ax = plt.subplots()
-    ax.scatter(
-        np.log2(merged["Fold Change_x"]),
-        np.log2(merged["Fold Change_y"]),
+    f, ax = plt.subplots(
+        figsize=(4, 3),
+    )
+
+    sns.regplot(
+        x=np.log2(merged["Fold Change_x"]),
+        y=np.log2(merged["Fold Change_y"]),
+        ax=ax,
+        scatter_kws={
+            "alpha": .5,
+        }
     )
 
     label_cutoff = np.log2(label_cutoff)
@@ -107,19 +114,19 @@ def correlate_data_sets(
 
     min_x = min(np.log2(merged["Fold Change_x"]))
     max_x = max(np.log2(merged["Fold Change_x"]))
-    ax.plot([min_x, max_x], [min_x, max_x], "--")
-    ax.plot(
-        [min_x, max_x],
-        [min_x + label_cutoff, max_x + label_cutoff],
-        color="lightgreen",
-        linestyle=":",
-    )
-    ax.plot(
-        [min_x, max_x],
-        [min_x - label_cutoff, max_x - label_cutoff],
-        color="pink",
-        linestyle=":",
-    )
+    ax.plot([min_x, max_x], [min_x, max_x], "--", color="k")
+    # ax.plot(
+    #     [min_x, max_x],
+    #     [min_x + label_cutoff, max_x + label_cutoff],
+    #     color="lightgreen",
+    #     linestyle=":",
+    # )
+    # ax.plot(
+    #     [min_x, max_x],
+    #     [min_x - label_cutoff, max_x - label_cutoff],
+    #     color="pink",
+    #     linestyle=":",
+    # )
 
     name1 = data1.name
     name2 = data2.name
@@ -147,9 +154,9 @@ def correlate_data_sets(
 
     ax.set_title(
         (
-            r"Pearson's: $\rho$={:.2f}, "
-            r"Spearman's: $\rho$={:.2f}"
-        ).format(pear_corr, spear_corr)
+            r"Pearson's: $\rho$={:.2f}"
+            # r"Spearman's: $\rho$={:.2f}"
+        ).format(pear_corr)
     )
 
     if filename:
