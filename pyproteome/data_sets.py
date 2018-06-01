@@ -666,6 +666,7 @@ class DataSet:
 
         Parameters
         ----------
+        columns : list of str, optional
         how : str, optional
         groups : list of str, optional
             Only drop rows with NaN in columns within groups.
@@ -1158,7 +1159,7 @@ class DataSet:
                 [chan for chan_group in channels for chan in chan_group]
             ]
 
-            norm_vals = vals[channels[0]].mean(axis=1)
+            norm_vals = vals[channels[0]].median(axis=1)
 
             vals = vals.apply(lambda col: col / norm_vals)
 
