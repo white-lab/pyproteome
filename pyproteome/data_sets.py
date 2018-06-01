@@ -19,7 +19,7 @@ from functools import partial
 import pandas as pd
 import numpy as np
 import numpy.ma as ma
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, pearsonr, spearmanr
 
 from . import levels, loading, modification, paths, protein, sequence, utils
 from .motifs import motif as pymotif
@@ -653,7 +653,14 @@ class DataSet:
 
         return found_all
 
-    def dropna(self, how=None, thresh=None, groups=None, inplace=False):
+    def dropna(
+        self,
+        columns=None,
+        how=None,
+        thresh=None,
+        groups=None,
+        inplace=False,
+    ):
         """
         Drop any channels with NaN values.
 
@@ -673,7 +680,8 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        columns = list(new.channels.values())
+        if columns is None:
+            columns = list(new.channels.values())
 
         if how is None and thresh is None:
             how = "any"
@@ -1260,10 +1268,21 @@ class DataSet:
 def load_all_data(
     chan_mapping=None,
     group_mapping=None,
+    loaded_fn=None,
     norm_mapping=None,
     merge_mapping=None,
+    merged_fn=None,
     **kwargs
 ):
+    """
+    Parameters
+    ----------
+    chan_mapping : dict, optional
+    group_mapping : dict, optional
+    loaded_fn : func, optional
+    norm_mapping : dict, optional
+    merge_mapping : dict, optional
+    """
     chan_mapping = chan_mapping or {}
     group_mapping = group_mapping or {}
     norm_mapping = norm_mapping or {}
@@ -1298,8 +1317,15 @@ def load_all_data(
             **kws
         )
 
+    if loaded_fn:
+        datas = loaded_fn(datas)
+
     datas, mapped_names = norm_all_data(datas, norm_mapping)
-    datas = merge_all_data(datas, merge_mapping, mapped_names=mapped_names)
+    datas = merge_all_data(
+        datas, merge_mapping,
+        mapped_names=mapped_names,
+        merged_fn=merged_fn,
+    )
 
     return datas
 
@@ -1328,7 +1354,7 @@ def norm_all_data(datas, norm_mapping):
     return datas_new, mapped_names
 
 
-def merge_all_data(datas, merge_mapping, mapped_names=None):
+def merge_all_data(datas, merge_mapping, mapped_names=None, merged_fn=None):
     datas = datas.copy()
 
     if mapped_names is None:
@@ -1354,6 +1380,9 @@ def merge_all_data(datas, merge_mapping, mapped_names=None):
             ],
             name=key,
         )
+
+        if merged_fn:
+            datas[key] = merged_fn(key, datas[key])
 
     return datas
 
@@ -1557,3 +1586,45 @@ def _nan_sum(lst):
         return np.nan
     else:
         return np.nansum(lst)
+
+def update_correlation(ds, corr, metric="spearman"):
+    """
+    Update a table's Fold-Change, and p-value columns.
+
+    Values are calculated based on changes between group_a and group_b.
+
+    Parameters
+    ----------
+    """
+    ds = ds.copy()
+
+    metric = {
+        "spearman": spearmanr,
+        "pearson": pearsonr,
+    }[metric]
+
+    def _map_corr(row):
+        try:
+            c = metric(
+                pd.to_numeric(row[list(corr.index)]),
+                pd.to_numeric(corr),
+                nan_policy="omit",
+            )
+        except ValueError:
+            c = [np.nan, np.nan]
+
+        return pd.Series(
+            [c[0], c[1]],
+            index=["Fold Change", "p-value"],
+        )
+
+    vals = ds.psms.apply(
+        lambda row:
+        _map_corr(row),
+        axis=1,
+    )
+
+    for col in vals.columns:
+        ds.psms[col] = vals[col]
+
+    return ds
