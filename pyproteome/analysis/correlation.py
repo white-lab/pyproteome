@@ -28,6 +28,7 @@ def correlate_data_sets(
     filename=None,
     adjust=True,
     label_cutoff=1.5,
+    show_labels=True,
 ):
     """
     Plot the correlation between peptides levels in two different data sets.
@@ -57,50 +58,52 @@ def correlate_data_sets(
     )
 
     label_cutoff = np.log2(label_cutoff)
-    texts, x_s, y_s = [], [], []
 
-    for index, row in merged.iterrows():
-        x = row["Fold Change_x"]
-        y = row["Fold Change_y"]
-        ratio = np.log2(x / y)
-        x, y = np.log2(x), np.log2(y)
+    if show_labels:
+        texts, x_s, y_s = [], [], []
 
-        if ratio < label_cutoff and ratio > - label_cutoff:
-            continue
+        for index, row in merged.iterrows():
+            x = row["Fold Change_x"]
+            y = row["Fold Change_y"]
+            ratio = np.log2(x / y)
+            x, y = np.log2(x), np.log2(y)
 
-        x_s.append(x)
-        y_s.append(y)
+            if ratio < label_cutoff and ratio > - label_cutoff:
+                continue
 
-        txt = " / ".join(row["Proteins_x"].genes)
-        txt = txt[:20] + ("..." if len(txt) > 20 else "")
+            x_s.append(x)
+            y_s.append(y)
 
-        text = ax.text(
-            x, y, txt,
-        )
+            txt = " / ".join(row["Proteins_x"].genes)
+            txt = txt[:20] + ("..." if len(txt) > 20 else "")
 
-        text.set_bbox(
-            dict(
-                color="lightgreen" if ratio < 0 else "pink",
-                alpha=0.8,
+            text = ax.text(
+                x, y, txt,
             )
-        )
-        texts.append(text)
 
-    if adjust:
-        adjust_text(
-            x=x_s,
-            y=y_s,
-            texts=texts,
-            ax=ax,
-            lim=400,
-            force_text=0.1,
-            force_points=0.1,
-            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-            only_move={
-                "points": "y",
-                "text": "xy",
-            }
-        )
+            text.set_bbox(
+                dict(
+                    color="lightgreen" if ratio < 0 else "pink",
+                    alpha=0.8,
+                )
+            )
+            texts.append(text)
+
+        if adjust:
+            adjust_text(
+                x=x_s,
+                y=y_s,
+                texts=texts,
+                ax=ax,
+                lim=400,
+                force_text=0.1,
+                force_points=0.1,
+                arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+                only_move={
+                    "points": "y",
+                    "text": "xy",
+                }
+            )
 
     min_x = min(np.log2(merged["Fold Change_x"]))
     max_x = max(np.log2(merged["Fold Change_x"]))
@@ -121,8 +124,17 @@ def correlate_data_sets(
     name1 = data1.name
     name2 = data2.name
 
-    ax.set_xlabel("$log_2$ Fold Change -- {}".format(name1))
-    ax.set_ylabel("$log_2$ Fold Change -- {}".format(name2))
+    ax.set_xlabel("Fold Change -- {}".format(name1))
+    ax.set_ylabel("Fold Change -- {}".format(name2))
+
+    ax.set_xticklabels(
+        ["{:.2f}".format(i) for i in np.power(2, ax.get_xticks())],
+        # fontsize=20,
+    )
+    ax.set_yticklabels(
+        ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
+        # fontsize=20,
+    )
 
     pear_corr = merged["Fold Change_x"].corr(
         merged["Fold Change_y"],
@@ -145,6 +157,7 @@ def correlate_data_sets(
             os.path.join(folder_name, filename),
             transparent=True,
             dpi=pyp.DEFAULT_DPI,
+            bbox_inches="tight",
         )
 
 
