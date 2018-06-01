@@ -394,7 +394,9 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
             "Calculating ranks (groups: {}, {})".format(ds.group_a, ds.group_b)
         )
         new = ds.psms["Fold Change"]
-        new = new.apply(np.log2)
+
+        if metric in ["log2", "zscore"]:
+            new = new.apply(np.log2)
 
         if metric in ["zscore"]:
             new = (new - new.mean()) / new.std()
@@ -736,7 +738,12 @@ def plot_nes(
                 x=x,
                 y=row["NES(S)"],
                 s=row["name"],
-                horizontalalignment='right',
+                backgroundcolor="white",
+                bbox=dict(
+                    facecolor='white',
+                    alpha=0.9,
+                    edgecolor='red',
+                )
             )
         )
 
