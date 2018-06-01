@@ -73,6 +73,7 @@ def plot_volcano(
     full_site_labels=False,
     sequence_labels=False,
     alpha=1,
+    log2_fold=True,
     bonferoni=False,
 ):
     """
@@ -133,7 +134,11 @@ def plot_volcano(
     if not filename:
         filename = re.sub("[ ></?]", "_", title) + ".png"
 
-    upper_fold = np.log2(fold)
+    upper_fold = fold
+
+    if log2_fold:
+        upper_fold = np.log2(upper_fold)
+
     lower_fold = -upper_fold
 
     rows = [
@@ -142,10 +147,12 @@ def plot_volcano(
             subset=["p-value", "Fold Change"],
         ).iterrows()
         if not (
+            np.isnan(row["p-value"]) or
+            row["p-value"] <= 0 or
             np.isnan(-np.log10(row["p-value"])) or
-            np.isnan(np.log2(row["Fold Change"])) or
+            (log2_fold and np.isnan(np.log2(row["Fold Change"]))) or
             np.isinf(-np.log10(row["p-value"])) or
-            np.isinf(np.log2(row["Fold Change"]))
+            (log2_fold and np.isinf(np.log2(row["Fold Change"])))
         )
     ]
 
@@ -162,15 +169,22 @@ def plot_volcano(
     for row in rows:
         color = "grey"
         row_pval = -np.log10(row["p-value"])
-        row_change = np.log2(row["Fold Change"])
+        row_change = row["Fold Change"]
+
+        if log2_fold:
+            row_change = np.log2(row_change)
 
         if xminmax and (row_change < xminmax[0] or row_change > xminmax[1]):
+            continue
+
+        if yminmax and (row_pval < yminmax[0] or row_pval > yminmax[1]):
             continue
 
         if sequence_labels:
             row_label = row["Sequence"].__str__()
         else:
             row_label = " / ".join(sorted(row["Proteins"].genes))
+
         old_row_label, old_re_row_label = None, None
 
         if (
@@ -282,13 +296,24 @@ def plot_volcano(
             )
         )
     )
-    ax.set_xticklabels(
-        [
-            "{:.3}".format(i)
-            for i in np.exp2(ax.get_xticks())
-        ],
-        fontsize=20,
-    )
+
+    if log2_fold:
+        ax.set_xticklabels(
+            [
+                "{:.3}".format(i)
+                for i in np.exp2(ax.get_xticks())
+            ],
+            fontsize=20,
+        )
+    else:
+        ax.set_xticklabels(
+            [
+                "{:3}".format(i)
+                for i in ax.get_xticks()
+            ],
+            fontsize=20,
+        )
+
     ax.set_yticklabels(
         [
             ("{:.3}" if i > 0.005 else "{:.0e}").format(i)
@@ -327,7 +352,7 @@ def plot_volcano(
 
     # Position the labels
     texts = []
-    txt_lim = 100 if full_site_labels else 20
+    txt_lim = 100 if full_site_labels else 7
 
     for y, x, txt, edgecolor, highlight_label in labels:
         text = ax.text(
