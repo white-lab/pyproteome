@@ -15,6 +15,7 @@ import os
 import re
 import requests
 
+import numpy as np
 import pandas as pd
 
 try:
@@ -311,7 +312,7 @@ def get_phosphomap_data():
     r = requests.get(url, stream=True)
     r.raise_for_status()
 
-    gz = gzip.GzipFile(fileobj=io.BytesIO(r.raw.read()))
+    gz = gzip.GzipFile(fileobj=io.BytesIO(r.content))
 
     return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t")
 
@@ -637,7 +638,7 @@ def get_pathways(species, p_sites=False, remap=False):
     else:
         pathways_df = get_wikipathways(species)
 
-        if species in ["Homo sapiens"] or remap:
+        if species in ["Homo sapiens", "human"] or remap:
             # pathways_df = pathways_df.append(get_pathway_common(species))
             pathways_df = pathways_df.append(
                 get_msigdb_pathways(species, remap=remap)
@@ -668,6 +669,18 @@ def _get_scores(ds, phenotype=None, metric="spearman"):
     LOGGER.info("building correlations using metric '{}'".format(metric))
 
     ds.psms = ds.psms[~ds.psms["ID"].isnull()]
+
+    agg = {
+        "Fold Change": np.nanmedian,
+    }
+    agg.update({
+        chan: np.nanmedian
+        for chan in ds.channels.values()
+    })
+    ds.psms = ds.psms.groupby(
+        by="ID",
+        as_index=False,
+    ).agg(agg)
 
     if phenotype is not None and metric in ["spearman", "pearson"]:
         phenotype = pd.to_numeric(phenotype)
