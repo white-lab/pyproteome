@@ -278,6 +278,7 @@ def correlate_signal(
     show_duplicates=False,
     scatter_colors=None,
     scatter_symbols=None,
+    show_scatter=True,
     figsize=(12, 10),
     xlabel="",
 ):
@@ -443,20 +444,23 @@ def correlate_signal(
             transparent=True,
         )
 
-    f_scatter = _scatter_plots(
-        cp, signal, data_chans, signal_chans, signal_groups,
-        scatter_cols=scatter_cols,
-        scatter_colors=scatter_colors,
-        scatter_symbols=scatter_symbols,
-    )
+    f_scatter = None
 
-    if f_scatter:
-        f_scatter.savefig(
-            os.path.join(folder_name, "Correlation Scatter.png"),
-            bbox_inches="tight",
-            # dpi=pyp.DEFAULT_DPI,
-            dpi=pyp.DEFAULT_DPI / 4,
-            transparent=True,
+    if show_scatter:
+        f_scatter = _scatter_plots(
+            cp, signal, data_chans, signal_chans, signal_groups,
+            scatter_cols=scatter_cols,
+            scatter_colors=scatter_colors,
+            scatter_symbols=scatter_symbols,
         )
+
+        if f_scatter:
+            f_scatter.savefig(
+                os.path.join(folder_name, "Correlation Scatter.png"),
+                bbox_inches="tight",
+                # dpi=pyp.DEFAULT_DPI,
+                dpi=pyp.DEFAULT_DPI / 6,
+                transparent=True,
+            )
 
     return f_corr, f_scatter
