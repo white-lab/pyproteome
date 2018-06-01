@@ -111,6 +111,8 @@ def plot(
         ax.set_xlabel("")
         ax.get_legend().set_title("")
 
+        ax.axhline(1, linestyle=":", color="k", alpha=.5)
+
         mod_str = row["Modifications"].__str__(prot_index=0)
 
         ax.set_title(
@@ -165,7 +167,7 @@ def plot_group(
     cmp_groups=None,
     title=None,
     folder_name=None,
-    figsize=(8, 4),
+    figsize=None,
 ):
     """
     Plot the levels of a sequence across each group.
@@ -183,6 +185,9 @@ def plot_group(
 
     if cmp_groups is None:
         cmp_groups = data.cmp_groups or [list(data.groups.keys())]
+
+    if figsize is None:
+        figsize = (12, 4)
 
     if f:
         data = data.filter(f)
@@ -256,10 +261,30 @@ def plot_group(
             for i in values
             for j in i.values
         ])
+        data = pd.DataFrame(
+            [
+                (
+                    np.log2(k),
+                    label,
+                    "#e19153" if label in set(j[0] for j in cmp_groups) else "#60ae47"
+                )
+                for i in values
+                for label, j in i.iteritems()
+                for k in j.values
+            ],
+            columns=("y", "label", "color"),
+        )
+        hue = np.array([
+            "#e19153" if i in set(j[0] for j in cmp_groups) else "#60ae47"
+            for i in labels
+        ])
         sns.boxplot(
-            x=x,
-            y=y,
+            x="label",
+            y="y",
+            hue="color",
+            data=data,
             ax=ax,
+            dodge=False,
             boxprops=dict(alpha=.3),
         )
         sns.swarmplot(
@@ -397,12 +422,14 @@ def plot_group(
                 ]),
             )
 
+        ax.set_xlabel("")
         ax.set_ylabel(
             "{} Signal".format(
                 "Relative" if cmp_groups else "Cumulative",
             ),
             fontsize=20,
         )
+        ax.get_legend().set_visible(False)
 
         ax.set_yticklabels(
             ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
