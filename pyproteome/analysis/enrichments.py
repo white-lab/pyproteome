@@ -29,6 +29,7 @@ CORRELATION_METRICS = [
     "pearson",
     "kendall",
     "fold",
+    "log2",
     "zscore",
 ]
 """
@@ -37,7 +38,9 @@ Correlation metrics used for enrichment analysis. "spearman", "pearson", and
 
 "fold" takes ranking values direction from the "Fold Change" column.
 
-"zscore" takes ranking values from a z-scored "Fold Change" column.
+"log2" takes ranking values from a log2 "Fold Change" column.
+
+"zscore" takes ranking values from a log2 z-scored "Fold Change" column.
 """
 DEFAULT_RANK_CPUS = 6
 DEFAULT_CORR_CPUS = 4
@@ -657,6 +660,7 @@ def plot_nes(
     min_abs_score=0,
     max_pval=.1,
     max_qval=1,
+    figsize=None,
 ):
     """
     Plot the ranked normalized enrichment score values.
@@ -671,6 +675,7 @@ def plot_nes(
     min_abs_score : float, optional
     max_pval : float, optional
     max_qval : float, optional
+    figsize : tuple of (int, int), optional
 
     Returns
     -------
@@ -742,8 +747,8 @@ def plot_nes(
         y=[i._y for i in texts],
         texts=texts,
         ax=ax,
-        lim=100,
-        force_text=0.5,
+        lim=50,
+        force_text=5,
         force_points=0.1,
         arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),
         only_move={
