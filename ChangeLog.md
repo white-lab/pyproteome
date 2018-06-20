@@ -2,6 +2,16 @@
 
 ## 0.7.0 (2018-\*-\*)
 
+Features
+
+  - Many improvements to GSEA / PSEA calculations. Added functionality for
+    remapping phosphosites between species.
+  - Renamed several functions / parameters for more consistent naming.
+  - Added QC module for validation of peptide quantification robustness.
+  - Re-wrote several plotting functions to use seaborn for pretty figures.
+  - Changed normalization calculations to fit to the mode, rather than the
+    median channel ratio.
+
 ## 0.6.1 (2018-03-22)
 
 Bug fixes
