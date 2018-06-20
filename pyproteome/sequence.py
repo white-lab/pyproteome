@@ -51,8 +51,10 @@ class Sequence:
     Attributes
     ----------
     pep_seq : str
-    protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
-    modifications : :class:`Modifications<pyproteome.modification.Modifications>`
+    protein_matches :
+    list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
+    modifications :
+    :class:`Modifications<pyproteome.modification.Modifications>`
     """
 
     def __init__(
@@ -65,8 +67,10 @@ class Sequence:
         Parameters
         ----------
         pep_seq : str
-        protein_matches : list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
-        modifications : :class:`Modifications<pyproteome.modification.Modifications>`, optional
+        protein_matches :
+        list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
+        modifications :
+        :class:`Modifications<pyproteome.modification.Modifications>`, optional
         """
         self.pep_seq = pep_seq
         self.protein_matches = protein_matches or ()
@@ -92,6 +96,12 @@ class Sequence:
         if not isinstance(other, Sequence):
             raise TypeError(other)
 
+        if self.pep_seq != other.pep_seq:
+            return False
+
+        if tuple(self.protein_matches) != tuple(other.protein_matches):
+            return False
+
         return self.to_tuple() == other.to_tuple()
 
     def __lt__(self, other):
@@ -104,8 +114,8 @@ class Sequence:
         if not isinstance(other, Sequence):
             raise TypeError(type(other))
 
-        self_mods = list(self.modifications.skip_labels_iter())
-        other_mods = list(other.modifications.skip_labels_iter())
+        self_mods = list(self.modifications.skip_labels())
+        other_mods = list(other.modifications.skip_labels())
 
         return (
             other.pep_seq.upper() in self.pep_seq.upper() and
@@ -131,7 +141,7 @@ class Sequence:
         string = self.pep_seq.upper()
 
         if self.modifications:
-            for mod in self.modifications.skip_labels_iter():
+            for mod in self.modifications.skip_labels():
                 string = (
                     string[:mod.rel_pos] +
                     string[mod.rel_pos].lower() +
