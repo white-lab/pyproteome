@@ -15,9 +15,6 @@ def _is_qc_equal(row_a, row_b):
     str_a = str(row_a["Sequence"])
     str_b = str(row_b["Sequence"])
 
-    if str_a == str_b:
-        return False
-
     if str_a not in str_b and str_b not in str_a:
         return False
 
@@ -83,16 +80,13 @@ def peptide_corr(ds):
         s_corr = data_a.corr(
             data_b,
             method="spearman",
-            min_periods=5,
+            min_periods=3,
         )
         p_corr = data_a.corr(
             data_b,
             method="pearson",
-            min_periods=5,
+            min_periods=3,
         )
-
-        if np.isnan(s_corr) or np.isnan(p_corr):
-            continue
 
         corrs.append(
             OrderedDict([
@@ -102,7 +96,7 @@ def peptide_corr(ds):
                 ("spearman", s_corr),
                 ("pearson", p_corr),
                 (
-                    "score",
+                    "ion score",
                     np.max([
                         row_a["Ion Score"],
                         row_b["Ion Score"],
@@ -116,7 +110,7 @@ def peptide_corr(ds):
                     ]),
                 ),
                 (
-                    "quant",
+                    "median quant signal",
                     np.log10(
                         np.mean([
                             np.nanmedian(weights_a),
@@ -125,30 +119,72 @@ def peptide_corr(ds):
                     ),
                 ),
                 (
-                    "mmc",
+                    "max missed cleavages",
                     np.random.random() / 5 + np.max([
                         row_a["Missed Cleavages"],
                         row_b["Missed Cleavages"],
                     ]),
                 ),
                 (
-                    "len",
+                    "length",
                     np.max([
                         len(row_a["Sequence"].pep_seq),
                         len(row_b["Sequence"].pep_seq),
                     ]),
                 ),
                 (
-                    "under",
-                    np.random.random() / 5 + int(
-                        row_a["Sequence"].is_underlabeled or
-                        row_b["Sequence"].is_underlabeled
-                    ),
+                    "# scans",
+                    np.min([
+                        1
+                        if isinstance(row_a["Scan"], int) else
+                        len(row_a["Scan"]),
+                        1
+                        if isinstance(row_b["Scan"], int) else
+                        len(row_b["Scan"]),
+                    ])
+                ),
+                (
+                    "# underlabeled",
+                    np.random.random() / 5 + sum([
+                        row_a["Sequence"].is_underlabeled,
+                        row_b["Sequence"].is_underlabeled,
+                    ]),
+                ),
+                (
+                    "last KR",
+                    np.max([
+                        row_a["Sequence"].pep_seq[:-5].count("R") +
+                        row_a["Sequence"].pep_seq[:-5].count("K"),
+                        row_b["Sequence"].pep_seq[:-5].count("R") +
+                        row_b["Sequence"].pep_seq[:-5].count("K"),
+                    ])
+                ),
+                (
+                    "KR bias",
+                    np.max([
+                        np.mean([
+                            ind
+                            for ind, val in enumerate(
+                                row_a["Sequence"].pep_seq
+                            )
+                            if val in "KR"
+                        ]) / len(row_a["Sequence"].pep_seq),
+                        np.mean([
+                            ind
+                            for ind, val in enumerate(
+                                row_b["Sequence"].pep_seq
+                            )
+                            if val in "KR"
+                        ]) / len(row_b["Sequence"].pep_seq),
+                    ])
                 ),
             ])
         )
 
-    df = pd.DataFrame(corrs).sort_values("pearson")
+    df = pd.DataFrame(corrs)
+
+    if df.shape[0] > 0:
+        df = df.sort_values("pearson")
 
     if df.shape[0] > 10:
         f, ax = plt.subplots()
@@ -164,13 +200,15 @@ def peptide_corr(ds):
         ax.set_title(ds.name)
 
         for y in [
-            "quant",
-            "score",
+            "median quant signal",
+            "ion score",
             "isolation",
-            "mmc",
-            "sites",
-            "len",
-            "under",
+            "max missed cleavages",
+            "length",
+            "# scans",
+            "# underlabeled",
+            "last KR",
+            "KR bias",
         ]:
             sns.jointplot(
                 x="pearson",
