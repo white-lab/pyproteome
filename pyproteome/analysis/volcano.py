@@ -189,7 +189,7 @@ def plot_volcano(
 
         if (
             full_site_labels and
-            len(list(row["Modifications"].skip_labels_iter())) > 0
+            len(list(row["Modifications"].skip_labels())) > 0
         ):
             old_row_label = row_label
             old_re_row_label = rename.get(old_row_label, old_row_label)
@@ -365,10 +365,13 @@ def plot_volcano(
 
         text.set_bbox(
             dict(
-                facecolor=_get_color(txt, x, y),
+                # facecolor=_get_color(txt, x, y),
                 alpha=1,
-                linewidth=0.5 if not edgecolor else 3,
-                edgecolor=edgecolor or "black",
+                linewidth=0.5,
+                facecolor=edgecolor or (
+                    "#DDDDDD" if edgecolors else _get_color(txt, x, y)
+                ),
+                # edgecolor="black",
                 boxstyle="round",
             )
         )
