@@ -918,7 +918,7 @@ def gsea(
         fig.savefig(
             os.path.join(folder_name, name + "-{}.png".format(index)),
             bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
+            dpi=pyp.DEFAULT_DPI / 3,
             transparent=True,
         )
 
