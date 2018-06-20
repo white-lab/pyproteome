@@ -35,7 +35,8 @@ class Modifications:
 
         Parameters
         ----------
-        mods : list of :class:`Modification<pyproteome.modification.Modification>`
+        mods :
+        list of :class:`Modification<pyproteome.modification.Modification>`
         """
         self.mods = mods or ()
 
@@ -54,19 +55,19 @@ class Modifications:
         new.mods = tuple(i.copy() for i in new.mods)
         return new
 
-    def skip_labels_iter(self):
+    def skip_labels(self):
         """
-        Return an iterable, skipping over any modifications for peptide labels.
+        Get modifications, skipping over any that are peptide labels.
 
         Returns
         -------
-        generator of :class:`Modification<pyproteome.modification.Modification>`
+        list of :class:`Modification<pyproteome.modification.Modification>`
         """
-        return (
+        return [
             mod
             for mod in self.mods
             if not any(label in mod.mod_type for label in LABEL_NAMES)
-        )
+        ]
 
     def get_mods(self, letter_mod_types):
         """
@@ -133,10 +134,7 @@ class Modifications:
         self_mods = sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple())
         o_mods = sorted(other.skip_labels_iter(), key=lambda x: x.to_tuple())
 
-        return len(self_mods) == len(o_mods) and all(
-            i == j
-            for i, j in zip(self_mods, o_mods)
-        )
+        return tuple(self_mods) == tuple(o_mods)
 
     def __repr__(self, absolute=True, skip_labels=True):
         return self.__str__(absolute=absolute, skip_labels=skip_labels)
@@ -146,7 +144,7 @@ class Modifications:
             return ""
 
         if skip_labels:
-            lst = list(self.skip_labels_iter())
+            lst = list(self.skip_labels())
         else:
             lst = list(iter(self))
 
