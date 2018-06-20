@@ -13,6 +13,7 @@ import copy
 import logging
 import os
 import warnings
+from itertools import chain
 from functools import partial
 
 # Core data analysis libraries
@@ -179,7 +180,7 @@ class DataSet:
 
         if filter_bad:
             LOGGER.info(
-                "{}: Filtering peptides using the following parameters: {}"
+                "{}: Filtering peptides using: {}"
                 .format(self.name, filter_bad)
             )
             self.filter(
@@ -371,6 +372,8 @@ class DataSet:
                 new.psms[channel] = (
                     new.psms[channel] / new.psms[weight]
                 )
+
+        new.psms = new.psms.reset_index(drop=True)
 
         return new
 
@@ -904,7 +907,7 @@ class DataSet:
 
             "mod": lambda val, psms:
             psms["Modifications"].apply(
-                lambda x: bool(list(x.get_mods(val).skip_labels_iter()))
+                lambda x: bool(list(x.get_mods(val).skip_labels()))
             ),
 
             "only_validated": lambda val, psms:
@@ -1458,7 +1461,9 @@ def merge_data(
             if key not in new.channels:
                 new.channels[key] = val
 
-        new.psms = pd.concat([new.psms, data.psms])
+        new.psms = _concat(
+            [new.psms, data.psms],
+        ).reset_index(drop=True)
 
         if merge_duplicates:
             new.merge_duplicates(inplace=True)
@@ -1588,6 +1593,7 @@ def _nan_sum(lst):
     else:
         return np.nansum(lst)
 
+
 def update_correlation(ds, corr, metric="spearman"):
     """
     Update a table's Fold-Change, and p-value columns.
@@ -1600,7 +1606,7 @@ def update_correlation(ds, corr, metric="spearman"):
     ds = ds.copy()
 
     metric = {
-        "spearman": spearmanr,
+        "spearman": partial(spearmanr, nan_policy="omit"),
         "pearson": pearsonr,
     }[metric]
 
@@ -1609,7 +1615,6 @@ def update_correlation(ds, corr, metric="spearman"):
             c = metric(
                 pd.to_numeric(row[list(corr.index)]),
                 pd.to_numeric(corr),
-                nan_policy="omit",
             )
         except ValueError:
             c = [np.nan, np.nan]
@@ -1629,3 +1634,32 @@ def update_correlation(ds, corr, metric="spearman"):
         ds.psms[col] = vals[col]
 
     return ds
+
+
+def _concat(dfs):
+    cols = []
+
+    for frame in dfs:
+        for col in frame.columns:
+            if col not in cols:
+                cols.append(col)
+
+    df_dict = dict.fromkeys(cols, [])
+
+    def _fast_flatten(input_list):
+        return list(chain.from_iterable(input_list))
+
+    for col in cols:
+        # Flatten and save to df_dict
+        df_dict[col] = list(
+            chain.from_iterable(
+                frame[col]
+                if col in frame.columns else
+                [np.nan] * frame.shape[0]
+                for frame in dfs
+            )
+        )
+
+    df = pd.DataFrame.from_dict(df_dict)[cols]
+
+    return df
