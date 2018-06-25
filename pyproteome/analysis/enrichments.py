@@ -257,18 +257,18 @@ def estimate_pq(vals):
     vals["neg NES(S, pi)"] = neg_pi_nes
 
     pos_mat = (
-        np.concatenate(pos_pi_nes.as_matrix())
+        np.concatenate(pos_pi_nes.values)
         if pos_pi_nes.shape[0] > 0 else
         np.array([])
     )
     neg_mat = (
-        np.concatenate(neg_pi_nes.as_matrix())
+        np.concatenate(neg_pi_nes.values)
         if neg_pi_nes.shape[0] > 0 else
         np.array([])
     )
 
     plot_nes_dist(
-        vals["NES(S)"].as_matrix(),
+        vals["NES(S)"].values,
         np.concatenate([pos_mat, neg_mat]),
     )
 
