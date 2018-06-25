@@ -115,7 +115,8 @@ def _shuffle(ser):
 
 def simulate_es_s_pi(
     vals,
-    ds, gene_sets,
+    psms,
+    gene_sets,
     phenotype=None,
     p=1,
     metric="spearman",
@@ -129,7 +130,7 @@ def simulate_es_s_pi(
     Parameters
     ----------
     vals : :class:`pandas.DataFrame`
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    psms : :class:`pandas.DataFrame`
     gene_sets : :class:`pandas.DataFrame`
     phenotype : :class:`pandas.Series`, optional
     p : float, optional
@@ -146,11 +147,12 @@ def simulate_es_s_pi(
     LOGGER.info(
         "Calculating ES(S, pi) for {} gene sets".format(len(gene_sets))
     )
+
     if n_cpus is None:
         n_cpus = DEFAULT_RANK_CPUS
 
-    if metric in ["spearman", "pearson", "kendall"]:
-        n_cpus = DEFAULT_CORR_CPUS
+        if metric in ["spearman", "pearson", "kendall"]:
+            n_cpus = DEFAULT_CORR_CPUS
 
     if n_cpus > 1:
         pool = multiprocessing.Pool(
@@ -159,18 +161,18 @@ def simulate_es_s_pi(
         gen = pool.imap_unordered(
             partial(
                 _calc_essdist,
-                ds=ds,
+                psms=psms.copy(),
                 gene_sets=gene_sets,
                 p=p,
                 metric=metric,
             ),
-            [phenotype for _ in range(p_iter)],
+            [phenotype.copy() for _ in range(p_iter)],
         )
     else:
         gen = (
             _calc_essdist(
                 phen=phenotype,
-                ds=ds,
+                psms=psms,
                 gene_sets=gene_sets,
                 p=p,
                 metric=metric,
@@ -187,7 +189,7 @@ def simulate_es_s_pi(
         for key, val in ess.items():
             ess_dist[key].append(val)
 
-        if ind % (p_iter // 10) == 0:
+        if ind % (p_iter // min([p_iter, 10])) == 0:
             LOGGER.info(
                 "Calculated {}/{} pvals".format(ind, p_iter)
             )
@@ -244,11 +246,11 @@ def estimate_pq(vals):
     pos_nes = (pos_ess / pos_mean)
     neg_nes = -(neg_ess / neg_mean)
 
-    assert (pos_nes.isnull() | neg_nes.isnull()).all()
-    assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
+    # assert (pos_nes.isnull() | neg_nes.isnull()).all()
+    # assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
 
     pos_pi_nes = pos_pi / pos_mean
-    neg_pi_nes = -neg_pi / neg_mean
+    neg_pi_nes = neg_pi.apply(lambda x: -x) / neg_mean
 
     vals["NES(S)"] = pos_nes.fillna(neg_nes)
     vals["pos NES(S, pi)"] = pos_pi_nes
@@ -300,6 +302,7 @@ def estimate_pq(vals):
         )
 
     LOGGER.info("Calculated p, q values")
+
     return vals
 
 
@@ -307,7 +310,7 @@ def _frac_true(x):
     return sum(x) / max([len(x), 1])
 
 
-def get_gene_changes(ds):
+def get_gene_changes(psms):
     """
     Extract the gene IDs and correlation values for each gene / phosphosite in
     a data set. Merge together duplicate IDs by calculating their mean
@@ -315,12 +318,11 @@ def get_gene_changes(ds):
 
     Parameters
     ----------
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    psms : :class:`pandas.DataFrame`
     """
     LOGGER.info("Getting gene correlations")
 
-    gene_changes = ds.psms[["ID", "Correlation"]]
-    gene_changes.is_copy = None
+    gene_changes = psms[["ID", "Correlation"]].copy()
 
     if gene_changes.shape[0] > 0:
         gene_changes = gene_changes.groupby(
@@ -336,18 +338,18 @@ def get_gene_changes(ds):
     return gene_changes
 
 
-def _calc_essdist(phen, ds=None, gene_sets=None, p=1, metric="spearman"):
+def _calc_essdist(phen, psms=None, gene_sets=None, p=1, metric="spearman"):
     assert metric in CORRELATION_METRICS
 
     if phen is not None:
         phen = _shuffle(phen)
 
     if metric in ["fold", "zscore"]:
-        ds = ds.copy()
-        ds.psms["Fold Change"] = _shuffle(ds.psms["Fold Change"])
+        psms = psms.copy()
+        psms["Fold Change"] = _shuffle(psms["Fold Change"])
 
     vals = enrichment_scores(
-        ds,
+        psms,
         gene_sets,
         phenotype=phen,
         metric=metric,
@@ -359,13 +361,13 @@ def _calc_essdist(phen, ds=None, gene_sets=None, p=1, metric="spearman"):
     return vals["ES(S)"]
 
 
-def correlate_phenotype(ds, phenotype=None, metric="spearman"):
+def correlate_phenotype(psms, phenotype=None, metric="spearman"):
     """
     Calculate the correlation values for each gene / phosphosite in a data set.
 
     Parameters
     ----------
-    gene_changes : :class:`pandas.DataFrame`
+    psms : :class:`pandas.DataFrame`
     phenotype : :class:`pandas.Series`, optional
     metric : str, optional
         The correlation function to use. See CORRELATION_METRICS for a full
@@ -373,14 +375,14 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
     """
     assert metric in CORRELATION_METRICS
 
-    ds = ds.copy()
+    psms = psms.copy()
 
     if metric in ["spearman", "pearson", "kendall"]:
         LOGGER.info(
             "Calculating correlations using metric '{}' (samples: {})"
             .format(metric, list(phenotype.index))
         )
-        ds.psms["Correlation"] = ds.psms.apply(
+        psms["Correlation"] = psms.apply(
             lambda row:
             phenotype.corr(
                 pd.to_numeric(row[phenotype.index]),
@@ -391,9 +393,9 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
         )
     else:
         LOGGER.info(
-            "Calculating ranks (groups: {}, {})".format(ds.group_a, ds.group_b)
+            "Calculating ranks"
         )
-        new = ds.psms["Fold Change"]
+        new = psms["Fold Change"]
 
         if metric in ["log2", "zscore"]:
             new = new.apply(np.log2)
@@ -401,9 +403,9 @@ def correlate_phenotype(ds, phenotype=None, metric="spearman"):
         if metric in ["zscore"]:
             new = (new - new.mean()) / new.std()
 
-        ds.psms["Correlation"] = new
+        psms["Correlation"] = new
 
-    return ds
+    return psms
 
 
 def calculate_es_s(gene_changes, gene_set, p=1):
@@ -446,7 +448,8 @@ def calculate_es_s(gene_changes, gene_set, p=1):
 
 
 def enrichment_scores(
-    ds, gene_sets,
+    psms,
+    gene_sets,
     metric="spearman",
     phenotype=None,
     p=1,
@@ -464,7 +467,7 @@ def enrichment_scores(
 
     Parameters
     ----------
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    psms : :class:`pandas.DataFrame`
     gene_sets : :class:`pandas.DataFrame`, optional
     metric : str, optional
     phenotype : :class:`pandas.Series`, optional
@@ -481,9 +484,9 @@ def enrichment_scores(
     assert metric in CORRELATION_METRICS
 
     if recorrelate:
-        ds = correlate_phenotype(ds, phenotype=phenotype, metric=metric)
+        psms = correlate_phenotype(psms, phenotype=phenotype, metric=metric)
 
-    gene_changes = get_gene_changes(ds)
+    gene_changes = get_gene_changes(psms)
 
     cols = ["name", "set", "cumscore", "ES(S)", "hits", "hit_list", "n_hits"]
     vals = pd.DataFrame(
@@ -514,7 +517,7 @@ def enrichment_scores(
 
     if pval:
         vals = simulate_es_s_pi(
-            vals, ds, gene_sets,
+            vals, psms, gene_sets,
             phenotype=phenotype,
             p=p,
             metric=metric,
@@ -530,7 +533,7 @@ def enrichment_scores(
     return vals
 
 
-def filter_gene_sets(gene_sets, ds, min_hits=10):
+def filter_gene_sets(gene_sets, psms, min_hits=10):
     """
     Filter gene sets to include only those with at least a given number of
     hits in a data set.
@@ -538,7 +541,7 @@ def filter_gene_sets(gene_sets, ds, min_hits=10):
     Parameters
     ----------
     gene_sets : :class:`pandas.DataFrame`
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    psms : :class:`pandas.DataFrame`
     min_hits : int, optional
 
     Returns
@@ -548,7 +551,7 @@ def filter_gene_sets(gene_sets, ds, min_hits=10):
     LOGGER.info("Filtering gene sets")
 
     total_sets = gene_sets
-    all_genes = set(ds["ID"])
+    all_genes = set(psms["ID"])
 
     gene_sets = gene_sets[
         gene_sets["set"].apply(

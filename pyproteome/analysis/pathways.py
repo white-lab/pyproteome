@@ -331,29 +331,26 @@ def get_phosphoreg_data():
     return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t", usecols=range(21))
 
 
-def _remap_data(ds, species):
-    new = ds.copy()
-    old_species = list(new.species)[0]
+def _remap_data(psms, from_species, to_species):
+    new = psms.copy()
 
-    old_species = ORGANISM_MAPPING.get(old_species, old_species)
-    species = ORGANISM_MAPPING.get(species, species)
-
-    new.species = set([species])
+    from_species = ORGANISM_MAPPING.get(from_species, from_species)
+    to_species = ORGANISM_MAPPING.get(to_species, to_species)
 
     LOGGER.info(
-        "Remapping phosphosites from {} to {}".format(old_species, species)
+        "Remapping phosphosites from {} to {}".format(from_species, to_species)
     )
 
     mapping = get_phosphomap_data()
     mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
 
     acc_mapping = mapping[
-        mapping["ORGANISM"] == old_species
+        mapping["ORGANISM"] == from_species
     ].set_index(
         ["ACC_ID", "MOD_RSD"]
     ).sort_index()
     site_mapping = mapping[
-        mapping["ORGANISM"] == species
+        mapping["ORGANISM"] == to_species
     ].set_index(
         ["SITE_GRP_ID"]
     ).sort_index()
@@ -377,12 +374,12 @@ def _remap_data(ds, species):
 
         return ",".join([re_map["ACC_ID"], re_map["MOD_RSD"]])
 
-    new.psms["ID"] = new.psms["ID"].apply(_remap)
-    new.psms = new.psms[~(new.psms["ID"].isnull())]
+    new["ID"] = new["ID"].apply(_remap)
+    new = new[~(new["ID"].isnull())]
 
     LOGGER.info(
         "Mapping {} IDs ({}) down to {} IDs ({})"
-        .format(ds.shape[0], old_species, new.shape[0], species)
+        .format(psms.shape[0], from_species, new.shape[0], to_species)
     )
 
     return new
@@ -413,14 +410,23 @@ def _get_psite_ids(ds, species):
     return df
 
 
-def _get_protein_ids(ds, species):
-    return ds.psms["Proteins"].apply(
-        lambda row:
-        brs.mapping.get_entrez_mapping(
-            row.genes[0],
-            species=species,
-        ),
-    )
+def _get_protein_ids(psms, species):
+    if "Proteins" in psms.columns:
+        return psms["Proteins"].apply(
+            lambda row:
+            brs.mapping.get_entrez_mapping(
+                row.genes[0],
+                species=species,
+            ),
+        )
+    else:
+        return psms["Gene"].apply(
+            lambda row:
+            brs.mapping.get_entrez_mapping(
+                row,
+                species=species,
+            ),
+        )
 
 
 def _remap_psp(
@@ -665,19 +671,21 @@ def _filter_ambiguous_peptides(ds):
     return ds
 
 
-def _get_scores(ds, phenotype=None, metric="spearman"):
+def _get_scores(psms, phenotype=None, metric="spearman"):
     LOGGER.info("building correlations using metric '{}'".format(metric))
 
-    ds.psms = ds.psms[~ds.psms["ID"].isnull()]
+    psms = psms[~psms["ID"].isnull()]
 
-    agg = {
-        "Fold Change": np.nanmedian,
-    }
+    agg = {}
+
+    if "Fold Change" in psms.columns:
+        agg["Fold Change"] = np.nanmedian
+
     agg.update({
         chan: np.nanmedian
-        for chan in ds.channels.values()
+        for chan in phenotype.index
     })
-    ds.psms = ds.psms.groupby(
+    psms = psms.groupby(
         by="ID",
         as_index=False,
     ).agg(agg)
@@ -685,22 +693,22 @@ def _get_scores(ds, phenotype=None, metric="spearman"):
     if phenotype is not None and metric in ["spearman", "pearson"]:
         phenotype = pd.to_numeric(phenotype)
 
-        ds.psms = ds.psms[
-            (~ds.psms[phenotype.index].isnull()).sum(axis=1) >=
+        psms = psms[
+            (~psms[phenotype.index].isnull()).sum(axis=1) >=
             enrichments.MIN_PERIODS
         ]
 
-    ds = enrichments.correlate_phenotype(
-        ds,
+    psms = enrichments.correlate_phenotype(
+        psms,
         phenotype=phenotype,
         metric=metric,
     )
 
-    ds.psms = ds.psms[
-        ~ds.psms["Correlation"].isnull()
+    psms = psms[
+        ~psms["Correlation"].isnull()
     ]
 
-    return ds
+    return psms
 
 
 def filter_fn(vals, ds=None, species=None):
@@ -777,7 +785,8 @@ def filter_fn(vals, ds=None, species=None):
 
 
 def gsea(
-    ds,
+    psms=None,
+    ds=None,
     gene_sets=None,
     metric="spearman",
     phenotype=None,
@@ -845,30 +854,46 @@ def gsea(
     vals : :class:`pandas.DataFrame`
     gene_changes : :class:`pandas.DataFrame`
     """
+    assert psms is not None or ds is not None
+
     folder_name = pyp.utils.make_folder(
         data=ds,
         folder_name=folder_name,
         sub="PSEA" if p_sites else "GSEA",
     )
 
-    ds = _filter_ambiguous_peptides(ds)
+    if ds is not None:
+        ds = _filter_ambiguous_peptides(ds)
 
-    if species is None:
-        species = list(ds.species)[0]
+        if species is None:
+            species = list(ds.species)[0]
 
-    if p_sites:
-        ds.psms = _get_psite_ids(ds, species)
+        if name is None:
+            name = "{}-{}".format(
+                ds.name,
+                "PSEA" if p_sites else "GSEA",
+            )
+
+        if p_sites:
+            psms = _get_psite_ids(ds, species)
+        else:
+            psms = ds.psms.copy()
+            psms["ID"] = _get_protein_ids(psms, species)
+
+        if species not in ds.species:
+            psms = _remap_data(
+                psms,
+                from_species=list(ds.species)[0],
+                to_species=species,
+            )
     else:
-        ds.psms["ID"] = _get_protein_ids(ds, species)
-
-    if species not in ds.species:
-        ds = _remap_data(ds, species)
+        psms["ID"] = _get_protein_ids(psms, species)
 
     if gene_sets is None:
         gene_sets = get_pathways(species, p_sites=p_sites, remap=remap)
 
-    ds = _get_scores(
-        ds,
+    psms = _get_scores(
+        psms,
         phenotype=phenotype,
         metric=metric,
     )
@@ -883,24 +908,21 @@ def gsea(
         if i in kwargs
     })
 
-    gene_changes = enrichments.get_gene_changes(ds)
+    gene_changes = enrichments.get_gene_changes(psms)
 
     gene_sets = enrichments.filter_gene_sets(
-        gene_sets, ds,
+        gene_sets, psms,
         min_hits=min_hits,
     )
 
     vals = enrichments.enrichment_scores(
-        ds,
+        psms,
         gene_sets,
         **es_args
     )
 
     if name is None:
-        name = "{}-{}".format(
-            ds.name,
-            "PSEA" if p_sites else "GSEA",
-        )
+        name = "PSEA" if p_sites else "GSEA"
 
     vals.to_csv(
         os.path.join(
