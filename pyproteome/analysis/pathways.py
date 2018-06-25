@@ -681,10 +681,12 @@ def _get_scores(psms, phenotype=None, metric="spearman"):
     if "Fold Change" in psms.columns:
         agg["Fold Change"] = np.nanmedian
 
-    agg.update({
-        chan: np.nanmedian
-        for chan in phenotype.index
-    })
+    if phenotype is not None:
+        agg.update({
+            chan: np.nanmedian
+            for chan in phenotype.index
+        })
+
     psms = psms.groupby(
         by="ID",
         as_index=False,

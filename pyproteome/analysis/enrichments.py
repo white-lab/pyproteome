@@ -166,7 +166,7 @@ def simulate_es_s_pi(
                 p=p,
                 metric=metric,
             ),
-            [phenotype.copy() for _ in range(p_iter)],
+            [phenotype for _ in range(p_iter)],
         )
     else:
         gen = (
@@ -274,8 +274,8 @@ def estimate_pq(vals):
 
     LOGGER.info("Calculated pos, neg distributions")
 
-    pos_pdf = PrPDF(pos_nes.dropna().as_matrix())
-    neg_pdf = PrPDF(neg_nes.dropna().as_matrix())
+    pos_pdf = PrPDF(pos_nes.dropna().values)
+    neg_pdf = PrPDF(neg_nes.dropna().values)
 
     pos_pi_pdf = PrPDF(pos_mat)
     neg_pi_pdf = PrPDF(neg_mat)
