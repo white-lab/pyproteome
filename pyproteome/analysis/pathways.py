@@ -706,9 +706,10 @@ def _get_scores(psms, phenotype=None, metric="spearman"):
         metric=metric,
     )
 
-    psms = psms[
-        ~psms["Correlation"].isnull()
-    ]
+    if "Correlation" in psms.columns:
+        psms = psms[
+            ~psms["Correlation"].isnull()
+        ]
 
     return psms
 

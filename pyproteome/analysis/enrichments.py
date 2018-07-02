@@ -243,8 +243,8 @@ def estimate_pq(vals):
     pos_mean = pos_pi.apply(np.mean)
     neg_mean = neg_pi.apply(np.mean)
 
-    pos_nes = (pos_ess / pos_mean)
-    neg_nes = -(neg_ess / neg_mean)
+    pos_nes = pos_ess / pos_mean
+    neg_nes = neg_ess.apply(lambda x: -x) / neg_mean
 
     # assert (pos_nes.isnull() | neg_nes.isnull()).all()
     # assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
@@ -320,7 +320,7 @@ def get_gene_changes(psms):
     ----------
     psms : :class:`pandas.DataFrame`
     """
-    LOGGER.info("Getting gene correlations")
+    LOGGER.info("Getting gene correlations ({} IDs)".format(psms.shape[0]))
 
     gene_changes = psms[["ID", "Correlation"]].copy()
 
@@ -397,7 +397,10 @@ def correlate_phenotype(psms, phenotype=None, metric="spearman"):
         )
         new = psms["Fold Change"]
 
-        if metric in ["log2", "zscore"]:
+        if (
+            metric in ["log2"] or
+            (metric in ["zscore"] and (new > 0).all())
+        ):
             new = new.apply(np.log2)
 
         if metric in ["zscore"]:

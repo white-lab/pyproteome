@@ -121,7 +121,7 @@ def hierarchical_clusters(data, y_pred):
 
     link = linkage(
         np.array([
-            z[y_pred.as_matrix() == x].mean(axis=0)
+            z[y_pred.values == x].mean(axis=0)
             for x in ss
         ])
     )
@@ -138,7 +138,7 @@ def hierarchical_clusters(data, y_pred):
     }
 
     new_ind = np.argsort(np.vectorize(lambda x: mapping[x])(y_pred))
-    cn = np.corrcoef(data["data"].as_matrix()[new_ind])
+    cn = np.corrcoef(data["data"].values[new_ind])
 
     cmapping = {
         cluster_n: index
@@ -176,7 +176,7 @@ def cluster_corrmap(
     if len(set(y_pred)) > 1:
         mapping, new_ind, _, cn = hierarchical_clusters(data, y_pred)
         sorted_clusters = sorted(mapping, key=lambda x: mapping[x])
-        y_pred = y_pred.as_matrix()[new_ind]
+        y_pred = y_pred.values[new_ind]
     else:
         sorted_clusters = sorted(set(y_pred))
         cn = data["c"]
@@ -238,7 +238,7 @@ def plot_cluster(
     z = data["z"]
     names = data["names"]
 
-    dad = z[y_pred.as_matrix() == cluster_n]
+    dad = z[y_pred.values == cluster_n]
     n = dad.shape[0]
 
     if div_scale is None:

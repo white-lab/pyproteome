@@ -261,7 +261,7 @@ def plot_group(
             for i in values
             for j in i.values
         ])
-        data = pd.DataFrame(
+        df = pd.DataFrame(
             [
                 (
                     np.log2(k),
@@ -282,7 +282,7 @@ def plot_group(
             x="label",
             y="y",
             hue="color",
-            data=data,
+            data=df,
             ax=ax,
             dodge=False,
             boxprops=dict(alpha=.3),
@@ -383,8 +383,8 @@ def plot_group(
                     continue
 
                 pval = ttest_ind(
-                    values_a.as_matrix(),
-                    values_b.as_matrix(),
+                    values_a.values,
+                    values_b.values,
                 ).pvalue
 
                 if pval < 0.05:

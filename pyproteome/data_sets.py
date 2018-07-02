@@ -1594,7 +1594,7 @@ def _nan_sum(lst):
         return np.nansum(lst)
 
 
-def update_correlation(ds, corr, metric="spearman"):
+def update_correlation(ds, corr, metric="spearman", min_periods=5):
     """
     Update a table's Fold-Change, and p-value columns.
 
@@ -1602,6 +1602,10 @@ def update_correlation(ds, corr, metric="spearman"):
 
     Parameters
     ----------
+    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    corr : :class:`pd.Series`
+    metric : str, optional
+    min_periods : int, optional
     """
     ds = ds.copy()
 
@@ -1611,13 +1615,18 @@ def update_correlation(ds, corr, metric="spearman"):
     }[metric]
 
     def _map_corr(row):
-        try:
-            c = metric(
-                pd.to_numeric(row[list(corr.index)]),
-                pd.to_numeric(corr),
-            )
-        except ValueError:
-            c = [np.nan, np.nan]
+        a = pd.to_numeric(row[list(corr.index)])
+        b = pd.to_numeric(corr)
+        c = [np.nan, np.nan]
+
+        if (~(a.isnull()) & ~(b.isnull())).sum() >= min_periods:
+            try:
+                c = metric(
+                    a,
+                    b,
+                )
+            except ValueError:
+                pass
 
         return pd.Series(
             [c[0], c[1]],

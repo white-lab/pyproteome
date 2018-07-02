@@ -26,7 +26,7 @@ def get_data(ds, dropna=True, groups=None):
     chans = [ds.channels[chan] for chan in names]
     data = ds.data[chans]
 
-    c = np.corrcoef(data.as_matrix())
+    c = np.corrcoef(data.values)
     z = zscore(data, axis=1)
 
     classes = np.array([

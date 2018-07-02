@@ -81,7 +81,7 @@ class Sequence:
 
     def to_tuple(self):
         return (
-            str(self),
+            self.pep_seq.upper(),
             self.modifications,
         )
 
@@ -96,7 +96,7 @@ class Sequence:
         if not isinstance(other, Sequence):
             raise TypeError(other)
 
-        if self.pep_seq != other.pep_seq:
+        if self.pep_seq.upper() != other.pep_seq.upper():
             return False
 
         if tuple(self.protein_matches) != tuple(other.protein_matches):
