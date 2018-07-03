@@ -81,7 +81,11 @@ def import_all(line=None):
     )
 
 
-if register_line_magic:
+if (
+    register_line_magic is not None and
+    get_ipython is not None and
+    get_ipython() is not None
+):
     import_all = register_line_magic(import_all)
 
 __all__ = [
