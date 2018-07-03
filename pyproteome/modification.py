@@ -123,7 +123,8 @@ class Modifications:
     def __hash__(self):
         return hash(
             tuple(
-                sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple())
+                sorted(self.skip_labels(), key=lambda x: x.to_tuple())
+                # sorted(self.mods, key=lambda x: x.to_tuple())
             ),
         )
 
@@ -131,8 +132,10 @@ class Modifications:
         if not isinstance(other, Modifications):
             raise TypeError()
 
-        self_mods = sorted(self.skip_labels_iter(), key=lambda x: x.to_tuple())
-        o_mods = sorted(other.skip_labels_iter(), key=lambda x: x.to_tuple())
+        self_mods = sorted(self.skip_labels(), key=lambda x: x.to_tuple())
+        o_mods = sorted(other.skip_labels(), key=lambda x: x.to_tuple())
+        # self_mods = sorted(self.mods, key=lambda x: x.to_tuple())
+        # o_mods = sorted(other.mods, key=lambda x: x.to_tuple())
 
         return tuple(self_mods) == tuple(o_mods)
 
