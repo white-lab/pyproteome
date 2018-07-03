@@ -758,11 +758,9 @@ class DataSet:
         Notes
         -----
         These parameters filter your data set to only include peptides that
-        match a given attribute. For example:
+        match a given attribute. For example::
 
-            # Filter for all peptides with p-value < 0.01, and a fold change
-            # greater than 2x or less than 0.5x
-            >>> data.filter(p=0.01, fold=2)
+            >>> data.filter(mod="Y", p=0.01, fold=2)
 
         This function interprets both the argument filter and python `kwargs`
         magic. The three functions are all equivalent::

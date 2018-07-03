@@ -80,6 +80,7 @@ def import_all(line=None):
         ])
     )
 
+
 if register_line_magic:
     import_all = register_line_magic(import_all)
 
