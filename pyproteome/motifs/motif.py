@@ -78,7 +78,7 @@ class Motif:
 
         return re.compile(ret)
 
-    def generate_children(self):
+    def children(self):
         for index, x in enumerate(self.motif):
             if x != ".":
                 continue
@@ -88,7 +88,7 @@ class Motif:
                     self.motif[:index] + char + self.motif[index + 1:],
                 )
 
-    def generate_pairwise_children(self, hit_list):
+    def pairwise_children(self, hit_list):
         # First build a list of all of the AAs in the hits for this motif. We
         # don't want to generate child motifs that do not at least match any
         # peptides in that list.
@@ -593,13 +593,13 @@ def motif_enrichment(
             # something more specific.
             motif_hits.update(
                 _search_children(
-                    children=motif.generate_children(),
+                    children=motif.children(),
                     parent=motif,
                 )
             )
             motif_hits.update(
                 _search_children(
-                    children=motif.generate_pairwise_children(fg_hit_list),
+                    children=motif.pairwise_children(fg_hit_list),
                     parent=motif,
                 )
             )
@@ -698,14 +698,14 @@ def motif_enrichment(
         for start in starts:
             first_pass.update(
                 _search_children(
-                    children=start.generate_children(),
+                    children=start.children(),
                     parent=start,
                 )
             )
 
             first_pass.update(
                 _search_children(
-                    children=start.generate_pairwise_children(fg_hit_list),
+                    children=start.pairwise_children(fg_hit_list),
                     parent=start,
                 )
             )
