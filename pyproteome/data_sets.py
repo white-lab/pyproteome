@@ -765,7 +765,7 @@ class DataSet:
             >>> data.filter(p=0.01, fold=2)
 
         This function interprets both the argument filter and python `kwargs`
-        magic. The three functions are all equivalent:
+        magic. The three functions are all equivalent::
 
             >>> data.filter(p=0.01)
             >>> data.filter([{"p": 0.01}])
