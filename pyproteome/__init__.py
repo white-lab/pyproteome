@@ -18,65 +18,70 @@ try:
     from IPython.core.magic import register_line_magic
 except ImportError:
     get_ipython = None
+    register_line_magic = None
 
 
-if get_ipython is not None and get_ipython() is not None:
-    @register_line_magic
-    def import_all(line=None):
-        """
-        Inialize and import many packages using IPython Notebooks magic.
+def import_all(line=None):
+    """
+    Inialize and import many packages using IPython Notebooks magic.
 
-        Examples
-        --------
-            >>> from pyproteome import *
-            >>> %import_all
-        """
-        ip = get_ipython()
-        ip.run_line_magic(
-            "config",
-            "InlineBackend.figure_formats = ['retina']",
-        )
-        ip.run_line_magic("load_ext", "autoreload")
-        ip.run_line_magic("autoreload", "2")
-        ip.run_line_magic("aimport", "pyproteome")
-        ip.run_line_magic("aimport", "brainrnaseq")
-        ip.run_line_magic("pylab", "inline")
+    Examples
+    --------
+        >>> from pyproteome import *
+        >>> %import_all
+    """
+    if get_ipython is None:
+        return
 
-        ip.ex(
-            "\n".join([
-                "from collections import OrderedDict, Counter",
-                "import logging",
-                "import os",
-                "import pickle",
-                "from IPython.display import display, SVG, Image",
+    ip = get_ipython()
+    ip.run_line_magic(
+        "config",
+        "InlineBackend.figure_formats = ['retina']",
+    )
+    ip.run_line_magic("load_ext", "autoreload")
+    ip.run_line_magic("autoreload", "2")
+    ip.run_line_magic("aimport", "pyproteome")
+    ip.run_line_magic("aimport", "brainrnaseq")
+    ip.run_line_magic("pylab", "inline")
 
-                "import numpy as np",
-                "import pandas as pd",
-                "import seaborn as sns",
-                "import sklearn",
+    ip.ex(
+        "\n".join([
+            "from collections import OrderedDict, Counter",
+            "import logging",
+            "import os",
+            "import pickle",
+            "from IPython.display import display, SVG, Image",
 
-                "pylab.rcParams['figure.figsize'] = (12, 8)",
-                "pylab.rcParams['mathtext.default'] = 'regular'",
-                "pylab.rcParams['figure.max_open_warning'] = 0",
+            "import numpy as np",
+            "import pandas as pd",
+            "import seaborn as sns",
+            "import sklearn",
 
-                "sns.set_style('white')",
-                "sns.set_context('notebook')",
+            "pylab.rcParams['figure.figsize'] = (12, 8)",
+            "pylab.rcParams['mathtext.default'] = 'regular'",
+            "pylab.rcParams['figure.max_open_warning'] = 0",
 
-                'pd.set_option("display.max_colwidth", 500)',
-                'pd.set_option("display.max_rows", 500)',
+            "sns.set_style('white')",
+            "sns.set_context('notebook')",
 
-                "formatter = logging.Formatter('%(asctime)s - %(name)s - "
-                "%(levelname)s - %(message)s')",
+            'pd.set_option("display.max_colwidth", 500)',
+            'pd.set_option("display.max_rows", 500)',
 
-                "root = logging.getLogger()",
+            "formatter = logging.Formatter('%(asctime)s - %(name)s - "
+            "%(levelname)s - %(message)s')",
 
-                "if not root.handlers: "
-                "handler = logging.StreamHandler(); "
-                "handler.setFormatter(formatter); "
-                "root.setLevel(logging.INFO); "
-                "root.addHandler(handler)",
-            ])
-        )
+            "root = logging.getLogger()",
+
+            "if not root.handlers: "
+            "handler = logging.StreamHandler(); "
+            "handler.setFormatter(formatter); "
+            "root.setLevel(logging.INFO); "
+            "root.addHandler(handler)",
+        ])
+    )
+
+if register_line_magic:
+    import_all = register_line_magic(import_all)
 
 __all__ = [
     "analysis",
