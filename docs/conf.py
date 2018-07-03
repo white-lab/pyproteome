@@ -83,6 +83,7 @@ autodoc_mock_imports = [
     "IPython.display",
     "scipy",
     "scipy.cluster",
+    "scipy.cluster.hierarchy",
     "scipy.misc",
     "scipy.spatial",
     "scipy.stats",
