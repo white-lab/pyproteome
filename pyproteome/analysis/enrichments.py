@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module does most of the heavy lifting for the pathways module.
 
