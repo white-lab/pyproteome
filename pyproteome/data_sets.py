@@ -750,7 +750,7 @@ class DataSet:
         ----------
         filters : list of dict or dict, optional
             List of filters to apply to data set. Filters are also pulled from
-            **kwargs (see below).
+            `kwargs` (see below).
         inplace : bool, optional
             Perform the filter on self, other create a copy and return the
             new object.
@@ -764,7 +764,7 @@ class DataSet:
             # greater than 2x or less than 0.5x
             >>> data.filter(p=0.01, fold=2)
 
-        This function interprets both the argument filter and python's **kwargs
+        This function interprets both the argument filter and python `kwargs`
         magic. The three functions are all equivalent:
 
             >>> data.filter(p=0.01)
@@ -1297,7 +1297,6 @@ def load_all_data(
     datas = OrderedDict()
 
     for f in os.listdir(paths.MS_SEARCHED_DIR):
-        kws = kwargs.copy()
         name, ext = os.path.splitext(f)
 
         if ext not in [".msf"]:
