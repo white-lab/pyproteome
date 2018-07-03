@@ -77,7 +77,7 @@ autodoc_mock_imports = [
 ] + [
     "sklearn",
     "IPython", "IPython.display",
-    "scipy.stats", "scipy.misc", "scipy.spatial",
+    "scipy.stats", "scipy.misc", "scipy.spatial", "scipy.cluster",
 ]
 
 numpydoc_show_class_members = False
