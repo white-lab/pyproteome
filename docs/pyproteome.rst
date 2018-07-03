@@ -20,6 +20,8 @@ Subpackages
     pyproteome.cluster
     pyproteome.discoverer
     pyproteome.motifs
+    pyproteome.pride
+    pyproteome.pypuniprot
 
 Submodules
 ----------

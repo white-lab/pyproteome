@@ -1,5 +1,5 @@
 pyproteome.pride package
-===========================
+========================
 
 .. automodule:: pyproteome.pride
     :members:
