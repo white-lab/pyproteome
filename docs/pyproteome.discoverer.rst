@@ -1,5 +1,5 @@
 pyproteome.discoverer package
-===========================
+=============================
 
 .. automodule:: pyproteome.discoverer
     :members:

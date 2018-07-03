@@ -18,7 +18,7 @@ pyproteome.analysis.correlation module
     :show-inheritance:
 
 pyproteome.analysis.enrichments module
------------------------------------
+--------------------------------------
 
 .. automodule:: pyproteome.analysis.enrichments
     :members:

@@ -75,6 +75,7 @@ autodoc_mock_imports = [
     for mod_name in PROJ_REQUIREMENTS
     if mod_name not in DOCS_REQUIREMENTS
 ] + [
+    "numpy",
     "sklearn",
     "sklearn.cluster",
     "sklearn.decomposition",
