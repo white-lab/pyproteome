@@ -934,18 +934,12 @@ def gsea(
         ),
     )
 
-    figs = enrichments.plot_gsea(
+    enrichments.plot_gsea(
         vals, gene_changes,
+        folder_name=folder_name,
+        name=name,
         **kwargs
     )
-
-    for index, fig in enumerate(figs):
-        fig.savefig(
-            os.path.join(folder_name, name + "-{}.png".format(index)),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI / 3,
-            transparent=True,
-        )
 
     return vals, gene_changes
 

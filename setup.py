@@ -2,19 +2,22 @@
 import os
 from setuptools import setup, find_packages
 
-from pyproteome import version
+__dir__ = os.path.dirname(__file__)
 
+__version__ = open(
+    os.path.join(__dir__, "pyproteome", "version.py")
+).readlines()[0].split("=")[1].strip().strip("\"")
 
 REQUIREMENTS_PATH = os.path.abspath(
     os.path.join(
-        os.path.dirname(__file__), "requirements.txt",
+        __dir__, "requirements.txt",
     )
 )
 
 
 setup(
     name="pyproteome",
-    version=version.__version__,
+    version=__version__,
     description="Package for managing proteomics data",
     url="https://github.com/white-lab/pyproteome",
     author="Nader Morshed",
@@ -51,6 +54,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Topic :: Scientific/Engineering",
     ],
     test_suite="tests",

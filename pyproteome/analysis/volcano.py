@@ -8,13 +8,11 @@ import re
 from matplotlib import pyplot as plt
 import numpy as np
 
-# Misc extras
-from adjustText.adjustText import adjust_text
-
 import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.volcano")
+MAX_VOLCANO_LABELS = 500
 
 
 def _remove_lesser_dups(labels, compress_sym=False):
@@ -224,7 +222,7 @@ def plot_volcano(
 
         names = [
             row_label, re_row_label, old_row_label, old_re_row_label,
-        ]
+        ] + list(row["Proteins"].genes)
 
         if (
             any(
@@ -279,7 +277,7 @@ def plot_volcano(
             sorted(
                 tick
                 for tick in ax.get_xticks()
-                if tick < lower_fold or tick > upper_fold
+                if tick < lower_fold - .25 or tick > upper_fold + .25
             ) + [lower_fold, upper_fold]
         )
     )
@@ -352,7 +350,7 @@ def plot_volcano(
 
     # Position the labels
     texts = []
-    txt_lim = 100 if full_site_labels else 7
+    txt_lim = 100 if full_site_labels else 9
 
     for y, x, txt, edgecolor, highlight_label in labels:
         text = ax.text(
@@ -379,7 +377,8 @@ def plot_volcano(
         texts.append(text)
 
     if adjust:
-        adjust_text(
+        texts = texts[:MAX_VOLCANO_LABELS]
+        pyp.utils.adjust_text(
             x=[i._x for i in texts],
             y=[i._y for i in texts],
             texts=texts,

@@ -1276,6 +1276,7 @@ def load_all_data(
     norm_mapping=None,
     merge_mapping=None,
     merged_fn=None,
+    kw_mapping=None,
     **kwargs
 ):
     """
@@ -1291,6 +1292,7 @@ def load_all_data(
     group_mapping = group_mapping or {}
     norm_mapping = norm_mapping or {}
     merge_mapping = merge_mapping or {}
+    kw_mapping = kw_mapping or {}
 
     datas = OrderedDict()
 
@@ -1300,6 +1302,9 @@ def load_all_data(
 
         if ext not in [".msf"]:
             continue
+
+        kws = kw_mapping.get(name, {})
+        kws.update(kwargs)
 
         chan = kws.pop("channels", None)
         group = kws.pop("groups", None)

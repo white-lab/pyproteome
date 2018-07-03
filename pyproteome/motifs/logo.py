@@ -176,7 +176,7 @@ def _calc_hline(back_counts, p=0.05):
     return abs(np.log10(alpha / (1 - alpha)))
 
 
-def make_logo(data, f, **kwargs):
+def make_logo(data, f, folder_name=None, **kwargs):
     """
     Create a logo from a pyproteome data set using a given filter to define
     the foreground set.
@@ -211,19 +211,36 @@ def make_logo(data, f, **kwargs):
         )
     ]
     title = kwargs.pop("title", plogo.format_title(data=data, f=f))
-    return logo(
+    fig, ax = logo(
         fore, back,
         title=title,
         **kwargs
     )
 
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Logo",
+    )
+
+    fig.savefig(
+        os.path.join(folder_name, re.sub("[><^ ]", "_", title) + ".png"),
+        bbox_inches="tight",
+        transparent=True,
+        dpi=pyp.DEFAULT_DPI,
+    )
+
+    return fig, ax
+
 
 def _draw_logo(
-    scores, p_line=None, title=None, ytitle=None, width=12, height=8,
+    scores, p_line=None, title=None, ytitle="", width=10, height=6,
     fade_power=1, low_res_cutoff=0,
+    show_title=True,
+    show_ylabel=True,
 ):
     length = len(list(scores.values())[0])
-    fig = plt.figure(figsize=(width, height))
+    fig = plt.figure(figsize=(width / 2, height / 2))
 
     left_margin = (
         .15 / width * 5
@@ -264,6 +281,7 @@ def _draw_logo(
     yax.xaxis.set_ticks([])
     yax.yaxis.set_ticks([])
     xax.yaxis.set_ticks([])
+    xax.spines['bottom'].set_position(('data', .18))
 
     for ax in (yax, xax) + axes:
         ax.spines['top'].set_color('none')
@@ -271,7 +289,9 @@ def _draw_logo(
         ax.spines['left'].set_color('none')
         ax.spines['right'].set_color('none')
 
-    yax.set_title(title, fontsize=32)
+    if show_title:
+        yax.set_title(title, fontsize=32)
+
     xax.set_xticks(
         range(0, length),
     )
@@ -327,11 +347,15 @@ def _draw_logo(
         spacing = minmaxy // 3
         if spacing != 0:
             ax.set_yticks(
-                np.arange(
-                    spacing if ind == 0 else -spacing,
-                    (spacing + 1) * (3 if ind == 0 else -3),
-                    spacing * (1 if ind == 0 else -1)
-                ),
+                [
+                    i
+                    for i in np.arange(
+                        spacing if ind == 0 else -spacing,
+                        (spacing + 1) * (3 if ind == 0 else -3),
+                        spacing * (1 if ind == 0 else -1)
+                    )
+                    if abs(i) >= abs(p_line)
+                ],
             )
         else:
             ax.set_yticks(
@@ -346,10 +370,10 @@ def _draw_logo(
             ax.get_yticks(),
             fontsize=16,
         )
-        if ytitle:
+        if show_ylabel:
             yax.set_ylabel(
                 ytitle,
-                fontsize=24,
+                fontsize=18,
             )
 
     return fig, (yax, xax,) + axes, minmaxy
@@ -358,7 +382,9 @@ def _draw_logo(
 def logo(
     fore, back,
     title="", width=12, height=8, p=0.05,
-    fade_power=1, low_res_cutoff=0, prob_fn=None
+    fade_power=1, low_res_cutoff=0, prob_fn=None,
+    show_title=True,
+    show_ylabel=True,
 ):
     """
     Generate a sequence logo locally using pLogo's enrichment score.
@@ -410,13 +436,15 @@ def logo(
         height=height,
         fade_power=fade_power,
         low_res_cutoff=low_res_cutoff,
+        show_title=show_title,
+        show_ylabel=show_ylabel,
     )
     axes[3].text(
         length + .5,
         -minmaxy,
         "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
         color="darkred",
-        fontsize=32,
+        fontsize=24,
         horizontalalignment="right",
         verticalalignment="bottom",
     )

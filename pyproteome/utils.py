@@ -269,3 +269,8 @@ def save_load(name, val=None, default=None):
             val = default
 
     return val
+
+
+def adjust_text(*args, **kwargs):
+    from adjustText.adjustText import adjust_text as at
+    return at(*args, **kwargs)

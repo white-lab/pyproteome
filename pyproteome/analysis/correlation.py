@@ -10,12 +10,12 @@ from __future__ import absolute_import, division
 import logging
 import os
 
-from adjustText.adjustText import adjust_text
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-import pyproteome as pyp
 import seaborn as sns
+
+import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.correlation")
@@ -97,7 +97,7 @@ def correlate_data_sets(
             texts.append(text)
 
         if adjust:
-            adjust_text(
+            pyp.utils.adjust_text(
                 x=x_s,
                 y=y_s,
                 texts=texts,

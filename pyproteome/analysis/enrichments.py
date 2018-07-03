@@ -9,13 +9,15 @@ from __future__ import division
 from collections import defaultdict
 from functools import partial
 import logging
+import os
 import multiprocessing
 
-from adjustText.adjustText import adjust_text
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.utils import shuffle
+
+import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.enrichments")
@@ -693,9 +695,9 @@ def plot_nes(
     LOGGER.info("Plotting ranked NES(S) values")
 
     if figsize is None:
-        figsize = (12, 8)
+        figsize = (4, 3)
 
-    f, ax = plt.subplots(figsize=figsize)
+    f, ax = plt.subplots(figsize=figsize, dpi=pyp.DEFAULT_DPI)
     v = vals.copy()
     v = v.sort_values("NES(S)")
     mask = (
@@ -724,7 +726,8 @@ def plot_nes(
         y=neg,
         color="k",
     )
-    ax.set_ylabel("Normalized Enrichment Score (NES)")
+    ax.set_xticks([])
+    ax.set_ylabel("Normalized Enrichment Score")
     x_pad = ind.max() / 10
     ax.set_xlim(
         left=ind.min() - x_pad,
@@ -755,13 +758,13 @@ def plot_nes(
 
     LOGGER.info("Adjusting positions for {} labels".format(len(texts)))
 
-    adjust_text(
+    pyp.utils.adjust_text(
         x=[i._x for i in texts],
         y=[i._y for i in texts],
         texts=texts,
         ax=ax,
         lim=50,
-        force_text=5,
+        force_text=1,
         force_points=0.1,
         arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),
         only_move={
@@ -885,6 +888,8 @@ def plot_gsea(
     min_abs_score=.3,
     max_pval=1,
     max_qval=1,
+    folder_name=None,
+    name="",
     **kwargs
 ):
     """
@@ -900,6 +905,10 @@ def plot_gsea(
     -------
     figs : list of :class:`matplotlib.figure.Figure`
     """
+
+    folder_name = pyp.utils.make_folder(
+        sub="GSEA + PSEA",
+    )
 
     figs = ()
 
@@ -925,5 +934,13 @@ def plot_gsea(
                 max_pval=max_pval,
                 max_qval=max_qval,
             )[0],
+
+    for index, fig in enumerate(figs):
+        fig.savefig(
+            os.path.join(folder_name, name + "-{}.png".format(index)),
+            bbox_inches="tight",
+            dpi=pyp.DEFAULT_DPI / (1 if index in [0, len(figs) - 1] else 3),
+            transparent=True,
+        )
 
     return figs
