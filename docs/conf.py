@@ -76,6 +76,7 @@ autodoc_mock_imports = [
     if mod_name not in DOCS_REQUIREMENTS
 ] + [
     "sklearn",
+    "sklearn.utils",
     "IPython", "IPython.display",
     "scipy",
     "scipy.stats", "scipy.misc", "scipy.spatial", "scipy.cluster",
