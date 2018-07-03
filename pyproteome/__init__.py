@@ -20,7 +20,7 @@ except ImportError:
     get_ipython = None
 
 
-if get_ipython() is not None:
+if get_ipython is not None and get_ipython() is not None:
     @register_line_magic
     def import_all(line=None):
         """
