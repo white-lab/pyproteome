@@ -14,24 +14,25 @@
 
 import sys
 import os
-from pip.req import parse_requirements
-# import shlex
+import re
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+PYP_DIR = os.path.join(THIS_DIR, "..")
+
+sys.path.append(PYP_DIR)
+
+from setup import REQUIREMENTS
+
 
 PROJ_REQUIREMENTS = [
-    str(i.name)
-    for i in parse_requirements(
-        os.path.join(THIS_DIR, "..", "requirements.txt"),
-    )
+    re.split("[><=]", i)[0]
+    for i in REQUIREMENTS
 ]
 
 DOCS_REQUIREMENTS = [
-    str(i.name)
-    for i in parse_requirements(
-        os.path.join(THIS_DIR, "requirements.txt"),
-    )
+    re.split("\W+", i)[0]
+    for i in REQUIREMENTS
 ]
 # PROJ_REQUIREMENTS = []
 # DOCS_REQUIREMENTS = []
