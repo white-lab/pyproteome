@@ -76,10 +76,15 @@ autodoc_mock_imports = [
     if mod_name not in DOCS_REQUIREMENTS
 ] + [
     "sklearn",
+    "sklearn.decomposition",
     "sklearn.utils",
-    "IPython", "IPython.display",
+    "IPython",
+    "IPython.display",
     "scipy",
-    "scipy.stats", "scipy.misc", "scipy.spatial", "scipy.cluster",
+    "scipy.cluster",
+    "scipy.misc",
+    "scipy.spatial",
+    "scipy.stats",
 ]
 
 numpydoc_show_class_members = False
