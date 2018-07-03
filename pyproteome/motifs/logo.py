@@ -1,6 +1,8 @@
 
 
 from collections import Counter
+import os
+import re
 
 from matplotlib import transforms
 from matplotlib import pyplot as plt
@@ -10,6 +12,7 @@ from matplotlib.font_manager import FontProperties
 import numpy as np
 from scipy import stats
 
+import pyproteome as pyp
 from . import motif, plogo
 
 
@@ -186,6 +189,7 @@ def make_logo(data, f, folder_name=None, **kwargs):
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     f : dict
         Filter passed to data.filter() to define the foreground set.
+    folder_name : str, optional
     kwargs
         Arguments passed on to logo()
 
