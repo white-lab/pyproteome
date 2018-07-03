@@ -1,5 +1,5 @@
 pyproteome.pypuniprot package
-===========================
+=============================
 
 .. automodule:: pyproteome.pypuniprot
     :members:
