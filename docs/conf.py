@@ -32,7 +32,7 @@ PROJ_REQUIREMENTS = [
 
 DOCS_REQUIREMENTS = [
     re.split("\W+", i)[0]
-    for i in REQUIREMENTS
+    for i in open(os.path.join(THIS_DIR, "requirements.txt")).readlines()
 ]
 # PROJ_REQUIREMENTS = []
 # DOCS_REQUIREMENTS = []
@@ -76,6 +76,8 @@ autodoc_mock_imports = [
     if mod_name not in DOCS_REQUIREMENTS
 ] + [
     "numpy",
+    "pandas",
+    "seaborn",
     "sklearn",
     "sklearn.cluster",
     "sklearn.decomposition",
