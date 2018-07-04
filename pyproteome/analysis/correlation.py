@@ -423,7 +423,7 @@ def correlate_signal(
 
         texts.append(text)
 
-    adjust_text(
+    pyp.utils.adjust_text(
         x=sig_x,
         y=sig_y,
         texts=texts,

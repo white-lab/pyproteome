@@ -226,12 +226,13 @@ def make_logo(data, f, folder_name=None, **kwargs):
         sub="Logo",
     )
 
-    fig.savefig(
-        os.path.join(folder_name, re.sub("[><^ ]", "_", title) + ".png"),
-        bbox_inches="tight",
-        transparent=True,
-        dpi=pyp.DEFAULT_DPI,
-    )
+    if fig is not None:
+        fig.savefig(
+            os.path.join(folder_name, re.sub("[><^ ]", "_", title) + ".png"),
+            bbox_inches="tight",
+            transparent=True,
+            dpi=pyp.DEFAULT_DPI,
+        )
 
     return fig, ax
 

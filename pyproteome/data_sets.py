@@ -1063,7 +1063,7 @@ class DataSet:
             if i in self.channels
         ]
 
-        if channels_a and channels_b:
+        if channels_a and channels_b and self.shape[0] > 0:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 self.psms["Fold Change"] = pd.Series(

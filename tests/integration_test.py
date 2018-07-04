@@ -273,7 +273,7 @@ class IntegrationTest(TestCase):
     def test_gsea(self):
         for data in self.data.values():
             analysis.pathways.gsea(
-                data,
+                ds=data,
                 metric="zscore",
                 n_cpus=1,
                 min_hits=15,
@@ -284,7 +284,7 @@ class IntegrationTest(TestCase):
     def test_psea(self):
         for data in self.data.values():
             analysis.pathways.gsea(
-                data,
+                ds=data,
                 metric="zscore",
                 n_cpus=1,
                 min_hits=15,
