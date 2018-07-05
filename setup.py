@@ -38,7 +38,7 @@ if __name__ == "__main__":
         packages=find_packages(exclude=["*.tests", "tests"]),
         install_requires=REQUIREMENTS,
         dependency_links=[
-            "git+https://github.com/jrderuiter/genemap.git#egg=genemap",
+            "git+https://github.com/naderm/genemap.git#egg=genemap",
         ],
         classifiers=[
             "License :: OSI Approved :: BSD License",
