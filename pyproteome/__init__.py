@@ -58,6 +58,7 @@ def import_all(line=None):
             "import sklearn",
 
             "pylab.rcParams['figure.figsize'] = (12, 8)",
+            "pylab.rcParams['figure.dpi'] = 300",
             "pylab.rcParams['mathtext.default'] = 'regular'",
             "pylab.rcParams['figure.max_open_warning'] = 0",
 
@@ -68,7 +69,7 @@ def import_all(line=None):
             'pd.set_option("display.max_rows", 500)',
 
             "formatter = logging.Formatter('%(asctime)s - %(name)s - "
-            "%(levelname)s - %(message)s')",
+            "%(levelname)s - %(message)s', datefmt='%I:%M:%S %p')",
 
             "root = logging.getLogger()",
 
