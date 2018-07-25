@@ -9,21 +9,21 @@ __version__ = open(
 ).readlines()[0].split("=")[1].strip().strip("\"")
 
 REQUIREMENTS = [
-    "adjustText>=0.6.1",
-    "fastcluster>=1.1.23",
+    "adjustText>=0.7.3",
+    "fastcluster>=1.1.25",
     "genemap",
     "ipython>=5.4.1",
     "matplotlib>=2.2.0",
-    "numpy>=1.13.0",
-    "numpydoc>=0.7",
-    "pandas>=0.22.0",
+    "numpy>=1.15.0",
+    "numpydoc>=0.8",
+    "pandas>=0.23.0",
     "scikit-learn>=0.19.1",
-    "scipy>=1.0.0",
-    "seaborn>=0.8.1",
+    "scipy>=1.1.0",
+    "seaborn>=0.9.0",
     "uniprot==1.3",
     "xlrd>=1.1.0",
     "xlwt>=1.3.0",
-    "xlsxwriter>=1.0.2",
+    "xlsxwriter>=1.0.5",
 ]
 
 if __name__ == "__main__":
