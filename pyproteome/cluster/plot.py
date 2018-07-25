@@ -9,7 +9,7 @@ from fastcluster import linkage
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram
-from scipy.stats import zscore
+from scipy import stats
 import seaborn as sns
 import sklearn
 
@@ -31,6 +31,7 @@ def hierarchical_heatmap(
     row_cluster=True,
     col_cluster=True,
     show_y=False,
+    title=None,
     filename="Hierarchical Heatmap.png",
     folder_name=None,
 ):
@@ -66,9 +67,25 @@ def hierarchical_heatmap(
         if channel in data.channels
     ]
 
-    raw = data.psms[channels].T.apply(zscore).T
-    raw.index = data.psms["Proteins"].apply(str)
+    raw = data.psms
+    raw = raw.sort_values("Fold Change", ascending=False)
+    raw = raw[channels]
+
+    def zscore(x):
+        return (x - np.nanmean(x)) / np.nanstd(x)
+
+    # raw = raw.apply(zscore, axis=1)
+    raw = raw.apply(np.log2, axis=1)
+    raw.index = data.psms["Proteins"].apply(str).apply(lambda x: x[:50])
     raw = raw.dropna(how="all")
+
+    minmax = max([
+        abs(raw.min().min()),
+        abs(raw.max().max()),
+    ])
+    # minmax = 1.5
+
+    raw = raw.fillna(value=-minmax)
 
     map = sns.clustermap(
         raw,
@@ -76,12 +93,17 @@ def hierarchical_heatmap(
         metric=metric,
         row_cluster=row_cluster,
         col_cluster=col_cluster,
+        vmin=-minmax,
+        vmax=minmax,
     )
     map.ax_heatmap.set_xticklabels(
         map.ax_heatmap.get_xticklabels(),
         rotation=45,
         horizontalalignment="right",
     )
+
+    if title is not None:
+        map.fig.suptitle(title)
 
     if not show_y:
         map.ax_heatmap.set_yticklabels([])
