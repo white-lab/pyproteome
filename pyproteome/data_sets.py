@@ -1137,11 +1137,15 @@ class DataSet:
         # if len(cmp_groups) < 2:
         #     return new
 
-        assert not any(
-            group in [i for o_groups in cmp_groups[ind + 1:] for i in o_groups]
-            for ind, groups in enumerate(cmp_groups)
-            for group in groups
-        )
+        # assert not any(
+        #     group in [
+        #         i
+        #         for o_groups in cmp_groups[ind + 1:]
+        #         for i in o_groups
+        #     ]
+        #     for ind, groups in enumerate(cmp_groups)
+        #     for group in groups
+        # )
 
         for groups in cmp_groups:
             channels = [
