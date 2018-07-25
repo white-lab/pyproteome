@@ -1275,6 +1275,7 @@ def load_all_data(
     merge_mapping=None,
     merged_fn=None,
     kw_mapping=None,
+    merge_only=True,
     **kwargs
 ):
     """
@@ -1298,6 +1299,12 @@ def load_all_data(
         name, ext = os.path.splitext(f)
 
         if ext not in [".msf"]:
+            continue
+
+        if (
+            merge_only and
+            name not in utils.flatten_set(list(merge_mapping.values()))
+        ):
             continue
 
         kws = kw_mapping.get(name, {})
