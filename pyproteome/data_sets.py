@@ -1390,10 +1390,14 @@ def merge_all_data(datas, merge_mapping, mapped_names=None, merged_fn=None):
                 LOGGER.warning("Unmerged data: {}".format(name))
 
     for key, vals in merge_mapping.items():
+        if not any([mapped_names.get(val, val) in datas for val in vals]):
+            continue
+
         datas[key] = merge_data(
             [
                 datas[mapped_names.get(val, val)]
                 for val in vals
+                if mapped_names.get(val, val) in datas
             ],
             name=key,
         )
