@@ -356,6 +356,7 @@ def plot_volcano(
         text = ax.text(
             x, y,
             txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
+            zorder=10,
         )
 
         if highlight_label:
@@ -369,6 +370,7 @@ def plot_volcano(
                 facecolor=edgecolor or (
                     "#DDDDDD" if edgecolors else _get_color(txt, x, y)
                 ),
+                zorder=1,
                 # edgecolor="black",
                 boxstyle="round",
             )
@@ -386,7 +388,9 @@ def plot_volcano(
             lim=100,
             force_text=0.5,
             force_points=0.01,
-            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            arrowprops=dict(
+                arrowstyle="->", relpos=(0, 0), lw=1, zorder=1, color="k",
+            ),
             only_move={
                 "points": "y",
                 "text": "xy",
