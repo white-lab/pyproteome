@@ -123,7 +123,7 @@ def plot(
                 " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
             ),
-            fontsize=28,
+            # fontsize=28,
         )
 
         ylabel = "Intensity"
@@ -136,7 +136,7 @@ def plot(
 
         ax.set_ylabel(
             ylabel,
-            fontsize=20,
+            # fontsize=20,
         )
 
         fig.savefig(
@@ -327,7 +327,7 @@ def plot_group(
                 " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
             ),
-            fontsize=32,
+            # fontsize=32,
         )
         ax.xaxis.grid(False)
 
