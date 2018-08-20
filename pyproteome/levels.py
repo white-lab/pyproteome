@@ -15,12 +15,13 @@ from collections import OrderedDict
 # Core data analysis libraries
 from matplotlib import pyplot as plt
 import numpy as np
+import seaborn as sns
 from scipy import stats
 
 from . import utils
 
 LOGGER = logging.getLogger("pyproteome.levels")
-WARN_PEP_CUTOFF = 150
+WARN_PEP_CUTOFF = 100
 
 
 def get_channel_levels(
@@ -77,23 +78,24 @@ def get_channel_levels(
             LOGGER.warning(
                 (
                     "{}: Too few peptides for normalization, "
-                    "quantification may be inaccurate ({} peptides for {}: {})"
+                    "quantification may be inaccurate "
+                    " ({} peptides for {}: {})"
                 ).format(data.name, points.shape[0], col_name, col)
             )
 
         # Fit a guassian and find its maximum
         gaus = stats.kde.gaussian_kde(points)
         x = np.arange(0, 10, .01)
-        y = gaus.pdf(x)
+        y = np.array(gaus.pdf(x))
         med = x[y == y.max()][0]
 
         channel_levels[col] = med
 
         ax = next(ax_iter)
 
-        ax.hist(
+        sns.distplot(
             points,
-            bins=40,
+            ax=ax,
         )
         ax.set_title(
             r"{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
