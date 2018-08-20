@@ -394,15 +394,15 @@ def _random_pdist(x, background, fore_size, kwargs):
 
 
 def _generate_ppdist(
-    background, fore_size, pp_iterations,
+    background, fore_size, p_iter,
     cpu_count=None,
     **kwargs
 ):
     if cpu_count is None:
         try:
-            cpu_count = multiprocessing.cpu_count()
+            cpu_count = multiprocessing.cpu_count() - 1
         except NotImplementedError:
-            cpu_count = 2
+            cpu_count = 1
 
     kwargs = kwargs.copy()
     kwargs["pp_value"] = False
@@ -413,18 +413,33 @@ def _generate_ppdist(
         processes=cpu_count,
     )
 
-    for p_dist in pool.imap_unordered(
-        partial(
-            _random_pdist,
-            background=background,
-            fore_size=fore_size,
-            kwargs=kwargs,
+    LOGGER.info(
+        "Calculating distribution of {} p-values using {} CPUs".format(
+            p_iter,
+            cpu_count,
+        )
+    )
+
+    for ind, p_dist in enumerate(
+        pool.imap_unordered(
+            partial(
+                _random_pdist,
+                background=background,
+                fore_size=fore_size,
+                kwargs=kwargs,
+            ),
+            range(p_iter),
         ),
-        range(pp_iterations),
+        start=1,
     ):
         pp_dist.append(
             min(p_dist + [kwargs.get("sig_cutoff")])
         )
+
+        if ind % (p_iter // min([p_iter, 10])) == 0:
+            LOGGER.info(
+                "Calculated {}/{} pvals".format(ind, p_iter)
+            )
 
     return pp_dist
 
@@ -736,17 +751,20 @@ def motif_enrichment(
         .format(len(second_pass))
     )
 
-    pp_dist = _generate_ppdist(
-        background, fore_size, pp_iterations,
-        sig_cutoff=sig_cutoff,
-        min_fore_hits=min_fore_hits,
-        start_letters=start_letters,
-        cpu_count=cpu_count,
-    ) if pp_value else None
+    pp_dist = []
 
-    if pp_dist is not None and len(pp_dist) != pp_iterations:
-        LOGGER.info("pp-dist size mismatch")
-        return
+    if len(second_pass) > 0:
+        pp_dist = _generate_ppdist(
+            background, fore_size, pp_iterations,
+            sig_cutoff=sig_cutoff,
+            min_fore_hits=min_fore_hits,
+            start_letters=start_letters,
+            cpu_count=cpu_count,
+        ) if pp_value else None
+
+        if pp_dist is not None and len(pp_dist) != pp_iterations:
+            LOGGER.info("pp-dist size mismatch")
+            return
 
     # Finally prepare the output as a sorted list with the motifs and their
     # associated statistics.
