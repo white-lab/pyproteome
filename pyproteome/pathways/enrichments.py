@@ -414,7 +414,7 @@ def correlate_phenotype(psms, phenotype=None, metric="spearman"):
     return psms
 
 
-def calculate_es_s(gene_changes, gene_set, p=1):
+def calculate_es_s(gene_changes, gene_set, p=1, n_h=None):
     """
     Calculate the enrichment score for an individual gene set.
 
@@ -423,8 +423,10 @@ def calculate_es_s(gene_changes, gene_set, p=1):
     gene_changes : :class:`pandas.DataFrame`
     gene_set : set of str
     p : float, optional
+    n_h : int, optional
     """
     n = len(gene_changes)
+
     gene_set = set(
         gene
         for gene in gene_set
@@ -433,7 +435,9 @@ def calculate_es_s(gene_changes, gene_set, p=1):
     hits = gene_changes.index.isin(gene_set)
     hit_list = gene_changes[hits].index.tolist()
 
-    n_h = len(gene_set)
+    if n_h is None:
+        n_h = len(gene_set)
+
     n_r = gene_changes[hits]["Correlation"].apply(
         lambda x: abs(x) ** p
     ).sum()
@@ -446,11 +450,76 @@ def calculate_es_s(gene_changes, gene_set, p=1):
     ]
     cumsum = np.cumsum(scores)
 
-    # ess = cumsum.max() - cumsum.min()
-    # ess *= np.sign(max(cumsum, key=abs))
-    ess = max(cumsum, key=abs)
+    ess = cumsum.max() - cumsum.min()
+    ess *= np.sign(max(cumsum, key=abs))
+    # ess = max(cumsum, key=abs)
 
-    return hits, hit_list, cumsum, ess
+    return {
+        "hits": hits,
+        "cumscore": cumsum,
+        "ess": ess,
+        "hit_list": hit_list,
+    }
+
+
+def calculate_es_s_ud(gene_changes, up_set, down_set, p=1):
+    """
+    Calculate the enrichment score for an individual gene set.
+
+    Parameters
+    ----------
+    gene_changes : :class:`pandas.DataFrame`
+    gene_set : set of str
+    p : float, optional
+    """
+    up_set = set(
+        gene
+        for gene in up_set
+        if gene in gene_changes.index
+    )
+    down_set = set(
+        gene
+        for gene in down_set
+        if gene in gene_changes.index
+    )
+
+    vals = []
+
+    for gene_set in [up_set, down_set]:
+        vals.append(
+            calculate_es_s(gene_changes, gene_set, p=p, n_h=len(up_set) + len(down_set))
+        )
+
+    up_hits = vals[0]["hits"]
+    down_hits = vals[1]["hits"]
+    hit_list = vals[0]["hit_list"] + vals[1]["hit_list"]
+
+    upcumsum = vals[0]["cumscore"]
+    downcumsum = vals[1]["cumscore"]
+
+    ess = (
+        vals[0]["ess"] if vals[0]["hits"].any() else 0
+    ) - (
+        vals[1]["ess"] if vals[1]["hits"].any() else 0
+    )
+
+    return {
+        "hits": up_hits,
+        "down_hits": down_hits,
+        "cumscore": upcumsum,
+        "down_cumscore": downcumsum,
+        "ess": ess,
+        "hit_list": hit_list,
+    }
+
+
+def _get_set_cols(cols):
+    for set_cols in [
+        ["up_set", "down_set"],
+        ["set"],
+    ]:
+        if any([i in cols for i in set_cols]):
+            return set_cols
 
 
 def enrichment_scores(
@@ -494,28 +563,49 @@ def enrichment_scores(
 
     gene_changes = get_gene_changes(psms)
 
-    cols = ["name", "set", "cumscore", "ES(S)", "hits", "hit_list", "n_hits"]
+    set_cols = _get_set_cols(gene_sets.columns)
+
+    cols = [
+        "name",
+        "cumscore",
+        "down_cumscore",
+        "ES(S)",
+        "hits",
+        "down_hits",
+        "hit_list",
+        "n_hits",
+    ] + set_cols
     vals = pd.DataFrame(
         columns=cols,
     )
 
     for set_id, row in gene_sets.iterrows():
-        hits, hit_list, cumscore, ess = calculate_es_s(
-            gene_changes,
-            row["set"],
-            p=p,
-        )
+        if set(set_cols) == set(["set"]):
+            es_vals = calculate_es_s(
+                gene_changes,
+                row["set"],
+                p=p,
+            )
+        else:
+            es_vals = calculate_es_s_ud(
+                gene_changes,
+                row["up_set"],
+                row["down_set"],
+                p=p,
+            )
+
         vals = vals.append(
             pd.Series(
                 [
                     row["name"],
-                    row["set"],
-                    cumscore,
-                    ess,
-                    hits,
-                    hit_list,
-                    len(hit_list),
-                ],
+                    es_vals.get("cumscore", []),
+                    es_vals.get("down_cumscore", []),
+                    es_vals.get("ess", 0),
+                    es_vals.get("hits", []),
+                    es_vals.get("down_hits", []),
+                    es_vals.get("hit_list", []),
+                    len(es_vals.get("hit_list", [])),
+                ] + [row[i] for i in set_cols],
                 name=set_id,
                 index=cols,
             )
@@ -559,8 +649,19 @@ def filter_gene_sets(gene_sets, psms, min_hits=10):
     total_sets = gene_sets
     all_genes = set(psms["ID"])
 
+    set_cols = _get_set_cols(gene_sets.columns)
+    combined_set = gene_sets.apply(
+        lambda x:
+        set(
+            i
+            for col in set_cols
+            for i in x[col]
+        ),
+        axis=1,
+    )
+
     gene_sets = gene_sets[
-        gene_sets["set"].apply(
+        combined_set.apply(
             lambda x:
             len(x) < len(all_genes) and
             len(all_genes.intersection(x)) >= min_hits
@@ -578,7 +679,7 @@ def filter_gene_sets(gene_sets, psms, min_hits=10):
 def filter_vals(
     vals,
     min_hits=0,
-    min_abs_score=.3,
+    min_abs_score=0,
     max_pval=1,
     max_qval=1,
 ):
@@ -654,13 +755,16 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
         )
 
     if nes_vals.shape[0] > 0:
-        ax.hist(
-            nes_vals,
-            bins=50,
-            color='r',
-            alpha=.5,
-            density=True,
-        )
+        try:
+            ax.hist(
+                nes_vals,
+                bins=50,
+                color='r',
+                alpha=.5,
+                density=True,
+            )
+        except ValueError as err:
+            LOGGER.warning("ax.hist threw an error: {}".format(err))
 
     return f, ax
 
@@ -767,7 +871,7 @@ def plot_nes(
         lim=50,
         force_text=1,
         force_points=0.1,
-        arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1),
+        arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1, zorder=0),
         only_move={
             "points": "y",
             "text": "xy",
@@ -840,11 +944,27 @@ def plot_enrichment(
     for index, (set_id, row) in enumerate(vals.iterrows()):
         ax = next(ax_iter)
 
-        ax.plot(row["cumscore"])
+        if (
+            "cumscore" in row and
+            len(row["cumscore"]) > 0 and
+            row["hits"].any()
+        ):
+            ax.plot(row["cumscore"], color="g")
+
+        if (
+            "down_cumscore" in row and
+            len(row["down_cumscore"]) > 0 and
+            row["down_hits"].any()
+        ):
+            ax.plot(row["down_cumscore"], color="r")
 
         for ind, hit in enumerate(row["hits"]):
             if hit:
-                ax.axvline(ind, linestyle=":", alpha=.25)
+                ax.axvline(ind, linestyle=":", alpha=.25, color="g")
+
+        for ind, hit in enumerate(row["down_hits"]):
+            if hit:
+                ax.axvline(ind, linestyle=":", alpha=.25, color="r")
 
         name = row["name"]
         name = name if len(name) < 35 else name[:35] + "..."
@@ -886,7 +1006,7 @@ def plot_enrichment(
 def plot_gsea(
     vals, gene_changes,
     min_hits=0,
-    min_abs_score=.3,
+    min_abs_score=0,
     max_pval=1,
     max_qval=1,
     folder_name=None,

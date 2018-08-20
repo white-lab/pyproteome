@@ -11,7 +11,7 @@ from . import (
     loading, modification, motifs, paths, pride, protein, sequence,
     utils, version,
 )
-from . import cluster
+from . import cluster, pathways
 
 try:
     from IPython import get_ipython
@@ -102,6 +102,7 @@ __all__ = [
     "motifs",
     "phosphosite",
     "paths",
+    "pathways",
     "pride",
     "protein",
     "sequence",
