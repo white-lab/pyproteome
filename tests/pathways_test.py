@@ -1,7 +1,7 @@
 
 from unittest import TestCase
 
-from pyproteome.analysis import pathways
+from pyproteome import pathways
 
 
 class PathwaysTest(TestCase):
