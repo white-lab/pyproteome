@@ -10,7 +10,7 @@ import pylab
 import pyproteome as pyp
 from pyproteome import (
     analysis, cluster, correlation, data_sets, logo, motif, motifs, paths,
-    tables, volcano, phosphosite,
+    tables, volcano, pathways, phosphosite
 )
 
 
@@ -272,7 +272,7 @@ class IntegrationTest(TestCase):
 
     def test_gsea(self):
         for data in self.data.values():
-            analysis.pathways.gsea(
+            pathways.gsea(
                 ds=data,
                 metric="zscore",
                 n_cpus=1,
@@ -283,7 +283,7 @@ class IntegrationTest(TestCase):
 
     def test_psea(self):
         for data in self.data.values():
-            analysis.pathways.gsea(
+            pathways.gsea(
                 ds=data,
                 metric="zscore",
                 n_cpus=1,
