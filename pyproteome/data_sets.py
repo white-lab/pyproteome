@@ -1306,6 +1306,7 @@ def load_all_data(
             continue
 
         if (
+            merge_mapping and
             merge_only and
             name not in utils.flatten_set(list(merge_mapping.values()))
         ):
