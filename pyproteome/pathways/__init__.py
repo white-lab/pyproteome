@@ -17,6 +17,7 @@ import pandas as pd
 
 import pyproteome as pyp
 import brainrnaseq as brs
+from . import enrichments, msigdb, psp, wikipathways, photon_ptm
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
