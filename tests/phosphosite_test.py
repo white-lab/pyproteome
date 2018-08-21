@@ -12,4 +12,7 @@ class PhosphositeTest(TestCase):
 
     def test_generate_logos(self):
         for species in ["Human", "Mouse"]:
-            phosphosite.generate_logos(species)
+            phosphosite.generate_logos(
+                species,
+                min_foreground=50,
+            )
