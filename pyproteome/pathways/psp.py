@@ -41,7 +41,7 @@ def get_phosphoreg_data():
     r = requests.get(url, stream=True)
     r.raise_for_status()
 
-    gz = gzip.GzipFile(fileobj=io.BytesIO(r.raw.read()))
+    gz = gzip.GzipFile(fileobj=io.BytesIO(r.content))
 
     return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t", usecols=range(21))
 

@@ -65,7 +65,7 @@ class PathwaysTest(TestCase):
                     remap=remap,
                 )
 
-                for col in ["name", "set"]:
+                for col in ["name", "up_set", "down_set"]:
                     self.assertIn(col, gene_sets.columns)
 
                 self.assertGreater(gene_sets.shape[0], 0)
