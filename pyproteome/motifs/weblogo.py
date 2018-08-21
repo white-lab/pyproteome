@@ -87,6 +87,6 @@ def make_logo(
     response.raise_for_status()
 
     if Image:
-        return Image(response.raw.read(), format="png")
+        return Image(response.content, format="png")
     else:
-        return response.raw.read()
+        return response.content

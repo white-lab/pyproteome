@@ -71,7 +71,7 @@ def generate_logos(
     if kinases is None:
         kinases = sorted(set(df["KINASE"]))
 
-    figs = {}
+    figs = []
 
     for kinase in kinases:
         fore = list(df[df["KINASE"] == kinase]["SITE_+/-7_AA"])

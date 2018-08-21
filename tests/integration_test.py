@@ -335,9 +335,9 @@ class IntegrationTest(TestCase):
     #     for data in self.data.values():
     #         motifs.icelogo.make_logo(data, {"asym_fold": 1.001})
 
-    # def test_weblogo(self):
-    #     for data in self.data.values():
-    #         motifs.weblogo.make_logo(data)
+    def test_weblogo(self):
+        for data in self.data.values():
+            motifs.weblogo.make_logo(data)
 
     def test_phosphosite_enriched(self):
         for data in self.data.values():
