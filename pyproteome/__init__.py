@@ -8,7 +8,7 @@ from .motifs import (
 )
 from . import (
     analysis, bca, data_sets, discoverer, levels,
-    loading, modification, motifs, paths, pride, protein, sequence,
+    loading, modification, motifs, paths, pride, protein, sequence, species,
     utils, version,
 )
 from . import cluster, pathways
@@ -106,6 +106,7 @@ __all__ = [
     "pride",
     "protein",
     "sequence",
+    "species",
     "tables",
     "utils",
     "version",

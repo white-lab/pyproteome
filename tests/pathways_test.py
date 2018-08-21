@@ -7,7 +7,7 @@ from pyproteome import pathways
 class PathwaysTest(TestCase):
     def test_gskb_pathways(self):
         for species in ["Mus musculus"]:
-            gene_sets = pathways.get_gskb_pathways(species)
+            gene_sets = pathways.gskb.get_gskb_pathways(species)
 
             for col in ["name", "set"]:
                 self.assertIn(col, gene_sets.columns)
@@ -16,7 +16,7 @@ class PathwaysTest(TestCase):
 
     def test_pathway_common(self):
         for species in ["Homo sapiens"]:
-            gene_sets = pathways.get_pathway_common(species)
+            gene_sets = pathways.pathwayscommon.get_pathway_common(species)
 
             for col in ["name", "set"]:
                 self.assertIn(col, gene_sets.columns)
@@ -25,7 +25,7 @@ class PathwaysTest(TestCase):
 
     def test_wikipathways(self):
         for species in ["Homo sapiens", "Mus musculus"]:
-            gene_sets = pathways.get_wikipathways(species)
+            gene_sets = pathways.wikipathways.get_wikipathways(species)
 
             for col in ["name", "set"]:
                 self.assertIn(col, gene_sets.columns)
