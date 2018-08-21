@@ -116,7 +116,7 @@ def get_phosphosite_regulation(species, remap=False):
     """
     LOGGER.info("Getting phosphosite regulation data for {}".format(species))
 
-    species = pyp.pathways.ORGANISM_MAPPING.get(species, species)
+    species = pyp.species.ORGANISM_MAPPING.get(species, species).lower()
 
     psp_data = get_phosphoreg_data()
 

@@ -48,7 +48,7 @@ def get_wikipathways(species):
     """
     LOGGER.info("Fetching WikiPathways")
 
-    species = pyp.pathways.INV_ORGANISM_MAPPING.get(species, species)
+    species = pyp.species.INV_ORGANISM_MAPPING.get(species, species)
 
     url = WIKIPATHWAYS_GMT_URL.format(
         date=_get_wp_date(),
@@ -90,7 +90,7 @@ def get_wikipathways_psites(species):
     """
     LOGGER.info("Fetching WikiPathways")
 
-    species = pyp.pathways.INV_ORGANISM_MAPPING.get(species, species)
+    species = pyp.species.INV_ORGANISM_MAPPING.get(species, species)
 
     url = WIKIPATHWAYS_GMPL_URL.format(
         date=_get_wp_date(),

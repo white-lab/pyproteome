@@ -23,7 +23,6 @@ from . import enrichments, msigdb, psp, wikipathways, photon_ptm
 LOGGER = logging.getLogger("pyproteome.pathways")
 
 
-
 def _remap_data(psms, from_species, to_species):
     new = psms.copy()
 
