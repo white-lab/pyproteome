@@ -17,7 +17,15 @@ import pandas as pd
 
 import pyproteome as pyp
 import brainrnaseq as brs
-from . import enrichments, msigdb, psp, wikipathways, photon_ptm
+from . import (
+    enrichments,
+    gskb,
+    msigdb,
+    pathwayscommon,
+    photon_ptm,
+    psp,
+    wikipathways,
+)
 
 
 LOGGER = logging.getLogger("pyproteome.pathways")
@@ -495,3 +503,18 @@ def psea(*args, **kwargs):
     """
     kwargs["p_sites"] = True
     return gsea(*args, **kwargs)
+
+
+__all__ = [
+    "psea",
+    "gsea",
+    "filter_fn",
+    "get_pathways",
+    "enrichments",
+    "gskb",
+    "msigdb",
+    "pathwayscommon",
+    "photon_ptm",
+    "psp",
+    "wikipathways",
+]
