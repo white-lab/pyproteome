@@ -65,7 +65,7 @@ def get_pathway_common(species):
     pathways_df = pd.DataFrame(
         data=[
             _get_data(line)
-            for line in gzip.GzipFile(fileobj=io.BytesIO(r.raw.read()))
+            for line in gzip.GzipFile(fileobj=io.BytesIO(r.content))
         ],
         columns=["name", "set"],
     )
