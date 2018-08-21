@@ -487,7 +487,12 @@ def calculate_es_s_ud(gene_changes, up_set, down_set, p=1):
 
     for gene_set in [up_set, down_set]:
         vals.append(
-            calculate_es_s(gene_changes, gene_set, p=p, n_h=len(up_set) + len(down_set))
+            calculate_es_s(
+                gene_changes,
+                gene_set,
+                p=p,
+                n_h=len(up_set) + len(down_set),
+            )
         )
 
     up_hits = vals[0]["hits"]

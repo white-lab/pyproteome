@@ -22,43 +22,13 @@ from . import enrichments, msigdb, psp, wikipathways, photon_ptm
 
 LOGGER = logging.getLogger("pyproteome.pathways")
 
-ORGANISM_MAPPING = {
-    # 'cat': ,
-    # 'chicken': ,
-    "Bos taurus": 'cow',
-    "Canis familiaris": 'dog',
-    "Mustela putorius": 'ferret',
-    # 'frog': ,
-    "Drosophila melanogaster": 'fruit fly',
-    # 'goat': ,
-    # 'guinea pig': ,
-    # 'hamster': ,
-    "Equus caballus": 'horse',
-    "Homo sapiens": 'human',
-    # 'monkey': ,
-    "Mus musculus": 'mouse',
-    # 'papillomavirus': ,
-    # 'pig': ,
-    # 'quail': ,
-    # 'rabbit': ,
-    "Rattus norvegicus": 'rat',
-    # 'sheep': ,
-    # 'starfish': ,
-    # 'torpedo': ,
-    # 'turkey': ,
-    # 'water buffalo': ,
-}
-INV_ORGANISM_MAPPING = {
-    val: key
-    for key, val in ORGANISM_MAPPING.items()
-}
 
 
 def _remap_data(psms, from_species, to_species):
     new = psms.copy()
 
-    from_species = ORGANISM_MAPPING.get(from_species, from_species)
-    to_species = ORGANISM_MAPPING.get(to_species, to_species)
+    from_species = pyp.species.ORGANISM_MAPPING.get(from_species, from_species)
+    to_species = pyp.species.ORGANISM_MAPPING.get(to_species, to_species)
 
     LOGGER.info(
         "Remapping phosphosites from {} to {}".format(from_species, to_species)

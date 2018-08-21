@@ -62,7 +62,7 @@ def get_phosphosite(species, remap=False):
     """
     LOGGER.info("Getting phosphosite data for {}".format(species))
 
-    species = pyp.pathways.ORGANISM_MAPPING.get(species, species)
+    species = pyp.species.ORGANISM_MAPPING.get(species, species)
 
     psp_data = pyp.motifs.phosphosite.get_data()
 

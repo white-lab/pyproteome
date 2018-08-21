@@ -82,6 +82,14 @@ pyproteome.sequence module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.species module
+--------------------------
+
+.. automodule:: pyproteome.species
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.utils module
 -----------------------
 
