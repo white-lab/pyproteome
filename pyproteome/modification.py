@@ -26,7 +26,7 @@ class Modifications:
 
     Attributes
     ----------
-    mods : list of :class:`Modification<pyproteome.modification.Modification>`
+    mods : list of :class:`.Modification`
     """
 
     def __init__(self, mods=None):
@@ -35,8 +35,7 @@ class Modifications:
 
         Parameters
         ----------
-        mods :
-        list of :class:`Modification<pyproteome.modification.Modification>`
+        mods : list of :class:`.Modification`
         """
         self.mods = mods or ()
 
@@ -50,6 +49,10 @@ class Modifications:
         """
         Creates a copy of a set of modifications. Does not copy the underlying
         sequence object.
+
+        Returns
+        -------
+        mods : :class:`.Modifications`
         """
         new = copy.copy(self)
         new.mods = tuple(i.copy() for i in new.mods)
@@ -103,7 +106,7 @@ class Modifications:
 
         Returns
         -------
-        generator of Modification
+        mods : :class:`.Modifications`
         """
         any_letter, any_mod, letter_mod = \
             _extract_letter_mods(letter_mod_types)
@@ -214,7 +217,7 @@ class Modification:
 
         Returns
         -------
-        str
+        abbrev : str
         """
         if self.mod_type in ["Phospho"]:
             return "p"
@@ -249,6 +252,10 @@ class Modification:
         """
         Creates a copy of a modification. Does not copy the underlying sequence
         object.
+
+        Returns
+        -------
+        mod : :class:`.Modification`
         """
         new = copy.copy(self)
         return new
@@ -258,6 +265,10 @@ class Modification:
         """
         This modification's one-letter amino acid code (i.e. "Y"), or "N-term"
         / "C-term" for terminal modifications.
+
+        Returns
+        -------
+        letter : str
         """
         if self.sequence is None:
             return ""
@@ -274,6 +285,10 @@ class Modification:
         """
         The absolute positions of this modification in the full sequence
         of each mapped protein (0-indexed).
+
+        Returns
+        -------
+        tuple of int
         """
         if self.sequence is None:
             return ()
@@ -288,6 +303,10 @@ class Modification:
         """
         Indicates whether each peptide-protein mapping for this modification is
         an exact or partial match.
+
+        Returns
+        -------
+        exact : tuple of bool
         """
         if self.sequence is None:
             return ()
@@ -322,7 +341,7 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
 
     Returns
     -------
-    bool
+    is_type : bool
     """
     return (
         (
