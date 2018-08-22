@@ -87,7 +87,7 @@ def plot_volcano(
     group_b : str or list of str, optional
     pval_cutoff : float, optional
     fold : float, optional
-    options: dict of (str, list), optional
+    options : dict of (str, list), optional
     folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float

@@ -352,7 +352,7 @@ def _pp_sig(p_value, pp_dist):
 
 
 # Taken from https://stackoverflow.com/questions/1023038/
-def lowpriority():
+def _lowpriority():
     """ Set the priority of the process to below-normal."""
 
     import sys
@@ -383,7 +383,7 @@ def lowpriority():
 
 
 def _random_pdist(x, background, fore_size, kwargs):
-    lowpriority()
+    _lowpriority()
 
     return motif_enrichment(
         random.sample(background, fore_size),
