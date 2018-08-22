@@ -185,6 +185,6 @@ def photon(ds, folder_name=None):
         defaults['db'],
     )
 
-    LOGGER.info("Wrote results to {}".format(folder_name))
+    LOGGER.info("Wrote results to: {}".format(folder_name))
 
     return results
