@@ -20,6 +20,13 @@ PSP_SITE_MAPPING_URL = (
 
 @pyp.utils.memoize
 def get_phosphomap_data():
+    """
+    Fetch mapping between phosphorylation sites of different species.
+
+    Returns
+    -------
+    df : :class:`pandas.DataFrame`
+    """
     LOGGER.info("Fetching Phosphosite Plus mapping data")
 
     url = PSP_SITE_MAPPING_URL
@@ -34,6 +41,13 @@ def get_phosphomap_data():
 
 @pyp.utils.memoize
 def get_phosphoreg_data():
+    """
+    Fetch Phosphosite Plus regulation data.
+
+    Returns
+    -------
+    df : :class:`pandas.DataFrame`
+    """
     LOGGER.info("Fetching Phosphosite Plus regulation data")
 
     url = PSP_REGULATORY_URL
