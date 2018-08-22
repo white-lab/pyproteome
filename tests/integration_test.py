@@ -239,16 +239,14 @@ class IntegrationTest(TestCase):
             for cmp_groups in [self.cmp_groups, None]:
                 for data in self.data.values():
                     analysis.plot.plot_all(
-                        data,
-                        f=f,
+                        data.filter(f),
                         individual=True,
                         between=True,
                         cmp_groups=cmp_groups,
                     )
 
                     analysis.plot.plot_together(
-                        data,
-                        f=f,
+                        data.filter(f),
                         cmp_groups=cmp_groups,
                     )
 

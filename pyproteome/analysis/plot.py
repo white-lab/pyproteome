@@ -25,7 +25,7 @@ LOGGER = logging.getLogger("pyproteome.plot")
 
 
 def plot(
-    data, f=None,
+    data,
     title=None,
     folder_name=None,
     figsize=None,
@@ -36,9 +36,13 @@ def plot(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    sequence : str or :class:`Sequence<pyproteome.sequence.Sequence>`
     title : str, optional
+    folder_name : str, optional
     figsize : tuple of (int, int), optional
+
+    Returns
+    -------
+    figs : list of :class:`matplotlib.figure.Figure`
     """
     folder_name = pyp.utils.make_folder(
         data=data,
@@ -57,9 +61,6 @@ def plot(
         data.channels[channel_name]
         for channel_name in channel_names
     ]
-
-    if f:
-        data = data.filter(f)
 
     figures = []
 
@@ -162,7 +163,6 @@ def plot(
 
 def plot_group(
     data,
-    f=None,
     cmp_groups=None,
     title=None,
     folder_name=None,
@@ -174,7 +174,14 @@ def plot_group(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    sequences : list of str
+    cmp_groups : list of tuple, optional
+    title : str, optional
+    folder_name : str, optional
+    figsize : tuple of (int, int), optional
+
+    Returns
+    -------
+    figs : list of :class:`matplotlib.figure.Figure`
     """
     folder_name = pyp.utils.make_folder(
         data=data,
@@ -184,9 +191,6 @@ def plot_group(
 
     if cmp_groups is None:
         cmp_groups = data.cmp_groups or [list(data.groups.keys())]
-
-    if f:
-        data = data.filter(f)
 
     figures = []
 
@@ -266,7 +270,9 @@ def plot_group(
                 (
                     np.log2(k),
                     label,
-                    "#e19153" if label in set(j[0] for j in cmp_groups) else "#60ae47"
+                    "#e19153"
+                    if label in set(j[0] for j in cmp_groups) else
+                    "#60ae47"
                 )
                 for i in values
                 for label, j in i.iteritems()
@@ -274,10 +280,6 @@ def plot_group(
             ],
             columns=("y", "label", "color"),
         )
-        hue = np.array([
-            "#e19153" if i in set(j[0] for j in cmp_groups) else "#60ae47"
-            for i in labels
-        ])
         sns.boxplot(
             x="label",
             y="y",
@@ -431,13 +433,26 @@ def plot_group(
 
 def plot_all(
     data,
-    f=None,
-    figsize=None,
     individual=True,
     between=True,
+    figsize=None,
     cmp_groups=None,
     folder_name=None,
 ):
+    """
+    Runs :func:`.plot` and :func:`.plot_group` for all peptides in a data set.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.DataSet`
+    figsize : tuple of (int, int), optional
+    cmp_groups : list of tuple, optional
+    folder_name : str, optional
+
+    Returns
+    -------
+    figs : list of :class:`matplotlib.figure.Figure`
+    """
     folder_name = pyp.utils.make_folder(
         data=data,
         folder_name=folder_name,
@@ -446,21 +461,17 @@ def plot_all(
 
     figures = []
 
-    if individual:
-        figures += plot(
-            data,
-            f=f,
-            figsize=figsize,
-            folder_name=folder_name,
-        )
+    figures += plot(
+        data,
+        figsize=figsize,
+        folder_name=folder_name,
+    )
 
-    if between:
-        figures += plot_group(
-            data,
-            f=f,
-            cmp_groups=cmp_groups,
-            folder_name=folder_name,
-        )
+    figures += plot_group(
+        data,
+        cmp_groups=cmp_groups,
+        folder_name=folder_name,
+    )
 
     return figures
 
