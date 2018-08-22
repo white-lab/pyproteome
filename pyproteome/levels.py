@@ -21,7 +21,7 @@ from scipy import stats
 import pyproteome as pyp
 
 LOGGER = logging.getLogger("pyproteome.levels")
-WARN_PEP_CUTOFF = 100
+WARN_PEP_CUTOFF = 50
 
 
 def get_channel_levels(
