@@ -10,7 +10,6 @@ from . import correlation, plot, tables, qc, volcano
 
 __all__ = [
     "correlation",
-    "pathways",
     "plot",
     "tables",
     "qc",
