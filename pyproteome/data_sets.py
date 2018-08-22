@@ -760,6 +760,8 @@ class DataSet:
             "Raw Paths": set(),
             "Scan Paths": set(),
             "Scan": set(),
+            "Fold Change": np.nan,
+            "p-value": np.nan,
         }
 
         for key, val in defaults.items():
