@@ -181,11 +181,17 @@ class Modification:
     Attributes
     ----------
     rel_pos : int
+        The relative position of a modification in a peptide sequence
+        (0-indexed).
     mod_type : str
+        A short name for this type of modification (i.e. "Phospho",
+        "Carbamidomethyl", "Oxidation", "TMT6", "TMT10")
     nterm : bool
+        Boolean indicator of whether this modification is applied to the
+        peptide N-terminus.
     cterm : bool
-    letter : str
-    abs_pos : int
+        Boolean indicator of whether this modification is applied to the
+        peptide C-terminus.
     """
 
     def __init__(
@@ -249,6 +255,10 @@ class Modification:
 
     @property
     def letter(self):
+        """
+        This modification's one-letter amino acid code (i.e. "Y"), or "N-term"
+        / "C-term" for terminal modifications.
+        """
         if self.sequence is None:
             return ""
 
@@ -261,6 +271,10 @@ class Modification:
 
     @property
     def abs_pos(self):
+        """
+        The absolute positions of this modification in the full sequence
+        of each mapped protein (0-indexed).
+        """
         if self.sequence is None:
             return ()
 
@@ -271,6 +285,10 @@ class Modification:
 
     @property
     def exact(self):
+        """
+        Indicates whether each peptide-protein mapping for this modification is
+        an exact or partial match.
+        """
         if self.sequence is None:
             return ()
 
@@ -281,7 +299,7 @@ class Modification:
 
     def __repr__(self):
         return (
-            "<pyproteome.modification.Modification {}{}({})>"
+            "<Modification {}{}({})>"
         ).format(
             self.letter,
             (self.rel_pos + 1) if not self.cterm and not self.nterm else "",
@@ -291,7 +309,7 @@ class Modification:
 
 def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
     """
-    Check if a modification is of a type.
+    Check if a modification is of a given type.
 
     Filters by letter, mod_type, or both.
 
@@ -301,6 +319,10 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
     any_letter : set of str
     any_mod : set of str
     letter_mod : set of tuple of str, str
+
+    Returns
+    -------
+    bool
     """
     return (
         (
