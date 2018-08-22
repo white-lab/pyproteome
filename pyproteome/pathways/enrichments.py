@@ -936,7 +936,7 @@ def plot_enrichment(
     LOGGER.info("Plotting ES(S) graphs")
 
     rows = max([int(np.ceil(len(vals) / cols)), 1])
-    scale = 6
+    scale = 3
 
     f, axes = plt.subplots(
         rows, cols,
@@ -1071,7 +1071,7 @@ def plot_gsea(
         fig.savefig(
             os.path.join(folder_name, name + "-{}.png".format(index)),
             bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI / (1 if index in [0, len(figs) - 1] else 3),
+            dpi=pyp.DEFAULT_DPI,
             transparent=True,
         )
 
