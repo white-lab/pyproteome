@@ -1831,13 +1831,13 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
     Parameters
     ----------
     ds : :class:`.DataSet`
-    corr : :class:`pd.Series`
+    corr : :class:`pandas.Series`
     metric : str, optional
     min_periods : int, optional
 
     Returns
     -------
-   ds : :class:`.DataSet`
+    ds : :class:`.DataSet`
     """
     ds = ds.copy()
 
