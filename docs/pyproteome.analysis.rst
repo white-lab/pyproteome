@@ -17,6 +17,14 @@ pyproteome.analysis.correlation module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.analysis.heatmap module
+-------------------------------
+
+.. automodule:: pyproteome.analysis.heatmap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.analysis.plot module
 -------------------------------
 
