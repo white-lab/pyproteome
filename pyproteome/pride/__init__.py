@@ -30,12 +30,13 @@ def list_data_set(accession):
     Returns
     -------
     list of str
+        Files available in a repository.
 
     Examples
     --------
     >>> lst = pride.list_data_set("PXD003660")
     >>> lst[0]
-        '20140524_MCF10A_E20VR1_ETP_TMT10.raw'
+    '20140524_MCF10A_E20VR1_ETP_TMT10.raw'
     """
     assert accession.startswith("PXD")
 
@@ -68,6 +69,7 @@ def fetch_data_set(accession, files=None):
     Returns
     -------
     list of str
+        Files downloaded from a repository.
 
     Examples
     --------
@@ -75,7 +77,7 @@ def fetch_data_set(accession, files=None):
     ...     "PXD001038",
     ...     files={"HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip": "."},
     ... )
-        ["HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip"]
+    ["HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip"]
     """
     ds = list_data_set(accession)
     ret = []
