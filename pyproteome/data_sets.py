@@ -190,7 +190,7 @@ class DataSet:
             if pd.isnull(self.psms[list(self.channels.values())]).all().all():
                 del filter_bad["median_quant"]
 
-        if skip_logging:
+        if not skip_logging:
             self.log_stats()
 
         if filter_bad:
@@ -226,7 +226,7 @@ class DataSet:
 
         self.update_group_changes()
 
-        if skip_logging:
+        if not skip_logging:
             self.log_stats()
 
     def copy(self):

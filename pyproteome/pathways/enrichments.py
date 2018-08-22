@@ -751,7 +751,6 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
 
     f, ax = plt.subplots(
         figsize=(4, 3),
-        dpi=pyp.DEFAULT_DPI,
     )
 
     if nes_pi_vals.shape[0] > 0:
@@ -807,12 +806,8 @@ def plot_nes(
     """
     LOGGER.info("Plotting ranked NES(S) values")
 
-    if figsize is None:
-        figsize = (4, 3)
-
     f, ax = plt.subplots(
-        figsize=figsize,
-        dpi=pyp.DEFAULT_DPI,
+        figsize=figsize or (4, 3),
     )
     v = vals.copy()
     v = v.sort_values("NES(S)")
@@ -893,7 +888,7 @@ def plot_nes(
     return f, ax
 
 
-def plot_correlations(gene_changes):
+def plot_correlations(gene_changes, figsize=None):
     """
     Plot the ranked list of correlations.
 
@@ -901,6 +896,7 @@ def plot_correlations(gene_changes):
     ----------
     gene_changes : :class:`pandas.DataFrame`
         Genes and their correlation values as calculated by get_gene_changes().
+    figsize : tuple of (int, int), optional
 
     Returns
     -------
@@ -910,8 +906,7 @@ def plot_correlations(gene_changes):
     LOGGER.info("Plotting gene correlations")
 
     f, ax = plt.subplots(
-        figsize=(4, 3),
-        dpi=pyp.DEFAULT_DPI,
+        figsize=figsize or (4, 3),
     )
 
     ax.plot(
@@ -949,7 +944,6 @@ def plot_enrichment(
         squeeze=False,
         sharex=True,
         sharey=True,
-        dpi=pyp.DEFAULT_DPI,
     )
     axes = [i for j in axes for i in j]
 

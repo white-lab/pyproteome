@@ -191,7 +191,6 @@ def peptide_corr(ds):
     if df.shape[0] > 10:
         f, ax = plt.subplots(
             figsize=(3, 2),
-            dpi=pyp.DEFAULT_DPI,
         )
         sns.kdeplot(
             df["spearman"],
@@ -209,7 +208,6 @@ def peptide_corr(ds):
 
         f, ax = plt.subplots(
             figsize=(3, 2),
-            dpi=pyp.DEFAULT_DPI,
         )
         ax.hist(
             df["spearman"].dropna(),

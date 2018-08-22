@@ -18,7 +18,7 @@ import numpy as np
 import seaborn as sns
 from scipy import stats
 
-from . import utils
+import pyproteome as pyp
 
 LOGGER = logging.getLogger("pyproteome.levels")
 WARN_PEP_CUTOFF = 100
@@ -50,7 +50,7 @@ def get_channel_levels(
     if not file_name:
         file_name = "channel_levels.png"
 
-    folder_name = utils.make_folder(
+    folder_name = pyp.utils.make_folder(
         data=data,
         folder_name=folder_name,
         sub="Normalization",
@@ -68,7 +68,6 @@ def get_channel_levels(
         sharex=True,
         sharey=True,
         figsize=(3 * cols, 3 * rows),
-        dpi=pyp.DEFAULT_DPI,
     )
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)
@@ -128,7 +127,7 @@ def get_channel_levels(
         f.savefig(
             os.path.join(folder_name, file_name),
             bbox_inches="tight",
-            dpi=utils.DEFAULT_DPI,
+            dpi=pyp.utils.DEFAULT_DPI,
             transparent=True,
         )
 

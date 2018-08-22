@@ -58,9 +58,6 @@ def plot(
         for channel_name in channel_names
     ]
 
-    if figsize is None:
-        figsize = (len(channels) / 2, 6 / 2)
-
     if f:
         data = data.filter(f)
 
@@ -76,7 +73,9 @@ def plot(
         values = values[mask]
         values = values / values[0]
 
-        fig, ax = plt.subplots(figsize=figsize)
+        fig, ax = plt.subplots(
+            figsize=figsize or (len(channels) / 2, 6 / 2),
+        )
 
         df = pd.DataFrame(
             [
@@ -186,9 +185,6 @@ def plot_group(
     if cmp_groups is None:
         cmp_groups = data.cmp_groups or [list(data.groups.keys())]
 
-    if figsize is None:
-        figsize = (12, 4)
-
     if f:
         data = data.filter(f)
 
@@ -244,8 +240,12 @@ def plot_group(
             for name in group.index
         ]
 
-        # print(values)
-        fig, ax = plt.subplots(figsize=figsize)
+        if figsize is None:
+            figsize = (8, 4)
+
+        fig, ax = plt.subplots(
+            figsize=figsize or (len(labels) * 2, 4),
+        )
 
         x = [
             ind
@@ -300,23 +300,6 @@ def plot_group(
             alpha=.25,
         )
 
-        means = [
-            i.mean()
-            for vals in values
-            for i in vals
-        ]
-        means = [
-            np.log2(i.mean())
-            for vals in values
-            for i in vals
-        ]
-
-        errs = [
-            np.log2(i.std()) if len(i) > 1 else 0
-            for vals in values
-            for i in vals
-        ]
-
         mod_str = row["Modifications"].__str__(prot_index=0)
 
         ax.set_title(
@@ -327,24 +310,8 @@ def plot_group(
                 " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
             ),
-            # fontsize=32,
         )
         ax.xaxis.grid(False)
-
-        # if not means[0].any():
-        #     return f
-
-        # if len(means[0]) > 1:
-        #     pep_seqs = row["Sequence"]
-        #     ax.legend([
-        #         "{} ({} - {})".format(
-        #             str(seq),
-        #             seq.protein_matches[0].rel_pos,
-        #             seq.protein_matches[0].rel_pos + len(seq.pep_seq),
-        #         )
-        #         for seq in pep_seqs
-        #     ])
-        #     return f, ax
 
         y_max = y.max()
 
@@ -427,18 +394,15 @@ def plot_group(
             "{} Signal".format(
                 "Relative" if cmp_groups else "Cumulative",
             ),
-            fontsize=20,
         )
         ax.get_legend().set_visible(False)
 
         ax.set_yticklabels(
             ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
-            fontsize=20,
         )
 
         ax.set_xticklabels(
             labels,
-            fontsize=20,
             rotation=45,
             horizontalalignment="right",
         )
@@ -468,7 +432,7 @@ def plot_group(
 def plot_all(
     data,
     f=None,
-    figsize=(16, 8),
+    figsize=None,
     individual=True,
     between=True,
     cmp_groups=None,
