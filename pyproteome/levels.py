@@ -8,9 +8,10 @@ or mean peptide levels across multiple channels.
 from __future__ import absolute_import, division
 
 # Built-ins
+from collections import OrderedDict
 import logging
 import os
-from collections import OrderedDict
+import warnings
 
 # Core data analysis libraries
 from matplotlib import pyplot as plt
@@ -73,6 +74,7 @@ def get_channel_levels(
     ax_iter = iter(axes)
 
     means = data.psms[channels].mean(axis=1)
+    # return {key: 1 for key in data.channels.values()}
 
     for col_name, col in zip(channel_names, channels):
         points = (data.psms[col] / means).dropna()
@@ -100,10 +102,18 @@ def get_channel_levels(
 
         ax = next(ax_iter)
 
-        sns.distplot(
-            points,
-            ax=ax,
-        )
+        # seaborn==0.9.0 throws a scipy.stats warning
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore',
+                '',
+                FutureWarning,
+            )
+            sns.distplot(
+                points,
+                ax=ax,
+            )
+
         ax.set_title(
             "{}\nmedian: {:.2f}, $\\sigma$ = {:.2f}".format(
                 "{} ({})".format(col_name, col)
