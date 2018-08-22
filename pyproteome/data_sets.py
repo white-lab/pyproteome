@@ -28,15 +28,20 @@ from .motifs import motif as pymotif
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
 
-#: Default parameters for filtering data sets. Selects all ions with an ion
-#: score > 15, isolation interference < 50, median quantification signal >
-#: 1e3, and optional false-discovery q-value < 0.05.
+#:
 DEFAULT_FILTER_BAD = dict(
     ion_score=15,
     isolation=50,
     median_quant=1e3,
     q=0.05,
 )
+"""
+Default parameters for filtering data sets.
+
+Selects all ions with an ion score > 15, isolation interference < 50,
+median quantification signal > 1e3, and optional false-discovery q-value <
+0.05.
+"""
 
 DATA_SET_COLS = [
     "Proteins",
@@ -56,7 +61,14 @@ DATA_SET_COLS = [
     "Raw Paths",
     "Scan Paths",
     "Scan",
+    "Fold Change",
+    "p-value",
 ]
+"""
+Columns available in DataSet.psms.
+
+Note that this does not include columns for quantification or weights.
+"""
 
 
 class DataSet:
@@ -248,6 +260,13 @@ class DataSet:
 
     @property
     def samples(self):
+        """
+        Get a list of sample names in this data set.
+
+        Returns
+        -------
+        list of str
+        """
         return list(self.channels.keys())
 
     def __str__(self):
@@ -1289,8 +1308,7 @@ class DataSet:
     @property
     def data(self):
         """
-        Get the raw data corresponding to each channels' intensities for
-        each peptide.
+        Get the quantification data for all samples and peptides in a data set.
 
         Returns
         -------
