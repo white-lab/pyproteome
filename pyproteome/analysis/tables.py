@@ -289,7 +289,12 @@ def _ds_to_df(data):
         ),
     )
     df["Sequence"] = df["Sequence"].apply(str)
-    df["Scan"] = df["Scan"].apply(lambda x: ", ".join(x))
+    df["Scan"] = df["Scan"].apply(
+        lambda x:
+        str(x)
+        if isinstance(x, int) else
+        ", ".join(x)
+    )
     df.sort_values("p-value", inplace=True, ascending=True)
 
     return df
