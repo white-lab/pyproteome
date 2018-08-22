@@ -49,10 +49,10 @@ to manage their Python environment and provide pyproteome's dependencies.
               "128_C": "Ctrl 2",
               "131": "Ctrl 3",
           },
-          groups=[
-              {"KO": ["KO 1", "KO 2", "KO 3"]},
-              {"Control": ["Ctrl 1", "Ctrl 2", "Ctrl 3"]},
-          ],
+          groups={
+              "Control": ["Ctrl 1", "Ctrl 2", "Ctrl 3"]},
+              "KO": ["KO 1", "KO 2", "KO 3"],
+          },
       )
 
   3. Analyze your data::

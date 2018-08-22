@@ -67,7 +67,7 @@ def get_channel_levels(
         rows, cols,
         sharex=True,
         sharey=True,
-        figsize=(4 * cols, 4 * rows),
+        figsize=(3 * cols, 3 * rows),
     )
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)
@@ -91,7 +91,6 @@ def get_channel_levels(
             continue
         else:
             # Fit a guassian and find its maximum
-            print(points)
             gaus = stats.kde.gaussian_kde(points)
             x = np.arange(0, 10, .01)
             y = np.array(gaus.pdf(x))
@@ -106,7 +105,7 @@ def get_channel_levels(
             ax=ax,
         )
         ax.set_title(
-            r"{}: median: {:.2f}, $\sigma$ = {:.2f}".format(
+            "{}\nmedian: {:.2f}, $\\sigma$ = {:.2f}".format(
                 "{} ({})".format(col_name, col)
                 if isinstance(data.channels, dict) else
                 col,

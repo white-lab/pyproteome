@@ -51,8 +51,8 @@ dilution.
 ...     ("3157 CK",     "131"),
 ... ])
 >>> ck_groups = OrderedDict([
-...     ("CK-p25", ["3131 CK-p25", "3145 CK-p25", "3146 CK-p25"]),
 ...     ("CK", ["3130 CK", "3148 CK", "3157 CK"]),
+...     ("CK-p25", ["3131 CK-p25", "3145 CK-p25", "3146 CK-p25"]),
 ... ])
 >>> ck_name = "CK-p25 vs. CK, 2 weeks"
 >>> ck_h1_py = data_sets.DataSet(

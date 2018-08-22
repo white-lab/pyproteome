@@ -55,10 +55,8 @@ def _get_anat(dir, force=False):
     r.raw.decode_content = True
     r.raise_for_status()
 
-    # gzip_file = gzip.GzipFile(fileobj=r.raw)
     tar_file = tarfile.open(
         fileobj=io.BytesIO(r.content),
-        # mode="r:gz",
         mode="r",
     )
     tar_file.extractall(dir)
@@ -151,7 +149,7 @@ def photon(ds):
         list(_get_phos_data(ds.psms))
     ).dropna()
 
-    LOGGER.info("Generated data frame: {}, {}".format(df.shape))
+    LOGGER.info("Generated data frame: {}".format(df.shape))
 
     df = df.sort_values("avg", ascending=False)
 
@@ -162,22 +160,24 @@ def photon(ds):
 
     dir = os.path.join(pyp.paths.FIGURES_DIR)
     defaults = phos.defaults.make_defaults(dir)
-    _get_anat(os.path.abspath("."))
+    _get_anat(dir)
 
     template_dir = os.path.join(defaults['root'], 'templates')
     _get_templates(template_dir)
 
     with tempfile.TemporaryDirectory() as work_dir:
-        with tempfile.NamedTemporaryFile() as csv_file:
+        tmp_path = tempfile.mktemp(suffix=".csv", dir=work_dir)
+
+        with open(tmp_path, "w") as csv_file:
             df.to_csv(csv_file, index=False)
 
-            results = phos.pipeline.run(
-                name,
-                csv_file.name,
-                _parameters,
-                template_dir,
-                work_dir,
-                defaults['db'],
-            )
+        results = phos.pipeline.run(
+            name,
+            csv_file.name,
+            _parameters,
+            template_dir,
+            work_dir,
+            defaults['db'],
+        )
 
     return results
