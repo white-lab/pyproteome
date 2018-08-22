@@ -61,7 +61,7 @@ class Modifications:
 
         Returns
         -------
-        list of :class:`Modification<pyproteome.modification.Modification>`
+        mods : list of :class:`.Modification`
         """
         return [
             mod

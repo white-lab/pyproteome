@@ -144,7 +144,7 @@ def simulate_es_s_pi(
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
     """
     assert metric in CORRELATION_METRICS
 
@@ -560,7 +560,7 @@ def enrichment_scores(
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
     """
     assert metric in CORRELATION_METRICS
 
@@ -648,7 +648,7 @@ def filter_gene_sets(gene_sets, psms, min_hits=10):
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
     """
     LOGGER.info("Filtering gene sets")
 
@@ -703,7 +703,7 @@ def filter_vals(
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
     """
     n_len = len(vals)
     if vals.shape[0] > 0:

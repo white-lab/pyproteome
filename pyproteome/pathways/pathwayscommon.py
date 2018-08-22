@@ -29,7 +29,7 @@ def get_pathway_common(species):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Fetching Pathways Common")
 

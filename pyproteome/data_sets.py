@@ -247,7 +247,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         new = copy.copy(self)
 
@@ -332,7 +332,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+       ds : :class:`.DataSet`
         """
         new = self
 
@@ -458,11 +458,11 @@ class DataSet:
 
         Parameters
         ----------
-        other : :class:`DataSet<pyproteome.data_sets.DataSet>`
+        other : :class:`.DataSet`
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         return merge_data([self, other])
 
@@ -515,13 +515,13 @@ class DataSet:
         Parameters
         ----------
         norm_channels : list of str, optional
-        other : :class:`DataSet<pyproteome.data_sets.DataSet>`, optional
+        other : :class:`.DataSet`, optional
         inplace : bool, optional
             Modify this data set in place.
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         assert (
             norm_channels is not None or
@@ -616,7 +616,7 @@ class DataSet:
         Parameters
         ----------
         lvls : dict of str, float or
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
             Mapping of channel names to normalized levels. Alternatively,
             a data set to pass to levels.get_channel_levels() or use
             pre-calculated levels from.
@@ -625,7 +625,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         new = self
 
@@ -711,7 +711,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         new = self
 
@@ -834,7 +834,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         new = self
 
@@ -1154,7 +1154,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`DataSet<pyproteome.data_sets.DataSet>`
+        ds : :class:`.DataSet`
         """
         new = self
 
@@ -1312,7 +1312,7 @@ class DataSet:
 
         Returns
         -------
-        :class:`pandas.DataFrame`
+        df : :class:`pandas.DataFrame`
         """
         return self.psms[
             [
@@ -1349,7 +1349,7 @@ def load_all_data(
 
     Returns
     -------
-    dict of str, :class:`DataSet<pyproteome.data_sets.DataSet>`
+    datas : dict of str, :class:`.DataSet`
     """
     chan_mapping = chan_mapping or {}
     group_mapping = group_mapping or {}
@@ -1494,13 +1494,13 @@ def merge_data(
 
     Parameters
     ----------
-    data_sets : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data_sets : list of :class:`.DataSet`
     name : str, optional
     merge_duplicates : bool, optional
 
     Returns
     -------
-    :class:`DataSet<pyproteome.data_sets.DataSet>`
+   ds : :class:`.DataSet`
     """
     new = DataSet(
         name=name,
@@ -1602,12 +1602,12 @@ def merge_proteins(ds, inplace=False):
 
     Parameters
     ----------
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    ds : :class:`.DataSet`
     inplace : bool, optional
 
     Returns
     -------
-    :class:`DataSet<pyproteome.data_sets.DataSet>`
+    ds : :class:`.DataSet`
     """
     new = ds
 
@@ -1708,14 +1708,14 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
 
     Parameters
     ----------
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    ds : :class:`.DataSet`
     corr : :class:`pd.Series`
     metric : str, optional
     min_periods : int, optional
 
     Returns
     -------
-    :class:`DataSet<pyproteome.data_sets.DataSet>`
+   ds : :class:`.DataSet`
     """
     ds = ds.copy()
 

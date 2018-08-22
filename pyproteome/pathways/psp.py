@@ -58,7 +58,7 @@ def get_phosphosite(species, remap=False):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Getting phosphosite data for {}".format(species))
 
@@ -112,7 +112,7 @@ def get_phosphosite_regulation(species, remap=False):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Getting phosphosite regulation data for {}".format(species))
 

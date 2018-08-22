@@ -52,9 +52,8 @@ class Sequence:
     ----------
     pep_seq : str
     protein_matches :
-    list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
-    modifications :
-    :class:`Modifications<pyproteome.modification.Modifications>`
+    protein_matches : list of :class:`.ProteinMatch`
+    modifications : :class:`.modification.Modifications`
     """
 
     def __init__(
@@ -67,10 +66,8 @@ class Sequence:
         Parameters
         ----------
         pep_seq : str
-        protein_matches :
-        list of :class:`ProteinMatch<pyproteome.sequence.ProteinMatch>`
-        modifications :
-        :class:`Modifications<pyproteome.modification.Modifications>`, optional
+        protein_matches : list of :class:`.ProteinMatch`
+        modifications : :class:`.modification.Modifications`, optional
         """
         self.pep_seq = pep_seq
         self.protein_matches = protein_matches or ()
@@ -210,7 +207,7 @@ def extract_sequence(proteins, sequence_string):
 
     Returns
     -------
-    list of :class:`Sequence<pyproteome.sequence.Sequence>`
+    seqs : list of :class:`.Sequence`
     """
     prot_matches = []
 

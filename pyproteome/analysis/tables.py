@@ -74,7 +74,7 @@ def motif_table(
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
 
     See Also
     --------

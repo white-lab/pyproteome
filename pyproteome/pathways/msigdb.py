@@ -54,7 +54,7 @@ def get_msigdb_pathways(species, remap=None):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Fetching MSigDB pathways")
 

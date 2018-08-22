@@ -44,7 +44,7 @@ def get_wikipathways(species):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Fetching WikiPathways")
 
@@ -86,7 +86,7 @@ def get_wikipathways_psites(species):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info("Fetching WikiPathways")
 

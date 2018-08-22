@@ -25,7 +25,7 @@ def get_data():
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
     """
     data = requests.get(DATA_URL, stream=True)
     content = BytesIO(data.content)

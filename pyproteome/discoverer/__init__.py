@@ -642,7 +642,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
 
     Returns
     -------
-    :class:`pandas.DataFrame`
+    df : :class:`pandas.DataFrame`
     """
     msf_path = os.path.join(
         paths.MS_SEARCHED_DIR,
