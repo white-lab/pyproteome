@@ -34,6 +34,10 @@ def hierarchical_heatmap(
         Hierarchical clustering method.
     row_cluster : bool, optional
     col_cluster : bool, optional
+
+    Returns
+    -------
+    map : :class:`seaborn.ClusterGrid`
     """
     folder_name = pyp.utils.make_folder(
         data=data,
