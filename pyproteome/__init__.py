@@ -57,8 +57,6 @@ def import_all(line=None):
             "import seaborn as sns",
             "import sklearn",
 
-            "pylab.rcParams['figure.figsize'] = (12, 8)",
-            "pylab.rcParams['figure.dpi'] = 300",
             "pylab.rcParams['figure.figsize'] = (6, 4)",
             "pylab.rcParams['figure.dpi'] = 144",
             "pylab.rcParams['mathtext.default'] = 'regular'",
