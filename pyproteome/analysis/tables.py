@@ -257,15 +257,96 @@ def ptmsigdb_changes_table(
     )
 
 
-def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
+def _ds_to_df(data):
+    channels = [
+        (name, data.channels[name])
+        for group in data.groups.values()
+        for name in group
+        if name in data.channels and
+        data.channels[name] in data.psms.columns
+    ]
+    df = data.psms[
+        [
+            "Proteins", "Sequence", "Scan",
+            "Fold Change", "p-value", "Validated",
+        ] + [
+            chan
+            for _, chan in channels
+        ]
+    ].copy()
+
+    df.rename(
+        columns={
+            chan: name
+            for name, chan in channels
+        },
+        inplace=True,
+    )
+    df.insert(
+        2, "Modifications",
+        df["Sequence"].apply(
+            lambda x: str(x.modifications)
+        ),
+    )
+    df["Sequence"] = df["Sequence"].apply(str)
+    df["Scan"] = df["Scan"].apply(lambda x: ", ".join(x))
+    df.sort_values("p-value", inplace=True, ascending=True)
+
+    return df
+
+
+def write_csv(data, folder_name=None, out_name="DataSet.csv"):
     """
-    Write a full list of data sets to a single .xlsx file.
+    Write information for a single data set to a .csv file.
+
+    Sheets are populated with protein, peptide, scan, and quantification values
+    for all peptide-spectrum matches contained within a data set.
 
     Parameters
     ----------
     datas : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     out_name : str, optional
+
+    Returns
+    -------
+    str
+        Path to .xlsx file.
+    """
+
+    out_name = _prep_csv(
+        data=None,
+        folder_name=folder_name,
+        csv_name=out_name,
+    )
+
+    df = _ds_to_df(data)
+
+    df.to_csv(
+        out_name,
+        index=False,
+    )
+
+    return out_name
+
+
+def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
+    """
+    Write information for a list of data sets to sheets of a .xlsx file.
+
+    Sheets are populated with protein, peptide, scan, and quantification values
+    for all peptide-spectrum matches contained within a data set.
+
+    Parameters
+    ----------
+    datas : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
+    folder_name : str, optional
+    out_name : str, optional
+
+    Returns
+    -------
+    str
+        Path to .xlsx file.
     """
 
     out_name = _prep_csv(
@@ -277,38 +358,7 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
 
     for data in datas:
-        channels = [
-            (name, data.channels[name])
-            for group in data.groups.values()
-            for name in group
-            if name in data.channels and
-            data.channels[name] in data.psms.columns
-        ]
-        df = data.psms[
-            [
-                "Proteins", "Sequence",
-                "Fold Change", "p-value", "Validated",
-            ] + [
-                chan
-                for _, chan in channels
-            ]
-        ].copy()
-
-        df.rename(
-            columns={
-                chan: name
-                for name, chan in channels
-            },
-            inplace=True,
-        )
-        df.insert(
-            2, "Modifications",
-            df["Sequence"].apply(
-                lambda x: str(x.modifications)
-            ),
-        )
-        df["Sequence"] = df["Sequence"].apply(str)
-        df.sort_values("p-value", inplace=True, ascending=True)
+        df = _ds_to_df(data)
 
         ws_name = re.sub(
             "/",
@@ -330,3 +380,5 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
         ws.set_column(4, 4, 12)
 
     writer.save()
+
+    return out_name

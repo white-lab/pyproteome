@@ -84,6 +84,11 @@ to manage their Python environment and provide pyproteome's dependencies.
           metric="zscore",
       )
 
+      # Export the data set as an .csv file
+      tables.write_csv(
+        datas["CK-H1-pST"],
+      )
+
 Contents
 ========
 
