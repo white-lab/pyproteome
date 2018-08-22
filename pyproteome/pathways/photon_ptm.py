@@ -95,6 +95,20 @@ def _get_templates(template_dir):
 
 
 def photon(ds, folder_name=None):
+    """
+    Run PHOTON algorithm on a data set to find functional phosphorylation sites
+    using protein-protein interaction networks.
+
+    Parameters
+    ----------
+    ds : :class:`pyproteome.data_sets.DataSet`
+    folder_name : str, optional
+
+    Returns
+    -------
+    out_path : str
+        Path to results directory.
+    """
     import phos
     import phos.defaults
     import phos.pipeline
@@ -176,7 +190,7 @@ def photon(ds, folder_name=None):
     with open(csv_path, "w") as csv_file:
         df.to_csv(csv_file, index=False)
 
-    results = phos.pipeline.run(
+    phos.pipeline.run(
         name,
         csv_path,
         _parameters,
@@ -187,4 +201,4 @@ def photon(ds, folder_name=None):
 
     LOGGER.info("Wrote results to: {}".format(folder_name))
 
-    return results
+    return folder_name
