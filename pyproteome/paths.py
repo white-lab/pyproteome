@@ -72,7 +72,7 @@ def find_base_dir():
 
     Returns
     -------
-    str
+    path : str
     """
     for opt in BASE_DIR_OPTS:
         if any(
