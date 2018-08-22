@@ -21,17 +21,10 @@ import importlib.util
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 SETUP_PATH = os.path.join(THIS_DIR, "..", "setup.py")
 
-SETUP_LOADER = importlib.machinery.SourceFileLoader('setup', SETUP_PATH)
-REQUIREMENTS = (
-    SETUP_LOADER.exec_module(
-        importlib.util.module_from_spec(
-            importlib.util.spec_from_loader(
-                SETUP_LOADER.name,
-                SETUP_LOADER,
-            )
-        )
-    ).REQUIREMENTS
-)
+SETUP_SPEC = importlib.util.spec_from_file_location('setup', SETUP_PATH)
+SETUP_MODULE = importlib.util.module_from_spec(SETUP_SPEC)
+SETUP_SPEC.loader.exec_module(SETUP_MODULE)
+REQUIREMENTS = SETUP_MODULE.REQUIREMENTS
 
 PROJ_REQUIREMENTS = [
     re.split("[><=]", i)[0]
