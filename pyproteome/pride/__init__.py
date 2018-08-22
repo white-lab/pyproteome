@@ -29,7 +29,7 @@ def list_data_set(accession):
 
     Returns
     -------
-    list of :class:`xml.etree.ElementTree`
+    info_list : list of :class:`xml.etree.ElementTree`
         Information on files available in a repository.
 
     Examples
@@ -70,7 +70,7 @@ def fetch_data_set(accession, files=None):
 
     Returns
     -------
-    list of str
+    file_list : list of str
         Files downloaded from a repository.
 
     Examples
