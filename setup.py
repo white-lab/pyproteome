@@ -4,9 +4,19 @@ from setuptools import setup, find_packages
 
 __dir__ = os.path.dirname(__file__)
 
-__version__ = open(
+with open(
     os.path.join(__dir__, "pyproteome", "version.py")
-).readlines()[0].split("=")[1].strip().strip("\"")
+) as f:
+    __version__ = "0.0.0"
+
+    for line in f:
+        if "#" in line:
+            line = line[:line.index("#")]
+
+        if not line.startswith("__version__ ="):
+            continue
+
+        __version__ = line.split("=")[1].strip().strip("\"")
 
 REQUIREMENTS = [
     "adjustText>=0.7.3",
