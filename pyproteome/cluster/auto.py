@@ -26,7 +26,7 @@ def auto_clusterer(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     """
     folder_name = pyp.utils.make_folder(
         data=data,

@@ -65,7 +65,7 @@ def motif_table(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     f : dict or list of dict
     p : float, optional
     sort : str, optional
@@ -123,7 +123,7 @@ def changes_table(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     sort : str, optional
     folder_name : str, optional
     csv_name : str, optional
@@ -199,7 +199,7 @@ def ptmsigdb_changes_table(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     sort : str, optional
     folder_name : str, optional
     csv_name : str, optional
@@ -310,7 +310,7 @@ def write_csv(data, folder_name=None, out_name="DataSet.csv"):
 
     Parameters
     ----------
-    datas : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
+    datas : list of :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     out_name : str, optional
 
@@ -345,7 +345,7 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
 
     Parameters
     ----------
-    datas : list of :class:`DataSet<pyproteome.data_sets.DataSet>`
+    datas : list of :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     out_name : str, optional
 

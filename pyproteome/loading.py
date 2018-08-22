@@ -124,8 +124,6 @@ def load_mascot_psms(basename, pick_best_ptm=False):
         ),
     )
 
-    psms["Validated"] = False
-
     psms = _calculate_rejected(psms, accepted, maybed, rejected)
     psms = _calculate_accepted(psms, accepted)
 

@@ -35,7 +35,7 @@ def plot(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     sequence : str or :class:`Sequence<pyproteome.sequence.Sequence>`
     title : str, optional
     figsize : tuple of (int, int), optional
@@ -173,7 +173,7 @@ def plot_group(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     sequences : list of str
     """
     folder_name = pyp.utils.make_folder(

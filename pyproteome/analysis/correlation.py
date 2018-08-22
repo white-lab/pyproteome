@@ -35,8 +35,8 @@ def correlate_data_sets(
 
     Parameters
     ----------
-    data1 : :class:`DataSet<pyproteome.data_sets.DataSet>`
-    data2 : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data1 : :class:`pyproteome.data_sets.DataSet`
+    data2 : :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     filename : str, optional
     """

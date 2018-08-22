@@ -378,6 +378,14 @@ def _get_ms_data(df, cursor):
     return df
 
 
+def _set_defaults(df):
+    df["Validated"] = False
+    df["Fold Change"] = np.nan
+    df["p-value"] = np.nan
+
+    return df
+
+
 def _get_filenames(df, cursor):
     files = cursor.execute(
         """
@@ -700,6 +708,8 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _get_ms_data(df, cursor)
         df = _get_filenames(df, cursor)
         df = _get_quantifications(df, cursor, tag_names)
+
+        df = _set_defaults(df)
 
         species = _get_species(cursor)
 

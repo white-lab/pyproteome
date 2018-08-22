@@ -40,7 +40,7 @@ def hierarchical_heatmap(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     baseline_channels : list of str, optional
         List of channels to average and use as baseline for each row.
     metric : str, optional

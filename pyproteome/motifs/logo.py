@@ -185,7 +185,7 @@ def make_logo(data, f, folder_name=None, **kwargs):
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     f : dict
         Filter passed to data.filter() to define the foreground set.
     folder_name : str, optional

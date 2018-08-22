@@ -38,7 +38,7 @@ def get_channel_levels(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     file_name : str, optional
     cols : int, optional

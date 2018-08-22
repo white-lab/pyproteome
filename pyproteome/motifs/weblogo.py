@@ -26,7 +26,7 @@ def make_logo(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     filename : str, optional
     """

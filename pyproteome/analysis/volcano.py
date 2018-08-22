@@ -82,7 +82,7 @@ def plot_volcano(
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     group_a : str or list of str, optional
     group_b : str or list of str, optional
     pval_cutoff : float, optional
@@ -424,7 +424,7 @@ def plot_volcano_filtered(data, f, **kwargs):
 
     Parameters
     ----------
-    data : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    data : :class:`pyproteome.data_sets.DataSet`
     f : dict or list of dict
         Filters passed to data.filter().
 
