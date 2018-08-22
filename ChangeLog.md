@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.7.1 (2018-08-22)
+
+Features
+
+  - More consistent figure + text sizes.
+  - Added tables.write_csv function.
+
 ## 0.7.0 (2018-08-20)
 
 Features
