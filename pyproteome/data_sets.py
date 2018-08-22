@@ -30,9 +30,15 @@ LOGGER = logging.getLogger("pyproteome.data_sets")
 DEFAULT_FILTER_BAD = dict(
     ion_score=15,
     isolation=50,
-    median_quant=1000,
+    median_quant=1e3,
     q=0.05,
 )
+"""
+Default parameters for filtering data sets. Selects all ions with an ion
+score > 15, isolation interference < 50, median quantification signal >
+1e3, and optional false-discovery q-value < 0.05.
+"""
+
 DATA_SET_COLS = [
     "Proteins",
     "Sequence",
@@ -65,7 +71,7 @@ class DataSet:
 
     Data sets are automatically loaded, filtered, and merged by default. See
     `pyproteome.data_sets.DEFAULT_FILTER_BAD` for default filtering parameters.
-    See :func:`~data_sets.DataSet.merge_duplicates` for info on how multiple
+    See :func:`data_sets.DataSet.merge_duplicates` for info on how multiple
     peptide-spectrum matches are integrated together.
 
     Attributes
@@ -1185,6 +1191,12 @@ class DataSet:
         return new
 
     def log_stats(self):
+        """
+        Log statistics information about peptides contained in the data
+        set. This information includes total numbers, phospho-specificity,
+        modification ambiguity, completeness of labeling, and missed
+        cleavage counts.
+        """
         data_p = self.filter(mod=[(None, "Phospho")])
         data_pst = self.filter(mod=[("S", "Phospho"), ("T", "Phospho")])
         data_py = self.filter(mod=[("Y", "Phospho")])
@@ -1243,6 +1255,13 @@ class DataSet:
 
     @property
     def genes(self):
+        """
+        Get all uniprot gene names occuring in this data set.
+
+        Returns
+        -------
+        list of str
+        """
         return sorted(
             set(
                 gene
@@ -1253,6 +1272,13 @@ class DataSet:
 
     @property
     def accessions(self):
+        """
+        Get all uniprot accessions occuring in this data set.
+
+        Returns
+        -------
+        list of str
+        """
         return sorted(
             set(
                 gene
@@ -1264,8 +1290,8 @@ class DataSet:
     @property
     def data(self):
         """
-        Get the raw data corresponding to each channels' intensities for each
-        peptide.
+        Get the raw data corresponding to each channels' intensities for
+        each peptide.
 
         Returns
         -------
@@ -1293,6 +1319,9 @@ def load_all_data(
     **kwargs
 ):
     """
+    Load, normalize, and merge all data sets found in
+    `pyproteome.paths.MS_SEARCHED_DIR`.
+
     Parameters
     ----------
     chan_mapping : dict, optional
@@ -1300,6 +1329,10 @@ def load_all_data(
     loaded_fn : func, optional
     norm_mapping : dict, optional
     merge_mapping : dict, optional
+
+    Returns
+    -------
+    dict of str, :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
     chan_mapping = chan_mapping or {}
     group_mapping = group_mapping or {}
@@ -1358,7 +1391,13 @@ def load_all_data(
     return datas
 
 
-def norm_all_data(datas, norm_mapping):
+def norm_all_data(
+    datas,
+    norm_mapping,
+):
+    """
+    Normalize all data sets.
+    """
     mapped_names = OrderedDict()
     datas_new = datas.copy()
 
@@ -1382,7 +1421,15 @@ def norm_all_data(datas, norm_mapping):
     return datas_new, mapped_names
 
 
-def merge_all_data(datas, merge_mapping, mapped_names=None, merged_fn=None):
+def merge_all_data(
+    datas,
+    merge_mapping,
+    mapped_names=None,
+    merged_fn=None,
+):
+    """
+    Merge together multiple data sets.
+    """
     datas = datas.copy()
 
     if mapped_names is None:
@@ -1531,6 +1578,20 @@ def merge_data(
 
 
 def merge_proteins(ds, inplace=False):
+    """
+    Merge together all peptides mapped to the same protein. Maintains the
+    first available peptide and calculates the median quantification value
+    for each protein across all of its peptides.
+
+    Parameters
+    ----------
+    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    inplace : bool, optional
+
+    Returns
+    -------
+    :class:`DataSet<pyproteome.data_sets.DataSet>`
+    """
     new = ds
 
     if not inplace:
