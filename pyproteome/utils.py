@@ -34,7 +34,7 @@ def fuzzy_find(needle, haystack):
 
     Returns
     -------
-    int
+    index : int
     """
     s = difflib.SequenceMatcher(a=haystack, b=needle)
     best = s.find_longest_match(0, len(haystack), 0, len(needle))
@@ -60,7 +60,11 @@ def makedirs(folder_name=None):
 
     Parameters
     ----------
-    folder_name: str or None
+    folder_name: str, optional
+
+    Returns
+    -------
+    folder_name : str
     """
     if folder_name:
         try:
@@ -77,11 +81,11 @@ def norm(channels):
 
     Parameters
     ----------
-    channels : list of str or OrderedDict of str, str or None
+    channels : list of str or OrderedDict of (str, str) or None
 
     Returns
     -------
-    list of str or OrderedDict of str, str
+    new_channels : list of str or OrderedDict of str, str
     """
     if channels is None:
         return None
@@ -109,7 +113,7 @@ def which(program):
 
     Returns
     -------
-    str or None
+    path : str or None
     """
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
@@ -133,18 +137,18 @@ def flatten_set(lst):
     """
     Flattens an Iterable with arbitrary nesting into a single set.
 
-    Examples
-    --------
-        >>> utils.flatten_set([0, [1, 2], [[3]], "string"])
-        set([0, 1, 2, 3, "string"])
-
     Parameters
     ----------
     lst : Iterable
 
     Returns
     -------
-    set
+    flattened : set
+
+    Examples
+    --------
+        >>> utils.flatten_set([0, [1, 2], [[3]], "string"])
+        set([0, 1, 2, 3, "string"])
     """
     if isinstance(
         lst,
@@ -221,11 +225,11 @@ def memoize(func):
 
     Parameters
     ----------
-    func : function
+    func : func
 
     Returns
     -------
-    function
+    memorized : func
     """
     cache = func.cache = {}
 
@@ -319,5 +323,8 @@ def load(name, default=None):
 
 
 def adjust_text(*args, **kwargs):
+    """
+    Wraps importing and calling adjustText.
+    """
     from adjustText import adjust_text as at
     return at(*args, **kwargs)
