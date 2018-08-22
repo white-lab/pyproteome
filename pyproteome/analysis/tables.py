@@ -292,7 +292,7 @@ def _ds_to_df(data):
     df["Sequence"] = df["Sequence"].apply(str)
     df["Scan"] = df["Scan"].apply(
         lambda x:
-        ", ".join(x)
+        ", ".join([str(i) for i in x])
         if isinstance(x, collections.Iterable) else
         str(x)
     )
