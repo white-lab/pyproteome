@@ -902,15 +902,17 @@ def plot_correlations(gene_changes):
     """
     LOGGER.info("Plotting gene correlations")
 
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(
+        figsize=(4, 3),
+    )
 
     ax.plot(
         gene_changes["Correlation"].sort_values(ascending=False).tolist(),
     )
     ax.axhline(0, color="k")
 
-    ax.set_xlabel("Gene List Rank", fontsize=20)
-    ax.set_ylabel("Correlation", fontsize=20)
+    ax.set_xlabel("Gene List Rank")
+    ax.set_ylabel("Correlation")
 
     return f, ax
 
@@ -967,9 +969,10 @@ def plot_enrichment(
             if hit:
                 ax.axvline(ind, linestyle=":", alpha=.25, color="g")
 
-        for ind, hit in enumerate(row["down_hits"]):
-            if hit:
-                ax.axvline(ind, linestyle=":", alpha=.25, color="r")
+        if "down_hits" in row:
+            for ind, hit in enumerate(row["down_hits"]):
+                if hit:
+                    ax.axvline(ind, linestyle=":", alpha=.25, color="r")
 
         name = row["name"]
         name = name if len(name) < 35 else name[:35] + "..."

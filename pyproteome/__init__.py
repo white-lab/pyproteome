@@ -68,8 +68,8 @@ def import_all(line=None):
             'pd.set_option("display.max_colwidth", 500)',
             'pd.set_option("display.max_rows", 500)',
 
-            "formatter = logging.Formatter('%(asctime)s - %(name)s - "
-            "%(levelname)s - %(message)s', datefmt='%I:%M:%S %p')",
+            "formatter = logging.Formatter('%(asctime)s\t%(name)s\t"
+            "%(levelname)s\t%(message)s', datefmt='%I:%M:%S %p')",
 
             "root = logging.getLogger()",
 

@@ -4,7 +4,6 @@ Discoverer.
 """
 
 from collections import defaultdict
-from datetime import datetime
 import logging
 import os
 import re
@@ -519,7 +518,7 @@ def _reassign_mods(mods, psp_val):
     return mods, reassigned, ambiguous
 
 
-def _get_phosphors(df, cursor):
+def _get_phosphors(df, cursor, name=None):
     fields = cursor.execute(
         """
         SELECT
@@ -569,7 +568,10 @@ def _get_phosphors(df, cursor):
         df.at[pep_id, "Ambiguous"] = ambiguous
 
     LOGGER.info(
-        "Reassigned {} phosphosites using phosphoRS".format(changed_peptides)
+        "{}: Reassigned {} phosphosites using phosphoRS".format(
+            name,
+            changed_peptides,
+        )
     )
 
     return df
@@ -655,7 +657,6 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     LOGGER.info(
         "{}: Loading ProteomeDiscoverer peptides".format(name)
     )
-    start = datetime.now()
 
     with sqlite3.connect(msf_path) as conn:
         cursor = conn.cursor()
@@ -694,7 +695,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
         df = _extract_confidence(df)
         df = _extract_spectrum_file(df)
         df = _get_modifications(df, cursor)
-        df = _get_phosphors(df, cursor)
+        df = _get_phosphors(df, cursor, name=name)
         df = _get_q_values(df, cursor)
         df = _get_ms_data(df, cursor)
         df = _get_filenames(df, cursor)
@@ -707,11 +708,10 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     df.reset_index(inplace=True, drop=True)
 
     LOGGER.info(
-        "{}: Loaded {} peptides in {} hr:min:sec"
+        "{}: Loaded {} peptides"
         .format(
             os.path.splitext(basename)[0],
             df.shape[0],
-            str(datetime.now() - start).split('.')[0],
         )
     )
 
