@@ -1,6 +1,7 @@
 
 from __future__ import absolute_import, division
 
+import collections
 import os
 import re
 
@@ -291,9 +292,9 @@ def _ds_to_df(data):
     df["Sequence"] = df["Sequence"].apply(str)
     df["Scan"] = df["Scan"].apply(
         lambda x:
-        str(x)
-        if isinstance(x, int) else
         ", ".join(x)
+        if isinstance(x, collections.Iterable) else
+        str(x)
     )
     df.sort_values("p-value", inplace=True, ascending=True)
 
