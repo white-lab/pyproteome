@@ -297,6 +297,13 @@ class DataSet:
 
     @property
     def shape(self):
+        """
+        Get the size of a data set in (rows, columns) format.
+
+        Returns
+        -------
+        shape : tuple of (int, int)
+        """
         return self.psms.shape
 
     def _pick_best_ptm(self):
