@@ -1624,6 +1624,10 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
     corr : :class:`pd.Series`
     metric : str, optional
     min_periods : int, optional
+
+    Returns
+    -------
+    :class:`DataSet<pyproteome.data_sets.DataSet>`
     """
     ds = ds.copy()
 

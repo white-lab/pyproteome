@@ -1,6 +1,6 @@
 """
-This module provides functionality for accessing public proteome data through
-PRIDE / Proteome Xchange.
+This module provides functionality for accessing public data through
+PRIDE PRoteomics IDEntifications (PRIDE) / Proteome Xchange.
 """
 
 import os
@@ -29,7 +29,13 @@ def list_data_set(accession):
 
     Returns
     -------
-    list of xml.etree.ElementTree
+    list of str
+
+    Examples
+    --------
+    >>> lst = pride.list_data_set("PXD003660")
+    >>> lst[0]
+        '20140524_MCF10A_E20VR1_ETP_TMT10.raw'
     """
     assert accession.startswith("PXD")
 
@@ -41,7 +47,10 @@ def list_data_set(accession):
 
     root = ET.fromstring(meta_data.text)
 
-    return root.findall("DatasetFileList/DatasetFile")
+    return [
+        i.get("name")
+        for i in root.findall("DatasetFileList/DatasetFile")
+    ]
 
 
 def fetch_data_set(accession, files=None):
@@ -53,6 +62,8 @@ def fetch_data_set(accession, files=None):
     accession : str
         A PRIDE accession ID. i.e. "PXD001038"
     files : dict of str, str
+        Download individual files to a specific location. By default, this
+        function downloads all files to the current working directory.
 
     Returns
     -------
@@ -60,17 +71,18 @@ def fetch_data_set(accession, files=None):
 
     Examples
     --------
-    >>> from pyproteome import pride
     >>> pride.fetch_data_set(
     ...     "PXD001038",
     ...     files={"HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip": "."},
     ... )
+        ["HJ070512_OCTFF_B2_All5Fractions_PeptideSummary.zip"]
     """
     ds = list_data_set(accession)
     ret = []
 
     for file_root in ds:
         name = file_root.get("name")
+
         if files and name not in files:
             continue
 
