@@ -147,10 +147,10 @@ def correlate_data_sets(
         merged["Fold Change_y"],
         method="pearson",
     )
-    spear_corr = merged["Fold Change_x"].corr(
-        merged["Fold Change_y"],
-        method="spearman",
-    )
+    # spear_corr = merged["Fold Change_x"].corr(
+    #     merged["Fold Change_y"],
+    #     method="spearman",
+    # )
 
     ax.set_title(
         (
@@ -302,6 +302,20 @@ def correlate_signal(
     figsize=(12, 10),
     xlabel="",
 ):
+    """
+    Calculate the correlation between levels of each peptide in a data set and
+    a given signal variable.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.DataSet`
+    signal : :class:`pandas.Series`
+
+    Returns
+    -------
+    f_corr : :class:`matplotlib.figure.Figure`
+    f_scatter : :class:`matplotlib.figure.Figure`
+    """
     folder_name = pyp.utils.make_folder(
         data=data,
         folder_name=folder_name,
