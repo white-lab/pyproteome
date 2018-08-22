@@ -26,10 +26,10 @@ pyproteome.pathways.gskb module
     :show-inheritance:
 
 
-pyproteome.pathways.msgidb module
+pyproteome.pathways.msigdb module
 ---------------------------------
 
-.. automodule:: pyproteome.pathways.msgidb
+.. automodule:: pyproteome.pathways.msigdb
     :members:
     :undoc-members:
     :show-inheritance:
