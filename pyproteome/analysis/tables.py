@@ -310,7 +310,7 @@ def write_csv(data, folder_name=None, out_name="DataSet.csv"):
 
     Parameters
     ----------
-    datas : list of :class:`pyproteome.data_sets.DataSet`
+    data : :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
     out_name : str, optional
 
