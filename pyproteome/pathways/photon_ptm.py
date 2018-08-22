@@ -171,7 +171,7 @@ def photon(ds, folder_name=None):
         sub=os.path.join("Photon", name),
     )
 
-    csv_path = os.path.join(folder_name, name, "results.csv")
+    csv_path = os.path.join(folder_name, "results.csv")
 
     with open(csv_path, "w") as csv_file:
         df.to_csv(csv_file, index=False)
