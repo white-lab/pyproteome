@@ -74,7 +74,7 @@ def make_logo(data, f, m=None, **kwargs):
     )
 
 
-def plogo_wait_job(s, job, delay=1):
+def _plogo_wait_job(s, job, delay=1):
     while True:
         response = s.get(
             '{}/getPlogo/{}'.format(PLOGO_BASE, job),
@@ -168,7 +168,7 @@ def plogo(
 
     json = _check_plogo_response(response)
     job = json['state']['jobId']
-    plogo_wait_job(s, job)
+    _plogo_wait_job(s, job)
 
     for letter, pos in fix_letter_pos:
         response = s.post(
@@ -188,7 +188,7 @@ def plogo(
 
         json = _check_plogo_response(response)
         job = json['state']['jobId']
-        plogo_wait_job(s, job)
+        _plogo_wait_job(s, job)
 
     response = s.post(
         '{}/redrawplogo/'.format(PLOGO_BASE),
@@ -203,7 +203,7 @@ def plogo(
     )
     json = _check_plogo_response(response)
     job = json['state']['jobId']
-    plogo_wait_job(s, job)
+    _plogo_wait_job(s, job)
 
     png = json['state']['job']['image_url']
 
