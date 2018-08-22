@@ -127,6 +127,10 @@ def changes_table(
     sort : str, optional
     folder_name : str, optional
     csv_name : str, optional
+
+    Returns
+    -------
+    df : :class:`pandas.DataFrame`
     """
     csv_name = _prep_csv(
         data=data,
@@ -203,6 +207,10 @@ def ptmsigdb_changes_table(
     sort : str, optional
     folder_name : str, optional
     csv_name : str, optional
+
+    Returns
+    -------
+    df : :class:`pandas.DataFrame`
     """
     csv_name = _prep_csv(
         data=data,
