@@ -16,7 +16,7 @@ class Proteins:
 
     Attributes
     ----------
-    proteins : list of :class:`Protein<pyproteome.protein.Protein>`
+    proteins : list of :class:`.Protein`
         List of proteins to which a peptide sequence is mapped.
     """
 
@@ -57,14 +57,35 @@ class Proteins:
 
     @property
     def accessions(self):
+        """
+        List of UniPort accessions for a group of proteins.
+
+        Returns
+        -------
+        tuple of str
+        """
         return tuple(i.accession for i in self.proteins)
 
     @property
     def descriptions(self):
+        """
+        List of protein descriptions for a group of proteins.
+
+        Returns
+        -------
+        tuple of str
+        """
         return tuple(i.description for i in self.proteins)
 
     @property
     def genes(self):
+        """
+        List of UniPort gene names for a group of proteins.
+
+        Returns
+        -------
+        tuple of str
+        """
         return tuple(i.gene for i in self.proteins)
 
 

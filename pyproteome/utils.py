@@ -60,7 +60,7 @@ def makedirs(folder_name=None):
 
     Parameters
     ----------
-    folder_name: str, optional
+    folder_name : str, optional
 
     Returns
     -------
