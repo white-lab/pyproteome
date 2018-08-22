@@ -2,9 +2,9 @@
 This module contains code for phosphorylation motif analysis.
 
 It includes functions for discrete motif enrichment as well as generation of
-motif logos. These logos can be generated locally (`logo.make_logo()`) or via
-automated hooks to online tools (`plogo.make_logo()`, `weblogo.make_logo()`,
-`icelogo.make_logo()`).
+motif logos. These logos can be generated locally (:func:`.logo.make_logo`) or
+via automated hooks into online tools (:func:`.plogo.make_logo`,
+:func:`.weblogo.make_logo`, :func:`.icelogo.make_logo`).
 """
 from . import (
     icelogo, logo, motif, neighborhood, phosphosite, plogo, weblogo,
