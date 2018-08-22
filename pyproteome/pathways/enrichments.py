@@ -47,7 +47,13 @@ Correlation metrics used for enrichment analysis. "spearman", "pearson", and
 "zscore" takes ranking values from a log2 z-scored "Fold Change" column.
 """
 DEFAULT_RANK_CPUS = 6
+"""
+Default number of CPUs to use when scrambling rows of a data set.
+"""
 DEFAULT_CORR_CPUS = 4
+"""
+Default number of CPUs to use when scrambling columns of a data set.
+"""
 
 
 class PrPDF(object):
