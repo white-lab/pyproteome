@@ -81,9 +81,10 @@ class DataSet:
     between channels, samples, and sample groups.
 
     Data sets are automatically loaded, filtered, and merged by default. See
-    `pyproteome.data_sets.DEFAULT_FILTER_BAD` for default filtering parameters.
-    See :func:`data_sets.DataSet.merge_duplicates` for info on how multiple
-    peptide-spectrum matches are integrated together.
+    :any:`DEFAULT_FILTER_BAD<pyproteome.data_sets.DEFAULT_FILTER_BAD>`
+    for default filtering parameters. See
+    :func:`merge_duplicates<pyproteome.data_sets.DataSet.merge_duplicates>`
+    for info on how multiple peptide-spectrum matches are integrated together.
 
     Attributes
     ----------
@@ -742,6 +743,13 @@ class DataSet:
         return new
 
     def add_peptide(self, insert):
+        """
+        Manually add a single peptide to a data set.
+
+        Parameters
+        ----------
+        insert : dict
+        """
         defaults = {
             "Proteins": protein.Proteins(),
             "Sequence": sequence.Sequence(),
