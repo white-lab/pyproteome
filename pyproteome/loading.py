@@ -106,11 +106,11 @@ def load_mascot_psms(basename, pick_best_ptm=False):
     Parameters
     ----------
     basenme : str
+    pick_best_ptm : bool, optional
 
     Returns
     -------
     psms : :class:`pandas.DataFrame`
-    pick_best_ptm : bool, optional
     """
     # The load CAMV data to clear unwanted hits if available.
     accepted, maybed, rejected = camv.load_camv_validation(basename)
