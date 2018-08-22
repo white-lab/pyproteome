@@ -7,6 +7,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+import pyproteome as pyp
+
 
 def _is_qc_equal(row_a, row_b):
     if row_a["Proteins"].genes != row_b["Proteins"].genes:
@@ -187,17 +189,45 @@ def peptide_corr(ds):
         df = df.sort_values("pearson")
 
     if df.shape[0] > 10:
-        f, ax = plt.subplots()
+        f, ax = plt.subplots(
+            figsize=(3, 2),
+            dpi=pyp.DEFAULT_DPI,
+        )
         sns.kdeplot(
-            [i["spearman"] for i in corrs],
+            df["spearman"],
             shade=True,
+            ax=ax,
         )
 
         sns.kdeplot(
-            [i["pearson"] for i in corrs],
+            df["pearson"],
             shade=True,
+            ax=ax,
         )
         ax.set_title(ds.name)
+        ax.legend(["spearman", "pearson"], loc='upper left')
+
+        f, ax = plt.subplots(
+            figsize=(3, 2),
+            dpi=pyp.DEFAULT_DPI,
+        )
+        ax.hist(
+            df["spearman"].dropna(),
+            label="spearman",
+            histtype='step',
+            cumulative=True,
+            density=True,
+        )
+
+        ax.hist(
+            df["pearson"].dropna(),
+            label="pearson",
+            histtype='step',
+            cumulative=True,
+            density=True,
+        )
+        ax.set_title(ds.name)
+        ax.legend(["spearman", "pearson"], loc='upper left')
 
         for y in [
             "median quant signal",

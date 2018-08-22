@@ -68,6 +68,7 @@ def get_channel_levels(
         sharex=True,
         sharey=True,
         figsize=(3 * cols, 3 * rows),
+        dpi=pyp.DEFAULT_DPI,
     )
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)

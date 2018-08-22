@@ -16,6 +16,7 @@ import multiprocessing
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import seaborn as sns
 from sklearn.utils import shuffle
 
 import pyproteome as pyp
@@ -748,28 +749,30 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
     """
     LOGGER.info("Plotting NES(S) and NES(S, pi) distributions")
 
-    f, ax = plt.subplots()
+    f, ax = plt.subplots(
+        figsize=(4, 3),
+        dpi=pyp.DEFAULT_DPI,
+    )
 
     if nes_pi_vals.shape[0] > 0:
-        ax.hist(
+        sns.distplot(
             nes_pi_vals,
-            bins=100,
             color='k',
-            alpha=.5,
-            density=True,
+            ax=ax,
         )
 
     if nes_vals.shape[0] > 0:
         try:
-            ax.hist(
+            sns.distplot(
                 nes_vals,
-                bins=50,
                 color='r',
-                alpha=.5,
-                density=True,
+                hist=False,
+                rug=True,
+                kde=False,
+                ax=ax,
             )
         except ValueError as err:
-            LOGGER.warning("ax.hist threw an error: {}".format(err))
+            LOGGER.warning("sns.distplot threw an error: {}".format(err))
 
     return f, ax
 
@@ -807,7 +810,10 @@ def plot_nes(
     if figsize is None:
         figsize = (4, 3)
 
-    f, ax = plt.subplots(figsize=figsize, dpi=pyp.DEFAULT_DPI)
+    f, ax = plt.subplots(
+        figsize=figsize,
+        dpi=pyp.DEFAULT_DPI,
+    )
     v = vals.copy()
     v = v.sort_values("NES(S)")
     mask = (
@@ -857,6 +863,7 @@ def plot_nes(
                 x=x,
                 y=row["NES(S)"],
                 s=row["name"],
+                fontsize=12,
                 backgroundcolor="white",
                 bbox=dict(
                     facecolor='white',
@@ -904,6 +911,7 @@ def plot_correlations(gene_changes):
 
     f, ax = plt.subplots(
         figsize=(4, 3),
+        dpi=pyp.DEFAULT_DPI,
     )
 
     ax.plot(
@@ -941,6 +949,7 @@ def plot_enrichment(
         squeeze=False,
         sharex=True,
         sharey=True,
+        dpi=pyp.DEFAULT_DPI,
     )
     axes = [i for j in axes for i in j]
 
