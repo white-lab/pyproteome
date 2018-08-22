@@ -324,7 +324,7 @@ def write_csv(data, folder_name=None, out_name="DataSet.csv"):
 
     Returns
     -------
-    str
+    path : str
         Path to .xlsx file.
     """
 
@@ -359,7 +359,7 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
 
     Returns
     -------
-    str
+    path : str
         Path to .xlsx file.
     """
 
