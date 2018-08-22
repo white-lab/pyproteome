@@ -31,15 +31,21 @@ def get_channel_levels(
     cols=2,
 ):
     """
-    Calculate channel levels using median channel levels.
-
-    Should be used on sample supernatants.
+    Calculate channel normalization levels. This value is calculated by
+    selecting the peak of Gaussian KDE distribution fitted to channel ratio
+    values.
 
     Parameters
     ----------
     data : :class:`DataSet<pyproteome.data_sets.DataSet>`
     folder_name : str, optional
     file_name : str, optional
+    cols : int, optional
+        Number of columns used when displaying KDE distributions.
+
+    Returns
+    -------
+    dict of str, float
     """
     if not file_name:
         file_name = "channel_levels.png"
@@ -60,7 +66,8 @@ def get_channel_levels(
     f, axes = plt.subplots(
         rows, cols,
         sharex=True,
-        figsize=(2 * rows, 6 * cols),
+        sharey=True,
+        figsize=(4 * cols, 4 * rows),
     )
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)
@@ -69,10 +76,6 @@ def get_channel_levels(
 
     for col_name, col in zip(channel_names, channels):
         points = (data.psms[col] / means).dropna()
-
-        # Filter ratios > 30, those are likely an error in quantification and
-        # may throw off histogram binning
-        points = points[points < 30]
 
         if points.shape[0] < WARN_PEP_CUTOFF:
             LOGGER.warning(
@@ -83,11 +86,16 @@ def get_channel_levels(
                 ).format(data.name, points.shape[0], col_name, col)
             )
 
-        # Fit a guassian and find its maximum
-        gaus = stats.kde.gaussian_kde(points)
-        x = np.arange(0, 10, .01)
-        y = np.array(gaus.pdf(x))
-        med = x[y == y.max()][0]
+        if points.shape[0] < 1:
+            channel_levels[col] = 1
+            continue
+        else:
+            # Fit a guassian and find its maximum
+            print(points)
+            gaus = stats.kde.gaussian_kde(points)
+            x = np.arange(0, 10, .01)
+            y = np.array(gaus.pdf(x))
+            med = x[y == y.max()][0]
 
         channel_levels[col] = med
 

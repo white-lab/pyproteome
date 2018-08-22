@@ -271,6 +271,53 @@ def save_load(name, val=None, default=None):
     return val
 
 
+def save(name, val=None):
+    """
+    Save a variable using the pickle module.
+
+    Parameters
+    ----------
+    name : str
+        The name to use for data storage.
+    val : object, optional
+
+    Returns
+    -------
+    val : object
+    """
+    filename = "{}.pkl".format(name)
+
+    with open(filename, "wb") as f:
+        pickle.dump(val, f)
+
+    return val
+
+
+def load(name, default=None):
+    """
+    Load a variable using the pickle module.
+
+    Parameters
+    ----------
+    name : str
+        The name to use for data storage.
+    default : object, optional
+
+    Returns
+    -------
+    val : object
+    """
+    filename = "{}.pkl".format(name)
+
+    try:
+        with open(filename, "rb") as f:
+            val = pickle.load(f)
+    except:
+        val = default
+
+    return val
+
+
 def adjust_text(*args, **kwargs):
     from adjustText import adjust_text as at
     return at(*args, **kwargs)

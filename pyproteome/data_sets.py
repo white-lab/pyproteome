@@ -56,13 +56,22 @@ DATA_SET_COLS = [
 
 class DataSet:
     """
-    Class that encompasses a proteomics data set.
+    Class that encompasses a proteomics data set. Data sets can be initialized
+    by calling this class's constructor directly, or using
+    :func:`data_sets.load_all_data()`.
 
-    Includes peptide list, scan list, channels, groups, etc.
+    Includes peptide-spectrum matches, quantification info, and mappings
+    between channels, samples, and sample groups.
+
+    Data sets are automatically loaded, filtered, and merged by default. See
+    `pyproteome.data_sets.DEFAULT_FILTER_BAD` for default filtering parameters.
+    See :func:`~data_sets.DataSet.merge_duplicates` for info on how multiple
+    peptide-spectrum matches are integrated together.
 
     Attributes
     ----------
     search_name : str, optional
+        Name of the search file this data set was loaded from.
     psms : :class:`pandas.DataFrame`
         Contains at least "Proteins", "Sequence", and "Modifications" columns.
     channels : dict of str, str
@@ -72,7 +81,8 @@ class DataSet:
         as the first in this sequence.
     cmp_groups : list of list of str
     name : str
-    levels : dict or str, float, optional
+        Name of this data set.
+    levels : dict or str, float
     sets : int
         Number of sets merged into this data set.
     """
@@ -83,14 +93,13 @@ class DataSet:
         channels=None,
         groups=None,
         cmp_groups=None,
-        lvls=None,
         dropna=False,
         pick_best_ptm=True,
         merge_duplicates=True,
         filter_bad=True,
         check_raw=True,
-        log_stats=True,
-        load=True,
+        skip_load=False,
+        skip_logging=False,
     ):
         """
         Initializes a data set.
@@ -106,7 +115,6 @@ class DataSet:
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
-        lvls : dict or str, float, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
             values.
@@ -121,8 +129,10 @@ class DataSet:
         filter_bad : bool or dict, optional
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
-        log_stats : bool, optional
-        load : bool, optional
+        skip_load : bool, optional
+            Just initialize the structure, don't load any data.
+        skip_logging : bool, optional
+            Don't log any information.
         """
         if search_name is None:
             search_name = name
@@ -137,7 +147,7 @@ class DataSet:
 
         species, lst = set(), []
 
-        if search_name and load:
+        if search_name and not skip_load:
             self.psms, species, lst = loading.load_mascot_psms(
                 search_name,
                 pick_best_ptm=pick_best_ptm,
@@ -150,7 +160,7 @@ class DataSet:
             )
 
         self.name = name
-        self.levels = lvls
+        self.levels = None
         self.search_name = search_name
         self.species = species
 
@@ -175,7 +185,7 @@ class DataSet:
             if pd.isnull(self.psms[list(self.channels.values())]).all().all():
                 del filter_bad["median_quant"]
 
-        if log_stats:
+        if skip_logging:
             self.log_stats()
 
         if filter_bad:
@@ -211,7 +221,7 @@ class DataSet:
 
         self.update_group_changes()
 
-        if log_stats:
+        if skip_logging:
             self.log_stats()
 
     def copy(self):
@@ -1430,8 +1440,8 @@ def merge_data(
     """
     new = DataSet(
         name=name,
-        log_stats=False,
-        load=False,
+        skip_logging=True,
+        skip_load=True,
     )
 
     if len(data_sets) < 1:
