@@ -1363,6 +1363,12 @@ def load_all_data(
     loaded_fn : func, optional
     norm_mapping : dict, optional
     merge_mapping : dict, optional
+    merged_fn : func, optional
+    kw_mapping : dict of (str, dict)
+    merge_only : bool, optional
+    kwargs : dict
+        Any extra arguments are passed directly to DataSet during
+        initialization.
 
     Returns
     -------
@@ -1509,6 +1515,16 @@ def norm_all_data(
 ):
     """
     Normalize all data sets.
+
+    Parameters
+    ----------
+    datas : dict of (str, :class:`.DataSet`)
+    norm_mapping : dict of (str, str)
+
+    Returns
+    -------
+    datas : dict of (str, :class:`.DataSet`)
+    mapped_names : dict of (str, str)
     """
     mapped_names = OrderedDict()
     datas_new = datas.copy()
@@ -1541,6 +1557,17 @@ def merge_all_data(
 ):
     """
     Merge together multiple data sets.
+
+    Parameters
+    ----------
+    datas : dict of (str, :class:`.DataSet`)
+    merge_mapping : dict of (str, list of str)
+    mapped_names : dict of (str, str), optional
+    merged_fn : func, optional
+
+    Returns
+    -------
+    datas : dict of (str, :class:`.DataSet`)
     """
     datas = datas.copy()
 
