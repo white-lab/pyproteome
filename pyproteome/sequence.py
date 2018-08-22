@@ -17,7 +17,7 @@ class ProteinMatch:
 
     Attributes
     ----------
-    protein : :class:`Protein<pyproteome.protein.Protein>`
+    protein : :class:`pyproteome.protein.Protein`
     rel_pos : int
     exact : bool
     """
@@ -158,6 +158,14 @@ class Sequence:
 
     @property
     def is_labeled(self):
+        """
+        Checks whether a sequence is modified on any residue with a
+        quantification label.
+
+        Returns
+        -------
+        is_labeled : bool
+        """
         if self._is_labeled is not None:
             return self._is_labeled
 
@@ -172,6 +180,15 @@ class Sequence:
 
     @property
     def is_underlabeled(self):
+        """
+        Checks whether a sequence is modified with quantification labels on
+        fewer than all expected residues.
+
+        Returns
+        -------
+        is_underlabeled : bool
+        """
+
         if self._is_underlabeled is not None:
             return self._is_underlabeled
 
@@ -202,7 +219,7 @@ def extract_sequence(proteins, sequence_string):
 
     Parameters
     ----------
-    proteins : list of :class:`Protein<pyproteome.protein.Protein>`
+    proteins : list of :class:`pyproteome.protein.Protein`
     sequence_string : str
 
     Returns
