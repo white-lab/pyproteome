@@ -29,14 +29,16 @@ def list_data_set(accession):
 
     Returns
     -------
-    list of str
-        Files available in a repository.
+    list of :class:`xml.etree.ElementTree`
+        Information on files available in a repository.
 
     Examples
     --------
     >>> lst = pride.list_data_set("PXD003660")
-    >>> lst[0]
+    >>> lst[0].get("name")
     '20140524_MCF10A_E20VR1_ETP_TMT10.raw'
+    >>> lst[0].find("cvParam").get("value")
+    'ftp://ftp.pride.ebi.ac.uk/pride/data/archive/2016/06/PXD003660/20140524_MCF10A_E20VR1_ETP_TMT10.raw'
     """
     assert accession.startswith("PXD")
 
@@ -49,7 +51,7 @@ def list_data_set(accession):
     root = ET.fromstring(meta_data.text)
 
     return [
-        i.get("name")
+        i
         for i in root.findall("DatasetFileList/DatasetFile")
     ]
 
