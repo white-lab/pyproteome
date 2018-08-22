@@ -5,7 +5,6 @@ import logging
 import requests
 import os
 import tarfile
-import tempfile
 import uuid
 
 import pyproteome as pyp
@@ -95,7 +94,7 @@ def _get_templates(template_dir):
         f.write(r.content)
 
 
-def photon(ds):
+def photon(ds, folder_name=None):
     import phos
     import phos.defaults
     import phos.pipeline
@@ -158,6 +157,7 @@ def photon(ds):
     _parameters = parameters.copy()
     _parameters['anat']['anchor'] = 1950
 
+    # XXX: Better directory for files that Photon must download for its use?
     dir = os.path.join(pyp.paths.FIGURES_DIR)
     defaults = phos.defaults.make_defaults(dir)
     _get_anat(dir)
@@ -165,19 +165,26 @@ def photon(ds):
     template_dir = os.path.join(defaults['root'], 'templates')
     _get_templates(template_dir)
 
-    with tempfile.TemporaryDirectory() as work_dir:
-        tmp_path = tempfile.mktemp(suffix=".csv", dir=work_dir)
+    folder_name = pyp.utils.make_folder(
+        data=ds,
+        folder_name=folder_name,
+        sub=os.path.join("Photon", name),
+    )
 
-        with open(tmp_path, "w") as csv_file:
-            df.to_csv(csv_file, index=False)
+    csv_path = os.path.join(folder_name, name, "results.csv")
 
-        results = phos.pipeline.run(
-            name,
-            csv_file.name,
-            _parameters,
-            template_dir,
-            work_dir,
-            defaults['db'],
-        )
+    with open(csv_path, "w") as csv_file:
+        df.to_csv(csv_file, index=False)
+
+    results = phos.pipeline.run(
+        name,
+        csv_path,
+        _parameters,
+        template_dir,
+        folder_name,
+        defaults['db'],
+    )
+
+    LOGGER.info("Wrote results to {}".format(folder_name))
 
     return results
