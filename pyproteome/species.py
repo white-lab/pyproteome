@@ -29,7 +29,14 @@ ORGANISM_MAPPING = {
     # 'turkey': ,
     # 'water buffalo': ,
 }
+"""
+Mapping between species' specific name and its colloquial name.
+(i.e. "Homo sapiens" > "human")
+"""
 INV_ORGANISM_MAPPING = {
     val: key
     for key, val in ORGANISM_MAPPING.items()
 }
+"""
+Mapping between species' colloquial name and its specific name.
+"""
