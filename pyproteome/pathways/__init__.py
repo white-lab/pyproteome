@@ -146,7 +146,7 @@ def get_pathways(species, p_sites=False, remap=False):
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info(
         "building gene sets (psites={}, remap={})"
@@ -356,7 +356,7 @@ def gsea(
 
     Parameters
     ----------
-    ds : :class:`DataSet<pyproteome.data_sets.DataSet>`
+    ds : :class:`pyproteome.data_sets.DataSet`
         The data set to perform enrichment analysis on.
     phenotype : :class:`pandas.Series`, optional
         A series object with index values equal to the quantification columns
@@ -494,12 +494,12 @@ def psea(*args, **kwargs):
     """
     Perform Gene Set Enrichment Analysis (GSEA) on a data set.
 
-    See :func:`pyproteome.analysis.pathways.gsea` for documentation and a full
+    See :func:`pyproteome.pathways.gsea` for documentation and a full
     list of arguments.
 
     Returns
     -------
-    :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`, optional
     """
     kwargs["p_sites"] = True
     return gsea(*args, **kwargs)
