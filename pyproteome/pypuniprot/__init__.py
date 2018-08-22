@@ -27,7 +27,7 @@ def fetch_uniprot_data(accessions):
     Fetch UniProt protein descriptions, gene names, sequences, etc.
 
     All information is stored in UNIPROT_DATA and can be accessed with
-    get_uniprot_data().
+    :func:`.get_uniprot_data`.
 
     Parameters
     ----------
@@ -86,11 +86,11 @@ def prefetch_all_msf_uniprot():
     Fetch data for all accesions found in MSF files in MS Searched directory.
     """
     accessions = set()
-    for filename in os.listdir(paths.MS_SEARCHED_DIR):
+    for filename in os.listdir(pyp.paths.MS_SEARCHED_DIR):
         if not os.path.splitext(filename)[1].lower() in [".msf"]:
             continue
 
-        msf_path = os.path.join(paths.MS_SEARCHED_DIR, filename)
+        msf_path = os.path.join(pyp.paths.MS_SEARCHED_DIR, filename)
 
         with sqlite3.connect(msf_path) as conn:
             cursor = conn.cursor()
@@ -122,7 +122,7 @@ def get_uniprot_data(accession):
 
     Returns
     -------
-    dict
+    data : dict
     """
     if accession not in UNIPROT_DATA:
         fetch_uniprot_data([accession])
