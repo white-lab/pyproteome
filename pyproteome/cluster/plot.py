@@ -9,7 +9,6 @@ from fastcluster import linkage
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram
-from scipy import stats
 import seaborn as sns
 import sklearn
 

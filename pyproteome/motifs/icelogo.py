@@ -50,12 +50,29 @@ def icelogo(
     scoring="foldChange",
 ):
     """
-    Wraps calls to icelogo server, returning an image showing the enrichment of
-    a sequence in a foreground set compared to a background set.
+    Wraps calls to iceLogo [1]_, returning an image showing the enrichment of a
+    sequence in a foreground set compared to a background set.
+
+    Parameters
+    ----------
+    foreground : list of str
+    background : list of str
+    title : str, optional
+    width : int, optional
+    height : int, optional
+    pval : float, optional
+    scoring : string, optional
+
+    Returns
+    -------
+    fig : :class:`IPython.display.Image`
 
     Notes
     -----
-    .. [1] ...
+    .. [1] Colaert, N., Helsens, K., Martens, L., Vandekerckhove, J., &
+        Gevaert, K. (2009). Improved visualization of protein consensus
+        sequences by iceLogo. Nature Methods, 6(11), 786–787.
+        http://doi.org/10.1038/nmeth1109-786
     """
     if len(foreground) < 1 or len(background) < 1:
         return None

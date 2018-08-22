@@ -105,7 +105,7 @@ def plogo(
     ymax=None,
 ):
     u"""
-    Wraps calls to Plogo, returning an image showing the enrichment of a
+    Wraps calls to Plogo [1]_, returning an image showing the enrichment of a
     sequence in a foreground set compared to a background set.
 
     Notes

@@ -510,7 +510,9 @@ def motif_enrichment(
     force=False,
 ):
     """
-    Calculate motifs significantly enriched in a list of sequences.
+    Calculate motifs significantly enriched in a set of sequences. Uses a
+    depth-first search algorithm to find discrete motifs that are enriched in
+    a foreground set compared to a given background [1]_.
 
     Parameters
     ----------

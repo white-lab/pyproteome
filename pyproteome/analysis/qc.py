@@ -7,8 +7,6 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-import pyproteome as pyp
-
 
 def _is_qc_equal(row_a, row_b):
     if row_a["Proteins"].genes != row_b["Proteins"].genes:
