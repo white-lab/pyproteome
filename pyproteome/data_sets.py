@@ -27,17 +27,16 @@ from .motifs import motif as pymotif
 
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
+
+#: Default parameters for filtering data sets. Selects all ions with an ion
+#: score > 15, isolation interference < 50, median quantification signal >
+#: 1e3, and optional false-discovery q-value < 0.05.
 DEFAULT_FILTER_BAD = dict(
     ion_score=15,
     isolation=50,
     median_quant=1e3,
     q=0.05,
 )
-"""
-Default parameters for filtering data sets. Selects all ions with an ion
-score > 15, isolation interference < 50, median quantification signal >
-1e3, and optional false-discovery q-value < 0.05.
-"""
 
 DATA_SET_COLS = [
     "Proteins",
