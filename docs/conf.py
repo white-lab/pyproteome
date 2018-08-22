@@ -15,15 +15,23 @@
 import sys
 import os
 import re
-
+import importlib.machinery
+import importlib.util
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-PYP_DIR = os.path.join(THIS_DIR, "..")
+SETUP_PATH = os.path.join(THIS_DIR, "..", "setup.py")
 
-sys.path.append(PYP_DIR)
-
-from setup import REQUIREMENTS
-
+SETUP_LOADER = importlib.machinery.SourceFileLoader('setup', SETUP_PATH)
+REQUIREMENTS = (
+    SETUP_LOADER.exec_module(
+        importlib.util.module_from_spec(
+            importlib.util.spec_from_loader(
+                SETUP_LOADER.name,
+                SETUP_LOADER,
+            )
+        )
+    ).REQUIREMENTS
+)
 
 PROJ_REQUIREMENTS = [
     re.split("[><=]", i)[0]
