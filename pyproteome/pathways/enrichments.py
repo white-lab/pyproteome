@@ -987,32 +987,51 @@ def plot_enrichment(
         name = name if len(name) < 35 else name[:35] + "..."
 
         ax.set_title(
-            "{}\nhits: {} {}={:.2f}"
-            .format(
-                name,
-                row["n_hits"],
-                nes.split("(")[0],
-                row[nes],
-            ) + (
-                ", p={:.2f}".format(
-                    row["p-value"],
-                ) if "p-value" in row.index else ""
-            ) + (
-                ", q={:.2f}".format(
-                    row["q-value"],
-                ) if "q-value" in row.index else ""
-            ),
-            fontsize=20,
+            name
         )
+        txt = "hits: {} {}={:.2f}".format(
+            row["n_hits"],
+            nes.split("(")[0],
+            row[nes],
+        ) + (
+            "\np={:.2f}".format(
+                row["p-value"],
+            ) if "p-value" in row.index else ""
+        ) + (
+            ", q={:.2f}".format(
+                row["q-value"],
+            ) if "q-value" in row.index else ""
+        )
+
         ax.axhline(0, color="k")
 
         if index >= len(axes) - cols:
-            ax.set_xlabel("Gene List Rank", fontsize=20)
+            ax.set_xlabel("Gene List Rank")
 
         if index % cols == 0:
-            ax.set_ylabel("ES(S)", fontsize=20)
+            ax.set_ylabel("ES(S)")
 
         ax.set_ylim(-1, 1)
+
+        text = ax.text(
+            s=txt,
+            x=ax.get_xlim()[1] / 2,
+            y=-.8,
+            color='k',
+            horizontalalignment='center',
+            verticalalignment='center',
+        )
+        text.set_bbox(
+            dict(
+                # facecolor=_get_color(txt, x, y),
+                alpha=1,
+                linewidth=0.5,
+                facecolor="white",
+                zorder=1,
+                edgecolor="black",
+                boxstyle="round",
+            )
+        )
 
     for ax in ax_iter:
         ax.axis('off')

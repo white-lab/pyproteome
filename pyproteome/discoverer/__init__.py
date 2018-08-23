@@ -576,7 +576,7 @@ def _get_phosphors(df, cursor, name=None):
         df.at[pep_id, "Ambiguous"] = ambiguous
 
     LOGGER.info(
-        "{}: Reassigned {} phosphosites using phosphoRS".format(
+        "{}: -- Reassigned {} phosphosites using phosphoRS".format(
             name,
             changed_peptides,
         )
@@ -663,7 +663,7 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     name = os.path.splitext(basename)[0]
 
     LOGGER.info(
-        "{}: Loading ProteomeDiscoverer peptides".format(name)
+        "{}: Loading ProteomeDiscoverer peptides...".format(name)
     )
 
     with sqlite3.connect(msf_path) as conn:

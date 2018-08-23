@@ -1236,15 +1236,23 @@ class DataSet:
         data_pst = self.filter(mod=[("S", "Phospho"), ("T", "Phospho")])
         data_py = self.filter(mod=[("Y", "Phospho")])
 
+        LOGGER.info("{}: Data Set Statistics:".format(self.name))
+
         LOGGER.info(
             (
-                "{}: {} pY - {} pST ({:.0%} phospho specificity) -"
-                " {} total peptides - {} unique proteins"
+                "{}: -- {} pY - {} pST ({:.0%} phospho specificity)"
             ).format(
                 self.name,
                 len(data_py.psms),
                 len(data_pst.psms),
                 len(data_p.psms) / max([len(self.psms), 1]),
+            )
+        )
+        LOGGER.info(
+            (
+                "{}: -- {} total peptides - {} unique proteins"
+            ).format(
+                self.name,
                 len(self.psms),
                 len(self.genes),
             )
@@ -1257,7 +1265,7 @@ class DataSet:
 
         LOGGER.info(
             (
-                "{}: {:.0%} of phosphopeptides have an ambiguous assignment"
+                "{}: -- {:.0%} of phosphopeptides have an ambiguous assignment"
             ).format(self.name, per_amb)
         )
 
@@ -1276,7 +1284,7 @@ class DataSet:
 
         LOGGER.info(
             (
-                "{}: {:.0%} labeled - {:.0%} underlabeled"
+                "{}: -- {:.0%} labeled - {:.0%} underlabeled"
             ).format(self.name, per_lab, per_under_lab)
         )
 
@@ -1284,7 +1292,7 @@ class DataSet:
 
         LOGGER.info(
             (
-                "{}: {:.1f} mean missed cleavages"
+                "{}: -- {:.1f} mean missed cleavages"
             ).format(self.name, mmc)
         )
 
@@ -1496,8 +1504,8 @@ def load_all_data(
             **kws
         )
 
-    if loaded_fn:
-        datas = loaded_fn(datas)
+        if loaded_fn:
+            datas[name] = loaded_fn(name, datas[name])
 
     datas, mapped_names = norm_all_data(datas, norm_mapping)
     datas = merge_all_data(
