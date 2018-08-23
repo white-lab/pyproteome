@@ -293,7 +293,7 @@ class IntegrationTest(TestCase):
 
     def test_clustermap(self):
         for data in self.data.values():
-            cluster.plot.hierarchical_heatmap(
+            analysis.heatmap.hierarchical_heatmap(
                 data,
             )
 

@@ -1013,17 +1013,15 @@ def plot_enrichment(
 
         ax.set_ylim(-1, 1)
 
-        text = ax.text(
+        ax.text(
             s=txt,
             x=ax.get_xlim()[1] / 2,
             y=-.8,
             color='k',
             horizontalalignment='center',
             verticalalignment='center',
-        )
-        text.set_bbox(
+        ).set_bbox(
             dict(
-                # facecolor=_get_color(txt, x, y),
                 alpha=1,
                 linewidth=0.5,
                 facecolor="white",
