@@ -111,26 +111,47 @@ def get_channel_levels(
             )
             sns.distplot(
                 points,
+                bins=25,
                 ax=ax,
             )
 
         ax.set_title(
-            "{}\nmedian: {:.2f}, $\\sigma$ = {:.2f}".format(
-                "{} ({})".format(col_name, col)
-                if isinstance(data.channels, dict) else
-                col,
-                med,
-                points.std(ddof=1),
-            ),
+            "{} ({})".format(col_name, col)
+            if isinstance(data.channels, dict) else
+            col,
+        )
+
+        txt = "center = {:.2f}\n$\\sigma$ = {:.2f}".format(
+            med,
+            points.std(ddof=1),
         )
         ax.axvline(med, color='k', linestyle='--')
+
+        ax.text(
+            s=txt,
+            x=ax.get_xlim()[1] * .9,
+            y=1,
+            color='k',
+            horizontalalignment='right',
+            verticalalignment='center',
+        ).set_bbox(
+            dict(
+                # facecolor=_get_color(txt, x, y),
+                alpha=1,
+                linewidth=0.5,
+                facecolor="white",
+                zorder=1,
+                edgecolor="black",
+                boxstyle="round",
+            )
+        )
 
     for ax in ax_iter:
         ax.axis("off")
 
     f.suptitle(
         "{}".format(data.name),
-        fontsize=20,
+        fontsize=16,
     )
 
     if file_name:
