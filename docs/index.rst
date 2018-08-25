@@ -42,12 +42,12 @@ to manage their Python environment and provide pyproteome's dependencies.
       # with search data located in "Searched/"
       datas = data_sets.load_all_data(
           channels={
-              "126": "KO 1",
-              "127_N": "KO 2",
-              "127_C": "KO 3",
-              "128_N": "Ctrl 1",
-              "128_C": "Ctrl 2",
-              "131": "Ctrl 3",
+              "KO 1": "126",
+              "KO 2": "127_N",
+              "KO 3": "127_C",
+              "Ctrl 1": "128_N",
+              "Ctrl 2": "128_C",
+              "Ctrl 3": "131",
           },
           groups={
               "Control": ["Ctrl 1", "Ctrl 2", "Ctrl 3"]},
