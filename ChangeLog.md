@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.7.2 (2018-08-25)
+
+Features
+
+  - Significant improvements to documentation.
+  - Cleaned up several figure layouts.
+
+Bug fixes
+
+  - Fixed install from pip.
+
 ## 0.7.1 (2018-08-22)
 
 Features

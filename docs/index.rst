@@ -39,7 +39,7 @@ to manage their Python environment and provide pyproteome's dependencies.
       # if using IPython:
       %import_all
 
-      # with search data located in "Searched/"
+      # with ProteomeDiscoverer .msf search files located in "Searched/"
       datas = data_sets.load_all_data(
           channels={
               "KO 1": "126",
