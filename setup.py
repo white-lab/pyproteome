@@ -21,7 +21,7 @@ with open(
 REQUIREMENTS = [
     "adjustText>=0.7.3",
     "fastcluster>=1.1.25",
-    "genemap",
+    "genemap>=0.2.0",
     "ipython>=5.4.1",
     "matplotlib>=2.2.0",
     "numpy>=1.15.0",
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         packages=find_packages(exclude=["*.tests", "tests"]),
         install_requires=REQUIREMENTS,
         dependency_links=[
-            "git+https://github.com/naderm/genemap.git#egg=genemap",
+            "git+https://github.com/naderm/genemap.git@master#egg=genemap-0",
         ],
         classifiers=[
             "License :: OSI Approved :: BSD License",
