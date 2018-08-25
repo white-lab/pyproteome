@@ -1626,11 +1626,12 @@ def merge_data(
     ----------
     data_sets : list of :class:`.DataSet`
     name : str, optional
+    norm_channels : dict of (str, str)
     merge_duplicates : bool, optional
 
     Returns
     -------
-   ds : :class:`.DataSet`
+    ds : :class:`.DataSet`
     """
     new = DataSet(
         name=name,
