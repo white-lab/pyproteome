@@ -10,6 +10,10 @@ from . import (
     icelogo, logo, motif, neighborhood, phosphosite, plogo, weblogo,
 )
 
+from .motif import (
+    generate_n_mers,
+)
+
 __all__ = [
     "icelogo",
     "logo",
@@ -18,4 +22,6 @@ __all__ = [
     "phosphosite",
     "plogo",
     "weblogo",
+
+    "generate_n_mers",
 ]

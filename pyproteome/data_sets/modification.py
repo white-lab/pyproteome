@@ -11,11 +11,18 @@ import copy
 LABEL_NAME_TARGETS = (
     "TMT", "ITRAQ", "plex",
 )
+"""
+Substrings used to identify and import novel label names from .msf files.
+"""
+
 LABEL_NAMES = defaultdict(set)
 LABEL_NAMES["TMT10"].add("K")
 LABEL_NAMES["TMT10"].add("N-term")
 LABEL_NAMES["TMT6"].add("K")
 LABEL_NAMES["TMT6"].add("N-term")
+"""
+Names of modifications used for quantification of peptide abundances.
+"""
 
 
 class Modifications:
@@ -334,7 +341,7 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
 
     Parameters
     ----------
-    mod : :class:`Modification<pyproteome.modification.Modification>`
+    mod : :class:`.Modification`
     any_letter : set of str
     any_mod : set of str
     letter_mod : set of tuple of str, str

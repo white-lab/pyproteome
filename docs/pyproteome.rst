@@ -18,6 +18,7 @@ Subpackages
     pyproteome.bca
     pyproteome.camv
     pyproteome.cluster
+    pyproteome.data_sets
     pyproteome.discoverer
     pyproteome.motifs
     pyproteome.pathways
@@ -26,14 +27,6 @@ Subpackages
 
 Submodules
 ----------
-
-pyproteome.data_sets module
----------------------------
-
-.. automodule:: pyproteome.data_sets
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 pyproteome.levels module
 ------------------------
@@ -51,34 +44,11 @@ pyproteome.loading module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.modification module
-------------------------------
-
-.. automodule:: pyproteome.modification
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 pyproteome.paths module
 -----------------------
 
 .. automodule:: pyproteome.paths
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.protein module
--------------------------
-
-.. automodule:: pyproteome.protein
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyproteome.sequence module
---------------------------
-
-.. automodule:: pyproteome.sequence
     :members:
     :undoc-members:
     :show-inheritance:

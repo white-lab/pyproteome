@@ -22,8 +22,9 @@ import numpy as np
 import numpy.ma as ma
 from scipy.stats import ttest_ind, pearsonr, spearmanr
 
-from . import levels, loading, modification, paths, protein, sequence, utils
-from .motifs import motif as pymotif
+from . import modification, protein, sequence
+
+import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.data_sets")
@@ -166,7 +167,7 @@ class DataSet:
         species, lst = set(), []
 
         if search_name and not skip_load:
-            self.psms, species, lst = loading.load_mascot_psms(
+            self.psms, species, lst = pyp.loading.load_mascot_psms(
                 search_name,
                 pick_best_ptm=pick_best_ptm,
             )
@@ -380,17 +381,17 @@ class DataSet:
         agg_dict["Missed Cleavages"] = _first
         agg_dict["Validated"] = all
 
-        agg_dict["Scan Paths"] = utils.flatten_set
-        agg_dict["Raw Paths"] = utils.flatten_set
+        agg_dict["Scan Paths"] = pyp.utils.flatten_set
+        agg_dict["Raw Paths"] = pyp.utils.flatten_set
 
         agg_dict["Ambiguous"] = all
 
-        agg_dict["Masses"] = utils.flatten_set
-        agg_dict["Charges"] = utils.flatten_set
-        agg_dict["Intensities"] = utils.flatten_set
-        agg_dict["RTs"] = utils.flatten_set
+        agg_dict["Masses"] = pyp.utils.flatten_set
+        agg_dict["Charges"] = pyp.utils.flatten_set
+        agg_dict["Intensities"] = pyp.utils.flatten_set
+        agg_dict["RTs"] = pyp.utils.flatten_set
 
-        agg_dict["Scan"] = utils.flatten_set
+        agg_dict["Scan"] = pyp.utils.flatten_set
         agg_dict["Ion Score"] = max
         agg_dict["q-value"] = min
         agg_dict["Confidence Level"] = partial(
@@ -645,11 +646,11 @@ class DataSet:
 
         if hasattr(lvls, "levels"):
             if not lvls.levels:
-                lvls.levels = levels.get_channel_levels(lvls)
+                lvls.levels = pyp.levels.get_channel_levels(lvls)
 
             lvls = lvls.levels
 
-        new_channels = utils.norm(self.channels)
+        new_channels = pyp.utils.norm(self.channels)
 
         for key, norm_key in zip(
             self.channels.values(),
@@ -678,14 +679,14 @@ class DataSet:
         try:
             raw_dir = [
                 i.lower()
-                for i in os.listdir(paths.MS_RAW_DIR)
+                for i in os.listdir(pyp.paths.MS_RAW_DIR)
             ]
         except OSError:
             raw_dir = []
 
         found_all = True
 
-        for raw in utils.flatten_set(
+        for raw in pyp.utils.flatten_set(
             row["Raw Paths"]
             for _, row in self.psms.iterrows()
         ):
@@ -935,7 +936,7 @@ class DataSet:
                 lambda x:
                 any(
                     val.match(nmer)
-                    for nmer in pymotif.generate_n_mers(
+                    for nmer in pyp.motifs.generate_n_mers(
                         x,
                         letter_mod_types=f.get("mod", None),
                     )
@@ -1468,7 +1469,7 @@ def load_all_data(
 
     datas = OrderedDict()
 
-    for f in os.listdir(paths.MS_SEARCHED_DIR):
+    for f in os.listdir(pyp.paths.MS_SEARCHED_DIR):
         name, ext = os.path.splitext(f)
 
         if ext not in [".msf"]:
@@ -1477,7 +1478,7 @@ def load_all_data(
         if (
             merge_mapping and
             merge_only and
-            name not in utils.flatten_set(list(merge_mapping.values()))
+            name not in pyp.utils.flatten_set(list(merge_mapping.values()))
         ):
             continue
 

@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from pyproteome import (
-    pypuniprot, modification, paths, protein, sequence,
+    data_sets, paths, pypuniprot,
 )
 
 
@@ -69,7 +69,7 @@ def _extract_sequence(df):
 
     df["Sequence"] = df.apply(
         lambda row:
-        sequence.extract_sequence(
+        data_sets.extract_sequence(
             row["Proteins"],
             row["Sequence"],
         ),
@@ -148,9 +148,9 @@ def _get_proteins(df, cursor):
 
     df["Proteins"] = df.index.map(
         lambda peptide_id:
-        protein.Proteins(
+        data_sets.Proteins(
             proteins=tuple(
-                protein.Protein(
+                data_sets.Protein(
                     accession=accession,
                     gene=gene,
                     full_sequence=seq,
@@ -191,7 +191,7 @@ def _get_modifications(df, cursor):
         if peptide_id not in df.index:
             continue
 
-        mod = modification.Modification(
+        mod = data_sets.Modification(
             rel_pos=pos,
             mod_type=name,
             nterm=False,
@@ -229,7 +229,7 @@ def _get_modifications(df, cursor):
         nterm = pos_type == 1
         pos = 0 if nterm else len(pep_seq)
 
-        mod = modification.Modification(
+        mod = data_sets.Modification(
             rel_pos=pos,
             mod_type=name,
             nterm=nterm,
@@ -245,7 +245,7 @@ def _get_modifications(df, cursor):
     def _get_mods(row):
         peptide_id = row.name
 
-        mods = modification.Modifications(
+        mods = data_sets.Modifications(
             mods=mod_dict.get(peptide_id, tuple()),
         )
 
@@ -505,7 +505,7 @@ def _reassign_mods(mods, psp_val):
         ambiguous = True
     elif set(i.rel_pos + 1 for i in p_mods) != set(i[1] for i in psp_val_f):
         p_mods = [
-            modification.Modification(
+            data_sets.Modification(
                 rel_pos=i[1] - 1,
                 mod_type="Phospho",
                 nterm=False,
@@ -516,7 +516,7 @@ def _reassign_mods(mods, psp_val):
         ]
         reassigned = True
 
-        mods = modification.Modifications(
+        mods = data_sets.Modifications(
             mods=_sort_mods(o_mods + p_mods),
         )
 
@@ -626,14 +626,14 @@ def _update_label_names(cursor):
     for abbrev, mod_name, aa_name, letter in fields:
         if any(
             i in abbrev or i in mod_name
-            for i in modification.LABEL_NAME_TARGETS
+            for i in data_sets.modification.LABEL_NAME_TARGETS
         ):
             if aa_name in ["N-Terminus"]:
                 letter = "N-term"
             elif aa_name in ["C-Terminus"]:
                 letter = "C-term"
 
-            modification.LABEL_NAMES[abbrev].add(letter)
+            data_sets.modification.LABEL_NAMES[abbrev].add(letter)
 
 
 def read_discoverer_msf(basename, pick_best_ptm=False):

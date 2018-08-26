@@ -5,7 +5,9 @@ This module provides functionality for manipulating sequences.
 # Built-ins
 import logging
 
-from . import modification, protein, utils
+from . import modification, protein
+
+import pyproteome as pyp
 
 
 LOGGER = logging.getLogger("pyproteome.sequence")
@@ -17,7 +19,7 @@ class ProteinMatch:
 
     Attributes
     ----------
-    protein : :class:`pyproteome.protein.Protein`
+    protein : :class:`.protein.Protein`
     rel_pos : int
     exact : bool
     """
@@ -219,7 +221,7 @@ def extract_sequence(proteins, sequence_string):
 
     Parameters
     ----------
-    proteins : list of :class:`pyproteome.protein.Protein`
+    proteins : list of :class:`.protein.Protein`
     sequence_string : str
 
     Returns
@@ -242,7 +244,7 @@ def extract_sequence(proteins, sequence_string):
         exact = True
 
         if pep_pos < 0:
-            pep_pos = utils.fuzzy_find(pep_seq, seq)
+            pep_pos = pyp.utils.fuzzy_find(pep_seq, seq)
             exact = False
 
         return pep_pos, exact

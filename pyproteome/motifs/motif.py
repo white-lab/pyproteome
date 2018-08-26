@@ -217,7 +217,7 @@ def generate_n_mers(
 
     Parameters
     ----------
-    sequences : list of :class:`Sequence<pyproteome.sequence.Sequence>`
+    sequences : list of :class:`pyproteome.data_sets.sequence.Sequence`
     n : int, optional
     all_matches : bool, optional
         Generate n-mers for all protein matches else just the first match.

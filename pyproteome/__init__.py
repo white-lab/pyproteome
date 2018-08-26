@@ -7,9 +7,8 @@ from .motifs import (
     logo, motif, phosphosite,
 )
 from . import (
-    analysis, bca, data_sets, discoverer, levels,
-    loading, modification, motifs, paths, pride, protein, sequence, species,
-    utils, version,
+    analysis, bca, data_sets, discoverer, levels, loading, motifs, paths,
+    pride, species, utils, version,
 )
 from . import cluster, pathways
 
@@ -98,14 +97,11 @@ __all__ = [
     "discoverer",
     "levels",
     "loading",
-    "modification",
     "motifs",
     "phosphosite",
     "paths",
     "pathways",
     "pride",
-    "protein",
-    "sequence",
     "species",
     "tables",
     "utils",

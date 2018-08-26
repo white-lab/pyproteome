@@ -3,7 +3,7 @@ from __future__ import division
 
 from unittest import TestCase
 
-from pyproteome import data_sets, modification, protein, sequence
+from pyproteome import data_sets
 
 import numpy as np
 from collections import OrderedDict
@@ -11,9 +11,9 @@ from collections import OrderedDict
 
 class NormalizationTest(TestCase):
     def setUp(self):
-        self.prots = protein.Proteins(
+        self.prots = data_sets.Proteins(
             proteins=(
-                protein.Protein(
+                data_sets.Protein(
                     accession="P03995",
                     gene="Gfap",
                     description="Glial fibrillary acidic protein",
@@ -31,11 +31,11 @@ class NormalizationTest(TestCase):
                 ),
             ),
         )
-        self.seq = sequence.extract_sequence(self.prots, "QEADEATLAR")
+        self.seq = data_sets.extract_sequence(self.prots, "QEADEATLAR")
 
-        self.mods = modification.Modifications(
+        self.mods = data_sets.Modifications(
             mods=[
-                modification.Modification(
+                data_sets.Modification(
                     rel_pos=0,
                     mod_type="TMT6plex",
                     nterm=True,

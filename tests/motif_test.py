@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from pyproteome import modification, motif, protein, sequence
+from pyproteome import data_sets, motif
 
 
 class MotifTest(TestCase):
@@ -56,11 +56,11 @@ class MotifTest(TestCase):
 
 class GenerateNMersTest(TestCase):
     def setUp(self):
-        self.sequence = sequence.Sequence(
+        self.sequence = data_sets.Sequence(
             pep_seq="GEPNVsyICSR",
             protein_matches=(
-                sequence.ProteinMatch(
-                    protein=protein.Protein(
+                data_sets.ProteinMatch(
+                    protein=data_sets.Protein(
                         accession="Q9WV60",
                         gene="Gsk3b",
                         description="Glycogen synthase kinase-3 beta",
@@ -81,16 +81,16 @@ class GenerateNMersTest(TestCase):
                 ),
             ),
         )
-        self.sequence.modifications = modification.Modifications(
+        self.sequence.modifications = data_sets.Modifications(
             (
                 # S215-p
-                modification.Modification(
+                data_sets.Modification(
                     rel_pos=5,
                     mod_type="Phospho",
                     sequence=self.sequence,
                 ),
                 # Y216-p
-                modification.Modification(
+                data_sets.Modification(
                     rel_pos=6,
                     mod_type="Phospho",
                     sequence=self.sequence,
@@ -133,11 +133,11 @@ class MotifEnrichmentTest(TestCase):
     list of sequences.
     """
     def setUp(self):
-        self.sequence = sequence.Sequence(
+        self.sequence = data_sets.Sequence(
             pep_seq="GEPNVsyICSR",
             protein_matches=(
-                sequence.ProteinMatch(
-                    protein=protein.Protein(
+                data_sets.ProteinMatch(
+                    protein=data_sets.Protein(
                         accession="Q9WV60",
                         gene="Gsk3b",
                         description="Glycogen synthase kinase-3 beta",
@@ -158,16 +158,16 @@ class MotifEnrichmentTest(TestCase):
                 ),
             ),
         )
-        self.sequence.modifications = modification.Modifications(
+        self.sequence.modifications = data_sets.Modifications(
             (
                 # S215-p
-                modification.Modification(
+                data_sets.Modification(
                     rel_pos=5,
                     mod_type="Phospho",
                     sequence=self.sequence,
                 ),
                 # Y216-p
-                modification.Modification(
+                data_sets.Modification(
                     rel_pos=6,
                     mod_type="Phospho",
                     sequence=self.sequence,
