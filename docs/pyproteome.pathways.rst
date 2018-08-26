@@ -58,6 +58,14 @@ pyproteome.pathways.photon_ptm module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.pathways.ptmsigdb module
+-----------------------------------
+
+.. automodule:: pyproteome.pathways.ptmsigdb
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.pathways.wikipathways module
 ---------------------------------------
 
