@@ -127,7 +127,7 @@ class IntegrationTest(TestCase):
 
     def test_columns(self):
         for _, data in self.data.items():
-            for col in data_sets.DATA_SET_COLS:
+            for col in data_sets.data_set.DATA_SET_COLS:
                 self.assertIn(col, data.psms.columns)
 
             for _, col in data.channels.items():

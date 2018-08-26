@@ -50,7 +50,7 @@ if __name__ == "__main__":
         install_requires=REQUIREMENTS,
         dependency_links=[
             "git+https://github.com/naderm/genemap.git"
-            "@develop#egg=genemap-0.2.0",
+            "@master#egg=genemap-0.2.0",
         ],
         classifiers=[
             "License :: OSI Approved :: BSD License",

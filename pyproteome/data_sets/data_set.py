@@ -82,12 +82,12 @@ class DataSet:
     between channels, samples, and sample groups.
 
     Data sets are automatically loaded, filtered, and merged by default. See
-    :any:`DEFAULT_FILTER_BAD<pyproteome.data_sets.DEFAULT_FILTER_BAD>`
+    :any:`DEFAULT_FILTER_BAD<pyproteome.data_sets.data_set.DEFAULT_FILTER_BAD>`
     for default filtering parameters. See
-    :func:`merge_duplicates<pyproteome.data_sets.DataSet.merge_duplicates>`
+    :func:`merge_duplicates<pyproteome.data_sets.data_set.DataSet.merge_duplicates>`
     for info on how multiple peptide-spectrum matches are integrated together.
 
-    Attributes
+    Attributes`
     ----------
     search_name : str, optional
         Name of the search file this data set was loaded from.
@@ -1167,7 +1167,7 @@ class DataSet:
         >>> ds = data_sets.DataSet(channels=channels, groups=groups)
         >>> ds.add_peptide({'a': 1000, 'b': 500, 'c': 100, 'd': 25})
         >>> ds = ds.norm_cmp_groups([["a", "b"], ["c", "d"]])
-        >>> {i: vals.psms.iloc[0][i] for i in channels}
+        >>> ds.data
         {"a": 1, "b": 0.5, "c": 1, "d": .25}
 
         Returns
