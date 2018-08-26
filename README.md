@@ -35,7 +35,7 @@ pyproteome will locate it automatically.
 
 ## Examples
 
-The following is an example of code to load a searched run from [Discoverer](https://www.thermofisher.com/order/catalog/product/IQLAAEGABSFAKJMAUH),
+The following is an example of code to load a searched run from [ProteomeDiscoverer](https://www.thermofisher.com/order/catalog/product/IQLAAEGABSFAKJMAUH),
 normalizing the phosphotyrosine run to the media channel levels in a supernatant
 dilution.
 
