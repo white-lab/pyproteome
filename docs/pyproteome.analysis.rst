@@ -18,7 +18,7 @@ pyproteome.analysis.correlation module
     :show-inheritance:
 
 pyproteome.analysis.heatmap module
--------------------------------
+----------------------------------
 
 .. automodule:: pyproteome.analysis.heatmap
     :members:

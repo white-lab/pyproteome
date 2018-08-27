@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.8.0 (2018-08-27)
+
+Changes
+
+  - Reorganized DataSet, Protein, Sequence, Modification modules into a single
+    package (pyproteome.data_sets).
+
 ## 0.7.2 (2018-08-25)
 
 Features
