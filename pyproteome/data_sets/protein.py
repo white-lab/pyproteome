@@ -49,6 +49,9 @@ class Proteins:
             for i, j in zip(self.proteins, other.proteins)
         )
 
+    def __lt__(self, other):
+        return self.proteins < other.proteins
+
     def __str__(self):
         return " / ".join(
             str(i)
@@ -139,6 +142,9 @@ class Protein:
             raise TypeError()
 
         return self.accession == other.accession
+
+    def __lt__(self, other):
+        return self.gene < other.gene
 
     def __str__(self):
         return "{} ({})".format(
