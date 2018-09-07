@@ -8,11 +8,14 @@ Phospho Set Enrichment Analysis (PSEA).
 
 from __future__ import absolute_import, division
 
+from collections import OrderedDict
 import logging
 import os
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 
 import pyproteome as pyp
@@ -190,7 +193,13 @@ def _filter_ambiguous_peptides(ds):
     return ds
 
 
-def _get_scores(psms, phenotype=None, metric="spearman"):
+def _get_scores(psms, phenotype=None, metric=None):
+    if metric is None:
+        if phenotype is None:
+            metric = "fold"
+        else:
+            metric = "spearman"
+
     LOGGER.info("building correlations using metric '{}'".format(metric))
 
     psms = psms[~psms["ID"].isnull()]
@@ -337,7 +346,7 @@ def gsea(
     psms=None,
     ds=None,
     gene_sets=None,
-    metric="spearman",
+    metric=None,
     phenotype=None,
     species=None,
     min_hits=10,
@@ -345,6 +354,7 @@ def gsea(
     remap=True,
     name=None,
     folder_name=None,
+    show_plots=True,
     **kwargs
 ):
     """
@@ -390,6 +400,7 @@ def gsea(
         Gene IDs should be strings of Entrez Gene IDs for protein sets and
         strings of "<Entrez>,<letter><pos>-p" (i.e. "8778,Y544-p") for
         phospho sets.
+    show_plots : bool, optional
     folder_name : str, optional
         Save figures and tables to this folder. Defaults to `<ds.name>/GSEA`
 
@@ -480,12 +491,13 @@ def gsea(
         ),
     )
 
-    enrichments.plot_gsea(
-        vals, gene_changes,
-        folder_name=folder_name,
-        name=name,
-        **kwargs
-    )
+    if show_plots:
+        enrichments.plot_gsea(
+            vals, gene_changes,
+            folder_name=folder_name,
+            name=name,
+            **kwargs
+        )
 
     return vals, gene_changes
 
@@ -503,6 +515,160 @@ def psea(*args, **kwargs):
     """
     kwargs["p_sites"] = True
     return gsea(*args, **kwargs)
+
+
+def ssgsea(
+    ds=None,
+    folder_name=None,
+    thres_na=None,
+    *args, **kwargs
+):
+    assert ds is not None
+
+    folder_name = pyp.utils.make_folder(
+        data=ds,
+        folder_name=folder_name,
+        sub="ssPSEA" if kwargs.get("p_sites", False) else "ssGSEA",
+    )
+
+    cmp_groups = ds.cmp_groups or [list(ds.groups.keys())]
+
+    if ds.cmp_groups is None:
+        ds = ds.norm_cmp_groups(cmp_groups)
+
+    samples = [
+        sample
+        for cmp_group in cmp_groups
+        for group in cmp_group
+        for sample in ds.groups[group]
+        if sample in ds.channels
+    ]
+    channels = [
+        ds.channels[sample]
+        for sample in samples
+    ]
+
+    gsea_vals = OrderedDict()
+
+    assert kwargs.get("metric", "fold") in ["log2", "fold", "zscore"]
+
+    LOGGER.info(
+        "Calculating ssGSEA scores for {} samples".format(len(samples))
+    )
+
+    for ind, (sample, chan) in enumerate(zip(samples, channels), start=1):
+        LOGGER.info(
+            "-- ssGSEA {}/{}: {} ({})".format(ind, len(samples), sample, chan)
+        )
+
+        ds.psms["Fold Change"] = ds.psms[chan]
+        vals, gene_changes = gsea(ds=ds, show_plots=False, *args, **kwargs)
+
+        gsea_vals[sample] = vals
+
+    cols = [
+        "sample",
+        "name",
+        "ES(S)",
+        "NES(S)",
+        "n_hits",
+        "p-value",
+        "q-value",
+    ]
+
+    for name in gsea_vals:
+        gsea_vals[name]["sample"] = name
+
+    cols = [
+        i
+        for i in cols
+        if any([i in vals.columns for vals in gsea_vals.values()])
+    ]
+
+    df_ssgsea = pd.concat([
+        vals[cols]
+        for vals in gsea_vals.values()
+    ])
+    df_ssgsea["sort_index"] = df_ssgsea["sample"].apply(
+        lambda x: samples.index(x)
+    )
+    df_ssgsea = df_ssgsea.sort_values("sort_index", ascending=True)
+
+    plot_ssgsea_heatmap(
+        df_ssgsea,
+        ds=ds,
+        max_qval=kwargs.get("max_qval", 1),
+    )
+    return df_ssgsea
+
+
+def plot_ssgsea_heatmap(
+    df,
+    figsize=None,
+    max_qval=1,
+    thres_na=None,
+    ds=None,
+):
+    if ds is not None:
+        cmp_groups = [ds.group_b, ds.group_a] or [list(ds.groups.keys())]
+
+        samples = [
+            sample
+            for cmp_group in cmp_groups
+            for group in cmp_group
+            for sample in ds.groups[group]
+            if sample in ds.channels
+        ]
+    else:
+        samples = df["sample"].drop_duplicates()
+
+    LOGGER.info("Plotting ssGSEA NES(S) heatmap")
+    df["sig"] = df["q-value"].apply(
+        lambda x:
+        x < max_qval
+    )
+    df["sig_symbol"] = df["sig"].apply(
+        lambda x:
+        "*" if x else ""
+    )
+
+    if thres_na is None:
+        thres_na = len(set(df["sample"])) / 3
+
+    thres_sig = 4
+
+    filtered_names = [
+        name
+        for name in set(df["name"])
+        if
+        (df["name"] == name).sum() >= thres_na and
+        ((df["name"] == name) & df["sig"]).sum() >= thres_sig
+    ]
+    df = df[df["name"].isin(filtered_names)]
+
+    f, ax = plt.subplots(
+        figsize=figsize or (8, 6),
+    )
+    sns.heatmap(
+        df.pivot("name", "sample", "NES(S)")[samples],
+        ax=ax,
+        annot=df.pivot("name", "sample", "sig_symbol")[samples],
+        fmt="s",
+        # vmin=-5,
+        # vmax=5,
+        cmap=plt.cm.Spectral_r,
+    )
+    ax.set_yticklabels(
+        ax.get_yticklabels(),
+        rotation=0,
+    )
+
+    return f
+
+
+def sspsea(*args, **kwargs):
+    kwargs["p_sites"] = True
+    return ssgsea(*args, **kwargs)
 
 
 __all__ = [
