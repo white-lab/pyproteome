@@ -22,7 +22,6 @@ pip install --process-dependency-links pyproteome
 If you are using Windows, it is easiest to use the latest version of
 [Anaconda](https://www.continuum.io/downloads) for your Python installation, as
 pyproteome requires several hard-to-install packages, such as NumPy and SciPy.
-In addition, BioPython should be installed from a [binary or wheel package](http://biopython.org/wiki/Download).
 
 Then, you can simply run the above `pip install pyproteome` command to install
 this package and the rest of its dependencies.
@@ -35,45 +34,89 @@ pyproteome will locate it automatically.
 
 ## Examples
 
-The following is an example of code to load a searched run from [ProteomeDiscoverer](https://www.thermofisher.com/order/catalog/product/IQLAAEGABSFAKJMAUH),
-normalizing the phosphotyrosine run to the media channel levels in a supernatant
-dilution.
+The following is an example of code to load a [ProteomeDiscoverer](https://www.thermofisher.com/order/catalog/product/IQLAAEGABSFAKJMAUH),
+.msf data set, normalize the phosphotyrosine run to its corresponding
+supernatant data set, and merge multiple runs into one final data set:
 
 ```
->>> from pyproteome import *
->>> from collections import OrderedDict
->>> ck_channels = OrderedDict([
-...     ("3130 CK",     "126"),
-...     ("3131 CK-p25", "127"),
-...     ("3145 CK-p25", "128"),
-...     ("3146 CK-p25", "129"),
-...     ("3148 CK",     "130"),
-...     ("3157 CK",     "131"),
-... ])
->>> ck_groups = OrderedDict([
-...     ("CK", ["3130 CK", "3148 CK", "3157 CK"]),
-...     ("CK-p25", ["3131 CK-p25", "3145 CK-p25", "3146 CK-p25"]),
-... ])
->>> ck_name = "CK-p25 vs. CK, 2 weeks"
->>> ck_h1_py = data_sets.DataSet(
-...     name="CK-H1-pY",
-...     channels=ck_channels,
-...     groups=ck_groups,
-... )
->>> ck_h1_global = data_sets.DataSet(
-...     name="CK-H1-Global",
-...     channels=ck_channels,
-...     groups=ck_groups,
-... )
->>> ck_h1_py_norm = ck_h1_py.normalize(ck_h1_global)
->>> tables.changes_table(
-...     ck_h1_py_norm.filter(p=0.05),
-...     sort="Fold Change",
-... )
+ckh_channels = OrderedDict(
+    [
+        ("3130 CK Hip",     "126"),
+        ("3131 CK-p25 Hip", "127"),
+        ("3145 CK-p25 Hip", "128"),
+        ("3146 CK-p25 Hip", "129"),
+        ("3148 CK Hip",     "130"),
+        ("3157 CK Hip",     "131"),
+    ]
+)
+ckx_channels = OrderedDict(
+    [
+        ("3130 CK Cortex",     "126"),
+        ("3131 CK-p25 Cortex", "127"),
+        ("3145 CK-p25 Cortex", "128"),
+        ("3146 CK-p25 Cortex", "129"),
+        ("3148 CK Cortex",     "130"),
+        ("3157 CK Cortex",     "131"),
+    ]
+)
+ckp25_groups = OrderedDict(
+    [
+        (
+            "CK",
+            [
+                "3130 CK Hip",
+                "3148 CK Hip",
+                "3157 CK Hip",
+                "3130 CK Cortex",
+                "3148 CK Cortex",
+                "3157 CK Cortex",
+            ],
+        ),
+        (
+            "CK-p25",
+            [
+                "3131 CK-p25 Hip",
+                "3145 CK-p25 Hip",
+                "3146 CK-p25 Hip",
+                "3131 CK-p25 Cortex",
+                "3145 CK-p25 Cortex",
+                "3146 CK-p25 Cortex",
+            ],
+        ),
+    ]
+)
+# With search data located as follows:
+#   Searched/
+#       CK-H1-pY.msf
+#       CK-H1-pST.msf
+#       CK-H1-Global.msf
+#       CK-X1-pY.msf
+#       CK-X1-pST.msf
+#       CK-X1-Global.msf
+datas = data_sets.load_all_data(
+    chan_mapping={
+        "CK-H": ckh_channels,
+        "CK-X": ckx_channels,
+    },
+    # Normalize pY, pST, and Global runs to each sample's global data
+    norm_mapping=OrderedDict([
+        ("CK-H1", "CK-H1-Global"),
+        ("CK-X1", "CK-X1-Global"),
+    ]),
+    # Merge together normalized hippocampus and cortex runs
+    merge_mapping=OrderedDict([
+        ("CK Hip", ["CK-H1-pY", "CK-H1-pST", "CK-H1-Global"]),
+        ("CK Cortex", ["CK-X1-pY", "CK-X1-pST", "CK-X1-Global"]),
+        ("CK All", ["CK Hip", "CK Cortex"]),
+    ]),
+    groups=ckp25_groups,
+)
 ```
 
 For other functionality, refer to the
-[online documentation](https://pyproteome.readthedocs.io/en/latest/).
+[online documentation](https://pyproteome.readthedocs.io/en/latest/). There
+are also a set of example analyses located in the [pyproteome-data
+repository](https://github.com/white-lab/pyproteome-data/tree/master/examples).
 
 ## Directory Hierarchy
 
