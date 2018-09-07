@@ -376,7 +376,7 @@ class DataSet:
 
             return x.values[0]
 
-        agg_dict["Proteins"] = _first
+        # agg_dict["Proteins"] = _first
         agg_dict["Modifications"] = _first
         agg_dict["Missed Cleavages"] = _first
         agg_dict["Validated"] = all
@@ -400,13 +400,20 @@ class DataSet:
         )
         agg_dict["Isolation Interference"] = min
 
-        new.psms = new.psms.groupby(
-            by=[
+        # new.psms = new.psms.groupby(
+        #     by=[
+        #         "Sequence",
+        #     ],
+        #     sort=False,
+        #     as_index=False,
+        # ).agg(agg_dict)
+        new.psms = new.psms.pivot_table(
+            index=[
+                "Proteins",
                 "Sequence",
             ],
-            sort=False,
-            as_index=False,
-        ).agg(agg_dict)
+            aggfunc=agg_dict,
+        ).reset_index()
 
         for channel in channels:
             weight = "{}_weight".format(channel)
