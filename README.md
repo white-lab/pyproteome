@@ -34,89 +34,11 @@ pyproteome will locate it automatically.
 
 ## Examples
 
-The following is an example of code to load a [ProteomeDiscoverer](https://www.thermofisher.com/order/catalog/product/IQLAAEGABSFAKJMAUH),
-.msf data set, normalize the phosphotyrosine run to its corresponding
-supernatant data set, and merge multiple runs into one final data set:
-
-```
-ckh_channels = OrderedDict(
-    [
-        ("3130 CK Hip",     "126"),
-        ("3131 CK-p25 Hip", "127"),
-        ("3145 CK-p25 Hip", "128"),
-        ("3146 CK-p25 Hip", "129"),
-        ("3148 CK Hip",     "130"),
-        ("3157 CK Hip",     "131"),
-    ]
-)
-ckx_channels = OrderedDict(
-    [
-        ("3130 CK Cortex",     "126"),
-        ("3131 CK-p25 Cortex", "127"),
-        ("3145 CK-p25 Cortex", "128"),
-        ("3146 CK-p25 Cortex", "129"),
-        ("3148 CK Cortex",     "130"),
-        ("3157 CK Cortex",     "131"),
-    ]
-)
-ckp25_groups = OrderedDict(
-    [
-        (
-            "CK",
-            [
-                "3130 CK Hip",
-                "3148 CK Hip",
-                "3157 CK Hip",
-                "3130 CK Cortex",
-                "3148 CK Cortex",
-                "3157 CK Cortex",
-            ],
-        ),
-        (
-            "CK-p25",
-            [
-                "3131 CK-p25 Hip",
-                "3145 CK-p25 Hip",
-                "3146 CK-p25 Hip",
-                "3131 CK-p25 Cortex",
-                "3145 CK-p25 Cortex",
-                "3146 CK-p25 Cortex",
-            ],
-        ),
-    ]
-)
-# With search data located as follows:
-#   Searched/
-#       CK-H1-pY.msf
-#       CK-H1-pST.msf
-#       CK-H1-Global.msf
-#       CK-X1-pY.msf
-#       CK-X1-pST.msf
-#       CK-X1-Global.msf
-datas = data_sets.load_all_data(
-    chan_mapping={
-        "CK-H": ckh_channels,
-        "CK-X": ckx_channels,
-    },
-    # Normalize pY, pST, and Global runs to each sample's global data
-    norm_mapping=OrderedDict([
-        ("CK-H1", "CK-H1-Global"),
-        ("CK-X1", "CK-X1-Global"),
-    ]),
-    # Merge together normalized hippocampus and cortex runs
-    merge_mapping=OrderedDict([
-        ("CK Hip", ["CK-H1-pY", "CK-H1-pST", "CK-H1-Global"]),
-        ("CK Cortex", ["CK-X1-pY", "CK-X1-pST", "CK-X1-Global"]),
-        ("CK All", ["CK Hip", "CK Cortex"]),
-    ]),
-    groups=ckp25_groups,
-)
-```
-
-For other functionality, refer to the
-[online documentation](https://pyproteome.readthedocs.io/en/latest/). There
-are also a set of example analyses located in the [pyproteome-data
+There are several example analyses located in the [pyproteome-data
 repository](https://github.com/white-lab/pyproteome-data/tree/master/examples).
+
+For a full list of package functionality, refer to the
+[online documentation](https://pyproteome.readthedocs.io/en/latest/).
 
 ## Directory Hierarchy
 
