@@ -46,6 +46,7 @@ Correlation metrics used for enrichment analysis. "spearman", "pearson", and
 
 "zscore" takes ranking values from a log2 z-scored "Fold Change" column.
 """
+DEFAULT_P = 0.75
 DEFAULT_RANK_CPUS = 6
 """
 Default number of CPUs to use when scrambling rows of a data set.
@@ -128,7 +129,7 @@ def simulate_es_s_pi(
     psms,
     gene_sets,
     phenotype=None,
-    p=1,
+    p=None,
     metric="spearman",
     p_iter=1000,
     n_cpus=None,
@@ -201,7 +202,7 @@ def simulate_es_s_pi(
 
         if ind % (p_iter // min([p_iter, 10])) == 0:
             LOGGER.info(
-                "Calculated {}/{} pvals".format(ind, p_iter)
+                "-- Calculated {}/{} pvals".format(ind, p_iter)
             )
 
     LOGGER.info("Calculating ES(S, pi) using {} cpus".format(n_cpus))
@@ -282,15 +283,13 @@ def estimate_pq(vals):
         np.concatenate([pos_mat, neg_mat]),
     )
 
-    LOGGER.info("Calculated pos, neg distributions")
-
     pos_pdf = PrPDF(pos_nes.dropna().values)
     neg_pdf = PrPDF(neg_nes.dropna().values)
 
     pos_pi_pdf = PrPDF(pos_mat)
     neg_pi_pdf = PrPDF(neg_mat)
 
-    LOGGER.info("Normalized NES distributions")
+    LOGGER.info("Generated NES(S) distributions")
 
     if vals.shape[0] > 0:
         vals["p-value"] = vals.apply(
@@ -311,7 +310,7 @@ def estimate_pq(vals):
             axis=1,
         )
 
-    LOGGER.info("Calculated p, q values")
+        LOGGER.info("Calculated p, q values")
 
     return vals
 
@@ -348,7 +347,7 @@ def get_gene_changes(psms):
     return gene_changes
 
 
-def _calc_essdist(phen, psms=None, gene_sets=None, p=1, metric="spearman"):
+def _calc_essdist(phen, psms=None, gene_sets=None, p=None, metric="spearman"):
     assert metric in CORRELATION_METRICS
 
     if phen is not None:
@@ -421,7 +420,7 @@ def correlate_phenotype(psms, phenotype=None, metric="spearman"):
     return psms
 
 
-def calculate_es_s(gene_changes, gene_set, p=1, n_h=None):
+def calculate_es_s(gene_changes, gene_set, p=None, n_h=None):
     """
     Calculate the enrichment score for an individual gene set.
 
@@ -432,6 +431,9 @@ def calculate_es_s(gene_changes, gene_set, p=1, n_h=None):
     p : float, optional
     n_h : int, optional
     """
+    if p is None:
+        p = DEFAULT_P
+
     n = len(gene_changes)
 
     gene_set = set(
@@ -469,7 +471,7 @@ def calculate_es_s(gene_changes, gene_set, p=1, n_h=None):
     }
 
 
-def calculate_es_s_ud(gene_changes, up_set, down_set, p=1):
+def calculate_es_s_ud(gene_changes, up_set, down_set, p=None):
     """
     Calculate the enrichment score for an individual gene set.
 
@@ -537,9 +539,9 @@ def _get_set_cols(cols):
 def enrichment_scores(
     psms,
     gene_sets,
-    metric="spearman",
+    metric=None,
     phenotype=None,
-    p=1,
+    p=None,
     pval=True,
     recorrelate=False,
     p_iter=1000,
@@ -568,6 +570,12 @@ def enrichment_scores(
     -------
     df : :class:`pandas.DataFrame`
     """
+    if metric is None:
+        if phenotype is None:
+            metric = "fold"
+        else:
+            metric = "spearman"
+
     assert metric in CORRELATION_METRICS
 
     if recorrelate:
@@ -1060,7 +1068,6 @@ def plot_gsea(
     -------
     figs : list of :class:`matplotlib.figure.Figure`
     """
-
     folder_name = pyp.utils.make_folder(
         sub="GSEA + PSEA",
     )
