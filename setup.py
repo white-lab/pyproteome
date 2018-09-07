@@ -26,7 +26,7 @@ REQUIREMENTS = [
     "matplotlib>=2.2.0",
     "numpy>=1.15.0",
     "numpydoc>=0.8",
-    "pandas==0.23.0",
+    "pandas>=0.23.0",
     "photon_ptm>=0.3.0",
     "scikit-learn>=0.19.1",
     "scipy>=1.1.0",

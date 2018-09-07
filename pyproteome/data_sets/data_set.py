@@ -99,9 +99,11 @@ class DataSet:
         Maps groups to list of sample names. The primary group is considered
         as the first in this sequence.
     cmp_groups : list of list of str
+        List of groups that are being compared.
     name : str
         Name of this data set.
     levels : dict or str, float
+        Peptide levels used for normalization.
     sets : int
         Number of sets merged into this data set.
     """
@@ -341,7 +343,7 @@ class DataSet:
 
         Returns
         -------
-       ds : :class:`.DataSet`
+        ds : :class:`.DataSet`
         """
         new = self
 
@@ -352,7 +354,7 @@ class DataSet:
             return
 
         channels = list(new.channels.values())
-        agg_dict = {}
+        agg_dict = OrderedDict()
 
         for channel in channels:
             weight = "{}_weight".format(channel)
@@ -413,6 +415,7 @@ class DataSet:
                 "Sequence",
             ],
             aggfunc=agg_dict,
+            dropna=False,
         ).reset_index()
 
         for channel in channels:
@@ -422,8 +425,6 @@ class DataSet:
                 new.psms[channel] = (
                     new.psms[channel] / new.psms[weight]
                 )
-
-        new.psms = new.psms.reset_index(drop=True)
 
         return new
 
