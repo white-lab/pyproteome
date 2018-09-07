@@ -1469,7 +1469,7 @@ def load_all_data(
 
     datas = OrderedDict()
 
-    for f in os.listdir(pyp.paths.MS_SEARCHED_DIR):
+    for f in sorted(os.listdir(pyp.paths.MS_SEARCHED_DIR)):
         name, ext = os.path.splitext(f)
 
         if ext not in [".msf"]:
@@ -1545,15 +1545,22 @@ def norm_all_data(
             if not name.endswith("-norm")
         }
 
-    for key, val in norm_mapping.items():
-        for name, data in datas.items():
-            if not name.startswith(key) or name.endswith("-norm"):
+    for name, data in datas.items():
+        if name.endswith("-norm"):
+            continue
+
+        for key, val in norm_mapping.items():
+            if not name.startswith(key):
                 continue
 
             mapped_names[name] = "{}-norm".format(name)
 
-            datas_new[mapped_names[name]] = data.normalize(datas[val])
-            datas_new[mapped_names[name]].name += "-norm"
+            new_data = data.normalize(datas[val])
+            new_data.name += "-norm"
+
+            datas_new[mapped_names[name]] = new_data
+
+            break
 
     return datas_new, mapped_names
 
@@ -1638,6 +1645,7 @@ def merge_data(
         name=name,
         skip_logging=True,
         skip_load=True,
+        filter_bad=False,
     )
 
     if len(data_sets) < 1:
