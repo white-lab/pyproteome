@@ -357,6 +357,9 @@ def plot_volcano(
             x, y,
             txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
             zorder=10,
+            horizontalalignment=(
+                'left' if x > 0 else "right"
+            ),
         )
 
         if highlight_label:
