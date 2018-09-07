@@ -672,15 +672,17 @@ def sspsea(*args, **kwargs):
 
 
 __all__ = [
-    "psea",
-    "gsea",
-    "filter_fn",
-    "get_pathways",
-    "enrichments",
-    "gskb",
-    "msigdb",
-    "pathwayscommon",
-    "photon_ptm",
-    "psp",
-    "wikipathways",
+    psea,
+    gsea,
+    ssgsea,
+    sspsea,
+    filter_fn,
+    get_pathways,
+    enrichments,
+    gskb,
+    msigdb,
+    pathwayscommon,
+    photon_ptm,
+    psp,
+    wikipathways,
 ]
