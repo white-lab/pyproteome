@@ -27,6 +27,7 @@ REQUIREMENTS = [
     "numpy>=1.15.0",
     "numpydoc>=0.8",
     "pandas>=0.23.0",
+    "perseuspy>=0.3.8",
     "photon_ptm>=0.3.0",
     "scikit-learn>=0.19.1",
     "scipy>=1.1.0",
@@ -51,6 +52,8 @@ if __name__ == "__main__":
         dependency_links=[
             "git+https://github.com/naderm/genemap.git"
             "@master#egg=genemap-0.2.0",
+            "git+https://github.com/naderm/perseuspy.git"
+            "@master#egg=perseuspy-0.3.8",
         ],
         classifiers=[
             "License :: OSI Approved :: BSD License",
