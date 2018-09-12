@@ -350,8 +350,8 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        if len(new.psms) < 1:
-            return
+        if new.shape[0] < 1:
+            return new
 
         channels = list(new.channels.values())
         agg_dict = OrderedDict()
@@ -402,21 +402,14 @@ class DataSet:
         )
         agg_dict["Isolation Interference"] = min
 
-        # new.psms = new.psms.groupby(
-        #     by=[
-        #         "Sequence",
-        #     ],
-        #     sort=False,
-        #     as_index=False,
-        # ).agg(agg_dict)
-        new.psms = new.psms.pivot_table(
-            index=[
+        new.psms = new.psms.groupby(
+            by=[
                 "Proteins",
                 "Sequence",
             ],
-            aggfunc=agg_dict,
-            dropna=False,
-        ).reset_index()
+            sort=False,
+            as_index=False,
+        ).agg(agg_dict).reset_index(drop=True)
 
         for channel in channels:
             weight = "{}_weight".format(channel)
