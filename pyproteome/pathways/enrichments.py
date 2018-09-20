@@ -821,7 +821,7 @@ def plot_nes(
     LOGGER.info("Plotting ranked NES(S) values")
 
     f, ax = plt.subplots(
-        figsize=figsize or (4, 3),
+        figsize=figsize or (5, 4),
     )
     v = vals.copy()
     v = v.sort_values("NES(S)")
@@ -873,11 +873,13 @@ def plot_nes(
                 y=row["NES(S)"],
                 s=row["name"],
                 fontsize=12,
+                zorder=10,
                 backgroundcolor="white",
                 bbox=dict(
                     facecolor='white',
-                    alpha=0.9,
-                    edgecolor='red',
+                    # alpha=0.9,
+                    edgecolor='k',
+                    zorder=1,
                 )
             )
         )
@@ -1025,11 +1027,11 @@ def plot_enrichment(
             s=txt,
             x=ax.get_xlim()[1] / 2,
             y=-.8,
+            zorder=10,
             color='k',
             horizontalalignment='center',
             verticalalignment='center',
-        ).set_bbox(
-            dict(
+            bbox=dict(
                 alpha=1,
                 linewidth=0.5,
                 facecolor="white",
@@ -1070,6 +1072,7 @@ def plot_gsea(
     """
     folder_name = pyp.utils.make_folder(
         sub="GSEA + PSEA",
+        folder_name=folder_name,
     )
 
     figs = ()

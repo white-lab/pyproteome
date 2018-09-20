@@ -49,73 +49,23 @@ def _get_color(txt, x, y):
     return "#BFEE90" if x > 0 else "#FFC1C1"
 
 
-def plot_volcano(
+def plot_volcano_labels(
     data,
-    group_a=None,
-    group_b=None,
-    p=0.05,
-    fold=1.25,
+    ax,
+    upper_fold=None,
+    lower_fold=None,
+    p=None,
     fold_and_p=True,
-    xminmax=None, yminmax=None,
-    options=None,
-    title=None,
-    filename=None,
-    folder_name=None,
-    figsize=(12, 10),
-    adjust=True,
-    show_duplicates=False,
-    compress_sym=False,
-    show_xlabel=True,
-    show_ylabel=True,
-    show_title=True,
-    mods=None,
     sequence_labels=False,
-    alpha=1,
-    log2_fold=True,
-    bonferoni=False,
+    options=None,
+    show_duplicates=False,
+    compress_sym=True,
+    adjust=True,
+    mods=None,
 ):
     """
-    Display a volcano plot of data.
-
-    This plot inclues the fold-changes and p-values associated with said
-    changes.
-
-    Parameters
-    ----------
-    data : :class:`pyproteome.data_sets.DataSet`
-    group_a : str or list of str, optional
-    group_b : str or list of str, optional
-    pval_cutoff : float, optional
-    fold : float, optional
-    options : dict of (str, list), optional
-    folder_name : str, optional
-    title : str, optional
-    figsize : tuple of float, float
-    adjust : bool, optional
-    show_duplicates : bool, optional
-    full_site_labels : bool, optional
-
-    Returns
-    -------
-    f : :class:`matplotlib.figure.Figure`
-    ax : :class:`matplotlib.axes.Axes`
-    folder_name : str
-    filename : str
+    Plot labels on a volcano plot.
     """
-    (channels_a, channels_b), (label_a, label_b), _ = data.get_groups(
-        group_a=group_a,
-        group_b=group_b,
-    )
-
-    if group_a and group_b:
-        data.update_group_changes(group_a=group_a, group_b=group_b)
-
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Volcano",
-    )
-
     options = options or {}
 
     highlight = options.get('highlight', {})
@@ -124,92 +74,91 @@ def plot_volcano(
     edgecolors = options.get('edgecolors', {})
     rename = options.get('rename', {})
 
-    log_p = -np.log10(p)
-
-    if not title:
-        title = data.name
-
-    if not filename:
-        filename = re.sub("[ ></?]", "_", title) + ".png"
-
-    upper_fold = fold
-
-    if log2_fold:
-        upper_fold = np.log2(upper_fold)
-
-    lower_fold = -upper_fold
-
-    rows = [
-        row
-        for _, row in data.psms.dropna(
-            subset=["p-value", "Fold Change"],
-        ).iterrows()
-        if not (
-            np.isnan(row["p-value"]) or
-            row["p-value"] <= 0 or
-            np.isnan(-np.log10(row["p-value"])) or
-            (log2_fold and np.isnan(np.log2(row["Fold Change"]))) or
-            np.isinf(-np.log10(row["p-value"])) or
-            (log2_fold and np.isinf(np.log2(row["Fold Change"])))
-        )
-    ]
-
-    if bonferoni:
-        p = p / len(rows)
-        log_p = -np.log10(p)
-
-    # Calculate the Fold-Change / p-values
-    pvals = []
-    changes = []
-    colors = []
+    xminmax = ax.get_xlim()
+    yminmax = ax.get_ylim()
     labels = []
 
-    for row in rows:
-        color = "grey"
-        row_pval = -np.log10(row["p-value"])
-        row_change = row["Fold Change"]
+    data.psms = data.psms[
+        (data.psms["Fold Change"] >= xminmax[0]) &
+        (data.psms["Fold Change"] <= xminmax[1]) &
+        (data.psms["p-value"] >= yminmax[0]) &
+        (data.psms["p-value"] <= yminmax[1])
+    ]
 
-        if log2_fold:
-            row_change = np.log2(row_change)
-
-        if xminmax and (row_change < xminmax[0] or row_change > xminmax[1]):
-            continue
-
-        if yminmax and (row_pval < yminmax[0] or row_pval > yminmax[1]):
-            continue
-
-        if sequence_labels:
-            row_label = row["Sequence"].__str__()
-        else:
-            row_label = " / ".join(sorted(row["Proteins"].genes))
-
-        old_row_label, old_re_row_label = None, None
-
-        if (
-            mods and
-            len(list(row["Modifications"].skip_labels())) > 0
-        ):
-            old_row_label = row_label
-            old_re_row_label = rename.get(old_row_label, old_row_label)
-            row_label = " / ".join(
+    if sequence_labels:
+        data.psms["Label"] = data.psms["Sequence"].apply(str)
+    elif not mods:
+        data.psms["Label"] = data.psms["Proteins"].apply(str)
+    else:
+        data.psms["Label"] = data.psms.apply(
+            lambda x:
+            " / ".join(
                 sorted(
                     "{} {}".format(
                         rename.get(gene, gene),
-                        row["Modifications"].get_mods(
+                        x["Modifications"].get_mods(
                             mods,
                         ).__str__(prot_index=index),
                     )
-                    for index, gene in enumerate(row["Proteins"].genes)
+                    for index, gene in enumerate(x["Proteins"].genes)
                 )
             )
-
-        re_row_label = rename.get(row_label, row_label)
-        edgecolor = edgecolors.get(
-            re_row_label, edgecolors.get(
-                row_label,
-                edgecolors.get(old_row_label, None),
-            )
+            if len(list(x["Modifications"].get_mods(mods))) > 0 else
+            str(row["Proteins"]),
+            axis=1,
         )
+
+    for _, row in data.psms.iterrows():
+        names = [
+            rename.get(row["Label"], row["Label"]),
+            row["Label"],
+        ]
+        if "Sequence" in row:
+            names += [str(row["Sequence"])]
+        if "Proteins" in row:
+            names += [
+                j
+                for i in row["Proteins"].genes
+                for j in [i, rename.get(i, i)]
+            ]
+
+        if not any([
+            i in show
+            for i in names
+        ]) and (
+            (
+                row["p-value"] < p or
+                (
+                    row["Fold Change"] < upper_fold and
+                    row["Fold Change"] > lower_fold
+                )
+            ) if fold_and_p else (
+                row["p-value"] < p and
+                (
+                    row["Fold Change"] < upper_fold and
+                    row["Fold Change"] > lower_fold
+                )
+            )
+        ):
+            continue
+
+        highlight_label = any([
+            i in highlight
+            for i in names
+        ])
+
+        if any([
+            i in hide
+            for i in names
+        ]):
+            continue
+
+        colors = [
+            edgecolors.get(i)
+            for i in names[:2]
+            if i in edgecolors
+        ]
+        edgecolor = colors[0] if colors else None
 
         if edgecolor is None:
             gene_colors = [
@@ -219,147 +168,16 @@ def plot_volcano(
             if len(set(gene_colors)) == 1:
                 edgecolor = gene_colors[0]
 
-        pvals.append(row_pval)
-        changes.append(row_change)
-
-        names = [
-            row_label, re_row_label,
-            old_row_label, old_re_row_label,
-        ]
-        if "Sequence" in row:
-            names += [str(row["Sequence"])]
-        if "Proteins" in row:
-            names += list(row["Proteins"].genes)
-
-        if (
-            any(
-                i in show
-                for i in names
-            ) or ((
-                row_pval > log_p and
-                (row_change > upper_fold or row_change < lower_fold)
-            ) if fold_and_p else (
-                row_pval > log_p or
-                (row_change > upper_fold or row_change < lower_fold)
-            ))
-        ):
-            color = "blue"
-            highlight_label = any(i in highlight for i in names)
-
-            if (
-                not any(i.strip() in hide for i in row_label.split("/")) and
-                re_row_label not in hide
-            ):
-                labels.append((
-                    row_pval, row_change,
-                    re_row_label, edgecolor, highlight_label,
-                ))
-
-        colors.append(color)
+        labels.append((
+            row["p-value"],
+            row["Fold Change"],
+            names[0],
+            edgecolor,
+            highlight_label,
+        ))
 
     if not show_duplicates:
         labels = _remove_lesser_dups(labels, compress_sym=compress_sym)
-
-    # Draw the figure
-    fig, ax = plt.subplots(figsize=figsize)
-    ax.scatter(
-        changes,
-        pvals,
-        s=5,
-        c=colors,
-        alpha=alpha,
-    )
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-
-    if xminmax:
-        ax.set_xlim(xmin=xminmax[0], xmax=xminmax[1])
-    else:
-        ax.set_xlim(
-            xmin=np.floor(min(changes + [0]) * 2) / 2,
-            xmax=np.ceil(max(changes + [0]) * 2) / 2,
-        )
-
-    if yminmax:
-        ax.set_ylim(bottom=yminmax[0], top=yminmax[1])
-    else:
-        ax.set_ylim(bottom=-0.1)
-
-    ax.set_xticks(
-        list(
-            sorted(
-                tick
-                for tick in ax.get_xticks()
-                if tick < lower_fold - .25 or tick > upper_fold + .25
-            ) + [lower_fold, upper_fold]
-        )
-    )
-    ax.set_yticks(
-        list(
-            sorted(
-                [
-                    tick
-                    for tick in ax.get_yticks()
-                    if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
-                    ["1", "5"] and
-                    tick > log_p
-                ] + [log_p]
-            )
-        )
-    )
-
-    if log2_fold:
-        ax.set_xticklabels(
-            [
-                "{:.3}".format(i)
-                for i in np.exp2(ax.get_xticks())
-            ],
-            fontsize=20,
-        )
-    else:
-        ax.set_xticklabels(
-            [
-                "{:3}".format(i)
-                for i in ax.get_xticks()
-            ],
-            fontsize=20,
-        )
-
-    ax.set_yticklabels(
-        [
-            ("{:.3}" if i > 0.005 else "{:.0e}").format(i)
-            for i in np.power(1/10, ax.get_yticks())
-        ],
-        fontsize=20,
-    )
-
-    if show_xlabel:
-        max_len = 25
-        ax.set_xlabel(
-            "{} (n={}) / {} (n={})".format(
-                label_a[:max_len] + ("..." if len(label_a) > max_len else ""),
-                len(channels_a),
-                label_b[:max_len] + ("..." if len(label_b) > max_len else ""),
-                len(channels_b),
-            ),
-            fontsize=20,
-        )
-
-    if show_ylabel:
-        ax.set_ylabel(
-            "p-value",
-            fontsize=20,
-        )
-
-    if not np.isnan(log_p):
-        ax.axhline(
-            log_p,
-            color="r", linestyle="dashed", linewidth=0.5,
-        )
-
-    if abs(fold - 1) > 0.01:
-        ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
-        ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
 
     # Position the labels
     texts = []
@@ -415,12 +233,199 @@ def plot_volcano(
             }
         )
 
-    if title:
-        if show_title:
-            ax.set_title(
-                title,
-                fontsize=20,
+    LOGGER.info("Plotting volcano labels for {} peptides".format(len(texts)))
+
+    return labels
+
+
+def plot_volcano(
+    data,
+    group_a=None,
+    group_b=None,
+    p=0.05,
+    fold=1.25,
+    xminmax=None,
+    yminmax=None,
+    title=None,
+    filename=None,
+    folder_name=None,
+    figsize=(12, 10),
+    show_xlabel=True,
+    show_ylabel=True,
+    log2_fold=True,
+    log10_p=True,
+    bonferoni=False,
+    **kwargs
+):
+    """
+    Display a volcano plot of data.
+
+    This plot inclues the fold-changes and p-values associated with said
+    changes.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.DataSet`
+    group_a : str or list of str, optional
+    group_b : str or list of str, optional
+    pval_cutoff : float, optional
+    fold : float, optional
+    folder_name : str, optional
+    title : str, optional
+    figsize : tuple of float, float
+    kwargs : dict
+        Arguments passed to :func:`.plot_volcano_labels`
+
+    Returns
+    -------
+    f : :class:`matplotlib.figure.Figure`
+    ax : :class:`matplotlib.axes.Axes`
+    folder_name : str
+    filename : str
+    """
+    data = data.copy()
+
+    (channels_a, channels_b), (label_a, label_b), _ = data.get_groups(
+        group_a=group_a,
+        group_b=group_b,
+    )
+
+    if group_a and group_b:
+        data.update_group_changes(group_a=group_a, group_b=group_b)
+
+    folder_name = pyp.utils.make_folder(
+        data=data,
+        folder_name=folder_name,
+        sub="Volcano",
+    )
+
+    if not filename:
+        filename = re.sub("[ ></?]", "_", data.name) + ".png"
+
+    if log10_p:
+        p = -np.log10(p)
+        data.psms["p-value"] = data.psms["p-value"].apply(
+            lambda x: -np.log10(x)
+        )
+
+    if log2_fold:
+        fold = np.log2(fold)
+        data.psms["Fold Change"] = data.psms["Fold Change"].apply(
+            lambda x: np.log2(x)
+        )
+
+    upper_fold = fold
+    lower_fold = -upper_fold
+
+    data.psms = data.psms.replace([np.inf, -np.inf], np.nan).dropna(
+        subset=["p-value", "Fold Change"],
+        how="any",
+    )
+
+    if bonferoni:
+        p += np.log10(data.shape[0])
+
+    # Draw the figure
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.scatter(
+        data["Fold Change"],
+        data["p-value"],
+        s=5,
+        c="grey",
+    )
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
+    if xminmax:
+        ax.set_xlim(xmin=xminmax[0], xmax=xminmax[1])
+    else:
+        ax.set_xlim(
+            xmin=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
+            xmax=np.ceil(max(data["p-value"] + [0]) * 2) / 2,
+        )
+
+    if yminmax:
+        ax.set_ylim(bottom=yminmax[0], top=yminmax[1])
+    else:
+        ax.set_ylim(bottom=-0.1)
+
+    ax.set_xticks(
+        list(
+            sorted(
+                tick
+                for tick in ax.get_xticks()
+                if tick < lower_fold - .25 or tick > upper_fold + .25
+            ) + [lower_fold, upper_fold]
+        )
+    )
+    ax.set_yticks(
+        list(
+            sorted(
+                [
+                    tick
+                    for tick in ax.get_yticks()
+                    if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
+                    ["1", "5"] and
+                    tick > p
+                ] + [p]
             )
+        )
+    )
+
+    ax.set_xticklabels(
+        [
+            "{:.3}".format(np.exp2(i) if log2_fold else i)
+            for i in ax.get_xticks()
+        ],
+    )
+    ax.set_yticklabels(
+        [
+            (
+                "{:.3}" if i > 5e-3 else "{:.0e}"
+            ).format(np.power(1/10, i) if log10_p else i)
+            for i in ax.get_yticks()
+        ],
+    )
+
+    if show_xlabel:
+        max_len = 25
+        ax.set_xlabel(
+            "{} (n={}) / {} (n={})".format(
+                label_a[:max_len] + ("..." if len(label_a) > max_len else ""),
+                len(channels_a),
+                label_b[:max_len] + ("..." if len(label_b) > max_len else ""),
+                len(channels_b),
+            ),
+        )
+
+    if show_ylabel:
+        ax.set_ylabel(
+            "p-value",
+        )
+
+    if not np.isnan(p):
+        ax.axhline(
+            p,
+            color="r", linestyle="dashed", linewidth=0.5,
+        )
+
+    if abs(fold - 1) > 0.01:
+        ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
+        ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
+
+    if title:
+        ax.set_title(
+            title,
+        )
+
+    plot_volcano_labels(
+        data=data,
+        ax=ax,
+        upper_fold=upper_fold,
+        lower_fold=lower_fold,
+        p=p,
+        **kwargs
+    )
 
     if filename:
         fig.savefig(

@@ -147,7 +147,6 @@ class Protein:
         return self.gene < other.gene
 
     def __str__(self):
-        return "{} ({})".format(
-            self.description,
+        return "{}".format(
             self.gene,
         )
