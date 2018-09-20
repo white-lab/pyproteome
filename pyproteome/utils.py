@@ -245,34 +245,7 @@ def memoize(func):
     return memoized_func
 
 
-def save_load(name, val=None, default=None):
-    """
-    Save or load a variable using the pickle module.
-
-    Parameters
-    ----------
-    name : str
-        The name to use for data storage.
-    val : object, optional
-    default : object, optional
-
-    Returns
-    -------
-    val : object
-    """
-    filename = "{}.pkl".format(name)
-
-    if val is not None:
-        with open(filename, "wb") as f:
-            pickle.dump(val, f)
-    else:
-        try:
-            with open(filename, "rb") as f:
-                val = pickle.load(f)
-        except:
-            val = default
-
-    return val
+PICKLE_DIR = ".pyproteome"
 
 
 def save(name, val=None):
@@ -289,7 +262,9 @@ def save(name, val=None):
     -------
     val : object
     """
-    filename = "{}.pkl".format(name)
+    filename = os.path.join(PICKLE_DIR, "{}.pkl".format(name))
+
+    makedirs(PICKLE_DIR)
 
     with open(filename, "wb") as f:
         pickle.dump(val, f)
@@ -311,12 +286,15 @@ def load(name, default=None):
     -------
     val : object
     """
-    filename = "{}.pkl".format(name)
+    filename = os.path.join(PICKLE_DIR, "{}.pkl".format(name))
 
     try:
         with open(filename, "rb") as f:
             val = pickle.load(f)
-    except:
+    except (
+        OSError, pickle.UnpicklingError, IOError,
+        AttributeError, EOFError, ImportError, IndexError,
+    ):
         val = default
 
     return val

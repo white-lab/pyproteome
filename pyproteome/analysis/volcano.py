@@ -68,7 +68,7 @@ def plot_volcano(
     show_xlabel=True,
     show_ylabel=True,
     show_title=True,
-    full_site_labels=False,
+    mods=None,
     sequence_labels=False,
     alpha=1,
     log2_fold=True,
@@ -186,7 +186,7 @@ def plot_volcano(
         old_row_label, old_re_row_label = None, None
 
         if (
-            full_site_labels and
+            mods and
             len(list(row["Modifications"].skip_labels())) > 0
         ):
             old_row_label = row_label
@@ -195,7 +195,9 @@ def plot_volcano(
                 sorted(
                     "{} {}".format(
                         rename.get(gene, gene),
-                        row["Modifications"].__str__(prot_index=index),
+                        row["Modifications"].get_mods(
+                            mods,
+                        ).__str__(prot_index=index),
                     )
                     for index, gene in enumerate(row["Proteins"].genes)
                 )
@@ -221,8 +223,13 @@ def plot_volcano(
         changes.append(row_change)
 
         names = [
-            row_label, re_row_label, old_row_label, old_re_row_label,
-        ] + list(row["Proteins"].genes)
+            row_label, re_row_label,
+            old_row_label, old_re_row_label,
+        ]
+        if "Sequence" in row:
+            names += [str(row["Sequence"])]
+        if "Proteins" in row:
+            names += list(row["Proteins"].genes)
 
         if (
             any(
@@ -255,7 +262,13 @@ def plot_volcano(
 
     # Draw the figure
     fig, ax = plt.subplots(figsize=figsize)
-    ax.scatter(changes, pvals, c=colors, alpha=alpha)
+    ax.scatter(
+        changes,
+        pvals,
+        s=5,
+        c=colors,
+        alpha=alpha,
+    )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
@@ -350,36 +363,34 @@ def plot_volcano(
 
     # Position the labels
     texts = []
-    txt_lim = 100 if full_site_labels else 9
+    txt_lim = 100 if mods else 11
 
     for y, x, txt, edgecolor, highlight_label in labels:
-        text = ax.text(
-            x, y,
-            txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
-            zorder=10,
-            horizontalalignment=(
-                'left' if x > 0 else "right"
-            ),
-        )
-
-        if highlight_label:
-            text.set_fontsize(20)
-
-        text.set_bbox(
-            dict(
-                # facecolor=_get_color(txt, x, y),
-                alpha=1,
-                linewidth=0.5,
-                facecolor=edgecolor or (
-                    "#DDDDDD" if edgecolors else _get_color(txt, x, y)
+        texts.append(
+            ax.text(
+                x, y,
+                txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
+                zorder=10,
+                fontsize=20 if highlight_label else 16,
+                horizontalalignment=(
+                    'left' if x > 0 else "right"
                 ),
-                zorder=1,
-                # edgecolor="black",
-                boxstyle="round",
+                bbox=dict(
+                    # facecolor=_get_color(txt, x, y),
+                    alpha=1,
+                    linewidth=0.1,
+                    pad=.2,
+                    facecolor=edgecolor or (
+                        "#DDDDDD"
+                        if edgecolors else
+                        _get_color(txt, x, y)
+                    ),
+                    zorder=1,
+                    # edgecolor="black",
+                    boxstyle="round",
+                )
             )
         )
-
-        texts.append(text)
 
     if adjust:
         texts = texts[:MAX_VOLCANO_LABELS]
@@ -392,7 +403,11 @@ def plot_volcano(
             force_text=0.5,
             force_points=0.01,
             arrowprops=dict(
-                arrowstyle="->", relpos=(0, 0), lw=1, zorder=1, color="k",
+                arrowstyle="->",
+                relpos=(0, 0),
+                lw=1,
+                zorder=1,
+                color="k",
             ),
             only_move={
                 "points": "y",
@@ -489,7 +504,15 @@ def plot_volcano_filtered(data, f, **kwargs):
             y > yminmax[0] and y < yminmax[1]
         ])
 
-    ax.scatter(changes, pvals, c="lightblue", zorder=0, alpha=0.3)
+    ax.scatter(
+        changes,
+        pvals,
+        s=5,
+        zorder=0,
+        c="grey",
+        # c="lightblue",
+        # alpha=0.3,
+    )
 
     if filename:
         f.savefig(

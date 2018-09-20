@@ -8,7 +8,7 @@ import pandas as pd
 
 import pyproteome as pyp
 
-LOGGER = logging.getLogger("pyproteome.psp")
+LOGGER = logging.getLogger("pyproteome.phosphosite")
 
 PSP_REGULATORY_URL = (
     "https://www.phosphosite.org/downloads/Regulatory_sites.gz"
