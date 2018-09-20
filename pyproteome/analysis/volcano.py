@@ -7,6 +7,7 @@ import re
 
 from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 
 import pyproteome as pyp
 
@@ -16,37 +17,18 @@ MAX_VOLCANO_LABELS = 500
 
 
 def _remove_lesser_dups(labels, compress_sym=False):
-    new_labels = []
+    labels["xy"] = labels.apply(lambda x: abs(x["x"]) + x["y"], axis=1)
+    labels = labels.sort_values("xy", ascending=False)
 
-    for index, (p, change, label, color, highlight) in enumerate(labels):
-        for o_index, (o_p, o_change, o_label, _, _) in enumerate(labels):
-            if index == o_index:
-                continue
-            if label != o_label:
-                continue
-            if not compress_sym and (change < 0) != (o_change < 0):
-                continue
+    if compress_sym:
+        labels = labels.drop_duplicates(subset="Label")
+    else:
+        labels = pd.concat([
+            labels[labels["x"] >= 0].drop_duplicates(subset="Label"),
+            labels[labels["x"] < 0].drop_duplicates(subset="Label"),
+        ])
 
-            mul = 1 if change >= 0 else -1
-            o_mul = 1 if o_change >= 0 else -1
-
-            if (
-                p + mul * change < o_p + o_mul * o_change
-            ) or (
-                (
-                    p + mul * change <= o_p + o_mul * o_change
-                ) and
-                index < o_index
-            ):
-                break
-        else:
-            new_labels.append((p, change, label, color, highlight))
-
-    return new_labels
-
-
-def _get_color(txt, x, y):
-    return "#BFEE90" if x > 0 else "#FFC1C1"
+    return labels
 
 
 def plot_volcano_labels(
@@ -78,11 +60,14 @@ def plot_volcano_labels(
     yminmax = ax.get_ylim()
     labels = []
 
+    data.psms["x"] = data.psms["Fold Change"]
+    data.psms["y"] = data.psms["p-value"]
+
     data.psms = data.psms[
-        (data.psms["Fold Change"] >= xminmax[0]) &
-        (data.psms["Fold Change"] <= xminmax[1]) &
-        (data.psms["p-value"] >= yminmax[0]) &
-        (data.psms["p-value"] <= yminmax[1])
+        (data.psms["x"] >= xminmax[0]) &
+        (data.psms["x"] <= xminmax[1]) &
+        (data.psms["y"] >= yminmax[0]) &
+        (data.psms["y"] <= yminmax[1])
     ]
 
     if sequence_labels:
@@ -93,7 +78,7 @@ def plot_volcano_labels(
         data.psms["Label"] = data.psms.apply(
             lambda x:
             " / ".join(
-                sorted(
+                [
                     "{} {}".format(
                         rename.get(gene, gene),
                         x["Modifications"].get_mods(
@@ -101,14 +86,14 @@ def plot_volcano_labels(
                         ).__str__(prot_index=index),
                     )
                     for index, gene in enumerate(x["Proteins"].genes)
-                )
+                ]
             )
             if len(list(x["Modifications"].get_mods(mods))) > 0 else
             str(row["Proteins"]),
             axis=1,
         )
 
-    for _, row in data.psms.iterrows():
+    def _get_names(row):
         names = [
             rename.get(row["Label"], row["Label"]),
             row["Label"],
@@ -122,40 +107,48 @@ def plot_volcano_labels(
                 for j in [i, rename.get(i, i)]
             ]
 
-        if not any([
-            i in show
-            for i in names
-        ]) and (
+        return names
+
+    data.psms["Names"] = data.psms.apply(_get_names, axis=1)
+
+    data.psms = data.psms[
+        data.psms["Names"].apply(lambda x: not any([i in hide for i in x]))
+    ]
+    data.psms = data.psms[
+        data.psms["Names"].apply(lambda x: any([i in show for i in x])) | (
             (
-                row["p-value"] < p or
+                (data.psms["y"] >= p) &
                 (
-                    row["Fold Change"] < upper_fold and
-                    row["Fold Change"] > lower_fold
-                )
-            ) if fold_and_p else (
-                row["p-value"] < p and
-                (
-                    row["Fold Change"] < upper_fold and
-                    row["Fold Change"] > lower_fold
+                    (data.psms["x"] >= upper_fold) |
+                    (data.psms["x"] <= lower_fold)
                 )
             )
-        ):
-            continue
-
-        highlight_label = any([
+            if fold_and_p else
+            (
+                (data.psms["y"] >= p) |
+                (
+                    (data.psms["x"] >= upper_fold) |
+                    (data.psms["x"] <= lower_fold)
+                )
+            )
+        )
+    ]
+    data.psms["Highlight"] = data.psms["Names"].apply(
+        lambda x:
+        any([
             i in highlight
-            for i in names
+            for i in x
         ])
+    )
+    data.psms["Label"] = data.psms["Names"].apply(
+        lambda x:
+        x[0]
+    )
 
-        if any([
-            i in hide
-            for i in names
-        ]):
-            continue
-
+    def _get_txt_color(row):
         colors = [
             edgecolors.get(i)
-            for i in names[:2]
+            for i in row["Names"][:2]
             if i in edgecolors
         ]
         edgecolor = colors[0] if colors else None
@@ -168,13 +161,22 @@ def plot_volcano_labels(
             if len(set(gene_colors)) == 1:
                 edgecolor = gene_colors[0]
 
-        labels.append((
-            row["p-value"],
-            row["Fold Change"],
-            names[0],
-            edgecolor,
-            highlight_label,
-        ))
+        return edgecolor
+
+    data.psms["EdgeColor"] = data.psms.apply(
+        _get_txt_color,
+        axis=1,
+    )
+
+    labels = data.psms[
+        [
+            "x",
+            "y",
+            "Label",
+            "EdgeColor",
+            "Highlight",
+        ]
+    ].copy()
 
     if not show_duplicates:
         labels = _remove_lesser_dups(labels, compress_sym=compress_sym)
@@ -183,25 +185,27 @@ def plot_volcano_labels(
     texts = []
     txt_lim = 100 if mods else 11
 
-    for y, x, txt, edgecolor, highlight_label in labels:
+    for _, row in labels.iterrows():
         texts.append(
             ax.text(
-                x, y,
-                txt[:txt_lim] + ("..." if len(txt) > txt_lim else ""),
+                x=row["x"],
+                y=row["y"],
+                s=row["Label"][:txt_lim] + (
+                    "..." if len(row["Label"]) > txt_lim else ""
+                ),
                 zorder=10,
-                fontsize=20 if highlight_label else 16,
+                fontsize=20 if row["Highlight"] else 16,
                 horizontalalignment=(
-                    'left' if x > 0 else "right"
+                    'left' if row["x"] > 0 else "right"
                 ),
                 bbox=dict(
-                    # facecolor=_get_color(txt, x, y),
                     alpha=1,
                     linewidth=0.1,
                     pad=.2,
-                    facecolor=edgecolor or (
+                    facecolor=row["EdgeColor"] or (
                         "#DDDDDD"
                         if edgecolors else
-                        _get_color(txt, x, y)
+                        ("#BFEE90" if row["x"] > 0 else "#FFC1C1")
                     ),
                     zorder=1,
                     # edgecolor="black",
@@ -268,7 +272,7 @@ def plot_volcano(
     data : :class:`pyproteome.data_sets.DataSet`
     group_a : str or list of str, optional
     group_b : str or list of str, optional
-    pval_cutoff : float, optional
+    p : float, optional
     fold : float, optional
     folder_name : str, optional
     title : str, optional

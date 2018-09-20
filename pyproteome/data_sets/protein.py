@@ -21,7 +21,10 @@ class Proteins:
     """
 
     def __init__(self, proteins=None):
-        self.proteins = proteins or ()
+        if proteins is None:
+            proteins = ()
+
+        self.proteins = tuple(sorted(proteins))
 
     def __iter__(self):
         return iter(self.proteins)

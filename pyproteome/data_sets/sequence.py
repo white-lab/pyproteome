@@ -39,6 +39,9 @@ class ProteinMatch:
     def __hash__(self):
         return hash(self.to_tuple())
 
+    def __lt__(self, other):
+        return self.protein < other.protein
+
     def __eq__(self, other):
         if not isinstance(other, ProteinMatch):
             raise TypeError(other)
@@ -71,8 +74,11 @@ class Sequence:
         protein_matches : list of :class:`.ProteinMatch`
         modifications : :class:`.modification.Modifications`, optional
         """
+        if protein_matches is None:
+            protein_matches = ()
+
         self.pep_seq = pep_seq
-        self.protein_matches = protein_matches or ()
+        self.protein_matches = tuple(sorted(protein_matches))
         self.modifications = modifications
 
         self._is_labeled = None
