@@ -847,6 +847,7 @@ class DataSet:
         sequence            Filter for sequence or list of sequences.
         mod                 Filter for modifications.
         only_validated      Use rows validated by CAMV.
+        any                 Use rows that many any filter.
         inverse             Use all rows that are rejected by a filter.
         rename              Change the new data sets name to a new value.
         ================    ===================================================
@@ -992,19 +993,40 @@ class DataSet:
                 if rename is not None:
                     new.name = rename
 
-                for key, val in f.items():
-                    # Skip filtering if psms is empty (fixes pandas type error)
+                if f.pop("any", False):
                     if new.shape[0] < 1:
-                        continue
+                        return new
 
-                    mask = fns[key](val, new.psms)
+                    mask = pd.Series(
+                        [inverse] * new.shape[0],
+                        index=new.psms.index,
+                    )
 
-                    if inverse:
-                        mask = ~mask
+                    for key, val in f.items():
+                        # Skip filtering if psms is empty
+                        f_mask = fns[key](val, new.psms)
+
+                        if inverse:
+                            f_mask = ~f_mask
+
+                        mask |= f_mask
 
                     assert mask.shape[0] == new.shape[0]
-
                     new.psms = new.psms.loc[mask].reset_index(drop=True)
+                else:
+                    for key, val in f.items():
+                        # Skip filtering if psms is empty
+                        if new.shape[0] < 1:
+                            continue
+
+                        mask = fns[key](val, new.psms)
+
+                        if inverse:
+                            mask = ~mask
+
+                        assert mask.shape[0] == new.shape[0]
+
+                        new.psms = new.psms.loc[mask].reset_index(drop=True)
 
         new.psms.reset_index(inplace=True, drop=True)
 
