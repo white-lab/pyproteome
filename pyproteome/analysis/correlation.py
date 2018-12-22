@@ -367,6 +367,10 @@ def correlate_signal(
             min_periods=5,
         ),
         axis=1,
+    ).replace([np.inf, -np.inf], np.nan)
+    cp.psms = cp.psms.dropna(
+        subset=["Correlation"],
+        how="any",
     )
 
     f_corr, ax = plt.subplots(figsize=figsize)
@@ -374,13 +378,6 @@ def correlate_signal(
     sig_x, sig_y, sig_labels = [], [], []
 
     for index, (_, row) in enumerate(cp.psms.iterrows()):
-        if (
-            row["Correlation"] == 0 or
-            np.isinf(row["Correlation"]) or
-            np.isnan(row["Correlation"])
-        ):
-            continue
-
         x.append(index)
         y.append(row["Correlation"])
 
@@ -389,7 +386,7 @@ def correlate_signal(
         if sig:
             sig_x.append(index)
             sig_y.append(row["Correlation"])
-            sig_labels.append(" / ".join(sorted(row["Proteins"].genes)))
+            sig_labels.append(str(row["Proteins"]))
 
         colors.append(
             "blue"
@@ -417,25 +414,21 @@ def correlate_signal(
 
         txt = rename.get(txt, txt)
 
-        text = ax.text(
-            xs, ys,
-            txt[:20] + ("..." if len(txt) > 20 else ""),
-        )
-
-        if txt in highlight:
-            text.set_fontsize(20)
-
-        text.set_bbox(
-            dict(
-                facecolor="lightgreen" if xs > 0 else "pink",
-                alpha=1,
-                linewidth=0.5 if txt not in edgecolors else 3,
-                edgecolor=edgecolors.get(txt, "black"),
-                boxstyle="round",
+        texts.append(
+            ax.text(
+                x=xs,
+                y=ys,
+                s=txt[:20] + ("..." if len(txt) > 20 else ""),
+                fontsize=20 if txt in highlight else 16,
+                bbox=dict(
+                    facecolor="lightgreen" if xs > 0 else "pink",
+                    alpha=1,
+                    linewidth=0.5 if txt not in edgecolors else 3,
+                    edgecolor=edgecolors.get(txt, "black"),
+                    boxstyle="round",
+                ),
             )
         )
-
-        texts.append(text)
 
     pyp.utils.adjust_text(
         x=sig_x,
@@ -454,7 +447,6 @@ def correlate_signal(
 
     ax.set_xlabel(
         "Index",
-        fontsize=20,
     )
     # ax.set_yticklabels(
     #     "{:.3}".format(i)
@@ -462,11 +454,10 @@ def correlate_signal(
     # )
     ax.set_ylabel(
         "Correlation",
-        fontsize=20,
     )
 
     if title:
-        ax.set_title(title, fontsize=32)
+        ax.set_title(title)
 
     cp.psms = cp.psms[cp.psms["Correlation"].apply(abs) >= corr_cutoff]
 
