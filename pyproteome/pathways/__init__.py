@@ -495,7 +495,6 @@ def gsea(
         enrichments.plot_gsea(
             vals, gene_changes,
             folder_name=folder_name,
-            name=name,
             **kwargs
         )
 
