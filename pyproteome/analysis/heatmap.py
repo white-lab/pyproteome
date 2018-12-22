@@ -84,6 +84,7 @@ def hierarchical_heatmap(
         col_cluster=col_cluster,
         vmin=-minmax,
         vmax=minmax,
+        cmap="viridis",
     )
     map.ax_heatmap.set_xticklabels(
         map.ax_heatmap.get_xticklabels(),
