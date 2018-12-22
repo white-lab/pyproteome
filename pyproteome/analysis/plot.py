@@ -72,7 +72,21 @@ def plot(
 
         names = pd.Series(channel_names, index=values.index)[mask]
         values = values[mask]
-        values = values / values[0]
+        cmp_groups = data.cmp_groups or [[
+            grp
+            for grp, channels in data.groups.items()
+            if any([i in data.channels for i in channels])
+        ]]
+        values = values / (
+            values[[
+                data.channels[i]
+                for grp in cmp_groups
+                for i in data.groups[grp[0]]
+                if i in values.index
+            ]].median()
+            if len(cmp_groups) > 0 else
+            values[0]
+        )
 
         fig, ax = plt.subplots(
             figsize=figsize or (len(channels) / 2, 6 / 2),
@@ -93,6 +107,7 @@ def plot(
             ],
             columns=("name", "val", "group"),
         )
+        df["val"] = df["val"].apply(np.log2)
 
         sns.barplot(
             x="name",
@@ -111,7 +126,7 @@ def plot(
         ax.set_xlabel("")
         ax.get_legend().set_title("")
 
-        ax.axhline(1, linestyle=":", color="k", alpha=.5)
+        ax.axhline(np.log2(1), linestyle=":", color="k", alpha=.5)
 
         mod_str = row["Modifications"].__str__(prot_index=0)
 
@@ -244,11 +259,8 @@ def plot_group(
             for name in group.index
         ]
 
-        if figsize is None:
-            figsize = (8, 4)
-
         fig, ax = plt.subplots(
-            figsize=figsize or (len(labels) * 2, 4),
+            figsize=figsize or (len(labels) * .75, 4),
         )
 
         x = [
