@@ -950,12 +950,12 @@ class DataSet:
                 lambda x: bool(set(val).intersection(x.genes))
             )
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            psms["Proteins"] == val,
+            psms["Proteins"] == val.strip(),
 
             "sequence": lambda val, psms:
             psms["Sequence"].apply(lambda x: any(i in x for i in val))
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            psms["Sequence"] == val,
+            psms["Sequence"] == val.strip(),
 
             "mod": lambda val, psms:
             psms["Modifications"].apply(
@@ -1757,7 +1757,7 @@ def merge_data(
     return new
 
 
-def merge_proteins(ds, inplace=False):
+def merge_proteins(ds, inplace=False, fn=None):
     """
     Merge together all peptides mapped to the same protein. Maintains the
     first available peptide and calculates the median quantification value
@@ -1780,6 +1780,9 @@ def merge_proteins(ds, inplace=False):
     if len(new.psms) < 1:
         return new
 
+    if fn is None:
+        fn = _nan_median
+
     channels = list(new.channels.values())
     agg_dict = {}
 
@@ -1789,9 +1792,9 @@ def merge_proteins(ds, inplace=False):
         if weight in new.psms.columns:
             # XXX: Use weight corresponding to median channel value?
             # (not median weight)
-            agg_dict[weight] = _nan_median
+            agg_dict[weight] = fn
 
-        agg_dict[channel] = _nan_median
+        agg_dict[channel] = fn
 
     def _unfirst(x):
         return x.values[0]
@@ -1847,6 +1850,13 @@ def merge_proteins(ds, inplace=False):
     new.update_group_changes()
 
     return new
+
+
+def _nan_max(lst):
+    if all(np.isnan(i) for i in lst):
+        return np.nan
+    else:
+        return np.nanmax(lst)
 
 
 def _nan_median(lst):
