@@ -47,6 +47,7 @@ Correlation metrics used for enrichment analysis. "spearman", "pearson", and
 "zscore" takes ranking values from a log2 z-scored "Fold Change" column.
 """
 DEFAULT_P = 0.75
+DEFAULT_Q = 0.25
 DEFAULT_RANK_CPUS = 6
 """
 Default number of CPUs to use when scrambling rows of a data set.
@@ -891,10 +892,16 @@ def plot_nes(
         y=[i._y for i in texts],
         texts=texts,
         ax=ax,
-        lim=50,
-        force_text=1,
-        force_points=0.1,
-        arrowprops=dict(arrowstyle="-", relpos=(0, 0), lw=1, zorder=0),
+        lim=500,
+        force_text=1.5,
+        force_points=1.5,
+        arrowprops=dict(
+            arrowstyle="-",
+            relpos=(0, 0),
+            lw=1,
+            zorder=1,
+            color="k",
+        ),
         only_move={
             "points": "y",
             "text": "xy",
