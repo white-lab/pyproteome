@@ -356,11 +356,11 @@ def plot_volcano(
     ax.spines["right"].set_visible(False)
 
     if xminmax:
-        ax.set_xlim(xmin=xminmax[0], xmax=xminmax[1])
+        ax.set_xlim(left=xminmax[0], right=xminmax[1])
     else:
         ax.set_xlim(
-            xmin=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
-            xmax=np.ceil(max(data["p-value"] + [0]) * 2) / 2,
+            left=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
+            right=np.ceil(max(data["p-value"] + [0]) * 2) / 2,
         )
 
     if yminmax:

@@ -339,12 +339,12 @@ def _draw_logo(
 
     for ind, ax in enumerate(axes):
         ax.set_xlim(
-            xmin=.5,
-            xmax=x - .5,
+            left=.5,
+            right=x - .5,
         )
         ax.set_ylim(
-            ymin=-1.05 * minmaxy if ind == 1 else 0,
-            ymax=1.05 * minmaxy if ind == 0 else 0,
+            bottom=-1.05 * minmaxy if ind == 1 else 0,
+            top=1.05 * minmaxy if ind == 0 else 0,
         )
         ax.set_xticks([])
 

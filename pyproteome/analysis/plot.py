@@ -396,8 +396,8 @@ def plot_group(
                     offset += y_max / 10
 
             ax.set_ylim(
-                ymin=ax.get_ylim()[0],
-                ymax=max([
+                bottom=ax.get_ylim()[0],
+                top=max([
                     ax.get_ylim()[1],
                     y_max + offset,
                 ]),
