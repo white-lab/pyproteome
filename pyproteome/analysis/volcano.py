@@ -31,6 +31,20 @@ def _remove_lesser_dups(labels, compress_sym=False):
     return labels
 
 
+def _get_name(proteins):
+    genes = sorted(proteins.genes)
+    common = ""
+    sep = " / "
+
+    if len(genes) > 1:
+        common = os.path.commonprefix(genes)
+
+        if common:
+            sep = "/"
+
+    return common + sep.join(i[len(common):] for i in genes)
+
+
 def plot_volcano_labels(
     data,
     ax,
@@ -58,24 +72,25 @@ def plot_volcano_labels(
 
     xminmax = ax.get_xlim()
     yminmax = ax.get_ylim()
-    labels = []
 
-    data.psms["x"] = data.psms["Fold Change"]
-    data.psms["y"] = data.psms["p-value"]
+    labels = data.psms.copy()
 
-    data.psms = data.psms[
-        (data.psms["x"] >= xminmax[0]) &
-        (data.psms["x"] <= xminmax[1]) &
-        (data.psms["y"] >= yminmax[0]) &
-        (data.psms["y"] <= yminmax[1])
+    labels["x"] = labels["Fold Change"]
+    labels["y"] = labels["p-value"]
+
+    labels = labels[
+        (labels["x"] >= xminmax[0]) &
+        (labels["x"] <= xminmax[1]) &
+        (labels["y"] >= yminmax[0]) &
+        (labels["y"] <= yminmax[1])
     ]
 
     if sequence_labels:
-        data.psms["Label"] = data.psms["Sequence"].apply(str)
+        labels["Label"] = labels["Sequence"].apply(str)
     elif not mods:
-        data.psms["Label"] = data.psms["Proteins"].apply(str)
+        labels["Label"] = labels["Proteins"].apply(_get_name)
     else:
-        data.psms["Label"] = data.psms.apply(
+        labels["Label"] = labels.apply(
             lambda x:
             " / ".join(
                 [
@@ -89,7 +104,7 @@ def plot_volcano_labels(
                 ]
             )
             if len(list(x["Modifications"].get_mods(mods))) > 0 else
-            str(row["Proteins"]),
+            " / ".join(x["Proteins"].genes),
             axis=1,
         )
 
@@ -109,38 +124,38 @@ def plot_volcano_labels(
 
         return names
 
-    data.psms["Names"] = data.psms.apply(_get_names, axis=1)
+    labels["Names"] = labels.apply(_get_names, axis=1)
 
-    data.psms = data.psms[
-        data.psms["Names"].apply(lambda x: not any([i in hide for i in x]))
+    labels = labels[
+        labels["Names"].apply(lambda x: not any([i in hide for i in x]))
     ]
-    data.psms = data.psms[
-        data.psms["Names"].apply(lambda x: any([i in show for i in x])) | (
+    labels = labels[
+        labels["Names"].apply(lambda x: any([i in show for i in x])) | (
             (
-                (data.psms["y"] >= p) &
+                (labels["y"] >= p) &
                 (
-                    (data.psms["x"] >= upper_fold) |
-                    (data.psms["x"] <= lower_fold)
+                    (labels["x"] >= upper_fold) |
+                    (labels["x"] <= lower_fold)
                 )
             )
             if fold_and_p else
             (
-                (data.psms["y"] >= p) |
+                (labels["y"] >= p) |
                 (
-                    (data.psms["x"] >= upper_fold) |
-                    (data.psms["x"] <= lower_fold)
+                    (labels["x"] >= upper_fold) |
+                    (labels["x"] <= lower_fold)
                 )
             )
         )
     ]
-    data.psms["Highlight"] = data.psms["Names"].apply(
+    labels["Highlight"] = labels["Names"].apply(
         lambda x:
         any([
             i in highlight
             for i in x
         ])
     )
-    data.psms["Label"] = data.psms["Names"].apply(
+    labels["Label"] = labels["Names"].apply(
         lambda x:
         x[0]
     )
@@ -163,12 +178,12 @@ def plot_volcano_labels(
 
         return edgecolor
 
-    data.psms["EdgeColor"] = data.psms.apply(
+    labels["EdgeColor"] = labels.apply(
         _get_txt_color,
         axis=1,
     )
 
-    labels = data.psms[
+    labels = labels[
         [
             "x",
             "y",
@@ -183,7 +198,7 @@ def plot_volcano_labels(
 
     # Position the labels
     texts = []
-    txt_lim = 100 if mods else 11
+    txt_lim = 100 if mods else 12
 
     for _, row in labels.iterrows():
         texts.append(
@@ -194,7 +209,7 @@ def plot_volcano_labels(
                     "..." if len(row["Label"]) > txt_lim else ""
                 ),
                 zorder=10,
-                fontsize=20 if row["Highlight"] else 16,
+                fontsize=20 if row["Highlight"] else 12,
                 horizontalalignment=(
                     'left' if row["x"] > 0 else "right"
                 ),
@@ -222,7 +237,7 @@ def plot_volcano_labels(
             texts=texts,
             ax=ax,
             lim=100,
-            force_text=0.5,
+            force_text=0.2,
             force_points=0.01,
             arrowprops=dict(
                 arrowstyle="->",
@@ -413,7 +428,7 @@ def plot_volcano(
             color="r", linestyle="dashed", linewidth=0.5,
         )
 
-    if abs(fold - 1) > 0.01:
+    if (abs(fold) if log2_fold else abs(fold - 1)) > 0.01:
         ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
         ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
 
