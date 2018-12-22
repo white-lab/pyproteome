@@ -26,6 +26,7 @@ from . import (
     msigdb,
     pathwayscommon,
     photon_ptm,
+    ptmsigdb,
     psp,
     wikipathways,
 )
@@ -682,6 +683,7 @@ __all__ = [
     msigdb,
     pathwayscommon,
     photon_ptm,
+    ptmsigdb,
     psp,
     wikipathways,
 ]
