@@ -17,6 +17,9 @@ MAX_VOLCANO_LABELS = 500
 
 
 def _remove_lesser_dups(labels, compress_sym=False):
+    if labels.shape[0] < 1:
+        return labels
+
     labels["xy"] = labels.apply(lambda x: abs(x["x"]) + x["y"], axis=1)
     labels = labels.sort_values("xy", ascending=False)
 
@@ -181,7 +184,7 @@ def plot_volcano_labels(
     labels["EdgeColor"] = labels.apply(
         _get_txt_color,
         axis=1,
-    )
+    ) if labels.shape[0] > 0 else []
 
     labels = labels[
         [
