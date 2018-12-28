@@ -54,6 +54,8 @@ if __name__ == "__main__":
             "@master#egg=genemap-0.2.0",
             "git+https://github.com/naderm/perseuspy.git"
             "@master#egg=perseuspy-0.3.8",
+            "git+https://github.com/jdrudolph/photon.git"
+            "@master#egg=photon_ptm-0.3.0",
         ],
         classifiers=[
             "License :: OSI Approved :: BSD License",
