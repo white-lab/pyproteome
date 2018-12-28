@@ -1,5 +1,5 @@
 
-from . import cache, mapping, enrichments
+from . import cache, mapping, enrichments, plot
 
 
 CELL_TYPE_COLS = {
@@ -70,21 +70,33 @@ CELL_TYPE_COLS = {
 
 CELL_TYPES = [
     "Astrocyte",
-    "Neuron",
-    "OPC",
-    "New Oligodendrocytes",
-    "Myelinating Oligodendrocytes",
-    "Microglia",
     "Endothelia",
+    "Microglia",
+    "Myelinating Oligodendrocytes",
+    "Neuron",
+    "New Oligodendrocytes",
+    "OPC",
 ]
 DEFAULT_CELL_TYPES = CELL_TYPES[:2] + CELL_TYPES[4:]
+
+CELL_COLORS = colors = {
+    "Astrocyte": "#bfee90",
+    "Endothelia": "salmon",
+    "Microglia": "#00b0f0",
+    "Myelinating Oligodendrocytes": "purple",
+    "Neuron": "orange",
+    "New Oligodendrocytes": "lightpurple",
+    "OPC": "darkpurple",
+}
 
 __all__ = [
     "cache",
     "mapping",
     "enrichments",
+    'plot',
 
     "CELL_TYPE_COLS",
     "CELL_TYPES",
     "DEFAULT_CELL_TYPES",
+    'CELL_COLORS',
 ]
