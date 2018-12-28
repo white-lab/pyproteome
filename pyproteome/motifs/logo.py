@@ -5,6 +5,7 @@ import re
 
 from matplotlib import transforms
 from matplotlib import pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.text import TextPath
 from matplotlib.patches import PathPatch
 from matplotlib.font_manager import FontProperties
@@ -238,34 +239,76 @@ def make_logo(data, f, folder_name=None, **kwargs):
 
 
 def _draw_logo(
-    scores, p_line=None, title=None, ytitle="", width=10, height=6,
-    fade_power=1, low_res_cutoff=0,
+    scores,
+    ax,
+    p_line=None,
+    title=None,
+    ytitle="",
+    width=10,
+    height=6,
+    fade_power=1,
+    low_res_cutoff=0,
     show_title=True,
     show_ylabel=True,
 ):
     length = len(list(scores.values())[0])
-    fig = plt.figure(figsize=(width / 2, height / 2))
-
     left_margin = (
         .15 / width * 5
     )
+    if show_ylabel:
+        left_margin += .02
+
+    ax.add_patch(
+        patches.Rectangle(
+            (left_margin, 0.001),
+            .9985 - left_margin,
+            .997,
+            fill=False,
+            linewidth=1,
+            edgecolor='k',
+            zorder=10,
+        )
+    )
+    ax.add_patch(
+        patches.Rectangle(
+            (left_margin, .46),
+            .9985 - left_margin,
+            .08,
+            fill=False,
+            linewidth=1,
+            edgecolor='k',
+            zorder=10,
+        )
+    )
+    # ax.add_patch(
+    #     patches.Rectangle(
+    #         (left_margin, .5),
+    #         .9985 - left_margin,
+    #         .001,
+    #         fill=False,
+    #         linewidth=1,
+    #         edgecolor='k',
+    #         zorder=10,
+    #     )
+    # )
+
     axes = (
-        fig.add_axes([
+        ax.inset_axes([
             left_margin, .54,
             1 - left_margin, .46,
         ]),
-        fig.add_axes([
+        ax.inset_axes([
             left_margin, 0,
             1 - left_margin, .46,
         ])
     )
-    yax = fig.add_axes([
+    yax = ax.inset_axes([
         0, 0,
         1, 1,
     ])
     xwidth = (1 - left_margin) / length
     xpad = xwidth / 2
-    xax = fig.add_axes([
+    xax = ax.inset_axes([
         left_margin + xpad, 0.52,
         xwidth * (length - 1), .11,
     ])
@@ -294,17 +337,22 @@ def _draw_logo(
         ax.spines['right'].set_color('none')
 
     if show_title:
-        yax.set_title(title, fontsize=32)
+        yax.set_title(title)
 
     xax.set_xticks(
         range(0, length),
     )
+    y_offset = (
+        76 * np.power(xax.get_window_extent().height, -1.453)
+    ) - .4
+
     xax.set_xticklabels(
         [
             "{:+d}".format(i) if i != 0 else "0"
             for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
         ],
-        fontsize=16,
+        verticalalignment='center',
+        y=y_offset,
     )
 
     for i in range(0, length):
@@ -372,23 +420,28 @@ def _draw_logo(
 
         ax.set_yticklabels(
             ax.get_yticks(),
-            fontsize=16,
         )
         if show_ylabel:
             yax.set_ylabel(
                 ytitle,
-                fontsize=18,
             )
 
-    return fig, (yax, xax,) + axes, minmaxy
+    return (yax, xax,) + axes, minmaxy
 
 
 def logo(
     fore, back,
-    title="", width=12, height=8, p=0.05,
-    fade_power=1, low_res_cutoff=0, prob_fn=None,
+    ax=None,
+    title="",
+    width=12,
+    height=8,
+    p=0.05,
+    fade_power=1,
+    low_res_cutoff=0,
+    prob_fn=None,
     show_title=True,
     show_ylabel=True,
+    show_n=True,
 ):
     """
     Generate a sequence logo locally using pLogo's enrichment score.
@@ -431,25 +484,33 @@ def logo(
         prob_fn=prob_fn,
     )
 
-    fig, axes, minmaxy = _draw_logo(
+    if ax is None:
+        _, ax = plt.subplots(figsize=(width / 2, height / 2))
+        ax.axis('off')
+
+    axes, minmaxy = _draw_logo(
         scores=rel_info,
         p_line=p_line,
         title=title,
-        ytitle="log odds of the binomial probability",
+        ytitle="log odds",
         width=width,
         height=height,
         fade_power=fade_power,
         low_res_cutoff=low_res_cutoff,
         show_title=show_title,
         show_ylabel=show_ylabel,
+        ax=ax,
     )
-    axes[3].text(
-        length + .5,
-        -minmaxy,
-        "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
-        color="darkred",
-        fontsize=24,
-        horizontalalignment="right",
-        verticalalignment="bottom",
-    )
-    return fig, axes
+
+    if show_n:
+        axes[3].text(
+            length + .4,
+            -minmaxy,
+            "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
+            color="darkred",
+            fontsize=18,
+            horizontalalignment="right",
+            verticalalignment="bottom",
+        )
+
+    return ax.get_figure(), axes
