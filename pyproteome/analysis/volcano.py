@@ -269,6 +269,7 @@ def plot_volcano(
     xminmax=None,
     yminmax=None,
     title=None,
+    ax=None,
     filename=None,
     folder_name=None,
     figsize=(12, 10),
@@ -348,7 +349,9 @@ def plot_volcano(
         p += np.log10(data.shape[0])
 
     # Draw the figure
-    fig, ax = plt.subplots(figsize=figsize)
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+
     ax.scatter(
         data["Fold Change"],
         data["p-value"],
@@ -448,6 +451,8 @@ def plot_volcano(
         p=p,
         **kwargs
     )
+
+    fig = ax.get_figure()
 
     if filename:
         fig.savefig(
