@@ -29,6 +29,8 @@ def correlate_data_sets(
     adjust=True,
     label_cutoff=1.5,
     show_labels=True,
+    show_title=True,
+    ax=None,
 ):
     """
     Plot the correlation between peptides levels in two different data sets.
@@ -40,6 +42,8 @@ def correlate_data_sets(
     folder_name : str, optional
     filename : str, optional
     """
+    LOGGER.info("Plotting dataset correlation")
+
     folder_name = pyp.utils.make_folder(
         data=data1,
         folder_name=folder_name,
@@ -51,17 +55,18 @@ def correlate_data_sets(
         on="Sequence",
     ).dropna(subset=("Fold Change_x", "Fold Change_y"))
 
-    f, ax = plt.subplots(
-        figsize=(4, 3),
-    )
+    if ax is None:
+        _, ax = plt.subplots(
+            figsize=(4, 3),
+        )
 
     sns.regplot(
-        x=np.log2(merged["Fold Change_x"]),
-        y=np.log2(merged["Fold Change_y"]),
+        x=merged["Fold Change_x"].apply(np.log2),
+        y=merged["Fold Change_y"].apply(np.log2),
         ax=ax,
         scatter_kws={
-            "alpha": .5,
-        }
+            's': 2,
+        },
     )
 
     label_cutoff = np.log2(label_cutoff)
@@ -72,8 +77,8 @@ def correlate_data_sets(
         for index, row in merged.iterrows():
             x = row["Fold Change_x"]
             y = row["Fold Change_y"]
-            ratio = np.log2(x / y)
             x, y = np.log2(x), np.log2(y)
+            ratio = x - y
 
             if ratio < label_cutoff and ratio > - label_cutoff:
                 continue
@@ -112,21 +117,17 @@ def correlate_data_sets(
                 }
             )
 
-    min_x = min(np.log2(merged["Fold Change_x"]))
-    max_x = max(np.log2(merged["Fold Change_x"]))
-    ax.plot([min_x, max_x], [min_x, max_x], "--", color="k")
-    # ax.plot(
-    #     [min_x, max_x],
-    #     [min_x + label_cutoff, max_x + label_cutoff],
-    #     color="lightgreen",
-    #     linestyle=":",
-    # )
-    # ax.plot(
-    #     [min_x, max_x],
-    #     [min_x - label_cutoff, max_x - label_cutoff],
-    #     color="pink",
-    #     linestyle=":",
-    # )
+    min_x = merged["Fold Change_x"].apply(np.log2).min()
+    max_x = merged["Fold Change_x"].apply(np.log2).max()
+    min_y = merged["Fold Change_y"].apply(np.log2).min()
+    max_y = merged["Fold Change_y"].apply(np.log2).max()
+
+    min_xy = min([min_x, min_y])
+    max_xy = max([max_x, max_y])
+
+    ax.plot([min_xy, max_xy], [min_xy, max_xy], "--", color="k")
+    ax.set_xlim(left=min_xy - .5, right=max_xy + .5)
+    ax.set_ylim(bottom=min_xy - .5, top=max_xy + .5)
 
     name1 = data1.name
     name2 = data2.name
@@ -136,31 +137,30 @@ def correlate_data_sets(
 
     ax.set_xticklabels(
         ["{:.2f}".format(i) for i in np.power(2, ax.get_xticks())],
-        # fontsize=20,
     )
     ax.set_yticklabels(
         ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
-        # fontsize=20,
     )
 
-    pear_corr = merged["Fold Change_x"].corr(
-        merged["Fold Change_y"],
-        method="pearson",
-    )
-    # spear_corr = merged["Fold Change_x"].corr(
-    #     merged["Fold Change_y"],
-    #     method="spearman",
-    # )
+    if show_title:
+        pear_corr = merged["Fold Change_x"].corr(
+            merged["Fold Change_y"],
+            method="pearson",
+        )
+        # spear_corr = merged["Fold Change_x"].corr(
+        #     merged["Fold Change_y"],
+        #     method="spearman",
+        # )
 
-    ax.set_title(
-        (
-            r"Pearson's: $\rho$={:.2f}"
-            # r"Spearman's: $\rho$={:.2f}"
-        ).format(pear_corr)
-    )
+        ax.set_title(
+            (
+                r"Pearson's: $\rho$={:.2f}"
+                # r"Spearman's: $\rho$={:.2f}"
+            ).format(pear_corr)
+        )
 
     if filename:
-        f.savefig(
+        ax.get_figure().savefig(
             os.path.join(folder_name, filename),
             transparent=True,
             dpi=pyp.DEFAULT_DPI,
