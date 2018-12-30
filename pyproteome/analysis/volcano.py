@@ -200,37 +200,38 @@ def plot_volcano_labels(
         labels = _remove_lesser_dups(labels, compress_sym=compress_sym)
 
     # Position the labels
-    texts = []
     txt_lim = 100 if mods else 12
 
-    for _, row in labels.iterrows():
-        texts.append(
-            ax.text(
-                x=row["x"],
-                y=row["y"],
-                s=row["Label"][:txt_lim] + (
-                    "..." if len(row["Label"]) > txt_lim else ""
+    texts = [
+        ax.text(
+            x=row["x"],
+            y=row["y"],
+            s=row["Label"][:txt_lim] + (
+                "..." if len(row["Label"]) > txt_lim else ""
+            ),
+            zorder=10,
+            fontsize=20 if row["Highlight"] else 12,
+            horizontalalignment=(
+                'left' if row["x"] > 0 else "right"
+            ),
+            bbox=dict(
+                alpha=1,
+                linewidth=0.1,
+                pad=.2,
+                facecolor=row["EdgeColor"] or (
+                    "#DDDDDD"
+                    if edgecolors else
+                    ("#BFEE90" if row["x"] > 0 else "#FFC1C1")
                 ),
-                zorder=10,
-                fontsize=20 if row["Highlight"] else 12,
-                horizontalalignment=(
-                    'left' if row["x"] > 0 else "right"
-                ),
-                bbox=dict(
-                    alpha=1,
-                    linewidth=0.1,
-                    pad=.2,
-                    facecolor=row["EdgeColor"] or (
-                        "#DDDDDD"
-                        if edgecolors else
-                        ("#BFEE90" if row["x"] > 0 else "#FFC1C1")
-                    ),
-                    zorder=1,
-                    # edgecolor="black",
-                    boxstyle="round",
-                )
-            )
+                zorder=1,
+                # edgecolor="black",
+                boxstyle="round",
+            ),
         )
+        for _, row in labels.iterrows()
+    ]
+
+    LOGGER.info("Plotting volcano labels for {} peptides".format(len(texts)))
 
     if adjust:
         texts = texts[:MAX_VOLCANO_LABELS]
@@ -254,8 +255,6 @@ def plot_volcano_labels(
                 "text": "xy",
             }
         )
-
-    LOGGER.info("Plotting volcano labels for {} peptides".format(len(texts)))
 
     return labels
 
@@ -361,18 +360,25 @@ def plot_volcano(
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
 
-    if xminmax:
-        ax.set_xlim(left=xminmax[0], right=xminmax[1])
-    else:
-        ax.set_xlim(
-            left=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
-            right=np.ceil(max(data["p-value"] + [0]) * 2) / 2,
+    if not np.isnan(p):
+        ax.axhline(
+            p,
+            color="r", linestyle="dashed", linewidth=0.5,
         )
 
-    if yminmax:
-        ax.set_ylim(bottom=yminmax[0], top=yminmax[1])
-    else:
-        ax.set_ylim(bottom=-0.1)
+    if (abs(fold) if log2_fold else abs(fold - 1)) > 0.01:
+        ax.axvline(
+            upper_fold,
+            color="r",
+            linestyle="dashed",
+            linewidth=0.5,
+        )
+        ax.axvline(
+            lower_fold,
+            color="r",
+            linestyle="dashed",
+            linewidth=0.5,
+        )
 
     ax.set_xticks(
         list(
@@ -396,6 +402,19 @@ def plot_volcano(
             )
         )
     )
+
+    if xminmax:
+        ax.set_xlim(left=xminmax[0], right=xminmax[1])
+    else:
+        ax.set_xlim(
+            left=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
+            right=np.ceil(max(data["p-value"] + [0]) * 2) / 2,
+        )
+
+    if yminmax:
+        ax.set_ylim(bottom=yminmax[0], top=yminmax[1])
+    else:
+        ax.set_ylim(bottom=-0.1)
 
     ax.set_xticklabels(
         [
@@ -427,16 +446,6 @@ def plot_volcano(
         ax.set_ylabel(
             "p-value",
         )
-
-    if not np.isnan(p):
-        ax.axhline(
-            p,
-            color="r", linestyle="dashed", linewidth=0.5,
-        )
-
-    if (abs(fold) if log2_fold else abs(fold - 1)) > 0.01:
-        ax.axvline(upper_fold, color="r", linestyle="dashed", linewidth=0.5)
-        ax.axvline(lower_fold, color="r", linestyle="dashed", linewidth=0.5)
 
     if title:
         ax.set_title(
