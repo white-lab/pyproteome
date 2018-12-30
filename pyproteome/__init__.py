@@ -55,6 +55,7 @@ def import_all(line=None):
             "import pandas as pd",
             "import seaborn as sns",
             "import sklearn",
+            "import pyproteome as pyp",
             "import brainrnaseq as brs",
 
             "pylab.rcParams['figure.figsize'] = (6, 4)",
