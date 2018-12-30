@@ -1,8 +1,9 @@
 
 from __future__ import absolute_import, division
 
-from math import ceil, sqrt
 from functools import cmp_to_key
+import logging
+from math import ceil, sqrt
 import os
 
 from fastcluster import linkage
@@ -16,7 +17,7 @@ import pyproteome as pyp
 
 from . import clusterer
 
-
+LOGGER = logging.getLogger('pyp.cluster.plot')
 COLOR_MAP = plt.cm.rainbow
 CORR_COLOR_MAP = plt.cm.Spectral_r
 
@@ -397,7 +398,7 @@ def show_peptide_clusters(
         )
         for fil in filters
     ]
-    print(list(zip(filters, clusters)))
+    # print(list(zip(filters, clusters)))
     clusters = [
         i[0]
         for i in clusters
@@ -491,7 +492,7 @@ def cluster_range(
     )
 
     for n, ax in zip(clusters, axes.ravel()):
-        print(n)
+        LOGGER.info('Generating plots for cluster {}'.format(n))
 
         _, y_pred = clusterer.cluster(
             data,
