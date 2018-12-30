@@ -19,7 +19,10 @@ LOGGER = logging.getLogger("pyproteome.plogo")
 PLOGO_BASE = "https://plogo.uconn.edu/main"
 
 
-def format_title(data=None, f=None):
+def format_title(
+    f=None,
+    data=None,
+):
     title = []
 
     if 'fold' in f:
