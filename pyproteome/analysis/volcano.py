@@ -339,10 +339,11 @@ def plot_volcano(
     upper_fold = fold
     lower_fold = -upper_fold
 
-    data.psms = data.psms.replace([np.inf, -np.inf], np.nan).dropna(
-        subset=["p-value", "Fold Change"],
-        how="any",
-    )
+    with pd.option_context('mode.use_inf_as_null', True):
+        data.psms = data.psms.dropna(
+            subset=["p-value", "Fold Change"],
+            how="any",
+        )
 
     if bonferoni:
         p += np.log10(data.shape[0])
