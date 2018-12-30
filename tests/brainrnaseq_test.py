@@ -161,13 +161,14 @@ class BrainRNASeqTest(TestCase):
                 enrich = brs.enrichments.get_enrichments(
                     species=species,
                 )
+                print(enrich)
 
                 self.assertIsInstance(
                     enrich,
                     dict,
                 )
                 for key, val in vals.items():
-                    print(key, val)
+                    print(key, val, enrich.get(key, []))
                     self.assertEqual(
                         enrich[key][0],
                         val,
