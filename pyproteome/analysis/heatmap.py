@@ -57,6 +57,15 @@ def hierarchical_heatmap(
     ]
 
     raw = data.psms
+    raw.index = data.psms.apply(
+        lambda x:
+        "{}{}{}".format(
+            " / ".join(x["Proteins"].genes),
+            " : " if len(x['Modifications']) > 0 else "",
+            str(x["Modifications"]),
+        ),
+        axis=1,
+    )
     raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
 
@@ -65,8 +74,8 @@ def hierarchical_heatmap(
 
     # raw = raw.apply(zscore, axis=1)
     raw = raw.apply(np.log2, axis=1)
-    raw.index = data.psms["Proteins"].apply(str).apply(lambda x: x[:50])
     raw = raw.dropna(how="all")
+    raw = raw.T.dropna(how="all").T
 
     minmax = max([
         abs(raw.min().min()),
