@@ -1,21 +1,27 @@
 from collections import OrderedDict
 import logging
 from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 from scipy.stats import hypergeom
 import seaborn as sns
+
+from pyproteome.motifs.plogo import format_title
 
 import brainrnaseq as brs
 
 LOGGER = logging.getLogger('brainrnaseq.plot')
 
 
-def plot_cell_enrichments(ds, enrichments, f=None, ax=None):
+def plot_cell_enrichments(ds, enrichments, f=None, ax=None, title=None):
     LOGGER.info("Plotting cell type enrichments")
 
     if f is None:
         f = {'p': .05, 'asym_fold': 1.25}
+
+    if isinstance(f, dict):
+        f = [f]
 
     if ax is None:
         _, ax = plt.subplots(figsize=(4, 3))
@@ -33,51 +39,91 @@ def plot_cell_enrichments(ds, enrichments, f=None, ax=None):
     ]) else {}
 
     vals = []
+
+    ds = ds.filter(
+        protein=set(j for i in cell_prots.values() for j in i),
+        fn=lambda x: len(x['Proteins']) < 2,
+    )
+    hatches = [
+        "",
+        "//",
+        "o",
+        "x",
+        ".",
+    ]
+
     for cell in brs.CELL_TYPES:
-        d = ds.filter(
-            protein=[j for i in cell_prots.values() for j in i],
-            fn=lambda x: len(x['Proteins']) < 2,
-        )
+        for ind, fil in enumerate(f):
+            dc = ds.filter(protein=set(cell_prots[cell]))
 
-        dc = d.filter(protein=cell_prots[cell])
-        fore_hits = dc.filter(f).shape[0]
-        fore_size = dc.shape[0]
+            fore_hits = dc.filter(fil).shape[0]
+            fore_size = dc.shape[0]
 
-        back_hits = d.filter(f).shape[0]
-        back_size = d.shape[0]
+            back_hits = ds.filter(fil).shape[0]
+            back_size = ds.shape[0]
 
-        if fore_size < 1 or back_size < 1:
-            continue
+            if fore_size < 1 or back_size < 1:
+                continue
 
-        val = (
-            1 -
-            hypergeom.cdf(fore_hits, back_size, back_hits, fore_size) +
-            hypergeom.pmf(fore_hits, back_size, back_hits, fore_size)
-        )
-        vals.append(
-            pd.Series(
-                OrderedDict([
-                    ('cell', display_name.get(cell, cell)),
-                    ('p-value', -np.log10(val)),
-                    ('hue', brs.CELL_COLORS[cell]),
-                ])
+            val = (
+                1 -
+                hypergeom.cdf(fore_hits, back_size, back_hits, fore_size) +
+                hypergeom.pmf(fore_hits, back_size, back_hits, fore_size)
             )
-        )
+            vals.append(
+                pd.Series(
+                    OrderedDict([
+                        ('cell', display_name.get(cell, cell)),
+                        ('fore hits', fore_hits),
+                        ('fore size', fore_size),
+                        ('back hits', back_hits),
+                        ('back size', back_size),
+                        ('p-value', val),
+                        ('-log10 p-value', -np.log10(val)),
+                        ('color', brs.CELL_COLORS[cell]),
+                        ('hatch', hatches[ind % len(hatches)]),
+                        ('hue', format_title(f=fil)),
+                    ])
+                )
+            )
 
     df = pd.DataFrame(vals)
-    df = df.sort_values('p-value', ascending=False)
 
     ax = sns.barplot(
         data=df,
         y='cell',
-        x='p-value',
-        palette=df['hue'],
+        x='-log10 p-value',
+        hue='hue',
         ax=ax,
     )
-    ax.set_title('Cell Type Enrichment')
+
+    ax.axvline(-np.log10(.01), color='k', linestyle=':')
+    ax.legend(
+        handles=[
+            mpatches.Patch(
+                facecolor='w',
+                edgecolor='k',
+                hatch=i,
+                label=df['hue'].iloc[ind],
+            )
+            for ind, i in enumerate(hatches[:len(f)])
+        ]
+    )
+
+    for hatch, color, p in zip(
+        df['hatch'],
+        df['color'],
+        sorted(ax.patches, key=lambda x: x.xy[1]),
+    ):
+        p.set_hatch(hatch)
+        p.set_facecolor(color)
+        p.set_edgecolor('k')
+
+    if title:
+        ax.set_title(title)
+
     ax.set_ylabel('')
     ax.set_xlabel('p-value')
     ax.set_xticklabels(['{:.3}'.format(10 ** -i) for i in ax.get_xticks()])
-    ax.axvline(-np.log10(.01), color='k', linestyle=':')
 
     return ax.get_figure(), ax
