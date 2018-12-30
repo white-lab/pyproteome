@@ -798,6 +798,8 @@ def plot_nes(
     max_pval=.1,
     max_qval=1,
     figsize=None,
+    title=None,
+    ax=None,
 ):
     """
     Plot the ranked normalized enrichment score values.
@@ -821,94 +823,42 @@ def plot_nes(
     """
     LOGGER.info("Plotting ranked NES(S) values")
 
-    f, ax = plt.subplots(
-        figsize=figsize or (5, 4),
-    )
     v = vals.copy()
-    v = v.sort_values("NES(S)")
-    mask = (
-        (v["n_hits"] >= min_hits) &
-        (v["ES(S)"].abs() >= min_abs_score) &
-        (v["p-value"] < max_pval) &
-        (v["q-value"] < max_qval)
+    col = 'p-value'
+    sig_cutoff = -np.log10(.01)
+    # col = 'q-value'
+    # sig_cutoff = -np.log10(.25)
+
+    p_iter = len(v['ES(S, pi)'].iloc[0])
+    v[col] = v[col].apply(
+        lambda x: -np.log10(x) if x > 0 else -np.log10(1/p_iter)
     )
+    # v = v.sort_values(col, ascending=False)
+    v = v.sort_values('NES(S)', ascending=False)
 
-    nes = v["NES(S)"]
-
-    pos = nes[mask]
-    neg = nes[~mask]
-
-    ind = np.arange(v.shape[0])
-    pos_ind = ind[mask]
-    neg_ind = ind[~mask]
-
-    ax.scatter(
-        x=pos_ind,
-        y=pos,
-        color="r",
-    )
-    ax.scatter(
-        x=neg_ind,
-        y=neg,
-        color="k",
-    )
-    ax.set_xticks([])
-    ax.set_ylabel("Normalized Enrichment Score")
-    x_pad = ind.max() / 10
-    ax.set_xlim(
-        left=ind.min() - x_pad,
-        right=ind.max() + x_pad,
-    )
-    y_pad = max([nes.abs().min(), nes.abs().max()]) / 4
-    ax.set_ylim(
-        bottom=nes.min() - y_pad,
-        top=nes.max() + y_pad,
-    )
-
-    texts = []
-
-    for x, (_, row) in zip(ind[mask], v[mask].iterrows()):
-        texts.append(
-            ax.text(
-                x=x,
-                y=row["NES(S)"],
-                s=row["name"],
-                fontsize=12,
-                zorder=10,
-                backgroundcolor="white",
-                bbox=dict(
-                    facecolor='white',
-                    # alpha=0.9,
-                    edgecolor='k',
-                    zorder=1,
-                )
-            )
+    if ax is None:
+        _, ax = plt.subplots(
+            figsize=figsize or (5, 4 / 14 * v.shape[0]),
         )
 
-    LOGGER.info("Adjusting positions for {} labels".format(len(texts)))
-
-    pyp.utils.adjust_text(
-        x=[i._x for i in texts],
-        y=[i._y for i in texts],
-        texts=texts,
+    sns.barplot(
+        data=v,
+        x=col,
+        y='name',
         ax=ax,
-        lim=500,
-        force_text=1.5,
-        force_points=1.5,
-        arrowprops=dict(
-            arrowstyle="-",
-            relpos=(0, 0),
-            lw=1,
-            zorder=1,
-            color="k",
-        ),
-        only_move={
-            "points": "y",
-            "text": "xy",
-        }
     )
 
-    return f, ax
+    if title is not None:
+        ax.set_title(title)
+
+    ax.set_ylabel('')
+    ax.set_xticklabels([
+        '{:.3}'.format(10 ** -i)
+        for i in ax.get_xticks()
+    ])
+    ax.axvline(sig_cutoff, color='k', linestyle=':')
+
+    return ax.get_figure(), ax
 
 
 def plot_correlations(gene_changes, figsize=None):
