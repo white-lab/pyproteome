@@ -182,6 +182,7 @@ def plot_group(
     title=None,
     folder_name=None,
     figsize=None,
+    ax=None,
 ):
     """
     Plot the levels of a sequence across each group.
@@ -259,9 +260,10 @@ def plot_group(
             for name in group.index
         ]
 
-        fig, ax = plt.subplots(
-            figsize=figsize or (len(labels) * .75, 4),
-        )
+        if ax is None:
+            _, ax = plt.subplots(
+                figsize=figsize or (len(labels) * .75, 4),
+            )
 
         x = [
             ind
@@ -421,7 +423,7 @@ def plot_group(
             horizontalalignment="right",
         )
 
-        fig.savefig(
+        ax.get_figure().savefig(
             os.path.join(
                 folder_name,
                 re.sub(
@@ -438,7 +440,7 @@ def plot_group(
             transparent=True,
         )
 
-        figures.append((fig, ax))
+        figures.append((ax.get_figure(), ax))
 
     return figures
 
