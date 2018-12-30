@@ -26,8 +26,9 @@ from . import (
     msigdb,
     pathwayscommon,
     photon_ptm,
-    ptmsigdb,
+    plot,
     psp,
+    ptmsigdb,
     wikipathways,
 )
 
@@ -493,7 +494,7 @@ def gsea(
     )
 
     if show_plots:
-        enrichments.plot_gsea(
+        plot.plot_gsea(
             vals, gene_changes,
             folder_name=folder_name,
             **kwargs

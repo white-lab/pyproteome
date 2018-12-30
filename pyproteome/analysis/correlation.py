@@ -9,6 +9,7 @@ from __future__ import absolute_import, division
 
 import logging
 import os
+import warnings
 
 from matplotlib import pyplot as plt
 import numpy as np
@@ -60,51 +61,53 @@ def correlate_data_sets(
             figsize=(4, 3),
         )
 
-    sns.regplot(
-        x=merged["Fold Change_x"].apply(np.log2),
-        y=merged["Fold Change_y"].apply(np.log2),
-        ax=ax,
-        scatter_kws={
-            's': 2,
-        },
-    )
+    merged["Fold Change_x"] = merged["Fold Change_x"].apply(np.log2)
+    merged["Fold Change_y"] = merged["Fold Change_y"].apply(np.log2)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=FutureWarning)
+        sns.regplot(
+            x='Fold Change_x',
+            y='Fold Change_y',
+            data=merged,
+            ax=ax,
+            scatter_kws={
+                's': 2,
+            },
+        )
 
     label_cutoff = np.log2(label_cutoff)
 
     if show_labels:
-        texts, x_s, y_s = [], [], []
+        texts = []
 
-        for index, row in merged.iterrows():
+        for _, row in merged.iterrows():
             x = row["Fold Change_x"]
             y = row["Fold Change_y"]
-            x, y = np.log2(x), np.log2(y)
             ratio = x - y
 
             if ratio < label_cutoff and ratio > - label_cutoff:
                 continue
 
-            x_s.append(x)
-            y_s.append(y)
-
             txt = " / ".join(row["Proteins_x"].genes)
             txt = txt[:20] + ("..." if len(txt) > 20 else "")
 
             text = ax.text(
-                x, y, txt,
-            )
-
-            text.set_bbox(
-                dict(
+                x=x,
+                y=y,
+                s=txt,
+                bbox=dict(
                     color="lightgreen" if ratio < 0 else "pink",
                     alpha=0.8,
-                )
+                ),
             )
+
             texts.append(text)
 
         if adjust:
             pyp.utils.adjust_text(
-                x=x_s,
-                y=y_s,
+                x=[i._x for i in texts],
+                y=[i._y for i in texts],
                 texts=texts,
                 ax=ax,
                 lim=400,
@@ -117,10 +120,10 @@ def correlate_data_sets(
                 }
             )
 
-    min_x = merged["Fold Change_x"].apply(np.log2).min()
-    max_x = merged["Fold Change_x"].apply(np.log2).max()
-    min_y = merged["Fold Change_y"].apply(np.log2).min()
-    max_y = merged["Fold Change_y"].apply(np.log2).max()
+    min_x = merged["Fold Change_x"].min()
+    max_x = merged["Fold Change_x"].max()
+    min_y = merged["Fold Change_y"].min()
+    max_y = merged["Fold Change_y"].max()
 
     min_xy = min([min_x, min_y])
     max_xy = max([max_x, max_y])
