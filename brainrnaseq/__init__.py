@@ -77,7 +77,11 @@ CELL_TYPES = [
     "New Oligodendrocytes",
     "OPC",
 ]
-DEFAULT_CELL_TYPES = CELL_TYPES[:2] + CELL_TYPES[4:]
+DEFAULT_CELL_TYPES = [
+    i
+    for i in CELL_TYPES
+    if i not in ['OPC', 'New Oligodendrocytes']
+]
 
 CELL_COLORS = colors = {
     "Astrocyte": "#bfee90",

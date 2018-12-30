@@ -23,7 +23,7 @@ BARRES_SEQ_URL = (
     "https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/"
     "TableS4-HumanMouseMasterFPKMList.xlsx?raw=true"
 )
-BARRES_DATA_NAME = "TableS4-HumanMouseMasterFPKMList.xlsx"
+BARRES_DATA_NAME = BARRES_SEQ_URL.rsplit("?", 1)[0].rsplit("/", 1)[1]
 
 BARRES_SEQ_PATH = os.path.join(CACHE_DIR, BARRES_DATA_NAME)
 
