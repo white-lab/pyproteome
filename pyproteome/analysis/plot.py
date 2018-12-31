@@ -89,7 +89,7 @@ def plot(
         )
 
         fig, ax = plt.subplots(
-            figsize=figsize or (len(channels) / 2, 6 / 2),
+            figsize=figsize or (len(values) / 2, 6 / 2),
         )
 
         df = pd.DataFrame(
@@ -261,9 +261,11 @@ def plot_group(
         ]
 
         if ax is None:
-            _, ax = plt.subplots(
+            _, plot_ax = plt.subplots(
                 figsize=figsize or (len(labels) * .75, 4),
             )
+        else:
+            plot_ax = ax
 
         x = [
             ind
@@ -299,7 +301,7 @@ def plot_group(
             y="y",
             hue="color",
             data=df,
-            ax=ax,
+            ax=plot_ax,
             dodge=False,
             boxprops=dict(alpha=.3),
         )
@@ -307,10 +309,10 @@ def plot_group(
             x=x,
             y=y,
             color=".25",
-            ax=ax,
+            ax=plot_ax,
             size=10,
         )
-        ax.axhline(
+        plot_ax.axhline(
             0,
             linestyle="--",
             alpha=.25,
@@ -318,7 +320,7 @@ def plot_group(
 
         mod_str = row["Modifications"].__str__(prot_index=0)
 
-        ax.set_title(
+        plot_ax.set_title(
             title
             if title else
             "{} ({}{})".format(
@@ -327,7 +329,7 @@ def plot_group(
                 (" " + mod_str) if mod_str else "",
             ),
         )
-        ax.xaxis.grid(False)
+        plot_ax.xaxis.grid(False)
 
         y_max = y.max()
 
@@ -371,7 +373,7 @@ def plot_group(
                 ).pvalue
 
                 if pval < 0.05:
-                    ax.annotate(
+                    plot_ax.annotate(
                         "",
                         xy=(
                             index_a,
@@ -388,7 +390,7 @@ def plot_group(
                             ec='#000000',
                         ),
                     )
-                    ax.text(
+                    plot_ax.text(
                         x=np.mean([index_a, index_b]),
                         y=y_max + offset + y_max / 40,
                         s=stars(pval),
@@ -397,33 +399,33 @@ def plot_group(
                     )
                     offset += y_max / 10
 
-            ax.set_ylim(
-                bottom=ax.get_ylim()[0],
+            plot_ax.set_ylim(
+                bottom=plot_ax.get_ylim()[0],
                 top=max([
-                    ax.get_ylim()[1],
+                    plot_ax.get_ylim()[1],
                     y_max + offset,
                 ]),
             )
 
-        ax.set_xlabel("")
-        ax.set_ylabel(
+        plot_ax.set_xlabel("")
+        plot_ax.set_ylabel(
             "{} Signal".format(
                 "Relative" if cmp_groups else "Cumulative",
             ),
         )
-        ax.get_legend().set_visible(False)
+        plot_ax.get_legend().set_visible(False)
 
-        ax.set_yticklabels(
-            ["{:.2f}".format(i) for i in np.power(2, ax.get_yticks())],
+        plot_ax.set_yticklabels(
+            ["{:.2f}".format(i) for i in np.power(2, plot_ax.get_yticks())],
         )
 
-        ax.set_xticklabels(
+        plot_ax.set_xticklabels(
             labels,
             rotation=45,
             horizontalalignment="right",
         )
 
-        ax.get_figure().savefig(
+        plot_ax.get_figure().savefig(
             os.path.join(
                 folder_name,
                 re.sub(
@@ -440,7 +442,7 @@ def plot_group(
             transparent=True,
         )
 
-        figures.append((ax.get_figure(), ax))
+        figures.append((plot_ax.get_figure(), plot_ax))
 
     return figures
 
