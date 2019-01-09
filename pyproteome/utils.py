@@ -165,6 +165,38 @@ def flatten_set(lst):
     return set([lst])
 
 
+def flatten_list(lst):
+    """
+    Flattens an Iterable with arbitrary nesting into a single list.
+
+    Parameters
+    ----------
+    lst : Iterable
+
+    Returns
+    -------
+    flattened : list
+
+    Examples
+    --------
+        >>> utils.flatten_list([0, [1, 2], [[3]], "string"])
+        [0, 1, 2, 3, "string"]
+    """
+    if isinstance(
+        lst,
+        (list, tuple, set, types.GeneratorType, pd.Series, np.ndarray)
+    ):
+        ret = []
+
+        for element in lst:
+            for new_element in flatten_set(element):
+                ret.append(new_element)
+
+        return ret
+
+    return [lst]
+
+
 class DefaultOrderedDict(OrderedDict):
     # Source: http://stackoverflow.com/a/6190500/562769
     def __init__(self, default_factory=None, *a, **kw):
