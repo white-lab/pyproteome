@@ -70,6 +70,7 @@ def plot_nes(
     max_qval=1,
     figsize=None,
     title=None,
+    col=None,
     ax=None,
 ):
     """
@@ -95,16 +96,29 @@ def plot_nes(
     LOGGER.info("Plotting ranked NES(S) values")
 
     v = vals.copy()
-    col = 'p-value'
-    sig_cutoff = -np.log10(.01)
-    # col = 'q-value'
-    # sig_cutoff = -np.log10(.25)
+
+    if col is None:
+        col = [
+            i
+            for i in ['q-value', 'p-value', 'NES(S)', 'ES(S)']
+            if i in v.columns
+        ][0]
+
+    if col in ['p-value']:
+        sig_cutoff = -np.log10(.01)
+    elif col in ['q-value']:
+        sig_cutoff = -np.log10(.25)
+    else:
+        sig_cutoff = 1
 
     p_iter = len(v['ES(S, pi)'].iloc[0])
-    v[col] = v[col].apply(
-        lambda x: -np.log10(x) if x > 0 else -np.log10(1/p_iter)
-    )
-    # v = v.sort_values(col, ascending=False)
+
+    if col in ['p-value', 'q-value']:
+        v[col] = v[col].apply(
+            lambda x:
+            -np.log10(x) if x > 0 else -np.log10(1/p_iter)
+        )
+
     v = v.sort_values('NES(S)', ascending=False)
 
     if ax is None:
@@ -123,6 +137,14 @@ def plot_nes(
         ax.set_title(title)
 
     ax.set_ylabel('')
+
+    if col in ['p-value', 'q-value']:
+        ax.set_xticks([
+            i
+            for i in ax.get_xticks()
+            if abs(i - int(i)) < .1
+        ])
+
     ax.set_xticklabels([
         '{:.3}'.format(10 ** -i)
         for i in ax.get_xticks()
