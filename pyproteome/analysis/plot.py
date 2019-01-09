@@ -310,7 +310,7 @@ def plot_group(
             y=y,
             color=".25",
             ax=plot_ax,
-            size=10,
+            # size=10,
         )
         plot_ax.axhline(
             0,
@@ -403,7 +403,7 @@ def plot_group(
                 bottom=plot_ax.get_ylim()[0],
                 top=max([
                     plot_ax.get_ylim()[1],
-                    y_max + offset,
+                    y_max + offset + y_max / 10,
                 ]),
             )
 
