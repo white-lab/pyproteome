@@ -85,10 +85,10 @@ DEFAULT_CELL_TYPES = [
 
 CELL_COLORS = colors = {
     "Astrocyte": "#bfee90",
-    "Endothelia": "salmon",
-    "Microglia": "#00b0f0",
-    "Myelinating Oligodendrocytes": "purple",
-    "Neuron": "orange",
+    "Endothelia": "#ff9b90",
+    "Microglia": "#5bd3ff",
+    "Myelinating Oligodendrocytes": "#ff39ff",
+    "Neuron": "#ffc467",
     "New Oligodendrocytes": "lightpurple",
     "OPC": "darkpurple",
 }

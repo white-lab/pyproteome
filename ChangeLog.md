@@ -1,5 +1,13 @@
 # Change Log
 
+### 0.9.0 (2019-01-10)
+
+Features
+
+  - Added support for ProteomeDiscoverer 2.2.
+  - Improved the layout of several analysis figures.
+  - Added cell type, gene ontology enrichment functions.
+
 ## 0.8.0 (2018-08-27)
 
 Changes

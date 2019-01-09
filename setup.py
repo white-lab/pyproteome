@@ -22,13 +22,12 @@ REQUIREMENTS = [
     "adjustText>=0.7.3",
     "fastcluster>=1.1.25",
     "genemap>=0.2.0",
+    'goatools>=0.8.12',
     "ipython>=5.4.1",
     "matplotlib>=2.2.0",
     "numpy>=1.15.0",
     "numpydoc>=0.8",
     "pandas>=0.23.0",
-    "perseuspy>=0.3.8",
-    "photon_ptm>=0.3.0",
     "scikit-learn>=0.19.1",
     "scipy>=1.1.0",
     "seaborn>=0.9.0",
@@ -57,6 +56,12 @@ if __name__ == "__main__":
             "git+https://github.com/jdrudolph/photon.git"
             "@master#egg=photon_ptm-0.3.0",
         ],
+        extras_require={
+            'photon': [
+                "perseuspy>=0.3.8",
+                "photon_ptm>=0.3.0",
+            ],
+        },
         classifiers=[
             "License :: OSI Approved :: BSD License",
             "Natural Language :: English",

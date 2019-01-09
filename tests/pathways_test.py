@@ -89,3 +89,34 @@ class PathwaysTest(TestCase):
                         self.assertIn(col, gene_sets.columns)
 
                     self.assertGreater(gene_sets.shape[0], 0)
+
+    def test_PrPDF(self):
+        pdf = pathways.enrichments.PrPDF(range(1, 11))
+        self.assertEqual(
+            pdf.cdf(1),
+            0,
+        )
+        self.assertEqual(
+            pdf.cdf(2),
+            .1,
+        )
+        self.assertEqual(
+            pdf.cdf(10),
+            .9,
+        )
+        self.assertEqual(
+            pdf.sf(2),
+            .8,
+        )
+        self.assertEqual(
+            pdf.sf(10),
+            0,
+        )
+        self.assertEqual(
+            pdf.pdf(2),
+            .1,
+        )
+        self.assertEqual(
+            pdf.cdf(2) + pdf.pdf(2) + pdf.sf(2),
+            1,
+        )
