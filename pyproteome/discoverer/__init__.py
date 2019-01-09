@@ -20,16 +20,16 @@ from pyproteome import (
 
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
-RE_PSP = re.compile("(\w+)\((\d+)\): ([\d\.]+)")
-RE_GENE = re.compile("^>.* GN=(.+) PE=")
-RE_GENE_BACKUP = re.compile("^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) ")
+RE_PSP = re.compile(r"(\w+)\((\d+)\): ([\d\.]+)")
+RE_GENE = re.compile(r"^>.* GN=(.+) PE=")
+RE_GENE_BACKUP = re.compile(r"^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) ")
 RE_DESCRIPTION = re.compile(
     r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*?) (OS=|GN=|PE=|SV=)"
 )
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
 
-def _read_peptides(conn, pick_best_ptm=False):
+def _read_peptides(conn, pd_version, pick_best_ptm=False):
     df = pd.read_sql_query(
         sql="""
         SELECT
@@ -96,7 +96,7 @@ def _extract_spectrum_file(df):
     return df
 
 
-def _get_proteins(df, cursor):
+def _get_proteins(df, cursor, pd_version):
     prots = cursor.execute(
         """
         SELECT
@@ -169,7 +169,7 @@ def _get_proteins(df, cursor):
     return df
 
 
-def _get_modifications(df, cursor):
+def _get_modifications(df, cursor, pd_version):
     aa_mods = cursor.execute(
         """
         SELECT
@@ -262,7 +262,7 @@ def _get_modifications(df, cursor):
     return df
 
 
-def _get_quantifications(df, cursor, tag_names):
+def _get_quantifications(df, cursor, pd_version, tag_names):
     if not tag_names:
         return df
 
@@ -321,7 +321,7 @@ def _get_quantifications(df, cursor, tag_names):
     return df
 
 
-def _get_ms_data(df, cursor):
+def _get_ms_data(df, cursor, pd_version):
     vals = cursor.execute(
         """
         SELECT
@@ -386,7 +386,7 @@ def _set_defaults(df):
     return df
 
 
-def _get_filenames(df, cursor):
+def _get_filenames(df, cursor, pd_version):
     files = cursor.execute(
         """
         SELECT
@@ -414,7 +414,7 @@ def _get_filenames(df, cursor):
     return df
 
 
-def _get_q_values(df, cursor):
+def _get_q_values(df, cursor, pd_version):
     fields = cursor.execute(
         """
         SELECT
@@ -526,7 +526,7 @@ def _reassign_mods(mods, psp_val):
     return mods, reassigned, ambiguous
 
 
-def _get_phosphors(df, cursor, name=None):
+def _get_phosphors(df, cursor, pd_version, name=None):
     fields = cursor.execute(
         """
         SELECT
@@ -585,7 +585,7 @@ def _get_phosphors(df, cursor, name=None):
     return df
 
 
-def _get_species(cursor):
+def _get_species(cursor, pd_version):
     fields = cursor.execute(
         """
         SELECT
@@ -604,7 +604,7 @@ def _get_species(cursor):
     return species
 
 
-def _update_label_names(cursor):
+def _update_label_names(cursor, pd_version):
     fields = cursor.execute(
         """
         SELECT
@@ -634,6 +634,45 @@ def _update_label_names(cursor):
                 letter = "C-term"
 
             data_sets.modification.LABEL_NAMES[abbrev].add(letter)
+
+
+def _get_quant_tags(cursor, pd_version):
+    quantification = cursor.execute(
+        """
+        SELECT
+        ParameterValue
+        FROM ProcessingNodeParameters
+        WHERE ProcessingNodeParameters.ParameterName="QuantificationMethod"
+        """,
+    ).fetchone()
+
+    if quantification:
+        quantification = quantification[0]
+
+        if sys.version_info.major < 3:
+            quantification = quantification.encode("utf-8")
+
+        root = ET.fromstring(quantification)
+        quant_tags = root.findall(
+            "MethodPart/MethodPart/Parameter[@name='TagName']",
+        )
+        tag_names = [i.text for i in quant_tags]
+    else:
+        tag_names = None
+
+    return quantification, tag_names
+
+
+def _get_pd_version(cursor):
+    query = cursor.execute(
+        """
+        SELECT
+        SoftwareVersion
+        FROM SchemaInfo
+        WHERE Kind=='Result'
+        """,
+    )
+    return tuple([int(i) for i in next(query)[0].split('.')])
 
 
 def read_discoverer_msf(basename, pick_best_ptm=False):
@@ -669,45 +708,26 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     with sqlite3.connect(msf_path) as conn:
         cursor = conn.cursor()
 
-        _update_label_names(cursor)
+        pd_version = _get_pd_version(cursor)
+
+        _update_label_names(cursor, pd_version)
 
         # Get any N-terminal quantification tags
-        quantification = cursor.execute(
-            """
-            SELECT
-            ParameterValue
-            FROM ProcessingNodeParameters
-            WHERE ProcessingNodeParameters.ParameterName="QuantificationMethod"
-            """,
-        ).fetchone()
-
-        if quantification:
-            quantification = quantification[0]
-
-            if sys.version_info.major < 3:
-                quantification = quantification.encode("utf-8")
-
-            root = ET.fromstring(quantification)
-            quant_tags = root.findall(
-                "MethodPart/MethodPart/Parameter[@name='TagName']",
-            )
-            tag_names = [i.text for i in quant_tags]
-        else:
-            tag_names = None
+        quantification, tag_names = _get_quant_tags(cursor, pd_version)
 
         # Read the main peptide properties
-        df = _read_peptides(conn, pick_best_ptm=pick_best_ptm)
+        df = _read_peptides(conn, pd_version, pick_best_ptm=pick_best_ptm)
 
-        df = _get_proteins(df, cursor)
+        df = _get_proteins(df, cursor, pd_version)
         df = _extract_sequence(df)
         df = _extract_confidence(df)
         df = _extract_spectrum_file(df)
-        df = _get_modifications(df, cursor)
-        df = _get_phosphors(df, cursor, name=name)
-        df = _get_q_values(df, cursor)
-        df = _get_ms_data(df, cursor)
-        df = _get_filenames(df, cursor)
-        df = _get_quantifications(df, cursor, tag_names)
+        df = _get_modifications(df, cursor, pd_version)
+        df = _get_phosphors(df, cursor, pd_version, name=name)
+        df = _get_q_values(df, cursor, pd_version)
+        df = _get_ms_data(df, cursor, pd_version)
+        df = _get_filenames(df, cursor, pd_version)
+        df = _get_quantifications(df, cursor, pd_version, tag_names)
 
         df = _set_defaults(df)
 
