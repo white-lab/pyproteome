@@ -215,13 +215,13 @@ def simulate_es_s_pi(
 def _calc_q(nes, nes_pdf, nes_pi_pdf):
     if nes > 0:
         return (
-            nes_pi_pdf.sf(nes)
+            nes_pi_pdf.pdf(nes) + nes_pi_pdf.sf(nes)
         ) / (
             nes_pdf.pdf(nes) + nes_pdf.sf(nes)
         )
     else:
         return (
-            nes_pi_pdf.cdf(nes)
+            nes_pi_pdf.pdf(nes) + nes_pi_pdf.cdf(nes)
         ) / (
             nes_pdf.pdf(nes) + nes_pdf.cdf(nes)
         )
@@ -249,17 +249,17 @@ def estimate_pq(vals):
     pos_pi = vals["ES(S, pi)"].apply(np.array).apply(lambda x: x[x > 0])
     neg_pi = vals["ES(S, pi)"].apply(np.array).apply(lambda x: x[x < 0])
 
-    pos_mean = pos_pi.apply(np.mean)
-    neg_mean = neg_pi.apply(np.mean)
+    pos_mean = pos_pi.apply(np.mean).abs()
+    neg_mean = neg_pi.apply(np.mean).abs()
 
     pos_nes = pos_ess / pos_mean
-    neg_nes = neg_ess.apply(lambda x: -x) / neg_mean
+    neg_nes = neg_ess / neg_mean
 
     # assert (pos_nes.isnull() | neg_nes.isnull()).all()
     # assert ((~pos_nes.isnull()) | (~neg_nes.isnull())).all()
 
     pos_pi_nes = pos_pi / pos_mean
-    neg_pi_nes = neg_pi.apply(lambda x: -x) / neg_mean
+    neg_pi_nes = neg_pi / neg_mean
 
     vals["NES(S)"] = pos_nes.fillna(neg_nes)
     vals["pos NES(S, pi)"] = pos_pi_nes
