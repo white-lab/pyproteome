@@ -1,5 +1,6 @@
 
 from collections import Counter
+import logging
 import os
 import re
 
@@ -70,6 +71,7 @@ COLORS_SCHEME.update({
     "W": "#000000",
     "Y": "#6F6F6F",
 })
+LOGGER = logging.getLogger('pyp.motifs.logo')
 
 
 def _letterAt(letter, x, y, alpha=1, xscale=1, yscale=1, ax=None):
@@ -197,6 +199,8 @@ def make_logo(data, f, folder_name=None, **kwargs):
     -------
     fig, axes
     """
+    LOGGER.info('Generating motif logo')
+
     nmer_args = motif.get_nmer_args(kwargs)
 
     fore = [
@@ -261,7 +265,7 @@ def _draw_logo(
     ax.add_patch(
         patches.Rectangle(
             (left_margin, 0.001),
-            .9985 - left_margin,
+            .9984 - left_margin,
             .997,
             fill=False,
             linewidth=1,
