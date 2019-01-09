@@ -795,6 +795,9 @@ def _get_filenames(df, cursor, pd_version):
 
 
 def _get_q_values(df, cursor, pd_version):
+    df["q-value"] = np.nan
+    q_vals = []
+
     if pd_version[:2] in [(1, 4)]:
         fields = cursor.execute(
             """
@@ -811,8 +814,6 @@ def _get_q_values(df, cursor, pd_version):
             for field_id, name in fields
             if name in ["q-Value"]
         ]
-
-        df["q-value"] = np.nan
 
         if not field_ids:
             return df
@@ -832,10 +833,18 @@ def _get_q_values(df, cursor, pd_version):
             field_ids,
         )
     elif pd_version[:2] in [(2, 2)]:
-        q_vals = []
-        LOGGER.warning("q-values not supported for PD2.2")
+        try:
+            q_vals = cursor.execute(
+                """
+                SELECT
+                TargetPsms.PeptideID,
+                TargetPsms.PercolatorqValue
 
-        df["q-value"] = np.nan
+                FROM TargetPsms
+                """,
+            )
+        except sqlite3.OperationalError:
+            pass
     else:
         raise Exception(
             "Unsupported Proteome Discoverer Version: {}".format(pd_version)
@@ -876,6 +885,9 @@ def _reassign_mods(mods, psp_val):
 
     # phophoRS example format: "T(4): 99.6; S(6): 0.4; S(10): 0.0"
     # Error messages include: "Too many isoforms"
+    if psp_val is None:
+        psp_val = ''
+
     psp_val = [
         RE_PSP.match(i.strip())
         for i in psp_val.split(";")
@@ -923,6 +935,9 @@ def _reassign_mods(mods, psp_val):
 
 
 def _get_phosphors(df, cursor, pd_version, name=None):
+    df["Ambiguous"] = False
+    psp_vals = []
+
     if pd_version[:2] in [(1, 4)]:
         fields = cursor.execute(
             """
@@ -938,8 +953,6 @@ def _get_phosphors(df, cursor, pd_version, name=None):
             for field_id, name in fields
             if name in ["phosphoRS Site Probabilities"]
         ]
-
-        df["Ambiguous"] = False
 
         if not field_ids:
             return df
@@ -959,10 +972,18 @@ def _get_phosphors(df, cursor, pd_version, name=None):
             field_ids,
         )
     elif pd_version[:2] in [(2, 2)]:
-        psp_vals = []
-        LOGGER.warning("PhosphoRS not supported for PD2.2")
+        try:
+            psp_vals = cursor.execute(
+                """
+                SELECT
+                TargetPsms.PeptideID,
+                TargetPsms.ptmRSPhosphoSiteProbabilities
 
-        df["Ambiguous"] = False
+                FROM TargetPsms
+                """,
+            )
+        except sqlite3.OperationalError:
+            pass
     else:
         raise Exception(
             "Unsupported Proteome Discoverer Version: {}".format(pd_version)
