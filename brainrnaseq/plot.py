@@ -14,8 +14,19 @@ import brainrnaseq as brs
 LOGGER = logging.getLogger('brainrnaseq.plot')
 
 
-def plot_cell_enrichments(ds, enrichments, f=None, ax=None, title=None):
+def plot_cell_enrichments(
+    ds,
+    f=None,
+    enrichments=None,
+    ax=None,
+    title=None,
+):
     LOGGER.info("Plotting cell type enrichments")
+
+    if enrichments is None:
+        enrichments = brs.enrichments.get_enrichments(
+            list(ds.species)[0],
+        )
 
     if f is None:
         f = {'p': .05, 'asym_fold': 1.25}

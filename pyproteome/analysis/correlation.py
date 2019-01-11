@@ -29,7 +29,7 @@ def correlate_data_sets(
     filename=None,
     adjust=True,
     label_cutoff=1.5,
-    show_labels=True,
+    show_labels=False,
     show_title=True,
     ax=None,
 ):

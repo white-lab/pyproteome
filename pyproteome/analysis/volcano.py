@@ -271,7 +271,6 @@ def plot_volcano(
     ax=None,
     filename=None,
     folder_name=None,
-    figsize=(12, 10),
     show_xlabel=True,
     show_ylabel=True,
     log2_fold=True,
@@ -350,7 +349,7 @@ def plot_volcano(
 
     # Draw the figure
     if ax is None:
-        _, ax = plt.subplots(figsize=figsize)
+        _, ax = plt.subplots(figsize=(6, 6))
 
     ax.scatter(
         data["Fold Change"],
@@ -409,7 +408,7 @@ def plot_volcano(
     else:
         ax.set_xlim(
             left=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
-            right=np.ceil(max(data["p-value"] + [0]) * 2) / 2,
+            right=np.ceil(max(data["Fold Change"] + [0]) * 2) / 2,
         )
 
     if yminmax:

@@ -154,7 +154,7 @@ def get_pathways(species, p_sites=False, remap=False):
     df : :class:`pandas.DataFrame`, optional
     """
     LOGGER.info(
-        "building gene sets (psites={}, remap={})"
+        "Building gene sets (psites={}, remap={})"
         .format(p_sites, remap)
     )
 
@@ -184,13 +184,13 @@ def get_pathways(species, p_sites=False, remap=False):
 
 def _filter_ambiguous_peptides(ds):
     LOGGER.info(
-        "filtering ambiguous peptides ({} proteins)".format(len(set(ds.genes)))
+        "Filtering ambiguous peptides ({} proteins)".format(len(set(ds.genes)))
     )
 
     ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
     ds = ds.filter(ambiguous=False)
 
-    LOGGER.info("filtered down to {} proteins".format(len(set(ds.genes))))
+    LOGGER.info("Filtered down to {} proteins".format(len(set(ds.genes))))
 
     return ds
 
@@ -202,7 +202,7 @@ def _get_scores(psms, phenotype=None, metric=None):
         else:
             metric = "spearman"
 
-    LOGGER.info("building correlations using metric '{}'".format(metric))
+    LOGGER.info("Building correlations using metric '{}'".format(metric))
 
     psms = psms[~psms["ID"].isnull()]
 
