@@ -68,7 +68,6 @@ def plot_nes(
     min_abs_score=0,
     max_pval=.1,
     max_qval=1,
-    figsize=None,
     title=None,
     col=None,
     ax=None,
@@ -123,7 +122,7 @@ def plot_nes(
 
     if ax is None:
         _, ax = plt.subplots(
-            figsize=figsize or (5, 4 / 14 * v.shape[0]),
+            figsize=(5, 4 / 14 * v.shape[0]),
         )
 
     sns.barplot(
@@ -154,7 +153,10 @@ def plot_nes(
     return ax.get_figure(), ax
 
 
-def plot_correlations(gene_changes, figsize=None):
+def plot_correlations(
+    gene_changes,
+    ax=None,
+):
     """
     Plot the ranked list of correlations.
 
@@ -171,9 +173,10 @@ def plot_correlations(gene_changes, figsize=None):
     """
     LOGGER.info("Plotting gene correlations")
 
-    f, ax = plt.subplots(
-        figsize=figsize or (4, 3),
-    )
+    if ax is None:
+        f, ax = plt.subplots(
+            figsize=(4, 3),
+        )
 
     ax.plot(
         gene_changes["Correlation"].sort_values(ascending=False).tolist(),
@@ -183,7 +186,7 @@ def plot_correlations(gene_changes, figsize=None):
     ax.set_xlabel("Gene List Rank")
     ax.set_ylabel("Correlation")
 
-    return f, ax
+    return ax.get_figure(), ax
 
 
 def plot_enrichment(

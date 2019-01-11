@@ -302,7 +302,8 @@ def correlate_signal(
     scatter_colors=None,
     scatter_symbols=None,
     show_scatter=True,
-    figsize=(12, 10),
+    ax=None,
+    filename="",
     xlabel="",
 ):
     """
@@ -376,7 +377,9 @@ def correlate_signal(
         how="any",
     )
 
-    f_corr, ax = plt.subplots(figsize=figsize)
+    if ax is None:
+        f_corr, ax = plt.subplots(figsize=(12, 10))
+
     x, y, colors = [], [], []
     sig_x, sig_y, sig_labels = [], [], []
 
@@ -464,9 +467,9 @@ def correlate_signal(
 
     cp.psms = cp.psms[cp.psms["Correlation"].apply(abs) >= corr_cutoff]
 
-    if f_corr:
-        f_corr.savefig(
-            os.path.join(folder_name, "Correlation.png"),
+    if filename:
+        ax.get_figure().savefig(
+            os.path.join(folder_name, filename),
             bbox_inches="tight",
             dpi=pyp.DEFAULT_DPI,
             transparent=True,
@@ -491,4 +494,4 @@ def correlate_signal(
                 transparent=True,
             )
 
-    return f_corr, f_scatter
+    return ax.get_figure(), f_scatter

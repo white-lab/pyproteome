@@ -605,10 +605,10 @@ def ssgsea(
 
 def plot_ssgsea_heatmap(
     df,
-    figsize=None,
     max_qval=1,
     thres_na=None,
     ds=None,
+    ax=None,
 ):
     if ds is not None:
         cmp_groups = [ds.group_b, ds.group_a] or [list(ds.groups.keys())]
@@ -647,9 +647,11 @@ def plot_ssgsea_heatmap(
     ]
     df = df[df["name"].isin(filtered_names)]
 
-    f, ax = plt.subplots(
-        figsize=figsize or (8, 6),
-    )
+    if ax is None:
+        f, ax = plt.subplots(
+            figsize=(8, 6),
+        )
+
     sns.heatmap(
         df.pivot("name", "sample", "NES(S)")[samples],
         ax=ax,
@@ -664,7 +666,7 @@ def plot_ssgsea_heatmap(
         rotation=0,
     )
 
-    return f
+    return ax.get_figure()
 
 
 def sspsea(*args, **kwargs):

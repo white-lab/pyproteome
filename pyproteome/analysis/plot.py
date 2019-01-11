@@ -28,7 +28,7 @@ def plot(
     data,
     title=None,
     folder_name=None,
-    figsize=None,
+    ax=None,
 ):
     """
     Plot the levels of a sequence across multiple channels.
@@ -88,9 +88,12 @@ def plot(
             values[0]
         )
 
-        fig, ax = plt.subplots(
-            figsize=figsize or (len(values) / 2, 6 / 2),
-        )
+        if ax is None:
+            fig, ax_i = plt.subplots(
+                figsize=(len(values) / 2, 6 / 2),
+            )
+        else:
+            ax_i = ax
 
         df = pd.DataFrame(
             [
@@ -114,23 +117,23 @@ def plot(
             y="val",
             hue="group",
             data=df,
-            ax=ax,
+            ax=ax_i,
             dodge=False,
         )
-        ax.set_xticklabels(
+        ax_i.set_xticklabels(
             ax.get_xticklabels(),
             # fontsize=20,
             rotation=45,
             horizontalalignment="right",
         )
-        ax.set_xlabel("")
-        ax.get_legend().set_title("")
+        ax_i.set_xlabel("")
+        ax_i.get_legend().set_title("")
 
-        ax.axhline(np.log2(1), linestyle=":", color="k", alpha=.5)
+        ax_i.axhline(np.log2(1), linestyle=":", color="k", alpha=.5)
 
         mod_str = row["Modifications"].__str__(prot_index=0)
 
-        ax.set_title(
+        ax_i.set_title(
             title
             if title else
             "{} ({}{})".format(
@@ -149,12 +152,12 @@ def plot(
         #         (" (Normalized)" if data.intra_normalized else "")
         #     )
 
-        ax.set_ylabel(
+        ax_i.set_ylabel(
             ylabel,
             # fontsize=20,
         )
 
-        fig.savefig(
+        ax_i.get_figure().savefig(
             os.path.join(
                 folder_name,
                 re.sub(
@@ -171,7 +174,7 @@ def plot(
             transparent=True,
         )
 
-        figures.append((fig, ax))
+        figures.append((ax_i.get_figure(), ax_i))
 
     return figures
 
@@ -181,7 +184,6 @@ def plot_group(
     cmp_groups=None,
     title=None,
     folder_name=None,
-    figsize=None,
     ax=None,
 ):
     """
@@ -262,7 +264,7 @@ def plot_group(
 
         if ax is None:
             _, plot_ax = plt.subplots(
-                figsize=figsize or (len(labels) * .75, 4),
+                figsize=(len(labels) * .75, 4),
             )
         else:
             plot_ax = ax
@@ -451,7 +453,6 @@ def plot_all(
     data,
     individual=True,
     between=True,
-    figsize=None,
     cmp_groups=None,
     folder_name=None,
 ):
@@ -479,7 +480,6 @@ def plot_all(
 
     figures += plot(
         data,
-        figsize=figsize,
         folder_name=folder_name,
     )
 
@@ -487,27 +487,6 @@ def plot_all(
         data,
         cmp_groups=cmp_groups,
         folder_name=folder_name,
-    )
-
-    return figures
-
-
-def plot_together(
-    data,
-    folder_name=None,
-    only=True,
-    **kwargs
-):
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Peptides",
-    )
-
-    figures = plot_group(
-        data,
-        folder_name=folder_name,
-        **kwargs
     )
 
     return figures

@@ -245,11 +245,6 @@ class IntegrationTest(TestCase):
                         cmp_groups=cmp_groups,
                     )
 
-                    analysis.plot.plot_together(
-                        data.filter(f),
-                        cmp_groups=cmp_groups,
-                    )
-
     def test_correlate_data(self):
         for d1, d2 in itertools.combinations(self.data.values(), 2):
             correlation.correlate_data_sets(
