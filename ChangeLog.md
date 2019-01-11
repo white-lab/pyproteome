@@ -1,5 +1,11 @@
 # Change Log
 
+### 0.9.1 (2019-01-10)
+
+Bug fixes
+
+  - Fixed minor bugs in figure layouts.
+
 ### 0.9.0 (2019-01-10)
 
 Features
