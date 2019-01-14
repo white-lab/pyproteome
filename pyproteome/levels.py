@@ -27,6 +27,8 @@ WARN_PEP_CUTOFF = 50
 
 def get_channel_levels(
     data,
+    norm_channels=None,
+    method="median",
     folder_name=None,
     file_name=None,
     cols=2,
@@ -43,6 +45,10 @@ def get_channel_levels(
     file_name : str, optional
     cols : int, optional
         Number of columns used when displaying KDE distributions.
+    norm_channels : list of str, optional
+        Sample names of channels to use for normalization.
+    method : str, optional
+        Normalize to the "mean" or "median" of each row.
 
     Returns
     -------
@@ -57,11 +63,11 @@ def get_channel_levels(
         sub="Normalization",
     )
 
-    channel_names = list(data.channels.keys())
-    channels = list(data.channels.values())
+    if norm_channels is None:
+        norm_channels = list(data.channels.keys())
+
+    channels = [data.channels[i] for i in norm_channels]
     channel_levels = OrderedDict()
-    base = channels[0]
-    channel_levels[base] = 1
 
     rows = int(np.ceil(len(data.channels) / cols))
     f, axes = plt.subplots(
@@ -73,11 +79,15 @@ def get_channel_levels(
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)
 
-    means = data.psms[channels].mean(axis=1)
-    # return {key: 1 for key in data.channels.values()}
+    if method in ['mean']:
+        norm = data.psms[channels].mean(axis=1)
+    elif method in ['median']:
+        norm = data.psms[channels].median(axis=1)
+    else:
+        raise Exception("Unknown normalization method: {}".format(method))
 
     for col_name, col in zip(channel_names, channels):
-        points = (data.psms[col] / means).dropna()
+        points = (data.psms[col] / norm).dropna()
 
         if points.shape[0] < WARN_PEP_CUTOFF:
             LOGGER.warning(
@@ -96,9 +106,9 @@ def get_channel_levels(
             gaus = stats.kde.gaussian_kde(points)
             x = np.arange(0, 10, .01)
             y = np.array(gaus.pdf(x))
-            med = x[y == y.max()][0]
+            max_x = x[y == y.max()][0]
 
-        channel_levels[col] = med
+        channel_levels[col] = max_x
 
         ax = next(ax_iter)
 
@@ -125,7 +135,7 @@ def get_channel_levels(
             med,
             points.std(ddof=1),
         )
-        ax.axvline(med, color='k', linestyle='--')
+        ax.axvline(max_x, color='k', linestyle='--')
 
         ax.text(
             s=txt,
