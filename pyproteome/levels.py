@@ -132,7 +132,7 @@ def get_channel_levels(
         )
 
         txt = "center = {:.2f}\n$\\sigma$ = {:.2f}".format(
-            med,
+            max_x,
             points.std(ddof=1),
         )
         ax.axvline(max_x, color='k', linestyle='--')
