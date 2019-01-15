@@ -41,7 +41,7 @@ def hierarchical_heatmap(
 
     if cmp_groups is None:
         cmp_groups = [list(data.groups.keys())]
-        cmp_groups = [data.group_a, data.group_b]
+        # cmp_groups = [data.group_a, data.group_b]
 
     flat_cmp_groups = pyp.utils.flatten_list(cmp_groups)
 
