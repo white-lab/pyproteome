@@ -86,7 +86,7 @@ def get_channel_levels(
     else:
         raise Exception("Unknown normalization method: {}".format(method))
 
-    for col_name, col in zip(channel_names, channels):
+    for col_name, col in zip(norm_channels, channels):
         points = (data.psms[col] / norm).dropna()
 
         if points.shape[0] < WARN_PEP_CUTOFF:

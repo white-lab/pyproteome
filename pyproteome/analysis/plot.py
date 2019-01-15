@@ -121,8 +121,7 @@ def plot(
             dodge=False,
         )
         ax_i.set_xticklabels(
-            ax.get_xticklabels(),
-            # fontsize=20,
+            ax_i.get_xticklabels(),
             rotation=45,
             horizontalalignment="right",
         )
@@ -141,7 +140,6 @@ def plot(
                 " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
             ),
-            # fontsize=28,
         )
 
         ylabel = "Intensity"
@@ -154,7 +152,6 @@ def plot(
 
         ax_i.set_ylabel(
             ylabel,
-            # fontsize=20,
         )
 
         ax_i.get_figure().savefig(
