@@ -168,6 +168,6 @@ class BrainRNASeqTest(TestCase):
                 )
                 for key, val in vals.items():
                     self.assertEqual(
-                        enrich[key][0],
+                        enrich[key],
                         val,
                     )

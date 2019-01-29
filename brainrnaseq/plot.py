@@ -38,7 +38,7 @@ def plot_cell_enrichments(
         _, ax = plt.subplots(figsize=(4, 3))
 
     cell_prots = {
-        cell: [key for key, val in enrichments.items() if val[0] == cell]
+        cell: [key for key, val in enrichments.items() if val == cell]
         for cell in brs.CELL_TYPES
     }
 

@@ -23,9 +23,18 @@ BARRES_SEQ_URL = (
     "https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/"
     "TableS4-HumanMouseMasterFPKMList.xlsx?raw=true"
 )
+HANSEN_SEQ_URL = (
+    "https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/"
+    "Hansen_Cell_Types.xlsx?raw=true"
+)
 BARRES_DATA_NAME = BARRES_SEQ_URL.rsplit("?", 1)[0].rsplit("/", 1)[1]
+HANSEN_DATA_NAME = HANSEN_SEQ_URL.rsplit("?", 1)[0].rsplit("/", 1)[1]
 
 BARRES_SEQ_PATH = os.path.join(CACHE_DIR, BARRES_DATA_NAME)
+HANSEN_SEQ_PATH = os.path.join(CACHE_DIR, HANSEN_DATA_NAME)
+
+BARRES_SPECIES_DATA = {}
+HANSEN_SPECIES_DATA = {}
 
 # MAPPING_URL = "https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/"
 MAPPING_URL = (
@@ -34,7 +43,6 @@ MAPPING_URL = (
 
 ENRICHMENT_CACHE = os.path.join(CACHE_DIR, "enrichment_cache.pickle")
 MAPPING_CACHE = os.path.join(CACHE_DIR, "mapping_cache.pickle")
-SPECIES_DATA = {}
 MAPPING_DATA = None
 
 
@@ -42,7 +50,7 @@ utils.makedirs(CACHE_DIR)
 
 
 def get_barres_seq_data(force=False):
-    global SPECIES_DATA
+    global BARRES_SPECIES_DATA
 
     if force or not os.path.exists(BARRES_SEQ_PATH):
         LOGGER.info("Downloading Barres RNA Seq Data")
@@ -54,7 +62,7 @@ def get_barres_seq_data(force=False):
                 f.write(block)
 
     LOGGER.info("Reading Barres RNA Seq Data")
-    SPECIES_DATA = {
+    BARRES_SPECIES_DATA = {
         "Homo sapiens": pd.read_excel(
             BARRES_SEQ_PATH,
             sheet_name="Human data only",
@@ -65,6 +73,32 @@ def get_barres_seq_data(force=False):
             sheet_name="Mouse data only",
             skiprows=[0],
         ),
+    }
+
+
+def get_hansen_seq_data(force=False):
+    global HANSEN_SPECIES_DATA
+
+    if force or not os.path.exists(HANSEN_SEQ_PATH):
+        LOGGER.info("Downloading Hansen RNA Seq Data")
+        response = requests.get(HANSEN_SEQ_URL, stream=True)
+        response.raise_for_status()
+
+        with open(HANSEN_SEQ_PATH, mode="wb") as f:
+            for block in response.iter_content(1024):
+                f.write(block)
+
+    LOGGER.info("Reading Hansen RNA Seq Data")
+    df = pd.read_excel(
+        HANSEN_SEQ_PATH,
+    )
+    HANSEN_SPECIES_DATA = {
+        "Homo sapiens": df.dropna(
+            subset=['Human Gene Symbol']
+        ).set_index('Human Gene Symbol'),
+        "Mus musculus": df.dropna(
+            subset=['Mouse Gene Symbol']
+        ).set_index('Mouse Gene Symbol'),
     }
 
 
