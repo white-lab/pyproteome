@@ -189,8 +189,8 @@ def get_nmer_args(kwargs):
 
     nmer_args["all_matches"] = kwargs.pop("all_matches", False)
 
-    nmer_args["letter_mod_types"] = kwargs.pop(
-        "letter_mod_types", [(None, "Phospho")],
+    nmer_args["mods"] = kwargs.pop(
+        "mods", [(None, "Phospho")],
     )
     nmer_args["n"] = kwargs.pop(
         "n", 15,
@@ -203,11 +203,12 @@ def get_nmer_args(kwargs):
 
 
 def generate_n_mers(
-    sequences, n=15,
+    sequences,
+    n=15,
     all_matches=True,
     fill_left="A",
     fill_right="A",
-    letter_mod_types=None,
+    mods=None,
     use_ptms=True,
     use_nterms=False,
     use_cterms=False,
@@ -223,7 +224,7 @@ def generate_n_mers(
         Generate n-mers for all protein matches else just the first match.
     fill_left : str, optional
     fill_right : str, optional
-    letter_mod_types : list of tuple of str, str, optional
+    mods : list of tuple of str, str, optional
     use_ptms : bool, optional
     use_nterms : bool, optional
     use_cterms : bool, optional
@@ -250,7 +251,7 @@ def generate_n_mers(
     def _get_seqs(seq):
         for match in seq.protein_matches[:None if all_matches else 1]:
             if use_ptms:
-                for mod in seq.modifications.get_mods(letter_mod_types):
+                for mod in seq.modifications.get_mods(mods):
                     yield match.rel_pos + mod.rel_pos, match
 
             if use_nterms:
