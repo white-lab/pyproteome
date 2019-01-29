@@ -1,12 +1,15 @@
 
 from __future__ import absolute_import, division
 
+import logging
 import os
 import pickle
 
 from matplotlib import pyplot as plt
 
 import pyproteome as pyp
+
+LOGGER = logging.getLogger('pyp.cluster.auto')
 
 
 def auto_clusterer(
@@ -40,6 +43,8 @@ def auto_clusterer(
     plot_clusters_kwargs = plot_clusters_kwargs or {}
     volcano_kwargs = volcano_kwargs or {}
 
+    LOGGER.info("Fetching data matrix.")
+
     data = pyp.cluster.get_data(
         data,
         **get_data_kwargs
@@ -48,10 +53,18 @@ def auto_clusterer(
     if "n_clusters" not in cluster_kwargs:
         cluster_kwargs["n_clusters"] = 100
 
+    LOGGER.info(
+        "Grouping data into n={} clusters.".format(
+            cluster_kwargs["n_clusters"],
+        )
+    )
+
     clr, y_pred_old = pyp.cluster.cluster(
         data,
         **cluster_kwargs
     )
+
+    LOGGER.info("Clustering clusters into larger units.")
 
     y_pred = pyp.cluster.cluster_clusters(
         data, y_pred_old,
@@ -60,6 +73,10 @@ def auto_clusterer(
 
     if not plots:
         return data, y_pred
+
+    LOGGER.info(
+        "Plotting cluster information (n={} clusters)".format(len(set(y_pred)))
+    )
 
     pyp.cluster.plot.pca(data)
 
@@ -82,10 +99,13 @@ def auto_clusterer(
     ss = sorted(set(y_pred))
 
     for ind in ss:
-        f = pyp.cluster.plot.plot_cluster(
+        LOGGER.info("Plotting cluster #{}".format(ind))
+        ax = pyp.cluster.plot.plot_cluster(
             data, y_pred, ind,
             div_scale=1,
         )
+        f = ax.get_figure()
+
         if f:
             f.savefig(
                 os.path.join(folder_name, "Cluster-{}.png".format(ind)),
@@ -96,12 +116,12 @@ def auto_clusterer(
             if close:
                 plt.close(f)
 
-        f, _ = pyp.volcano.plot_volcano_filtered(
-            data["ds"], {"series": y_pred == ind},
+        f, _ = pyp.volcano.plot_volcano(
+            data["ds"].filter(series=y_pred == ind),
             title="Cluster {}".format(ind),
             folder_name=folder_name,
             **volcano_kwargs
-        )
+        )[:2]
 
         if f and close:
             plt.close(f)

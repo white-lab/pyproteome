@@ -155,7 +155,7 @@ def plot_cluster(
     color=None,
 ):
     if ax is None:
-        f, ax = plt.subplots()
+        f, ax = plt.subplots(dpi=pyp.DEFAULT_DPI)
     elif f is None:
         f = ax.get_figure()
 
@@ -223,7 +223,7 @@ def plot_cluster(
         title
     )
 
-    return f
+    return ax
 
 
 def plot_all_clusters(
