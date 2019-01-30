@@ -1059,7 +1059,7 @@ def _get_species(cursor, pd_version):
     return species
 
 
-def read_discoverer_msf(basename, pick_best_ptm=False):
+def read_discoverer_msf(basename, msf_path=None, pick_best_ptm=False):
     """
     Read a Proteome Discoverer .msf file.
 
@@ -1075,10 +1075,11 @@ def read_discoverer_msf(basename, pick_best_ptm=False):
     -------
     df : :class:`pandas.DataFrame`
     """
-    msf_path = os.path.join(
-        paths.MS_SEARCHED_DIR,
-        basename,
-    )
+    if msf_path is None:
+        msf_path = os.path.join(
+            paths.MS_SEARCHED_DIR,
+            basename,
+        )
 
     if not os.path.exists(msf_path):
         raise Exception("Search database does not exist: {}".format(msf_path))
