@@ -940,7 +940,7 @@ class DataSet:
                     val.match(nmer)
                     for nmer in pyp.motifs.generate_n_mers(
                         x,
-                        letter_mod_types=f.get("mod", None),
+                        mods=f.get("mod", None),
                     )
                 )
             ),
