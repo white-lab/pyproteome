@@ -102,7 +102,7 @@ class GenerateNMersTest(TestCase):
         nmers = list(
             motif.generate_n_mers(
                 self.sequence,
-                letter_mod_types=[(None, "Phospho")],
+                mods=[(None, "Phospho")],
             )
         )
 

@@ -114,7 +114,7 @@ def enriched(data, species=None):
                 data["Sequence"],
                 fill_left="_",
                 fill_right="_",
-                letter_mod_types=[(None, "Phospho")],
+                mods=[(None, "Phospho")],
             )
         )
     ].style.set_table_styles(
