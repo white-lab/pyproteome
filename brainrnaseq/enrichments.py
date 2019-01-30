@@ -65,11 +65,13 @@ def build_barres_table(cell_types=None, force=False):
 def _fix_name(name):
     name = name.title()
     return {
-        "Endothelial Cells": "Endothelial",
+        "Endothelial": "Endothelia",
+        "Endothelial Cells": "Endothelia",
         "Myeloid": "Microglia",
         "Oligodendrocyte": "Myelinating Oligodendrocytes",
         "Oligodendrocyte Precursor Cells": "OPC",
     }.get(name, name)
+
 
 def build_hansen_table(
     cell_types=None,
@@ -98,7 +100,6 @@ def build_hansen_table(
             for ind, row in data.iterrows()
             if not pd.isnull(row[col])
         }
-        print(set([i[0] for i in enriched[species].values()]))
 
     return enriched
 

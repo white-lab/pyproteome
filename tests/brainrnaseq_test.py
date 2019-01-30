@@ -95,24 +95,49 @@ class BrainRNASeqTest(TestCase):
 
         for species, (col, first, last) in items.items():
             self.assertEqual(
-                brs.cache.SPECIES_DATA[species].iloc[0][col],
+                brs.cache.BARRES_SPECIES_DATA[species].iloc[0][col],
                 first,
             )
             self.assertEqual(
-                brs.cache.SPECIES_DATA[species].iloc[-1][col],
+                brs.cache.BARRES_SPECIES_DATA[species].iloc[-1][col],
                 last,
             )
 
-    def test_enrichment_table(self):
-        for _ in range(2):
-            tab = brs.enrichments.build_enrichment_table()
+    def test_hansen_seq_data(self):
+        brs.cache.get_hansen_seq_data()
 
-            self.assertIsInstance(
-                tab,
-                dict,
+        items = {
+            "Homo sapiens": ["A1BG", "SCO2"],
+            "Mus musculus": ["A1bg", "Sco2"],
+        }
+
+        for species, (first, last) in items.items():
+            self.assertEqual(
+                brs.cache.HANSEN_SPECIES_DATA[species].index[0],
+                first,
+            )
+            self.assertEqual(
+                brs.cache.HANSEN_SPECIES_DATA[species].index[-1],
+                last,
             )
 
-    def test_enrichments(self):
+    def test_barres_enrichment_table(self):
+        tab = brs.enrichments.build_barres_table()
+
+        self.assertIsInstance(
+            tab,
+            dict,
+        )
+
+    def test_hansen_enrichment_table(self):
+        tab = brs.enrichments.build_hansen_table()
+
+        self.assertIsInstance(
+            tab,
+            dict,
+        )
+
+    def test_barres_enrichments(self):
         items = {
             "Homo sapiens": {
                 "AGT": "Astrocyte",
@@ -147,7 +172,6 @@ class BrainRNASeqTest(TestCase):
                 "Siglece": "Microglia",
                 "Siglec5": "Microglia",
                 "Siglec9": "Microglia",
-                "Siglech": "Microglia",
                 "Siglec-H": "Microglia",
                 "Siglecl1": "Microglia",
                 "Siglec12": "Microglia",
@@ -157,17 +181,62 @@ class BrainRNASeqTest(TestCase):
             },
         }
         for species, vals in items.items():
-            for _ in range(2):
-                enrich = brs.enrichments.get_enrichments(
-                    species=species,
+            enrich = brs.enrichments.get_enrichments(
+                species=species,
+                backend='Barres',
+            )
+
+            self.assertIsInstance(
+                enrich,
+                dict,
+            )
+            for key, val in vals.items():
+                if key not in enrich:
+                    print(key)
+                    continue
+                self.assertEqual(
+                    enrich[key],
+                    val,
                 )
 
-                self.assertIsInstance(
-                    enrich,
-                    dict,
+    def test_hansen_enrichments(self):
+        items = {
+            "Homo sapiens": {
+                "AGT": "Astrocyte",
+                "CD34": "Endothelia",
+                "FOLH1": "Myelinating Oligodendrocytes",
+                "GAD2": "Neuron",
+                "SYT4": "Neuron",
+            },
+            "Mus musculus": {
+                "AU021092": "Endothelia",
+                "OncoM": "Microglia",
+                "mSiglec-E": "Microglia",
+                "Siglece": "Microglia",
+                "Siglec5": "Microglia",
+                "Siglec9": "Microglia",
+                "Siglecl1": "Microglia",
+                "Siglec12": "Microglia",
+                "siglec-4a": "Myelinating Oligodendrocytes",
+                "Otm": "Myelinating Oligodendrocytes",
+                "Reln": "Neuron",
+            },
+        }
+        for species, vals in items.items():
+            enrich = brs.enrichments.get_enrichments(
+                species=species,
+                backend='Hansen',
+            )
+
+            self.assertIsInstance(
+                enrich,
+                dict,
+            )
+            for key, val in vals.items():
+                if key not in enrich:
+                    print(key)
+                    continue
+                self.assertEqual(
+                    enrich[key],
+                    val,
                 )
-                for key, val in vals.items():
-                    self.assertEqual(
-                        enrich[key],
-                        val,
-                    )

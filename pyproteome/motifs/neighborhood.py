@@ -11,13 +11,13 @@ def enriched_neighborhood(
 ):
     background = motif.generate_n_mers(
         data["Sequence"],
-        letter_mod_types=[(None, "Phospho")],
+        mods=[(None, "Phospho")],
         n=nmer_length,
         all_matches=False,
     )
     foreground = motif.generate_n_mers(
         data.filter(f)["Sequence"],
-        letter_mod_types=[(None, "Phospho")],
+        mods=[(None, "Phospho")],
         n=nmer_length,
         all_matches=False,
     )
