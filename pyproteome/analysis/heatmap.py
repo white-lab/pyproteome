@@ -1,4 +1,5 @@
 
+from collections import OrderedDict
 import os
 
 import numpy as np
@@ -54,15 +55,18 @@ def hierarchical_heatmap(
         'green',
     ]
 
-    group_colors = {
-        data.channels[channel]: colors[
-            flat_cmp_groups.index(group) % len(colors)
-        ]
+    group_colors = OrderedDict([
+        (
+            data.channels[channel],
+            colors[
+                flat_cmp_groups.index(group) % len(colors)
+            ],
+        )
         for groups in cmp_groups
         for group in groups
         for channel in data.groups[group]
         if channel in data.channels
-    }
+    ])
     channels = list(group_colors.keys())
 
     raw = data.psms
