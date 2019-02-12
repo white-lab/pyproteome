@@ -32,8 +32,8 @@ install:
 - conda update conda
 - conda create -n env python=$TRAVIS_PYTHON_VERSION $CONDA_PACKAGES
 - source activate env
-- python -m pip install -U "pip<19.0"
-- pip install --process-dependency-links -r requirements.txt
+- python -m pip install -U pip
+- pip install -r requirements.txt
 - pip install coveralls
 - echo $PATH
 - which python

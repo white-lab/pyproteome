@@ -22,6 +22,7 @@ REQUIREMENTS = [
     "adjustText>=0.7.3",
     "fastcluster>=1.1.25",
     "genemap>=0.2.0",
+    'genemap @ http://github.com/naderm/genemap/archive/master.zip',
     'goatools>=0.8.12',
     "ipython>=5.4.1",
     "matplotlib>=2.2.0",
@@ -48,18 +49,12 @@ if __name__ == "__main__":
         license="BSD",
         packages=find_packages(exclude=["*.tests", "tests"]),
         install_requires=REQUIREMENTS,
-        dependency_links=[
-            "git+https://github.com/naderm/genemap.git"
-            "@master#egg=genemap-0.2.0",
-            "git+https://github.com/naderm/perseuspy.git"
-            "@master#egg=perseuspy-0.3.8",
-            "git+https://github.com/jdrudolph/photon.git"
-            "@master#egg=photon_ptm-0.3.0",
-        ],
         extras_require={
             'photon': [
-                "perseuspy>=0.3.8",
-                "photon_ptm>=0.3.0",
+                "photon_ptm "
+                "@ http://github.com/jdrudolph/photon/archive/master.zip",
+                "perseuspy "
+                "@ http://github.com/naderm/perseuspy/archive/master.zip",
             ],
         },
         classifiers=[

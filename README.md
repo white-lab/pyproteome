@@ -11,16 +11,16 @@ Python library for analyzing mass spectrometry proteomics data.
 
 ## Installation
 
-To install the core pyproteome package, run the following command:
+To install the core pyproteome python library, [install the latest version of pip](https://pip.pypa.io/en/stable/installing/) and run the following command:
 
 ```
-pip install --process-dependency-links pyproteome
+pip install pyproteome
 ```
 
 To install dependencies for [PHOTON](https://github.com/jdrudolph/photon), run the following command:
 
 ```
-pip install --process-dependency-links pyproteome[photon]
+pip install pyproteome[photon]
 ```
 
 ### Windows
