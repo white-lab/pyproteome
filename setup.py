@@ -21,7 +21,6 @@ with open(
 REQUIREMENTS = [
     "adjustText>=0.7.3",
     "fastcluster>=1.1.25",
-    "genemap>=0.2.0",
     'genemap @ http://github.com/naderm/genemap/archive/master.zip',
     'goatools>=0.8.12',
     "ipython>=5.4.1",
