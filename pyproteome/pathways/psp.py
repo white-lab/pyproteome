@@ -36,7 +36,7 @@ def get_phosphomap_data():
 
     gz = gzip.GzipFile(fileobj=io.BytesIO(r.content))
 
-    return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t")
+    return pd.read_csv(gz, skiprows=[0, 1, 2], sep="\t")
 
 
 @pyp.utils.memoize
@@ -220,7 +220,7 @@ def _remap_psp(
         if old_species != species:
             # Remap the phosphorylation site if possible
             try:
-                site = mod_mapping.loc[acc, mod, old_species]
+                site = mod_mapping.loc(axis=0)[acc, mod, old_species]
             except KeyError:
                 pass
             else:
