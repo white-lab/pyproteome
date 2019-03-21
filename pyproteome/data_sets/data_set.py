@@ -298,6 +298,15 @@ class DataSet:
 
         raise TypeError(type(key))
 
+    def __setitem__(self, key, val):
+        if any(
+            isinstance(key, i)
+            for i in [str, list, set, tuple, pd.Series, np.ndarray]
+        ):
+            self.psms[key] = val
+        else:
+            raise TypeError(type(key))
+
     @property
     def shape(self):
         """
@@ -1355,7 +1364,7 @@ class DataSet:
         )
 
     @property
-    def data(self):
+    def data(self, groups=None):
         """
         Get the quantification data for all samples and peptides in a data set.
 
@@ -1363,12 +1372,25 @@ class DataSet:
         -------
         df : :class:`pandas.DataFrame`
         """
+        if groups is None:
+            # groups = (
+            #     np.ravel(self.cmp_groups)
+            #     if self.cmp_groups is not None else
+            #     np.ravel(self.groups.values())
+            # )
+            # print(groups)
+            channel_names = [
+                channel_name
+                for group in self.groups.values()
+                for channel_name in group
+                if channel_name in self.channels
+            ]
+            channel_names = list(OrderedDict.fromkeys(channel_names))
+
         return self.psms[
             [
                 self.channels[chan]
-                for group in self.groups.values()
-                for chan in group
-                if chan in self.channels
+                for chan in channel_names
             ]
         ]
 
