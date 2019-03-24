@@ -11,7 +11,7 @@ __dir__ = os.path.abspath(os.path.split(__file__)[0])
 
 PTMSIGDB_URL = (
     "https://raw.githubusercontent.com/broadinstitute/ssGSEA2.0/master/db/"
-    "ptm.sig.db.all.uniprot.{name}.v1.8.1.gmt"
+    "ptmsigdb/ptm.sig.db.all.uniprot.{name}.v1.9.0.gmt"
 )
 
 
