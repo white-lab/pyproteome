@@ -82,7 +82,7 @@ def plot(
                 data.channels[i]
                 for grp in cmp_groups
                 for i in data.groups[grp[0]]
-                if i in values.index
+                if data.channels[i] in values.index
             ]].median()
             if len(cmp_groups) > 0 else
             values[0]
@@ -285,9 +285,12 @@ def plot_group(
                 (
                     np.log2(k),
                     label,
-                    "#e19153"
-                    if label in set(j[0] for j in cmp_groups) else
-                    "#60ae47"
+                    {
+                        0: "#e19153",
+                        1: "#60ae47",
+                        2: "#ffae47",
+                        3: "#e191ff",
+                    }.get(max([ind for lst in cmp_groups for ind, val in enumerate(lst) if val == label]))
                 )
                 for i in values
                 for label, j in i.iteritems()
