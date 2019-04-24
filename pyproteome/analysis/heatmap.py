@@ -34,6 +34,8 @@ def hierarchical_heatmap(
     -------
     map : :class:`seaborn.ClusterGrid`
     """
+    data = data.copy()
+
     folder_name = pyp.utils.make_folder(
         data=data,
         folder_name=folder_name,
@@ -41,8 +43,12 @@ def hierarchical_heatmap(
     )
 
     if cmp_groups is None:
-        cmp_groups = [list(data.groups.keys())]
-        # cmp_groups = [data.group_a, data.group_b]
+        # cmp_groups = [list(data.groups.keys())]
+        cmp_groups = (
+            data.cmp_groups or
+            [i for i in [data.group_b, data.group_a] if i] or
+            [list(data.groups.keys())]
+        )
 
     flat_cmp_groups = pyp.utils.flatten_list(cmp_groups)
 
