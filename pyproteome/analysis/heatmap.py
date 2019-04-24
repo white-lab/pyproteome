@@ -55,10 +55,12 @@ def hierarchical_heatmap(
     colors = [
         'red',
         'orange',
-        'purple',
-        'blue',
-        'cyan',
+        'yellow',
         'green',
+        'cyan',
+        'lightblue',
+        'blue',
+        'purple',
     ]
 
     group_colors = OrderedDict([
@@ -109,6 +111,10 @@ def hierarchical_heatmap(
     # raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
 
+    data.inter_normalized = getattr(data, 'inter_normalized', False)
+    if not data.inter_normalized:
+        raw = (raw.T / raw.apply(np.nanmedian, axis=1)).T
+
     def zscore(x):
         return (x - np.nanmean(x)) / np.nanstd(x)
 
@@ -116,7 +122,6 @@ def hierarchical_heatmap(
     raw = raw.apply(np.log2, axis=1)
     raw = raw.dropna(how="all")
     raw = raw.T.dropna(how="all").T
-    raw = raw.fillna(0)
 
     if minmax is None:
         minmax = max([
@@ -126,13 +131,21 @@ def hierarchical_heatmap(
     else:
         minmax = np.log2(minmax)
 
-    raw = raw.fillna(value=-minmax)
+    cluster_rowcol = (
+        kwargs.get('row_cluster', True) or
+        kwargs.get('col_cluster', True)
+    )
+
+    if cluster_rowcol:
+        raw_na = raw.fillna(value=0)
+    else:
+        raw_na = raw.copy()
 
     if raw.shape[0] < 1:
         return
 
     map = sns.clustermap(
-        raw,
+        raw_na,
         col_colors=[group_colors[i] for i in raw.columns],
         vmin=-minmax,
         vmax=minmax,
