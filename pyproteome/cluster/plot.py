@@ -398,7 +398,7 @@ def show_peptide_clusters(
         )
         for fil in filters
     ]
-    # print(list(zip(filters, clusters)))
+
     clusters = [
         i[0]
         for i in clusters
