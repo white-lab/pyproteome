@@ -498,8 +498,6 @@ def plot_volcano_filtered(data, f, **kwargs):
         group_b=kwargs.get("group_b", None),
     )
 
-    d = data.filter(f)
-
     changes = []
     pvals = []
 
@@ -517,6 +515,8 @@ def plot_volcano_filtered(data, f, **kwargs):
 
         pvals.append(row_pval)
         changes.append(row_change)
+
+    d = data.filter(f)
 
     xminmax = kwargs.pop(
         "xminmax",
