@@ -189,7 +189,7 @@ def flatten_list(lst):
         ret = []
 
         for element in lst:
-            for new_element in flatten_set(element):
+            for new_element in flatten_list(element):
                 ret.append(new_element)
 
         return ret
