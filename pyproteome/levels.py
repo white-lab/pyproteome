@@ -23,6 +23,7 @@ import pyproteome as pyp
 
 LOGGER = logging.getLogger("pyproteome.levels")
 WARN_PEP_CUTOFF = 50
+REL_CUTOFF = 25
 
 
 def get_channel_levels(
@@ -88,6 +89,7 @@ def get_channel_levels(
 
     for col_name, col in zip(norm_channels, channels):
         points = (data.psms[col] / norm).dropna()
+        points = points[(points >= 1 / REL_CUTOFF) & (points <= REL_CUTOFF)]
 
         if points.shape[0] < WARN_PEP_CUTOFF:
             LOGGER.warning(
