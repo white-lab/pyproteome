@@ -22,7 +22,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy.stats import ttest_ind, pearsonr, spearmanr
 
-from . import modification, protein, sequence
+from . import modification, protein, sequence, constand
 
 import pyproteome as pyp
 
@@ -186,6 +186,7 @@ class DataSet:
         self.species = species
 
         self.intra_normalized = False
+        self.inter_normalized = False
         self.sets = 1
 
         if check_raw:
@@ -623,6 +624,7 @@ class DataSet:
                 new.psms[channel] = vals
 
         new.update_group_changes()
+        new.inter_normalized = True
 
         return new
 
@@ -1364,9 +1366,13 @@ class DataSet:
         )
 
     @property
-    def data(self, groups=None):
+    def data(self, groups=None, norm_cmp=False):
         """
         Get the quantification data for all samples and peptides in a data set.
+
+        Parameters
+        ----------
+        norm_cmp : bool, optional
 
         Returns
         -------
@@ -1583,7 +1589,9 @@ def norm_all_data(
     mapped_names = OrderedDict()
     datas_new = datas.copy()
 
-    if norm_mapping in ["self"]:
+    constand_norm = norm_mapping in ['constand']
+
+    if norm_mapping in ['self', 'constand']:
         norm_mapping = {
             name: name
             for name in datas.keys()
@@ -1600,7 +1608,11 @@ def norm_all_data(
 
             mapped_names[name] = "{}-norm".format(name)
 
-            new_data = data.normalize(datas[val])
+            if not constand_norm:
+                new_data = data.normalize(datas[val])
+            else:
+                new_data = constand.constand(data)
+
             new_data.name += "-norm"
 
             datas_new[mapped_names[name]] = new_data
