@@ -1410,6 +1410,7 @@ def load_all_data(
     merged_fn=None,
     kw_mapping=None,
     merge_only=True,
+    replace_norm=True,
     **kwargs
 ):
     """
@@ -1426,6 +1427,9 @@ def load_all_data(
     merged_fn : func, optional
     kw_mapping : dict of (str, dict)
     merge_only : bool, optional
+    replace_norm : bool, optional
+        If true, only keep the normalized version of a data set. Otherwise
+        return both normalized and unnormalized version.
     kwargs : dict
         Any extra arguments are passed directly to DataSet during
         initialization.
@@ -1559,7 +1563,11 @@ def load_all_data(
         if loaded_fn:
             datas[name] = loaded_fn(name, datas[name])
 
-    datas, mapped_names = norm_all_data(datas, norm_mapping)
+    datas, mapped_names = norm_all_data(
+        datas,
+        norm_mapping,
+        replace_norm=replace_norm,
+    )
     datas = merge_all_data(
         datas, merge_mapping,
         mapped_names=mapped_names,
@@ -1572,6 +1580,8 @@ def load_all_data(
 def norm_all_data(
     datas,
     norm_mapping,
+    replace_norm=True,
+    inplace=True,
 ):
     """
     Normalize all data sets.
@@ -1580,6 +1590,9 @@ def norm_all_data(
     ----------
     datas : dict of (str, :class:`.DataSet`)
     norm_mapping : dict of (str, str)
+    replace_norm : bool, optional
+    inplace : bool, optional
+        Modify datas object inplace.
 
     Returns
     -------
@@ -1587,7 +1600,9 @@ def norm_all_data(
     mapped_names : dict of (str, str)
     """
     mapped_names = OrderedDict()
-    datas_new = datas.copy()
+
+    if not inplace:
+        datas = datas.copy()
 
     constand_norm = norm_mapping in ['constand']
 
@@ -1609,17 +1624,20 @@ def norm_all_data(
             mapped_names[name] = "{}-norm".format(name)
 
             if not constand_norm:
-                new_data = data.normalize(datas[val])
+                data = data.normalize(datas[val], inplace=replace_norm)
             else:
-                new_data = constand.constand(data)
+                data = constand.constand(data, inplace=replace_norm)
 
-            new_data.name += "-norm"
+            data.name += "-norm"
 
-            datas_new[mapped_names[name]] = new_data
+            datas[mapped_names[name]] = data
+
+            if replace_norm:
+                del datas[name]
 
             break
 
-    return datas_new, mapped_names
+    return datas, mapped_names
 
 
 def merge_all_data(
@@ -1627,6 +1645,7 @@ def merge_all_data(
     merge_mapping,
     mapped_names=None,
     merged_fn=None,
+    inplace=True,
 ):
     """
     Merge together multiple data sets.
@@ -1637,12 +1656,15 @@ def merge_all_data(
     merge_mapping : dict of (str, list of str)
     mapped_names : dict of (str, str), optional
     merged_fn : func, optional
+    inplace : bool, optional
+        Modify datas object inplace.
 
     Returns
     -------
     datas : dict of (str, :class:`.DataSet`)
     """
-    datas = datas.copy()
+    if not inplace:
+        datas = datas.copy()
 
     if mapped_names is None:
         mapped_names = {}
