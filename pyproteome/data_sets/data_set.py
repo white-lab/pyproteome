@@ -1613,7 +1613,7 @@ def norm_all_data(
             if not name.endswith("-norm")
         }
 
-    for name, data in datas.items():
+    for name, data in list(datas.items()):
         if name.endswith("-norm"):
             continue
 
