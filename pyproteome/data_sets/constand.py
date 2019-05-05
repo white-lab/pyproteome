@@ -62,21 +62,18 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             #
             # The row multipliers R^(t + 1) are computed such that the mean
             # of the reporter ion intensities equals 1/n:
-            r = np.diag([
-                # Nan-hiding here!
+            r = np.diag(
                 1 / (
-                    np.count_nonzero(~np.isnan(k[i])) *
-                    np.nanmean(k[i])
+                    np.count_nonzero(~np.isnan(k), axis=1) *
+                    np.nanmean(k, axis=1)
                 )
-                for i in range(m)
-            ])
+            )
 
             # k^(2t + 1)
             k = np.matmul(r, np.nan_to_num(k))
-            err = sum([
-                abs(np.nanmean(k[:, i]) - 1 / n)
-                for i in range(n)
-            ]) / 2
+            err = (
+                abs(np.nanmean(k, axis=0)) - 1 / n
+            ).sum() / 2
         else:
             # In the even step the columns are fitted to match the column
             # marginals (i.e. constraints):
@@ -85,21 +82,18 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             #
             # The column multipliers S^(t + 1) are computed such that the
             # mean of the reporter ion intensities equals 1/n:
-            s = np.diag([
-                # Nan-hiding here!
+            s = np.diag(
                 1 / (
-                    np.count_nonzero(~np.isnan(k[i])) *
-                    np.nanmean(k[:, i])
+                    np.count_nonzero(~np.isnan(k), axis=0) *
+                    np.nanmean(k, axis=0)
                 )
-                for i in range(n)
-            ])
+            )
 
             # k^(2t + 2)
             k = np.matmul(k, s)
-            err = sum([
-                abs(np.nanmean(k[i]) - 1 / n)
-                for i in range(m)
-            ]) / 2
+            err = (
+                abs(np.nanmean(k, axis=1)) - 1 / n
+            ).sum() / 2
 
         if err < tol:
             break
