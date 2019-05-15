@@ -269,7 +269,8 @@ class DataSet:
 
     def fix_channel_names(self):
         """
-        Correct quantification channel names to those present in the search file.
+        Correct quantification channel names to those present in the search
+        file.
 
         i.e. from 130_C to 130C (or vice versa).
         """
