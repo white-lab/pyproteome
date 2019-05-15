@@ -114,6 +114,7 @@ class DataSet:
         channels=None,
         groups=None,
         cmp_groups=None,
+        fix_channel_names=True,
         dropna=False,
         pick_best_ptm=True,
         merge_duplicates=True,
@@ -189,6 +190,9 @@ class DataSet:
         self.inter_normalized = False
         self.sets = 1
 
+        if fix_channel_names:
+            self.fix_channel_names()
+
         if check_raw:
             self.check_raw()
 
@@ -262,6 +266,21 @@ class DataSet:
         new.species = new.species.copy()
 
         return new
+
+    def fix_channel_names(self):
+        for key, val in list(self.channels.items()):
+            val_dash = val.replace('_', '')
+            if (
+                val not in self.psms.columns and
+                val_dash in self.psms.columns
+            ):
+                LOGGER.info(
+                    '{}: Correcting {}: {} to {}'.format(
+                        self.name,
+                        key, val, val_dash,
+                    )
+                )
+                self.channels[key] = val_dash
 
     @property
     def samples(self):
