@@ -268,6 +268,11 @@ class DataSet:
         return new
 
     def fix_channel_names(self):
+        """
+        Correct quantification channel names to those present in the search file.
+
+        i.e. from 130_C to 130C (or vice versa).
+        """
         for key, val in list(self.channels.items()):
             if '_' in val:
                 new_val = val.replace('_', '')
