@@ -269,18 +269,22 @@ class DataSet:
 
     def fix_channel_names(self):
         for key, val in list(self.channels.items()):
-            val_dash = val.replace('_', '')
+            if '_' in val:
+                new_val = val.replace('_', '')
+            else:
+                new_val = val[:-1] + '_' + val[-1]
+
             if (
                 val not in self.psms.columns and
-                val_dash in self.psms.columns
+                new_val in self.psms.columns
             ):
                 LOGGER.info(
                     '{}: Correcting {}: {} to {}'.format(
                         self.name,
-                        key, val, val_dash,
+                        key, val, new_val,
                     )
                 )
-                self.channels[key] = val_dash
+                self.channels[key] = new_val
 
     @property
     def samples(self):
