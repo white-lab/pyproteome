@@ -70,7 +70,9 @@ def _remap_data(psms, from_species, to_species):
         except KeyError:
             return None
 
-        site = site.iloc[0]["SITE_GRP_ID"]
+        site = site["SITE_GRP_ID"]
+        if hasattr(site, 'iloc'):
+            site = site.iloc[0]
 
         try:
             re_map = site_mapping.loc[site]
