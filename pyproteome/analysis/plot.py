@@ -29,6 +29,7 @@ def plot(
     title=None,
     folder_name=None,
     ax=None,
+    log_2=True,
 ):
     """
     Plot the levels of a sequence across multiple channels.
@@ -82,7 +83,7 @@ def plot(
                 data.channels[i]
                 for grp in cmp_groups
                 for i in data.groups[grp[0]]
-                if data.channels[i] in values.index
+                if i in data.channels and data.channels[i] in values.index
             ]].median()
             if len(cmp_groups) > 0 else
             values[0]
@@ -110,7 +111,9 @@ def plot(
             ],
             columns=("name", "val", "group"),
         )
-        df["val"] = df["val"].apply(np.log2)
+
+        if log_2:
+            df["val"] = df["val"].apply(np.log2)
 
         sns.barplot(
             x="name",
