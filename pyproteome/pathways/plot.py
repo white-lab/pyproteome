@@ -66,8 +66,8 @@ def plot_nes(
     vals,
     min_hits=0,
     min_abs_score=0,
-    max_pval=.1,
-    max_qval=1,
+    max_pval=.05,
+    max_qval=.25,
     title=None,
     col=None,
     ax=None,
@@ -104,9 +104,9 @@ def plot_nes(
         ][0]
 
     if col in ['p-value']:
-        sig_cutoff = -np.log10(.01)
+        sig_cutoff = -np.log10(max_pval)
     elif col in ['q-value']:
-        sig_cutoff = -np.log10(.25)
+        sig_cutoff = -np.log10(max_qval)
     else:
         sig_cutoff = 1
 
@@ -125,30 +125,73 @@ def plot_nes(
             figsize=(5, 4 / 14 * v.shape[0]),
         )
 
-    sns.barplot(
+    sns.scatterplot(
         data=v,
-        x=col,
-        y='name',
+        y=col,
+        x='NES(S)',
         ax=ax,
     )
 
     if title is not None:
         ax.set_title(title)
 
-    ax.set_ylabel('')
+    # ax.set_ylabel('')
 
     if col in ['p-value', 'q-value']:
-        ax.set_xticks([
+        ax.set_yticks([
             i
-            for i in ax.get_xticks()
+            for i in ax.get_yticks()
             if abs(i - int(i)) < .1
         ])
 
-    ax.set_xticklabels([
+    ax.set_yticklabels([
         '{:.3}'.format(10 ** -i)
-        for i in ax.get_xticks()
+        for i in ax.get_yticks()
     ])
-    ax.axvline(sig_cutoff, color='k', linestyle=':')
+    ax.axhline(sig_cutoff, color='k', linestyle=':')
+
+    texts = [
+        ax.text(
+            x=row['NES(S)'],
+            y=row[col],
+            s=row['name'],
+            zorder=10,
+            horizontalalignment=(
+                'left' if row["NES(S)"] > 0 else "right"
+            ),
+            fontsize=12,
+            bbox=dict(
+                alpha=1,
+                linewidth=0.1,
+                pad=.05,
+                zorder=1,
+                facecolor='white',
+                boxstyle="round",
+            ),
+        )
+        for _, row in v[v[col] > sig_cutoff].iterrows()
+    ]
+
+    pyp.utils.adjust_text(
+        x=[i._x for i in texts],
+        y=[i._y for i in texts],
+        texts=texts,
+        ax=ax,
+        lim=100,
+        force_text=0.3,
+        force_points=0.01,
+        arrowprops=dict(
+            arrowstyle="->",
+            relpos=(0, 0),
+            lw=1,
+            zorder=1,
+            color="k",
+        ),
+        only_move={
+            "points": "y",
+            "text": "xy",
+        }
+    )
 
     return ax.get_figure(), ax
 
