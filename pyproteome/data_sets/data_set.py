@@ -162,8 +162,8 @@ class DataSet:
         if search_name and os.path.splitext(search_name)[1] == "":
             search_name += ".msf"
 
-        self.channels = channels or OrderedDict()
-        self.groups = groups or OrderedDict()
+        self.channels = channels.copy() if channels else OrderedDict()
+        self.groups = groups.copy() if groups else OrderedDict()
         self.cmp_groups = cmp_groups or None
         self.group_a, self.group_b = None, None
 
@@ -727,9 +727,11 @@ class DataSet:
 
         found_all = True
 
-        for raw in pyp.utils.flatten_set(
-            row["Raw Paths"]
-            for _, row in self.psms.iterrows()
+        for raw in sorted(
+            pyp.utils.flatten_set(
+                row["Raw Paths"]
+                for _, row in self.psms.iterrows()
+            )
         ):
             if raw.lower() not in raw_dir:
                 LOGGER.warning(
@@ -1296,7 +1298,8 @@ class DataSet:
         modification ambiguity, completeness of labeling, and missed
         cleavage counts.
         """
-        data_p = self.filter(mod=[(None, "Phospho")])
+        data_p = self.filter(mod="Phospho")
+        data_no_p = self.filter(mod="Phospho", inverse=True)
         data_pst = self.filter(mod=[("S", "Phospho"), ("T", "Phospho")])
         data_py = self.filter(mod=[("Y", "Phospho")])
 
@@ -1304,23 +1307,36 @@ class DataSet:
 
         LOGGER.info(
             (
-                "{}: -- {} pY - {} pST ({:.0%} phospho specificity)"
+                "{}: -- {} pY - {} pST - {} total ({:.0%} phospho specificity)"
             ).format(
                 self.name,
                 len(data_py.psms),
                 len(data_pst.psms),
+                len(self.psms),
                 len(data_p.psms) / max([len(self.psms), 1]),
             )
         )
         LOGGER.info(
             (
-                "{}: -- {} total peptides - {} unique proteins"
+                "{}: -- {} unique proteins"
             ).format(
                 self.name,
-                len(self.psms),
                 len(self.genes),
             )
         )
+
+        if len(data_p.psms) > 0:
+            per_prot_quant = (
+                len(set(data_p.genes).intersection(data_no_p.genes)) /
+                len(data_p.psms)
+            )
+
+            LOGGER.info(
+                (
+                    "{}: -- {:.0%} of phosphopeptides have "
+                    "protein quantification"
+                ).format(self.name, per_prot_quant)
+            )
 
         per_amb = (
             data_p.filter(ambiguous=True).shape[0] /
