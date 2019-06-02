@@ -62,7 +62,7 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             #
             # The row multipliers R^(t + 1) are computed such that the mean
             # of the reporter ion intensities equals 1/n:
-            r = np.diag(
+            r = (
                 1 / (
                     np.count_nonzero(~np.isnan(k), axis=1) *
                     np.nanmean(k, axis=1)
@@ -70,7 +70,7 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             )
 
             # k^(2t + 1)
-            k = np.matmul(r, np.nan_to_num(k))
+            k = (r * k.T).T
             err = (
                 abs(np.nanmean(k, axis=0)) - 1 / n
             ).sum() / 2
@@ -82,7 +82,7 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             #
             # The column multipliers S^(t + 1) are computed such that the
             # mean of the reporter ion intensities equals 1/n:
-            s = np.diag(
+            s = (
                 1 / (
                     np.count_nonzero(~np.isnan(k), axis=0) *
                     np.nanmean(k, axis=0)
@@ -90,7 +90,7 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             )
 
             # k^(2t + 2)
-            k = np.matmul(k, s)
+            k = s * k
             err = (
                 abs(np.nanmean(k, axis=1)) - 1 / n
             ).sum() / 2
