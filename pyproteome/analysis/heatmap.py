@@ -71,7 +71,7 @@ def hierarchical_heatmap(
             ],
         )
         for groups in cmp_groups
-        for group in groups
+        for group in [i for i in groups if i in data.groups]
         for channel in data.groups[group]
         if channel in data.channels
     ])
@@ -144,14 +144,54 @@ def hierarchical_heatmap(
     if raw.shape[0] < 1:
         return
 
+    row_colors = kwargs.pop('row_colors', None)
+
+    if row_colors:
+        row_colors = raw_na.index.map(row_colors)
+
     map = sns.clustermap(
         raw_na,
+        row_colors=row_colors,
         col_colors=[group_colors[i] for i in raw.columns],
         vmin=-minmax,
         vmax=minmax,
         robust=True,
         **kwargs
     )
+
+    kwargs.pop('metric', None)
+    kwargs.pop('method', None)
+    kwargs.pop('row_cluster', None)
+    kwargs.pop('col_cluster', None)
+    kwargs.pop('figsize', None)
+    kwargs.pop('cmap', None)
+
+    if cluster_rowcol:
+        raw_blank = raw.copy()
+
+        if map.dendrogram_row:
+            raw_blank = raw_blank.iloc[map.dendrogram_row.reordered_ind]
+
+        if map.dendrogram_col:
+            raw_blank = raw_blank[[
+                raw_blank.columns[i]
+                for i in map.dendrogram_col.reordered_ind
+            ]]
+
+        mask = raw_blank.isnull()
+        raw_blank = raw_blank.fillna(0)
+
+        sns.heatmap(
+            raw_blank,
+            mask=~mask,
+            vmin=0,
+            vmax=1,
+            ax=map.ax_heatmap,
+            cbar=False,
+            cmap='binary',
+            **kwargs
+        )
+
     map.ax_heatmap.tick_params(
         # direction='out',
         axis='x',
