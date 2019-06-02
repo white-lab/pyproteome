@@ -185,6 +185,8 @@ def plot_group(
     title=None,
     folder_name=None,
     ax=None,
+    show_p=True,
+    log_2=True,
 ):
     """
     Plot the levels of a sequence across each group.
@@ -216,6 +218,7 @@ def plot_group(
         values = []
 
         for groups in cmp_groups:
+            groups = [i for i in groups if i in data.groups]
             group_vals = pd.Series([
                 row[[
                     data.channels[name]
@@ -279,31 +282,40 @@ def plot_group(
             for k in l
         ]
         y = np.concatenate([
-            np.log2(j.astype(float))
+            j.astype(float)
             for i in values
             for j in i.values
         ])
+
+        if log_2:
+            y = np.log2(y)
+
+        def _get_color(label):
+            lst = [
+                i
+                for i in cmp_groups
+                for ind, val in enumerate(i)
+                if val == label
+            ][0]
+            return sns.color_palette("hls", len(lst)).as_hex()[lst.index(label)]
+
         df = pd.DataFrame(
             [
                 (
+                    k,
                     np.log2(k),
                     label,
-                    {
-                        0: "#e19153",
-                        1: "#60ae47",
-                        2: "#ffae47",
-                        3: "#e191ff",
-                    }.get(max([ind for lst in cmp_groups for ind, val in enumerate(lst) if val == label]))
+                    _get_color(label),
                 )
                 for i in values
                 for label, j in i.iteritems()
                 for k in j.values
             ],
-            columns=("y", "label", "color"),
+            columns=("y", 'log2_y', "label", "color"),
         )
         sns.boxplot(
             x="label",
-            y="y",
+            y="log2_y" if log_2 else 'y',
             hue="color",
             data=df,
             ax=plot_ax,
@@ -328,89 +340,91 @@ def plot_group(
         plot_ax.set_title(
             title
             if title else
-            "{} ({}{})".format(
+            "{}{}({}{})".format(
                 row["Sequence"],
+                ' ' if len(plot_ax.get_xticklabels()) > 2 else '\n',
                 " / ".join(row["Proteins"].genes)[:20],
                 (" " + mod_str) if mod_str else "",
             ),
         )
         plot_ax.xaxis.grid(False)
 
-        y_max = y.max()
+        if show_p:
+            y_max = y.max()
 
-        def stars(p):
-            if p < 0.0001:
-                return "****"
-            elif (p < 0.001):
-                return "***"
-            elif (p < 0.01):
-                return "**"
-            elif (p < 0.05):
-                return "*"
-            else:
-                return "-"
+            def stars(p):
+                if p < 0.0001:
+                    return "****"
+                elif (p < 0.001):
+                    return "***"
+                elif (p < 0.01):
+                    return "**"
+                elif (p < 0.05):
+                    return "*"
+                else:
+                    return "-"
 
-        v = [
-            vals
-            for group_vals in values
-            for vals in group_vals
-        ]
+            v = [
+                vals
+                for group_vals in values
+                for vals in group_vals
+            ]
 
-        for grp_set in cmp_groups:
-            offset = y_max / 10
+            for grp_set in cmp_groups:
+                offset = y_max / 10
 
-            for label_a, label_b in itertools.combinations(grp_set, 2):
-                if label_a not in labels or label_b not in labels:
-                    continue
+                for label_a, label_b in itertools.combinations(grp_set, 2):
+                    if label_a not in labels or label_b not in labels:
+                        continue
 
-                index_a = labels.index(label_a)
-                index_b = labels.index(label_b)
+                    index_a = labels.index(label_a)
+                    index_b = labels.index(label_b)
 
-                values_a = v[index_a]
-                values_b = v[index_b]
+                    values_a = v[index_a]
+                    values_b = v[index_b]
 
-                if values_a.shape[0] < 2 or values_b.shape[0] < 2:
-                    continue
+                    if values_a.shape[0] < 2 or values_b.shape[0] < 2:
+                        continue
 
-                pval = ttest_ind(
-                    values_a.values,
-                    values_b.values,
-                ).pvalue
+                    pval = ttest_ind(
+                        values_a.values,
+                        values_b.values,
+                    ).pvalue
 
-                if pval < 0.05:
-                    plot_ax.annotate(
-                        "",
-                        xy=(
-                            index_a,
-                            y_max + offset,
-                        ),
-                        xytext=(
-                            index_b,
-                            y_max + offset,
-                        ),
-                        xycoords='data',
-                        textcoords='data',
-                        arrowprops=dict(
-                            arrowstyle="-",
-                            ec='#000000',
-                        ),
-                    )
-                    plot_ax.text(
-                        x=np.mean([index_a, index_b]),
-                        y=y_max + offset + y_max / 40,
-                        s=stars(pval),
-                        horizontalalignment='center',
-                        verticalalignment='center',
-                    )
-                    offset += y_max / 10
+                    if pval < 0.05:
+                        plot_ax.annotate(
+                            "",
+                            xy=(
+                                index_a,
+                                y_max + offset,
+                            ),
+                            xytext=(
+                                index_b,
+                                y_max + offset,
+                            ),
+                            xycoords='data',
+                            textcoords='data',
+                            arrowprops=dict(
+                                arrowstyle="-",
+                                ec='#000000',
+                            ),
+                        )
+                        plot_ax.text(
+                            x=np.mean([index_a, index_b]),
+                            y=y_max + offset + y_max / 40,
+                            s=stars(pval),
+                            horizontalalignment='center',
+                            verticalalignment='center',
+                        )
+                        offset += y_max / 10
 
-            plot_ax.set_ylim(
-                bottom=plot_ax.get_ylim()[0],
-                top=max([
-                    plot_ax.get_ylim()[1],
-                    y_max + offset + y_max / 10,
-                ]),
-            )
+                plot_ax.set_ylim(
+                    bottom=plot_ax.get_ylim()[0],
+                    top=max([
+                        plot_ax.get_ylim()[1],
+                        y_max + offset + y_max / 10,
+                    ]),
+                )
 
         plot_ax.set_xlabel("")
         plot_ax.set_ylabel(
@@ -420,9 +434,13 @@ def plot_group(
         )
         plot_ax.get_legend().set_visible(False)
 
-        plot_ax.set_yticklabels(
-            ["{:.2f}".format(i) for i in np.power(2, plot_ax.get_yticks())],
-        )
+        if log_2:
+            plot_ax.set_yticklabels(
+                [
+                    "{:.2f}".format(i)
+                    for i in np.power(2, plot_ax.get_yticks())
+                ],
+            )
 
         plot_ax.set_xticklabels(
             labels,
