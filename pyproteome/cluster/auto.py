@@ -20,6 +20,7 @@ def auto_clusterer(
     plot_clusters_kwargs=None,
     volcano_kwargs=None,
     plots=True,
+    cluster_clusters=True,
     close=False,
     folder_name=None,
     filename="clusters.pkl",
@@ -64,12 +65,15 @@ def auto_clusterer(
         **cluster_kwargs
     )
 
-    LOGGER.info("Clustering clusters into larger units.")
+    if cluster_clusters:
+        LOGGER.info("Clustering clusters into larger units.")
 
-    y_pred = pyp.cluster.cluster_clusters(
-        data, y_pred_old,
-        **cluster_cluster_kwargs
-    )
+        y_pred = pyp.cluster.cluster_clusters(
+            data, y_pred_old,
+            **cluster_cluster_kwargs
+        )
+    else:
+        y_pred = y_pred_old
 
     if not plots:
         return data, y_pred
