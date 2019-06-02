@@ -292,7 +292,8 @@ def _remove_lesser_dups(labels, compress_sym=False):
 
 
 def correlate_signal(
-    data, signal,
+    data,
+    signal,
     corr_cutoff=0.8,
     scatter_cols=4,
     options=None,
@@ -392,7 +393,7 @@ def correlate_signal(
         if sig:
             sig_x.append(index)
             sig_y.append(row["Correlation"])
-            sig_labels.append(str(row["Proteins"]))
+            sig_labels.append(" / ".join(row["Proteins"].genes))
 
         colors.append(
             "blue"
@@ -407,10 +408,12 @@ def correlate_signal(
     ax.spines["right"].set_visible(False)
 
     labels = zip(sig_x, sig_y, sig_labels)
-    LOGGER.info("Showing names for {} genes".format(len(sig_x)))
 
     if not show_duplicates:
         labels = _remove_lesser_dups(labels)
+
+    labels = sorted(labels, key=lambda x: x[1], reverse=True)[:100]
+    LOGGER.info("Showing names for {} genes".format(len(labels)))
 
     texts = []
 
