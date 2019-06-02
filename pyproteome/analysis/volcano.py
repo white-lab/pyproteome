@@ -14,6 +14,8 @@ import pyproteome as pyp
 
 LOGGER = logging.getLogger("pyproteome.volcano")
 MAX_VOLCANO_LABELS = 500
+VOLCANO_TEXT_SIZE = 10
+VOLCANO_LARGE_TEXT_SIZE = 20
 
 
 def _remove_lesser_dups(labels, compress_sym=False):
@@ -210,7 +212,11 @@ def plot_volcano_labels(
                 "..." if len(row["Label"]) > txt_lim else ""
             ),
             zorder=10,
-            fontsize=20 if row["Highlight"] else 12,
+            fontsize=(
+                VOLCANO_LARGE_TEXT_SIZE
+                if row["Highlight"] else
+                VOLCANO_TEXT_SIZE
+            ),
             horizontalalignment=(
                 'left' if row["x"] > 0 else "right"
             ),
