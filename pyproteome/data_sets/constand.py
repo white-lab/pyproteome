@@ -44,6 +44,8 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
     if not inplace:
         new = new.copy()
 
+    LOGGER.info("Applying CONSTANd normalization.")
+
     channels = list(new.channels.values())
 
     new_channels = pyp.utils.norm(new.channels)
@@ -62,17 +64,12 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             #
             # The row multipliers R^(t + 1) are computed such that the mean
             # of the reporter ion intensities equals 1/n:
-            r = (
-                1 / (
-                    np.count_nonzero(~np.isnan(k), axis=1) *
-                    np.nanmean(k, axis=1)
-                )
-            )
+            r = 1 / (n * np.nanmean(k, axis=1))
 
             # k^(2t + 1)
-            k = (r * k.T).T
+            k = np.einsum('..., ...', r, k.T).T
             err = (
-                abs(np.nanmean(k, axis=0)) - 1 / n
+                abs(np.nanmean(k, axis=0) - 1 / n)
             ).sum() / 2
         else:
             # In the even step the columns are fitted to match the column
@@ -82,17 +79,15 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
             #
             # The column multipliers S^(t + 1) are computed such that the
             # mean of the reporter ion intensities equals 1/n:
-            s = (
-                1 / (
-                    np.count_nonzero(~np.isnan(k), axis=0) *
-                    np.nanmean(k, axis=0)
-                )
-            )
+            s = 1 / (n * np.nanmean(k, axis=0))
 
             # k^(2t + 2)
-            k = s * k
+            k = np.einsum('..., ...', k, s)
             err = (
-                abs(np.nanmean(k, axis=1)) - 1 / n
+                abs(
+                    np.nanmean(k, axis=1) -
+                    1 / np.count_nonzero(~np.isnan(k), axis=1)
+                )
             ).sum() / 2
 
         if err < tol:
