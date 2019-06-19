@@ -96,7 +96,10 @@ class Sequence:
     def __eq__(self, other):
         # In case of searching just by sequence
         if isinstance(other, str):
-            return self._seq_with_modifications() == other
+            return other in [
+                self.__str__(),
+                self.__str__(skip_labels=False, skip_terminus=False),
+            ]
 
         if not isinstance(other, Sequence):
             raise TypeError(other)
@@ -114,7 +117,13 @@ class Sequence:
 
     def __contains__(self, other):
         if isinstance(other, str):
-            return other in self._seq_with_modifications()
+            return any([
+                other in i
+                for i in [
+                    self.__str__(),
+                    self.__str__(skip_labels=False, skip_terminus=False),
+                ]
+            ])
 
         if not isinstance(other, Sequence):
             raise TypeError(type(other))
@@ -142,24 +151,41 @@ class Sequence:
             )
         )
 
-    def _seq_with_modifications(self):
-        string = self.pep_seq.upper()
+    def __str__(self, skip_labels=True, skip_terminus=True):
+        string = list('N-' + self.pep_seq.upper() + '-C')
+        self_mods = self.modifications
 
-        if self.modifications:
-            for mod in self.modifications.skip_labels():
-                string = (
-                    string[:mod.rel_pos] +
-                    string[mod.rel_pos].lower() +
-                    string[mod.rel_pos + 1:]
-                )
+        if skip_terminus:
+            string = string[2:-2]
 
-        return string
+        if skip_labels:
+            self_mods = self_mods.skip_labels()
 
-    def __str__(self):
-        if not self.modifications:
-            return self.pep_seq
-        else:
-            return self._seq_with_modifications()
+        def _mods(index, letter):
+            lst = [
+                mod
+                for mod in self_mods
+                if (mod.rel_pos == index)
+                or (mod.nterm and index < 0)
+                or (mod.cterm and index > len(self.pep_seq))
+            ]
+
+            if not lst or letter == '-':
+                return letter
+
+            return (
+                letter.lower() +
+                '({})'.format(', '.join([mod.mod_type for mod in lst]))
+            )
+
+        string = [
+            _mods(ind, letter)
+            for ind, letter in enumerate(
+                string,
+                start=0 if skip_terminus else -2,
+            )
+        ]
+        return ''.join(string)
 
     def __len__(self):
         return len(self.pep_seq)

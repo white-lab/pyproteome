@@ -131,7 +131,12 @@ def plot(
         ax_i.set_xlabel("")
         ax_i.get_legend().set_title("")
 
-        ax_i.axhline(np.log2(1), linestyle=":", color="k", alpha=.5)
+        ax_i.axhline(
+            np.log2(1) if log_2 else 1,
+            linestyle=":",
+            color="k",
+            alpha=.5,
+        )
 
         mod_str = row["Modifications"].__str__(prot_index=0)
 
@@ -330,7 +335,7 @@ def plot_group(
             # size=10,
         )
         plot_ax.axhline(
-            0,
+            np.log2(1) if log_2 else 1,
             linestyle="--",
             alpha=.25,
         )

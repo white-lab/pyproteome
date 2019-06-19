@@ -611,7 +611,6 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
             INNER JOIN TargetPsms
             ON TargetPsms.PeptideID=
             QuanSpectrumInfoTargetPsms.TargetPsmsPeptideID
-            AND TargetPsms.FirstScan=QuanSpectrumInfo.FirstScan
             """,
         )
     else:
@@ -1102,6 +1101,13 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_ptm=False):
 
         # Read the main peptide properties
         df = _read_peptides(conn, pd_version, pick_best_ptm=pick_best_ptm)
+
+        LOGGER.info(
+            "{}: -- Loading information for {} peptides".format(
+                name,
+                df.shape[0],
+            )
+        )
 
         df = _get_proteins(df, cursor, pd_version)
         df = _extract_sequence(df)
