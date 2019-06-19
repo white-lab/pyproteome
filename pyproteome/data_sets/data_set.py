@@ -20,7 +20,7 @@ from functools import partial
 import pandas as pd
 import numpy as np
 import numpy.ma as ma
-from scipy.stats import ttest_ind, pearsonr, spearmanr
+from scipy.stats import ttest_ind, pearsonr, spearmanr, variation
 
 from . import modification, protein, sequence, constand
 
@@ -397,12 +397,16 @@ class DataSet:
 
         for channel in channels:
             weight = "{}_weight".format(channel)
+            cv = '{}_CV'.format(channel)
 
             if weight in new.psms.columns:
                 new.psms[channel] *= new.psms[weight]
                 agg_dict[weight] = _nan_sum
 
+            new.psms[cv] = new.psms[channel]
+
             agg_dict[channel] = _nan_sum
+            agg_dict[cv] = _cv
 
         def _first(x):
             if not all(i == x.values[0] for i in x.values):
@@ -879,7 +883,8 @@ class DataSet:
         ion_score           MASCOT's ion score.
         isolation           Discoverer's isolation inference.
         missed_cleavage     Missed cleaves <= cutoff.
-        median_quant        Median quantification signal > cutoff.
+        median_quant        Median quantification signal >= cutoff.
+        median_cv           Median coefficient of variation <= cutoff.
         p                   p-value < cutoff.
         q                   q-value < cutoff.
         asym_fold           Change > val if cutoff > 1 else Change < val.
@@ -949,6 +954,19 @@ class DataSet:
                     axis=1,
                 )
             ) >= val,
+
+            'median_cv': lambda val, psms:
+            np.nan_to_num(
+                np.nanmedian(
+                    psms[
+                        [
+                            '{}_CV'.format(chan)
+                            for chan in new.channels.values()
+                        ]
+                    ],
+                    axis=1,
+                )
+            ) <= val,
 
             "p": lambda val, psms:
             (~psms["p-value"].isnull()) &
@@ -1972,6 +1990,11 @@ def _nan_sum(lst):
         return np.nan
     else:
         return np.nansum(lst)
+
+
+def _cv(x):
+    x = variation(x, nan_policy='omit')
+    return np.nan if ma.is_masked(x) else x
 
 
 def update_correlation(ds, corr, metric="spearman", min_periods=5):
