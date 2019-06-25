@@ -7,19 +7,22 @@ import sklearn
 import sklearn.decomposition
 import sklearn.cluster
 
+import pyproteome as pyp
+
 
 def get_data(ds, dropna=True, groups=None):
     ds = ds.copy()
 
     if groups is None:
-        groups = list(ds.groups.keys())
+        groups = ds.cmp_groups or [list(ds.groups.keys())]
 
     if dropna:
-        ds = ds.dropna(how="any", groups=groups)
+        ds = ds.dropna(how="any", groups=pyp.utils.flatten_list(groups))
 
     names = [
         chan
-        for group in groups
+        for lst in groups
+        for group in lst
         for chan in ds.groups[group]
         if chan in ds.channels
     ]
@@ -31,8 +34,9 @@ def get_data(ds, dropna=True, groups=None):
 
     classes = np.array([
         [
-            groups.index(i)
-            for i in groups
+            lst.index(i)
+            for lst in groups
+            for i in lst
             if col in ds.groups[i]
         ][0]
         for col in names

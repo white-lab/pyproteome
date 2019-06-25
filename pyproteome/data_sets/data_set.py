@@ -110,6 +110,7 @@ class DataSet:
     def __init__(
         self,
         name="",
+        psms=None,
         search_name=None,
         channels=None,
         groups=None,
@@ -117,6 +118,7 @@ class DataSet:
         fix_channel_names=True,
         dropna=False,
         pick_best_ptm=True,
+        constand_norm=False,
         merge_duplicates=True,
         filter_bad=True,
         check_raw=True,
@@ -181,6 +183,9 @@ class DataSet:
                 columns=DATA_SET_COLS + list(self.channels.values()),
             )
 
+        if psms:
+            self.add_peptide(psms)
+
         self.name = name
         self.levels = None
         self.search_name = search_name
@@ -234,6 +239,16 @@ class DataSet:
                 .format(self.name)
             )
             self._pick_best_ptm()
+
+        if constand_norm:
+            channels = list(self.channels.values())
+
+            for channel in channels:
+                weight = "{}_weight".format(channel)
+                self.psms[weight] = self.psms[channel]
+
+            constand.constand(self, name=name, inplace=True)
+            self.rename_channels(inplace=True)
 
         if merge_duplicates:
             LOGGER.info(
@@ -399,11 +414,11 @@ class DataSet:
             weight = "{}_weight".format(channel)
             cv = '{}_CV'.format(channel)
 
+            new.psms[cv] = new.psms[channel]
+
             if weight in new.psms.columns:
                 new.psms[channel] *= new.psms[weight]
                 agg_dict[weight] = _nan_sum
-
-            new.psms[cv] = new.psms[channel]
 
             agg_dict[channel] = _nan_sum
             agg_dict[cv] = _cv
@@ -421,6 +436,24 @@ class DataSet:
 
             return x.values[0]
 
+        # if 'PeptideStr' not in new.psms.columns:
+        #     new.psms['PeptideStr'] = (
+        #         new.psms['Sequence'].apply(
+        #             lambda x:
+        #             x.__str__(
+        #                 skip_labels=False,
+        #                 skip_terminus=False,
+        #                 show_mods=True,
+        #             )
+        #         )
+        #     )
+        #
+        # if 'ProteinStr' not in new.psms.columns:
+        #     new.psms['ProteinStr'] = (
+        #         new.psms['Proteins'].apply(str)
+        #     )
+
+        # agg_dict["Sequence"] = _first
         # agg_dict["Proteins"] = _first
         agg_dict["Modifications"] = _first
         agg_dict["Missed Cleavages"] = _first
@@ -447,8 +480,10 @@ class DataSet:
 
         new.psms = new.psms.groupby(
             by=[
-                "Proteins",
-                "Sequence",
+                # "ProteinStr",
+                # "PeptideStr",
+                'Proteins',
+                'Sequence',
             ],
             sort=False,
             as_index=False,
@@ -522,7 +557,7 @@ class DataSet:
     def rename_channels(self, inplace=False):
         """
         Rename all channels from quantification channel name to sample name.
-        (i.e. "126" => "Mouse 1337")
+        (i.e. "126" => "Mouse #1")
 
         Parameters
         ----------
@@ -620,6 +655,8 @@ class DataSet:
                 new.psms,
                 other.psms,
                 on=[
+                    # "ProteinStr",
+                    # "PeptideStr",
                     "Proteins",
                     "Sequence",
                     "Modifications",
@@ -797,13 +834,13 @@ class DataSet:
 
         return new
 
-    def add_peptide(self, insert):
+    def add_peptide(self, inserts):
         """
-        Manually add a single peptide to a data set.
+        Manually add a peptide or list of peptides to a data set.
 
         Parameters
         ----------
-        insert : dict
+        insert : dict or list of dict
         """
         defaults = {
             "Proteins": protein.Proteins(),
@@ -827,14 +864,18 @@ class DataSet:
             "p-value": np.nan,
         }
 
-        for key, val in defaults.items():
-            if key not in insert:
-                insert[key] = val
+        if isinstance(inserts, dict):
+            inserts = [inserts]
 
-        for col in DATA_SET_COLS:
-            assert col in insert
+        for insert in inserts:
+            for key, val in defaults.items():
+                if key not in insert:
+                    insert[key] = val
 
-        self.psms = self.psms.append(pd.Series(insert), ignore_index=True)
+            for col in DATA_SET_COLS:
+                assert col in insert
+
+            self.psms = self.psms.append(pd.Series(insert), ignore_index=True)
 
     def filter(
         self,
@@ -1600,8 +1641,8 @@ def load_all_data(
         ):
             continue
 
-        kws = kw_mapping.get(name, {})
-        kws.update(kwargs)
+        kws = kwargs.copy()
+        kws.update(kw_mapping.get(name, {}))
 
         chan = kws.pop("channels", None)
         group = kws.pop("groups", None)
@@ -1689,7 +1730,7 @@ def norm_all_data(
             if not constand_norm:
                 data = data.normalize(datas[val], inplace=replace_norm)
             else:
-                data = constand.constand(data, inplace=replace_norm)
+                data = constand.constand(data, name=name, inplace=replace_norm)
 
             data.name += "-norm"
 
@@ -1788,6 +1829,7 @@ def merge_data(
         skip_logging=True,
         skip_load=True,
         filter_bad=False,
+        constand_norm=False,
     )
 
     if len(data_sets) < 1:

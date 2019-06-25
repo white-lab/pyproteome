@@ -13,13 +13,11 @@ import logging
 # Core data analysis libraries
 import numpy as np
 
-import pyproteome as pyp
-
 
 LOGGER = logging.getLogger("pyproteome.constand")
 
 
-def constand(ds, inplace=False, n_iters=50, tol=1e-5):
+def constand(ds, name='', inplace=False, n_iters=50, tol=1e-5):
     """
     Normalize channels to given levels for intra-run comparisons.
 
@@ -32,8 +30,11 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
         Mapping of channel names to normalized levels. Alternatively,
         a data set to pass to levels.get_channel_levels() or use
         pre-calculated levels from.
+    name : str, optional
     inplace : bool, optional
         Modify this data set in place.
+    n_iters : int, optional
+    tol : float, optional
 
     Returns
     -------
@@ -44,12 +45,9 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
     if not inplace:
         new = new.copy()
 
-    LOGGER.info("Applying CONSTANd normalization.")
-
     channels = list(new.channels.values())
 
-    new_channels = pyp.utils.norm(new.channels)
-    # new = new.dropna()
+    new_channels = new.channels
 
     k = new[channels].values
     err = np.inf
@@ -93,12 +91,22 @@ def constand(ds, inplace=False, n_iters=50, tol=1e-5):
         if err < tol:
             break
 
+    LOGGER.info(
+        "{}Applied CONSTANd normalization: iters = {}, err = {:.2e}.".format(
+            name + ': ' if name else '',
+            ind,
+            err,
+        )
+    )
+
     for i, (key, norm_key) in enumerate(zip(
         new.channels.values(),
         new_channels.values(),
     )):
         new.psms[norm_key] = k[:, i]
-        del new.psms[key]
+
+        if key != norm_key:
+            del new.psms[key]
 
     new.intra_normalized = True
     new.channels = new_channels

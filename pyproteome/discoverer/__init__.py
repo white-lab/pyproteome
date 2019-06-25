@@ -878,7 +878,7 @@ def _sort_mods(mods):
     )
 
 
-def _reassign_mods(mods, psp_val):
+def _reassign_mods(mods, psp_val, probability_cutoff=75):
     reassigned = False
     ambiguous = False
 
@@ -903,7 +903,7 @@ def _reassign_mods(mods, psp_val):
 
     o_mods = [i for i in mods if not _is_pmod(i)]
     p_mods = [i for i in mods if _is_pmod(i)]
-    psp_val_f = [i for i in psp_val if i[2] > 50]
+    psp_val_f = [i for i in psp_val if i[2] > probability_cutoff]
 
     if len(p_mods) != len(psp_val_f):
         LOGGER.debug(

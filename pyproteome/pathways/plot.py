@@ -122,7 +122,8 @@ def plot_nes(
 
     if ax is None:
         _, ax = plt.subplots(
-            figsize=(5, 4 / 14 * v.shape[0]),
+            # figsize=(5, 4 / 14 * v.shape[0]),
+            figsize=(6, 6),
         )
 
     sns.scatterplot(
@@ -150,11 +151,22 @@ def plot_nes(
     ])
     ax.axhline(sig_cutoff, color='k', linestyle=':')
 
+    def _fix_name(name):
+        if name.startswith('HALLMARK_'):
+            name = name[len("HALLMARK_"):]
+
+        name = name.replace('_', ' ')
+
+        if not any([i.islower() for i in name]):
+            name = name.title()
+
+        return name
+
     texts = [
         ax.text(
             x=row['NES(S)'],
             y=row[col],
-            s=row['name'],
+            s=_fix_name(row['name']),
             zorder=10,
             horizontalalignment=(
                 'left' if row["NES(S)"] > 0 else "right"

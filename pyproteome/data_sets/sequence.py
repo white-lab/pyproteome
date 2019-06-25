@@ -98,7 +98,13 @@ class Sequence:
         if isinstance(other, str):
             return other in [
                 self.__str__(),
+                self.__str__(show_mods=True),
                 self.__str__(skip_labels=False, skip_terminus=False),
+                self.__str__(
+                    skip_labels=False,
+                    skip_terminus=False,
+                    show_mods=True,
+                ),
             ]
 
         if not isinstance(other, Sequence):
@@ -151,7 +157,7 @@ class Sequence:
             )
         )
 
-    def __str__(self, skip_labels=True, skip_terminus=True):
+    def __str__(self, skip_labels=True, skip_terminus=True, show_mods=False):
         string = list('N-' + self.pep_seq.upper() + '-C')
         self_mods = self.modifications
 
@@ -172,6 +178,9 @@ class Sequence:
 
             if not lst or letter == '-':
                 return letter
+
+            if not show_mods:
+                return letter.lower()
 
             return (
                 letter.lower() +

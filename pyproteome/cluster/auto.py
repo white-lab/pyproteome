@@ -52,7 +52,7 @@ def auto_clusterer(
     )
 
     if "n_clusters" not in cluster_kwargs:
-        cluster_kwargs["n_clusters"] = 100
+        cluster_kwargs["n_clusters"] = 25
 
     LOGGER.info(
         "Grouping data into n={} clusters.".format(
@@ -76,7 +76,7 @@ def auto_clusterer(
         y_pred = y_pred_old
 
     if not plots:
-        return data, y_pred
+        return data, y_pred, clr
 
     LOGGER.info(
         "Plotting cluster information (n={} clusters)".format(len(set(y_pred)))
@@ -104,21 +104,15 @@ def auto_clusterer(
 
     for ind in ss:
         LOGGER.info("Plotting cluster #{}".format(ind))
+
         ax = pyp.cluster.plot.plot_cluster(
             data, y_pred, ind,
             div_scale=1,
         )
         f = ax.get_figure()
 
-        if f:
-            f.savefig(
-                os.path.join(folder_name, "Cluster-{}.png".format(ind)),
-                bbox_inches="tight",
-                dpi=pyp.DEFAULT_DPI,
-                transparent=True,
-            )
-            if close:
-                plt.close(f)
+        if f and close:
+            plt.close(f)
 
         f, _ = pyp.volcano.plot_volcano(
             data["ds"].filter(series=y_pred == ind),
@@ -135,15 +129,8 @@ def auto_clusterer(
             title="Cluster {}".format(ind),
         )
 
-        if f:
-            f.savefig(
-                os.path.join(folder_name, "Logo - Cluster {}.png".format(ind)),
-                bbox_inches="tight",
-                dpi=pyp.DEFAULT_DPI,
-                transparent=True,
-            )
-            if close:
-                plt.close(f)
+        if f and close:
+            plt.close(f)
 
     slices = [
         data["ds"].filter({"series": y_pred == ind})
