@@ -45,7 +45,7 @@ if __name__ == "__main__":
         url="https://github.com/white-lab/pyproteome",
         author="Nader Morshed",
         author_email="morshed@mit.edu",
-        license="BSD",
+        license="BSD-2-Clause",
         packages=find_packages(exclude=["*.tests", "tests"]),
         install_requires=REQUIREMENTS,
         extras_require={
