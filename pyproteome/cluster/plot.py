@@ -4,13 +4,11 @@ from __future__ import absolute_import, division
 from functools import cmp_to_key
 import logging
 from math import ceil, sqrt
-import os
 
 from fastcluster import linkage
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram
-import seaborn as sns
 import sklearn
 
 import pyproteome as pyp
@@ -80,15 +78,7 @@ def cluster_corrmap(
     f=None,
     ax=None,
     div_scale=None,
-    filename="Cluster-Corrmap.png",
-    folder_name=None,
 ):
-    folder_name = pyp.utils.make_folder(
-        data=data["ds"],
-        folder_name=folder_name,
-        sub="Clusters",
-    )
-
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))
     elif f is None:
@@ -134,14 +124,6 @@ def cluster_corrmap(
     if colorbar:
         f.colorbar(mesh)
 
-    if filename:
-        f.savefig(
-            os.path.join(folder_name, filename),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
-
     return f
 
 
@@ -155,7 +137,10 @@ def plot_cluster(
     color=None,
 ):
     if ax is None:
-        f, ax = plt.subplots(dpi=pyp.DEFAULT_DPI)
+        f, ax = plt.subplots(
+            dpi=pyp.DEFAULT_DPI,
+            figsize=(8, 4),
+        )
     elif f is None:
         f = ax.get_figure()
 
@@ -199,7 +184,7 @@ def plot_cluster(
                 (dad.shape[0], 1),
             ).T,
             dad[:, prev_ind:ind + 1].T,
-            alpha=min([1 / dad.shape[0] * 50 / 2, 1]),
+            alpha=min([5 / dad.shape[0], 1]),
             color=color or COLOR_MAP(cluster_n / len(set(y_pred))),
         )
 
@@ -229,14 +214,7 @@ def plot_cluster(
 def plot_all_clusters(
     data, y_pred,
     cols=4,
-    folder_name=None,
 ):
-    folder_name = pyp.utils.make_folder(
-        data=data["ds"],
-        folder_name=folder_name,
-        sub="Clusters",
-    )
-
     ss = sorted(set(y_pred))
     rows = int(np.ceil(len(ss) / cols))
     f, axes = plt.subplots(
@@ -260,12 +238,7 @@ def plot_all_clusters(
 
     f.tight_layout(h_pad=1)
 
-    f.savefig(
-        os.path.join(folder_name, "Clusters.png"),
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
+    return f
 
 
 def show_cluster(
@@ -277,15 +250,7 @@ def show_cluster(
     ax=None,
     color=None,
     div_scale=None,
-    save=True,
-    folder_name=None,
 ):
-    folder_name = pyp.utils.make_folder(
-        data=data["ds"],
-        folder_name=folder_name,
-        sub="Clusters",
-    )
-
     if ax is None:
         f, ax = plt.subplots(figsize=(6, 6))
     elif f is None:
@@ -349,17 +314,9 @@ def show_cluster(
 
             prev_ind = ind + 1
 
-    if save:
-        f.savefig(
-            os.path.join(folder_name, "Cluster-{}.png".format(cluster)),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
-
     dp.psms = dp[y_pred == cluster]
 
-    return dp
+    return dp, f, ax
 
 
 def show_peptide_clusters(
@@ -368,15 +325,7 @@ def show_peptide_clusters(
     new_colors=False,
     div_scale=None,
     cols=4,
-    filename="PeptideClusters.png",
-    folder_name=None,
 ):
-    folder_name = pyp.utils.make_folder(
-        data=data["ds"],
-        folder_name=folder_name,
-        sub="Clusters",
-    )
-
     rows = int(ceil(len(filters) / cols))
     f, axes = plt.subplots(
         rows, cols,
@@ -428,14 +377,6 @@ def show_peptide_clusters(
     for ax in ax_iter:
         ax.axis('off')
 
-    if filename:
-        f.savefig(
-            os.path.join(folder_name, filename),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
-
     return f, axes
 
 
@@ -467,20 +408,14 @@ def pca(data):
     ax.set_xlabel("Component 1")
     ax.set_ylabel("Component 2")
 
+    return f, ax
+
 
 def cluster_range(
     data,
     min_clusters=2, max_clusters=20,
     cols=3,
-    folder_name=None,
-    filename="Cluster-Range-Scan.png",
 ):
-    folder_name = pyp.utils.make_folder(
-        data=data["ds"],
-        folder_name=folder_name,
-        sub="Clusters",
-    )
-
     clusters = range(min_clusters, max_clusters + 1)
 
     rows = int(np.ceil(len(clusters) / cols))
@@ -510,9 +445,4 @@ def cluster_range(
     for ax in axes.ravel()[len(clusters):]:
         ax.axis("off")
 
-    f.savefig(
-        os.path.join(folder_name, filename),
-        bbox_inches="tight",
-        dpi=pyp.DEFAULT_DPI,
-        transparent=True,
-    )
+    return f, axes

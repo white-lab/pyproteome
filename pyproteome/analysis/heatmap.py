@@ -1,6 +1,5 @@
 
 from collections import OrderedDict
-import os
 
 import numpy as np
 import seaborn as sns
@@ -15,8 +14,6 @@ def hierarchical_heatmap(
     minmax=None,
     show_y=False,
     title=None,
-    filename="Hierarchical Heatmap.png",
-    folder_name=None,
     **kwargs
 ):
     """
@@ -35,12 +32,6 @@ def hierarchical_heatmap(
     map : :class:`seaborn.ClusterGrid`
     """
     data = data.copy()
-
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Clusters",
-    )
 
     if cmp_groups is None:
         # cmp_groups = [list(data.groups.keys())]
@@ -213,13 +204,5 @@ def hierarchical_heatmap(
     if not show_y:
         map.ax_heatmap.set_yticklabels([])
         map.ax_heatmap.set_ylabel("")
-
-    if filename:
-        map.savefig(
-            os.path.join(folder_name, filename),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
 
     return map

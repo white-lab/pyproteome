@@ -24,9 +24,6 @@ LOGGER = logging.getLogger("pyproteome.correlation")
 
 def correlate_data_sets(
     data1, data2,
-    older_name=None,
-    folder_name=None,
-    filename=None,
     adjust=True,
     label_cutoff=1.5,
     show_labels=False,
@@ -40,16 +37,9 @@ def correlate_data_sets(
     ----------
     data1 : :class:`pyproteome.data_sets.DataSet`
     data2 : :class:`pyproteome.data_sets.DataSet`
-    folder_name : str, optional
     filename : str, optional
     """
     LOGGER.info("Plotting dataset correlation")
-
-    folder_name = pyp.utils.make_folder(
-        data=data1,
-        folder_name=folder_name,
-        sub="Correlation Analysis",
-    )
 
     merged = pd.merge(
         data1.psms, data2.psms,
@@ -57,9 +47,11 @@ def correlate_data_sets(
     ).dropna(subset=("Fold Change_x", "Fold Change_y"))
 
     if ax is None:
-        _, ax = plt.subplots(
+        f, ax = plt.subplots(
             figsize=(4, 3),
         )
+    else:
+        f = ax.get_figure()
 
     merged["Fold Change_x"] = merged["Fold Change_x"].apply(np.log2)
     merged["Fold Change_y"] = merged["Fold Change_y"].apply(np.log2)
@@ -162,13 +154,7 @@ def correlate_data_sets(
             ).format(pear_corr)
         )
 
-    if filename:
-        ax.get_figure().savefig(
-            os.path.join(folder_name, filename),
-            transparent=True,
-            dpi=pyp.DEFAULT_DPI,
-            bbox_inches="tight",
-        )
+    return f
 
 
 def _scatter_plots(
@@ -297,14 +283,12 @@ def correlate_signal(
     corr_cutoff=0.8,
     scatter_cols=4,
     options=None,
-    folder_name=None,
     title=None,
     show_duplicates=False,
     scatter_colors=None,
     scatter_symbols=None,
     show_scatter=True,
     ax=None,
-    filename="",
     xlabel="",
 ):
     """
@@ -321,12 +305,6 @@ def correlate_signal(
     f_corr : :class:`matplotlib.figure.Figure`
     f_scatter : :class:`matplotlib.figure.Figure`
     """
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Correlation Analysis",
-    )
-
     options = options or {}
 
     highlight = options.get('highlight', {})
@@ -470,14 +448,6 @@ def correlate_signal(
 
     cp.psms = cp.psms[cp.psms["Correlation"].apply(abs) >= corr_cutoff]
 
-    if filename:
-        ax.get_figure().savefig(
-            os.path.join(folder_name, filename),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
-
     f_scatter = None
 
     if show_scatter:
@@ -487,14 +457,5 @@ def correlate_signal(
             scatter_colors=scatter_colors,
             scatter_symbols=scatter_symbols,
         )
-
-        if f_scatter:
-            f_scatter.savefig(
-                os.path.join(folder_name, "Correlation Scatter.png"),
-                bbox_inches="tight",
-                # dpi=pyp.DEFAULT_DPI,
-                dpi=pyp.DEFAULT_DPI / 6,
-                transparent=True,
-            )
 
     return ax.get_figure(), f_scatter

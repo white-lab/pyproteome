@@ -10,7 +10,6 @@ from __future__ import absolute_import, division
 # Built-ins
 from collections import OrderedDict
 import logging
-import os
 import warnings
 
 # Core data analysis libraries
@@ -18,8 +17,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import seaborn as sns
 from scipy import stats
-
-import pyproteome as pyp
 
 LOGGER = logging.getLogger("pyproteome.levels")
 WARN_PEP_CUTOFF = 50
@@ -30,8 +27,6 @@ def get_channel_levels(
     data,
     norm_channels=None,
     method="median",
-    folder_name=None,
-    file_name=None,
     cols=2,
 ):
     """
@@ -42,8 +37,6 @@ def get_channel_levels(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    folder_name : str, optional
-    file_name : str, optional
     cols : int, optional
         Number of columns used when displaying KDE distributions.
     norm_channels : list of str, optional
@@ -53,17 +46,9 @@ def get_channel_levels(
 
     Returns
     -------
+    :class:`matplotlib.figure.Figure`
     dict of str, float
     """
-    if not file_name:
-        file_name = "channel_levels.png"
-
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Normalization",
-    )
-
     if norm_channels is None:
         norm_channels = list(data.channels.keys())
 
@@ -171,12 +156,4 @@ def get_channel_levels(
         fontsize=16,
     )
 
-    if file_name:
-        f.savefig(
-            os.path.join(folder_name, file_name),
-            bbox_inches="tight",
-            dpi=pyp.utils.DEFAULT_DPI,
-            transparent=True,
-        )
-
-    return channel_levels
+    return f, channel_levels

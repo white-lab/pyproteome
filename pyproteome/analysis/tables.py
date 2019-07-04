@@ -55,8 +55,6 @@ def motif_table(
     data, f,
     p=0.05,
     sort="p-value",
-    folder_name=None,
-    csv_name=None,
     **kwargs
 ):
     """
@@ -69,8 +67,6 @@ def motif_table(
     f : dict or list of dict
     p : float, optional
     sort : str, optional
-    folder_name : str, optional
-    csv_name : str, optional
 
     Returns
     -------
@@ -80,13 +76,6 @@ def motif_table(
     --------
     :func:`pyproteome.motifs.motif.run_motif_enrichment`
     """
-    csv_name = _prep_csv(
-        data=data,
-        folder_name=folder_name,
-        csv_name=csv_name,
-        postfix=_get_table_title(f=f, running_title=["motifs"]),
-    )
-
     hits = pyp.motifs.motif.run_motif_enrichment(
         data, f,
         **kwargs
@@ -96,9 +85,6 @@ def motif_table(
         sort,
         ascending=True if sort == "p-value" else False,
     )
-
-    if csv_name:
-        hits.to_csv(csv_name)
 
     hits = hits[
         hits[
@@ -115,8 +101,6 @@ def motif_table(
 def changes_table(
     data,
     sort="p-value",
-    folder_name=None,
-    csv_name=None,
 ):
     """
     Show a table of fold changes and p-values.
@@ -125,19 +109,11 @@ def changes_table(
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
     sort : str, optional
-    folder_name : str, optional
-    csv_name : str, optional
 
     Returns
     -------
     df : :class:`pandas.DataFrame`
     """
-    csv_name = _prep_csv(
-        data=data,
-        folder_name=folder_name,
-        csv_name=csv_name,
-        postfix=_get_table_title(running_title=["changes"]),
-    )
     psms = getattr(data, "psms", data)
 
     psms = psms[
@@ -163,9 +139,6 @@ def changes_table(
         psms.sort_values(sort, inplace=True, ascending=True)
 
     psms.drop("Modifications", axis=1, inplace=True)
-
-    if csv_name:
-        psms.to_csv(csv_name)
 
     # back_colors = {
     #     True: "#BBFFBB",  # light green

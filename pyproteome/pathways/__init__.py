@@ -357,7 +357,6 @@ def gsea(
     p_sites=False,
     remap=True,
     name=None,
-    folder_name=None,
     show_plots=True,
     **kwargs
 ):
@@ -405,8 +404,6 @@ def gsea(
         strings of "<Entrez>,<letter><pos>-p" (i.e. "8778,Y544-p") for
         phospho sets.
     show_plots : bool, optional
-    folder_name : str, optional
-        Save figures and tables to this folder. Defaults to `<ds.name>/GSEA`
 
     See Also
     --------
@@ -419,12 +416,6 @@ def gsea(
     gene_changes : :class:`pandas.DataFrame`
     """
     assert psms is not None or ds is not None
-
-    folder_name = pyp.utils.make_folder(
-        data=ds,
-        folder_name=folder_name,
-        sub="PSEA" if p_sites else "GSEA",
-    )
 
     if ds is not None:
         ds = _filter_ambiguous_peptides(ds)
@@ -485,20 +476,9 @@ def gsea(
         **es_args
     )
 
-    if name is None:
-        name = "PSEA" if p_sites else "GSEA"
-
-    vals.to_csv(
-        os.path.join(
-            folder_name,
-            name + ".csv",
-        ),
-    )
-
     if show_plots:
         plot.plot_gsea(
             vals, gene_changes,
-            folder_name=folder_name,
             **kwargs
         )
 
@@ -522,17 +502,10 @@ def psea(*args, **kwargs):
 
 def ssgsea(
     ds=None,
-    folder_name=None,
     thres_na=None,
     *args, **kwargs
 ):
     assert ds is not None
-
-    folder_name = pyp.utils.make_folder(
-        data=ds,
-        folder_name=folder_name,
-        sub="ssPSEA" if kwargs.get("p_sites", False) else "ssGSEA",
-    )
 
     cmp_groups = ds.cmp_groups or [list(ds.groups.keys())]
 

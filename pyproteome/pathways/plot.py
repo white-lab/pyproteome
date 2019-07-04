@@ -361,7 +361,6 @@ def plot_gsea(
     min_abs_score=0,
     max_pval=1,
     max_qval=1,
-    folder_name=None,
     name="",
     **kwargs
 ):
@@ -378,11 +377,6 @@ def plot_gsea(
     -------
     figs : list of :class:`matplotlib.figure.Figure`
     """
-    folder_name = pyp.utils.make_folder(
-        sub="GSEA + PSEA",
-        folder_name=folder_name,
-    )
-
     figs = ()
 
     figs += plot_correlations(gene_changes)[0],
@@ -407,18 +401,5 @@ def plot_gsea(
                 max_pval=max_pval,
                 max_qval=max_qval,
             )[0],
-
-    for index, fig in enumerate(figs):
-        fig_path = os.path.join(folder_name, name + "-{}.png".format(index))
-
-        fig.savefig(
-            fig_path,
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
-        LOGGER.info(
-            'Saved figure to {}'.format(fig_path)
-        )
 
     return figs

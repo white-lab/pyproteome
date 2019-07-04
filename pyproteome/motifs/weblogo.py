@@ -15,8 +15,6 @@ WEBLOGO_URL = "http://weblogo.threeplusone.com/create.cgi"
 
 def make_logo(
     data,
-    folder_name=None,
-    filename="Motif.svg",
     **kwargs
 ):
     """
@@ -27,11 +25,7 @@ def make_logo(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    folder_name : str, optional
-    filename : str, optional
     """
-    if folder_name and filename:
-        filename = os.path.join(folder_name, filename)
 
     nmer_args = motif.get_nmer_args(kwargs)
 

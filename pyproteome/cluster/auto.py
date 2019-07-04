@@ -2,8 +2,6 @@
 from __future__ import absolute_import, division
 
 import logging
-import os
-import pickle
 
 from matplotlib import pyplot as plt
 
@@ -22,8 +20,6 @@ def auto_clusterer(
     plots=True,
     cluster_clusters=True,
     close=False,
-    folder_name=None,
-    filename="clusters.pkl",
 ):
     """
     Cluster and generate plots for a data set.
@@ -32,12 +28,6 @@ def auto_clusterer(
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
     """
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Clusters",
-    )
-
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
     cluster_cluster_kwargs = cluster_cluster_kwargs or {}
@@ -86,11 +76,9 @@ def auto_clusterer(
 
     pyp.cluster.plot.cluster_corrmap(
         data, y_pred_old,
-        filename="First Clusters.png",
     )
     pyp.cluster.plot.cluster_corrmap(
         data, y_pred,
-        filename="Final Clusters.png",
     )
 
     pyp.cluster.plot.plot_all_clusters(
@@ -113,24 +101,23 @@ def auto_clusterer(
 
         if f and close:
             plt.close(f)
-
-        f, _ = pyp.volcano.plot_volcano(
-            data["ds"].filter(series=y_pred == ind),
-            title="Cluster {}".format(ind),
-            folder_name=folder_name,
-            **volcano_kwargs
-        )[:2]
-
-        if f and close:
-            plt.close(f)
-
-        f, _ = pyp.motifs.logo.make_logo(
-            data["ds"], {"series": y_pred == ind},
-            title="Cluster {}".format(ind),
-        )
-
-        if f and close:
-            plt.close(f)
+    #
+    #     f, _ = pyp.volcano.plot_volcano(
+    #         data["ds"].filter(series=y_pred == ind),
+    #         title="Cluster {}".format(ind),
+    #         **volcano_kwargs
+    #     )[:2]
+    #
+    #     if f and close:
+    #         plt.close(f)
+    #
+    #     f, _ = pyp.motifs.logo.make_logo(
+    #         data["ds"], {"series": y_pred == ind},
+    #         title="Cluster {}".format(ind),
+    #     )
+    #
+    #     if f and close:
+    #         plt.close(f)
 
     slices = [
         data["ds"].filter({"series": y_pred == ind})
@@ -142,11 +129,6 @@ def auto_clusterer(
 
     pyp.tables.write_full_tables(
         slices,
-        folder_name=folder_name,
     )
-
-    if filename:
-        with open(os.path.join(folder_name, filename), "wb") as f:
-            pickle.dump(y_pred, f)
 
     return data, y_pred, clr

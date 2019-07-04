@@ -181,7 +181,7 @@ def _calc_hline(back_counts, p=0.05):
     return abs(np.log10(alpha / (1 - alpha)))
 
 
-def make_logo(data, f, folder_name=None, **kwargs):
+def make_logo(data, f, **kwargs):
     """
     Create a logo from a pyproteome data set using a given filter to define
     the foreground set.
@@ -191,7 +191,6 @@ def make_logo(data, f, folder_name=None, **kwargs):
     data : :class:`pyproteome.data_sets.DataSet`
     f : dict
         Filter passed to data.filter() to define the foreground set.
-    folder_name : str, optional
     kwargs
         Arguments passed on to logo()
 
@@ -224,20 +223,6 @@ def make_logo(data, f, folder_name=None, **kwargs):
         title=title,
         **kwargs
     )
-
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Logo",
-    )
-
-    if fig is not None:
-        fig.savefig(
-            os.path.join(folder_name, re.sub("[><^ ]", "_", title) + ".png"),
-            bbox_inches="tight",
-            transparent=True,
-            dpi=pyp.DEFAULT_DPI,
-        )
 
     return fig, ax
 

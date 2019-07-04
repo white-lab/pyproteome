@@ -728,7 +728,7 @@ class DataSet:
 
         if hasattr(lvls, "levels"):
             if not lvls.levels:
-                lvls.levels = pyp.levels.get_channel_levels(lvls)
+                lvls.levels = pyp.levels.get_channel_levels(lvls)[1]
 
             lvls = lvls.levels
 
@@ -1483,26 +1483,32 @@ class DataSet:
         df : :class:`pandas.DataFrame`
         """
         if groups is None:
-            # groups = (
-            #     np.ravel(self.cmp_groups)
-            #     if self.cmp_groups is not None else
-            #     np.ravel(self.groups.values())
-            # )
-            # print(groups)
             channel_names = [
-                channel_name
-                for group in self.groups.values()
-                for channel_name in group
-                if channel_name in self.channels
+                self.channels[sample_name]
+                for lst in self.cmp_groups or [list(self.groups.keys())]
+                for group in lst
+                for sample_name in self.groups[group]
+                if sample_name in self.channels
             ]
+            # Remove duplicates
             channel_names = list(OrderedDict.fromkeys(channel_names))
 
-        return self.psms[
+        d = self.psms[
             [
                 self.channels[chan]
                 for chan in channel_names
             ]
         ]
+        d.index = self.psms.apply(
+            lambda row:
+            "{} {}".format(
+                " / ".join(row["Proteins"].genes)[:16],
+                row["Modifications"].__str__(prot_index=0),
+            ),
+            axis=1,
+        )
+
+        return d
 
 
 def load_all_data(

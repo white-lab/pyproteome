@@ -39,7 +39,6 @@ def get_data():
 def generate_logos(
     species,
     kinases=None,
-    folder_name=None,
     min_foreground=10,
 ):
     """
@@ -50,14 +49,9 @@ def generate_logos(
     species : str
         Species name (i.e. "Human" or "Homo sapiens")
     kinases : list of str, optional
-    folder_name : str, optional
     min_foreground : int, optional
         Minimum number of substrates needed for logo generation.
     """
-    folder_name = pyp.utils.make_folder(
-        folder_name=folder_name,
-        sub="Logos",
-    )
     species = pyp.species.ORGANISM_MAPPING.get(species, species).lower()
 
     df = get_data()
@@ -84,13 +78,6 @@ def generate_logos(
             back=list(df["SITE_+/-7_AA"]),
             title=kinase,
         )[0]
-
-        f.savefig(
-            os.path.join(folder_name, "{}.png".format(kinase)),
-            dpi=f.dpi,
-            bbox_inches="tight",
-            pad_inches=.1,
-        )
 
         figs.append(f)
 
