@@ -1038,7 +1038,11 @@ class DataSet:
             psms["Sequence"].apply(
                 lambda x:
                 any(
-                    val.match(nmer)
+                    (
+                        pyp.motifs.motif.Motif(val)
+                        if isinstance(val, str) else
+                        val
+                    ).match(nmer)
                     for nmer in pyp.motifs.generate_n_mers(
                         x,
                         mods=f.get("mod", None),

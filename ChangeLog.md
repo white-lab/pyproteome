@@ -1,5 +1,12 @@
 # Change Log
 
+### 0.10.1 (2019-07-11)
+
+Features
+
+  - Added module for CONSTANd normalization.
+  - Fixed several bugs when using groups with duplicated sample IDs.
+
 ### 0.9.1 (2019-01-10)
 
 Bug fixes
