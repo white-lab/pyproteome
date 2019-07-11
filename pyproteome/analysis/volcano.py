@@ -275,8 +275,6 @@ def plot_volcano(
     yminmax=None,
     title=None,
     ax=None,
-    filename=None,
-    folder_name=None,
     show_xlabel=True,
     show_ylabel=True,
     log2_fold=True,
@@ -297,7 +295,6 @@ def plot_volcano(
     group_b : str or list of str, optional
     p : float, optional
     fold : float, optional
-    folder_name : str, optional
     title : str, optional
     figsize : tuple of float, float
     kwargs : dict
@@ -307,8 +304,6 @@ def plot_volcano(
     -------
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
-    folder_name : str
-    filename : str
     """
     data = data.copy()
 
@@ -319,15 +314,6 @@ def plot_volcano(
 
     if group_a and group_b:
         data.update_group_changes(group_a=group_a, group_b=group_b)
-
-    folder_name = pyp.utils.make_folder(
-        data=data,
-        folder_name=folder_name,
-        sub="Volcano",
-    )
-
-    if not filename:
-        filename = re.sub("[ ></?]", "_", data.name) + ".png"
 
     if log10_p:
         p = -np.log10(p)
@@ -469,15 +455,7 @@ def plot_volcano(
 
     fig = ax.get_figure()
 
-    if filename:
-        fig.savefig(
-            os.path.join(folder_name, filename),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
-
-    return fig, ax, folder_name, filename
+    return fig, ax
 
 
 def plot_volcano_filtered(data, f, **kwargs):
@@ -536,7 +514,7 @@ def plot_volcano_filtered(data, f, **kwargs):
         (-0.1, np.ceil(max(pvals + [1]))),
     )
 
-    f, ax, folder_name, filename = plot_volcano(
+    f, ax = plot_volcano(
         d,
         xminmax=xminmax,
         yminmax=yminmax,
@@ -560,13 +538,5 @@ def plot_volcano_filtered(data, f, **kwargs):
         # c="lightblue",
         # alpha=0.3,
     )
-
-    if filename:
-        f.savefig(
-            os.path.join(folder_name, filename),
-            bbox_inches="tight",
-            dpi=pyp.DEFAULT_DPI,
-            transparent=True,
-        )
 
     return f, ax
