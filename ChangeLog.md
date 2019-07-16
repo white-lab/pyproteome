@@ -1,10 +1,11 @@
 # Change Log
 
-### 0.10.1 (2019-07-11)
+### 0.10.0 (2019-07-16)
 
 Features
 
   - Added module for CONSTANd normalization.
+  - Significant speed improvements with large data sets.
   - Fixed several bugs when using groups with duplicated sample IDs.
 
 ### 0.9.1 (2019-01-10)
