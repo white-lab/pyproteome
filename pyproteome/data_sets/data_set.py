@@ -243,6 +243,9 @@ class DataSet:
         if constand_norm:
             channels = list(self.channels.values())
 
+            # Display quant distribution
+            pyp.levels.get_channel_levels(self)
+
             for channel in channels:
                 weight = "{}_weight".format(channel)
                 self.psms[weight] = self.psms[channel]
@@ -412,16 +415,24 @@ class DataSet:
 
         for channel in channels:
             weight = "{}_weight".format(channel)
-            cv = '{}_CV'.format(channel)
-
-            new.psms[cv] = new.psms[channel]
+            std = '{}_std'.format(channel)
+            mean = '{}_mean'.format(channel)
+            cv = '{}_cv'.format(channel)
 
             if weight in new.psms.columns:
                 new.psms[channel] *= new.psms[weight]
-                agg_dict[weight] = _nan_sum
+                agg_dict[weight] = 'sum'
 
-            agg_dict[channel] = _nan_sum
-            agg_dict[cv] = _cv
+            agg_dict[channel] = 'sum'
+
+            if cv not in new.psms.columns:
+                new.psms[std] = new.psms[channel]
+                new.psms[mean] = new.psms[channel]
+
+                agg_dict[std] = 'std'
+                agg_dict[mean] = 'mean'
+            else:
+                agg_dict[cv] = 'mean'
 
         def _first(x):
             if not all(i == x.values[0] for i in x.values):
@@ -436,25 +447,6 @@ class DataSet:
 
             return x.values[0]
 
-        # if 'PeptideStr' not in new.psms.columns:
-        #     new.psms['PeptideStr'] = (
-        #         new.psms['Sequence'].apply(
-        #             lambda x:
-        #             x.__str__(
-        #                 skip_labels=False,
-        #                 skip_terminus=False,
-        #                 show_mods=True,
-        #             )
-        #         )
-        #     )
-        #
-        # if 'ProteinStr' not in new.psms.columns:
-        #     new.psms['ProteinStr'] = (
-        #         new.psms['Proteins'].apply(str)
-        #     )
-
-        # agg_dict["Sequence"] = _first
-        # agg_dict["Proteins"] = _first
         agg_dict["Modifications"] = _first
         agg_dict["Missed Cleavages"] = _first
         agg_dict["Validated"] = all
@@ -480,8 +472,6 @@ class DataSet:
 
         new.psms = new.psms.groupby(
             by=[
-                # "ProteinStr",
-                # "PeptideStr",
                 'Proteins',
                 'Sequence',
             ],
@@ -491,6 +481,14 @@ class DataSet:
 
         for channel in channels:
             weight = "{}_weight".format(channel)
+            std = '{}_std'.format(channel)
+            mean = '{}_mean'.format(channel)
+            cv = '{}_cv'.format(channel)
+
+            if cv not in new.psms.columns:
+                new.psms[cv] = new.psms[std] / new.psms[mean]
+                del new.psms[std]
+                del new.psms[mean]
 
             if weight in new.psms.columns:
                 new.psms[channel] = (
@@ -1952,7 +1950,7 @@ def merge_proteins(ds, inplace=False, fn=None):
         return new
 
     if fn is None:
-        fn = _nan_median
+        fn = 'median'
 
     channels = list(new.channels.values())
     agg_dict = {}
@@ -2021,27 +2019,6 @@ def merge_proteins(ds, inplace=False, fn=None):
     new.update_group_changes()
 
     return new
-
-
-def _nan_max(lst):
-    if all(np.isnan(i) for i in lst):
-        return np.nan
-    else:
-        return np.nanmax(lst)
-
-
-def _nan_median(lst):
-    if all(np.isnan(i) for i in lst):
-        return np.nan
-    else:
-        return np.nanmedian(lst)
-
-
-def _nan_sum(lst):
-    if all(np.isnan(i) for i in lst):
-        return np.nan
-    else:
-        return np.nansum(lst)
 
 
 def _cv(x):
