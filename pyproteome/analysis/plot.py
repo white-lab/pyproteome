@@ -274,18 +274,18 @@ def plot_group(
                     k,
                     np.log2(k),
                     label,
-                    _get_color(label),
                 )
                 for i in values
                 for label, j in i.iteritems()
                 for k in j.values
             ],
-            columns=("y", 'log2_y', "label", "color"),
+            columns=("y", 'log2_y', "label"),
         )
         sns.boxplot(
             x="label",
             y="log2_y" if log_2 else 'y',
-            hue="color",
+            hue="label",
+            palette={label: _get_color(label) for label in df['label']},
             data=df,
             ax=plot_ax,
             dodge=False,
@@ -401,7 +401,8 @@ def plot_group(
                 "Relative" if cmp_groups else "Cumulative",
             ),
         )
-        plot_ax.get_legend().set_visible(False)
+        if plot_ax.get_legend():
+            plot_ax.get_legend().set_visible(False)
 
         if log_2:
             plot_ax.set_yticklabels(

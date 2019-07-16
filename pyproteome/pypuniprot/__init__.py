@@ -16,7 +16,7 @@ import uniprot
 import pyproteome as pyp
 
 
-RE_ACCESSION = re.compile("\[([A-Za-z0-9]+_[A-Z]+)\]")
+RE_ACCESSION = re.compile(r"\[([A-Za-z0-9]+_[A-Z]+)\]")
 RE_DISCOVERER_ACCESSION = re.compile(r"^>sp\|([\dA-Za-z]+)\|[\dA-Za-z_]+ .*$")
 
 UNIPROT_DATA = {}

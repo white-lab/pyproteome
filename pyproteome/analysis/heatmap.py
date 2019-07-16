@@ -43,22 +43,15 @@ def hierarchical_heatmap(
 
     flat_cmp_groups = pyp.utils.flatten_list(cmp_groups)
 
-    colors = [
-        'red',
-        'orange',
-        'yellow',
-        'green',
-        'cyan',
-        'lightblue',
-        'blue',
-        'purple',
-    ]
+    colors = sns.color_palette(
+        "hls", len(flat_cmp_groups),
+    ).as_hex()
 
     group_colors = OrderedDict([
         (
             data.channels[channel],
             colors[
-                flat_cmp_groups.index(group) % len(colors)
+                flat_cmp_groups.index(group)
             ],
         )
         for groups in cmp_groups
