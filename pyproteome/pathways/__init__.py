@@ -216,8 +216,8 @@ def _get_scores(psms, phenotype=None, metric=None):
 
     if phenotype is not None:
         agg.update({
-            # chan: np.nanmedian
-            chan: np.max
+            chan: np.nanmedian
+            # chan: np.max
             for chan in phenotype.index
         })
 
