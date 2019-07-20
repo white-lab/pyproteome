@@ -8,7 +8,6 @@ Functions include volcano plots, sorted tables, and plotting sequence levels.
 from __future__ import absolute_import, division
 
 import logging
-import os
 import warnings
 
 from matplotlib import pyplot as plt
