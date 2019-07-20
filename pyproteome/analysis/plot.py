@@ -577,6 +577,7 @@ def plot_together(
 
         if title:
             plot_ax.set_title(title)
+
         plot_ax.xaxis.grid(False)
 
         if show_p:
@@ -681,6 +682,7 @@ def plot_together(
         figures.append((plot_ax.get_figure(), plot_ax))
 
     return figures
+
 
 def plot_all(
     data,
