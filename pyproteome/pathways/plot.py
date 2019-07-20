@@ -99,7 +99,12 @@ def plot_nes(
     if col is None:
         col = [
             i
-            for i in ['q-value', 'p-value', 'NES(S)', 'ES(S)']
+            for i in [
+                # 'q-value',
+                'p-value',
+                'NES(S)',
+                'ES(S)',
+            ]
             if i in v.columns
         ][0]
 
@@ -126,11 +131,16 @@ def plot_nes(
             figsize=(6, 6),
         )
 
+    v['n_hits'] = v['n_hits'].apply(float)
+
     sns.scatterplot(
         data=v,
         y=col,
         x='NES(S)',
+        size='n_hits',
+        hue='n_hits',
         ax=ax,
+        palette="Set2",
     )
 
     if title is not None:
