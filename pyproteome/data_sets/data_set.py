@@ -2045,38 +2045,24 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
     """
     ds = ds.copy()
 
-    metric = {
-        "spearman": partial(spearmanr, nan_policy="omit"),
-        "pearson": pearsonr,
-    }[metric]
-
-    def _map_corr(row):
-        a = pd.to_numeric(row[list(corr.index)])
-        b = pd.to_numeric(corr)
-        c = [np.nan, np.nan]
-
-        if (~(a.isnull()) & ~(b.isnull())).sum() >= min_periods:
-            try:
-                c = metric(
-                    a,
-                    b,
-                )
-            except ValueError:
-                pass
-
-        return pd.Series(
-            [c[0], c[1]],
-            index=["Fold Change", "p-value"],
-        )
-
-    vals = ds.psms.apply(
-        lambda row:
-        _map_corr(row),
-        axis=1,
+    corr = pd.to_numeric(
+        corr[(~corr.isnull()) & (corr.index.isin(ds.psms.columns))]
     )
 
-    for col in vals.columns:
-        ds.psms[col] = vals[col]
+    metric = {
+        "spearman": partial(spearmanr, b=corr, nan_policy="omit"),
+        "pearson": partial(pearsonr, y=corr),
+    }[metric]
+
+    df = ds.psms[list(corr.index)].apply(pd.to_numeric)
+
+    vals = df.apply(metric, axis=1, result_type='expand')
+
+    vals[
+        (~df.isnull()).sum(axis=1) < min_periods
+    ] = [np.nan, np.nan]
+
+    ds.psms[['Fold Change', 'p-value']] = vals
 
     return ds
 
