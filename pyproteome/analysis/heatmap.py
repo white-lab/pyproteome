@@ -95,15 +95,12 @@ def hierarchical_heatmap(
     # raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
 
-    data.inter_normalized = getattr(data, 'inter_normalized', False)
-    if not data.inter_normalized:
-        raw = (raw.T / raw.apply(np.nanmedian, axis=1)).T
-
     def zscore(x):
         return (x - np.nanmean(x)) / np.nanstd(x)
 
     # raw = raw.apply(zscore, axis=1)
     raw = raw.apply(np.log2, axis=1)
+    raw = raw.replace([np.inf, -np.inf], np.nan)
     raw = raw.dropna(how="all")
     raw = raw.T.dropna(how="all").T
 
