@@ -2056,7 +2056,11 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
         "pearson": partial(pearsonr, y=corr),
     }[metric]
 
-    df = ds.psms[list(corr.index)].apply(pd.to_numeric)
+    # Avoids errors with correlation of 2 points
+    cols = list(corr.index)
+    ds = ds.dropna(thresh=3, columns=cols)
+
+    df = ds.psms[cols].apply(pd.to_numeric)
 
     vals = df.apply(metric, axis=1, result_type='expand')
 
