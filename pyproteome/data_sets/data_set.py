@@ -495,6 +495,8 @@ class DataSet:
                     new.psms[channel] / new.psms[weight]
                 )
 
+            new.psms[channel] = new.psms[channel].replace(0, np.nan)
+
         return new
 
     def merge_subsequences(self, inplace=False):
