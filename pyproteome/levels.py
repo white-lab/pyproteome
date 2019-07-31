@@ -20,7 +20,14 @@ from scipy import stats
 
 LOGGER = logging.getLogger("pyproteome.levels")
 WARN_PEP_CUTOFF = 50
-REL_CUTOFF = 25
+REL_CUTOFF = 5
+
+
+def kde_max(points):
+    gaus = stats.kde.gaussian_kde(points[~np.isnan(points)])
+    x = np.arange(0, 10, .01)
+    y = np.array(gaus.pdf(x))
+    return x[y == y.max()][0]
 
 
 def get_channel_levels(
@@ -56,11 +63,12 @@ def get_channel_levels(
     channel_levels = OrderedDict()
 
     rows = int(np.ceil(len(data.channels) / cols))
+    scale = 4
     f, axes = plt.subplots(
         rows, cols,
         sharex=True,
         sharey=True,
-        figsize=(3 * cols, 3 * rows),
+        figsize=(scale * cols, scale * rows),
     )
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)
@@ -95,10 +103,7 @@ def get_channel_levels(
             continue
         else:
             # Fit a guassian and find its maximum
-            gaus = stats.kde.gaussian_kde(points)
-            x = np.arange(0, 10, .01)
-            y = np.array(gaus.pdf(x))
-            max_x = x[y == y.max()][0]
+            max_x = kde_max(points)
 
         channel_levels[col] = max_x
 
@@ -128,6 +133,9 @@ def get_channel_levels(
             points.std(ddof=1),
         )
         ax.axvline(max_x, color='k', linestyle='--')
+        ax.axvline(points.mean(), color='r', linestyle='--')
+        ax.axvline(points.median(), color='g', linestyle='--')
+        ax.axvline(1, color='c', linestyle='--')
 
         ax.text(
             s=txt,
