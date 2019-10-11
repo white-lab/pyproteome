@@ -133,7 +133,7 @@ def photon(ds, folder_name=None):
         to_organism='hsapiens',
     )
 
-    symbol_mapping = brs.cache.get_mapping_data(species="Human")
+    symbol_mapping = brs.cache.get_mapping_data(species="Homo sapiens")
     symbol_mapping["Symbol"] = symbol_mapping.index
     symbol_mapping = symbol_mapping.set_index("GeneID")["Symbol"]
 
@@ -144,7 +144,6 @@ def photon(ds, folder_name=None):
             entrez, symbol = _map_gene(mapper, symbol_mapping, gene, species)
 
             if not entrez:
-                # print(gene, entrez)
                 continue
 
             for mod in row["Modifications"].get_mods("Phospho"):

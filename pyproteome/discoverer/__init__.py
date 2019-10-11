@@ -642,7 +642,7 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
             for val in vals
         ]
 
-        if not np.isnan(vals).all() and not row["Sequence"].is_labeled:
+        if not row["Sequence"].is_labeled:
             vals = [np.nan] * len(vals)
 
         return pd.Series(vals, index=col_names)

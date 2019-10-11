@@ -252,6 +252,7 @@ class DataSet:
 
             constand.constand(self, name=name, inplace=True)
             self.rename_channels(inplace=True)
+            self.inter_normalized = True
 
         if merge_duplicates:
             LOGGER.info(
@@ -611,6 +612,7 @@ class DataSet:
         -------
         ds : :class:`.DataSet`
         """
+        print('inter_normalizing', self.name, norm_channels)
         assert (
             norm_channels is not None or
             other is not None
@@ -1488,7 +1490,7 @@ class DataSet:
         """
         if groups is None:
             channel_names = [
-                self.channels[sample_name]
+                sample_name
                 for lst in self.cmp_groups or [list(self.groups.keys())]
                 for group in lst
                 for sample_name in self.groups[group]
@@ -1505,9 +1507,10 @@ class DataSet:
         ]
         d.index = self.psms.apply(
             lambda row:
-            "{} {}".format(
+            "{} {} - {}".format(
                 " / ".join(row["Proteins"].genes)[:16],
                 row["Modifications"].__str__(prot_index=0),
+                row['Sequence'],
             ),
             axis=1,
         )
@@ -1867,18 +1870,23 @@ def merge_data(
                 if sample not in new.groups[group]
             ]
 
-        # Normalize data sets to their common channels
-        if len(data_sets) > 1:
+        if not data.inter_normalized:
+            # Normalize data sets to their common channels
+            inter_norm = norm_channels
+
+            if not inter_norm:
+                inter_norm = set(data.channels)
+
+                if index > 0:
+                    inter_norm = inter_norm.intersection(new.channels)
+                elif len(data_sets) > 1:
+                    inter_norm = inter_norm.intersection(
+                        data_sets[1].channels
+                    )
+
             data = data.inter_normalize(
                 other=new if index > 0 else None,
-                norm_channels=(
-                    norm_channels
-                    if norm_channels else (
-                        set(data.channels).intersection(new.channels)
-                        if index > 0 else
-                        set(data.channels).intersection(data_sets[1].channels)
-                    )
-                ),
+                norm_channels=inter_norm,
             )
 
         for key, val in data.channels.items():
@@ -1895,6 +1903,7 @@ def merge_data(
             new.merge_duplicates(inplace=True)
 
     new.sets = sum(data.sets for data in data_sets)
+    new.inter_normalized = True
 
     new.group_a = next(
         (i.group_a for i in data_sets if i.group_a is not None),
@@ -2066,7 +2075,7 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
 
     vals[
         (~df.isnull()).sum(axis=1) < min_periods
-    ] = [np.nan, np.nan]
+    ] = np.nan
 
     ds.psms[['Fold Change', 'p-value']] = vals
 

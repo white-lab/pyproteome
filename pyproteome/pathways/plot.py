@@ -2,7 +2,6 @@
 from __future__ import division
 
 import logging
-import os
 import warnings
 
 import numpy as np
@@ -14,6 +13,19 @@ import pyproteome as pyp
 from . import enrichments
 
 LOGGER = logging.getLogger("pyp.pathways.plot")
+
+
+def _fix_name(name):
+    if name.startswith('HALLMARK_'):
+        name = name[len("HALLMARK_"):]
+
+    name = name.replace('_', ' ')
+    # name = name.split('-', 1)[-1]
+
+    if not any([i.islower() for i in name]):
+        name = name.title()
+
+    return name
 
 
 def plot_nes_dist(nes_vals, nes_pi_vals):
@@ -126,9 +138,9 @@ def plot_nes(
     v = v.sort_values('NES(S)', ascending=False)
 
     if ax is None:
+        n = 8
         _, ax = plt.subplots(
-            # figsize=(5, 4 / 14 * v.shape[0]),
-            figsize=(6, 6),
+            figsize=(n, n),
         )
 
     v['n_hits'] = v['n_hits'].apply(float)
@@ -140,7 +152,7 @@ def plot_nes(
         size='n_hits',
         hue='n_hits',
         ax=ax,
-        palette="Set2",
+        palette="Spectral",
     )
 
     if title is not None:
@@ -161,17 +173,6 @@ def plot_nes(
     ])
     ax.axhline(sig_cutoff, color='k', linestyle=':')
 
-    def _fix_name(name):
-        if name.startswith('HALLMARK_'):
-            name = name[len("HALLMARK_"):]
-
-        name = name.replace('_', ' ')
-
-        if not any([i.islower() for i in name]):
-            name = name.title()
-
-        return name
-
     texts = [
         ax.text(
             x=row['NES(S)'],
@@ -183,7 +184,7 @@ def plot_nes(
             ),
             fontsize=12,
             bbox=dict(
-                alpha=1,
+                alpha=.75,
                 linewidth=0.1,
                 pad=.05,
                 zorder=1,
@@ -211,8 +212,12 @@ def plot_nes(
         ),
         only_move={
             "points": "y",
-            "text": "xy",
+            "text": "y",
         }
+    )
+    ax.legend(
+        loc='right',
+        bbox_to_anchor=(1.25, .5),
     )
 
     return ax.get_figure(), ax
@@ -311,12 +316,12 @@ def plot_enrichment(
                 if hit:
                     ax.axvline(ind, linestyle=":", alpha=.25, color="r")
 
-        name = row["name"]
+        name = _fix_name(row["name"])
         name = name if len(name) < 35 else name[:35] + "..."
 
-        ax.set_title(
-            name
-        )
+        ax.set_title(name)
+        print(name)
+
         txt = "hits: {} {}={:.2f}".format(
             row["n_hits"],
             nes.split("(")[0],
@@ -366,7 +371,8 @@ def plot_enrichment(
 
 
 def plot_gsea(
-    vals, gene_changes,
+    vals,
+    gene_changes,
     min_hits=0,
     min_abs_score=0,
     max_pval=1,

@@ -17,7 +17,13 @@ import numpy as np
 LOGGER = logging.getLogger("pyproteome.constand")
 
 
-def constand(ds, name='', inplace=False, n_iters=50, tol=1e-5):
+def constand(
+    ds, 
+    name='', 
+    inplace=False, 
+    n_iters=25, 
+    tol=1e-5,
+):
     """
     Normalize channels to given levels for intra-run comparisons.
 
@@ -53,7 +59,7 @@ def constand(ds, name='', inplace=False, n_iters=50, tol=1e-5):
     err = np.inf
     m, n = k.shape
 
-    for ind in range(1, n_iters * 2 + 1):
+    for ind in range(1, n_iters + 1):
         if ind % 2 == 1:
             # In the odd step the rows are fitted to match the row marginals
             # (i.e. constraints):
@@ -61,13 +67,15 @@ def constand(ds, name='', inplace=False, n_iters=50, tol=1e-5):
             # K^(2t + 1) = R^(t + 1) * K ^ (2t)
             #
             # The row multipliers R^(t + 1) are computed such that the mean
-            # of the reporter ion intensities equals 1/n:
+            # of the reporter ion intensities equals 1:
             r = 1 / (np.nanmean(k, axis=1))
 
             # k^(2t + 1)
+            # print(r)
             k = np.einsum('..., ...', r, k.T).T
             err = (
-                abs(np.nanmean(k, axis=0) - 1)
+                # abs(np.nanmean(k, axis=0) - 1)
+                abs(np.nanmedian(k, axis=0) - 1)
             ).sum() / 2
         else:
             # In the even step the columns are fitted to match the column
@@ -76,17 +84,21 @@ def constand(ds, name='', inplace=False, n_iters=50, tol=1e-5):
             # K^(2t + 2) = K^(2t + 1) * S^(t + 1)
             #
             # The column multipliers S^(t + 1) are computed such that the
-            # mean of the reporter ion intensities equals 1/n:
-            s = 1 / (np.nanmean(k, axis=0))
+            # mean of the reporter ion intensities equals 1:
+            s = 1 / (np.nanmedian(k, axis=0))
+            # s = 1 / (np.nanmean(k, axis=0))
+            # from pyproteome.levels import kde_max
+            # s = 1 / np.apply_along_axis(kde_max, 0, k)
 
             # k^(2t + 2)
+            # print(s)
             k = np.einsum('..., ...', k, s)
             err = (
-                abs(
-                    np.nanmean(k, axis=1) -
-                    1
-                )
+                abs(np.nanmean(k, axis=1) - 1)
+                # abs(np.nanmedian(k, axis=1) - 1)
             ).sum() / 2
+
+        # print(ind, err)
 
         if err < tol:
             break
@@ -108,7 +120,7 @@ def constand(ds, name='', inplace=False, n_iters=50, tol=1e-5):
         if key != norm_key:
             del new.psms[key]
 
-    new.intra_normalized = True
+    new.inter_normalized = True
     new.channels = new_channels
     new.groups = new.groups.copy()
 

@@ -38,10 +38,14 @@ def plot(
     -------
     figs : list of :class:`matplotlib.figure.Figure`
     """
+
+    cmp_groups = data.cmp_groups or [list(data.groups.keys())]
+
     channel_names = [
         channel_name
-        for group in data.groups.values()
-        for channel_name in group
+        for groups in cmp_groups
+        for group in groups
+        for channel_name in data.groups[group]
         if channel_name in data.channels
     ]
     channel_names = list(OrderedDict.fromkeys(channel_names))
@@ -57,14 +61,9 @@ def plot(
 
         values = row[channels]
         mask = ~pd.isnull(row[channels])
-
         names = pd.Series(channel_names, index=values.index)[mask]
         values = values[mask]
-        cmp_groups = data.cmp_groups or [[
-            grp
-            for grp, channels in data.groups.items()
-            if any([i in data.channels for i in channels])
-        ]]
+
         values = values / (
             values[[
                 data.channels[i]
@@ -89,9 +88,10 @@ def plot(
                     name,
                     val,
                     [
-                        group_name
-                        for group_name, group in data.groups.items()
-                        if name in group
+                        group
+                        for groups in cmp_groups
+                        for group in groups
+                        if name in data.groups[group]
                     ][0],
                 )
                 for name, val in zip(names, values)
@@ -196,7 +196,7 @@ def plot_group(
             ], index=groups, dtype=object)
 
             group_vals = pd.Series([
-                group[~pd.isnull(group)]
+                group[(~pd.isnull(group)) & (group > 0)]
                 for group in group_vals
             ], index=group_vals.index, dtype=object)
 
@@ -572,8 +572,6 @@ def plot_together(
             linestyle="--",
             alpha=.25,
         )
-
-        mod_str = row["Modifications"].__str__(prot_index=0)
 
         if title:
             plot_ax.set_title(title)

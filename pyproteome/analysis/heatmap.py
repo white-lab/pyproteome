@@ -7,11 +7,15 @@ import seaborn as sns
 import pyproteome as pyp
 
 
+def _zscore(x):
+    return (x - np.nanmean(x)) / np.nanstd(x)
+
+
 def hierarchical_heatmap(
     data,
     cmp_groups=None,
     baseline_channels=None,
-    minmax=None,
+    minmax=0,
     show_y=False,
     title=None,
     **kwargs
@@ -95,16 +99,13 @@ def hierarchical_heatmap(
     # raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
 
-    def zscore(x):
-        return (x - np.nanmean(x)) / np.nanstd(x)
-
-    # raw = raw.apply(zscore, axis=1)
+    # raw = raw.apply(_zscore, axis=1)
     raw = raw.apply(np.log2, axis=1)
     raw = raw.replace([np.inf, -np.inf], np.nan)
     raw = raw.dropna(how="all")
     raw = raw.T.dropna(how="all").T
 
-    if minmax is None:
+    if minmax == 0:
         minmax = max([
             abs(raw.min().min()),
             abs(raw.max().max()),
