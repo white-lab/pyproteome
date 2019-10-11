@@ -320,7 +320,6 @@ def plot_enrichment(
         name = name if len(name) < 35 else name[:35] + "..."
 
         ax.set_title(name)
-        print(name)
 
         txt = "hits: {} {}={:.2f}".format(
             row["n_hits"],
