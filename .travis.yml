@@ -22,11 +22,7 @@ before_install:
   -O miniconda.sh ; fi
 - bash miniconda.sh -b -p /home/travis/mc
 - export PATH=/home/travis/mc/bin:$PATH
-- export CONDA_PACKAGES="numpy scipy matplotlib pandas scikit-learn seaborn
-  biopython pyzmq"
-# Start X server for matplotlib
-- "export DISPLAY=:99.0"
-- "sh -e /etc/init.d/xvfb start"
+- export CONDA_PACKAGES="numpy scipy matplotlib pandas scikit-learn seaborn pyzmq"
 
 install:
 - conda config --set always_yes yes --set changeps1 no

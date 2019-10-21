@@ -477,12 +477,12 @@ def gsea(
     )
 
     if show_plots:
-        plot.plot_gsea(
+        figures = plot.plot_gsea(
             vals, gene_changes,
             **kwargs
         )
 
-    return vals, gene_changes
+    return vals, gene_changes, figures
 
 
 def psea(*args, **kwargs):
