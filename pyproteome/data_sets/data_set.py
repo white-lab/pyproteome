@@ -320,7 +320,16 @@ class DataSet:
         -------
         list of str
         """
-        return list(self.channels.keys())
+        channel_names = [
+            sample_name
+            for lst in self.cmp_groups or [list(self.groups.keys())]
+            for group in lst
+            for sample_name in self.groups[group]
+            if sample_name in self.channels
+        ]
+        # Remove duplicates
+        channel_names = list(OrderedDict.fromkeys(channel_names))
+        return channel_names
 
     def __str__(self):
         return (
@@ -1489,15 +1498,7 @@ class DataSet:
         df : :class:`pandas.DataFrame`
         """
         if groups is None:
-            channel_names = [
-                sample_name
-                for lst in self.cmp_groups or [list(self.groups.keys())]
-                for group in lst
-                for sample_name in self.groups[group]
-                if sample_name in self.channels
-            ]
-            # Remove duplicates
-            channel_names = list(OrderedDict.fromkeys(channel_names))
+            channel_names = self.samples
 
         d = self.psms[
             [
