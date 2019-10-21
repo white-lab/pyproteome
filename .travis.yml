@@ -13,7 +13,7 @@ python:
 - '3.5'
 - '3.6'
 - '3.7'
-- '3.8'
+# - '3.8'
 
 before_install:
 # Install miniconda packages to speed up / resolve install issuesa
@@ -55,4 +55,4 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: white-lab/pyproteome
-    python: '3.8'
+    python: '3.6'
