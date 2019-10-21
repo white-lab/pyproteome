@@ -1,12 +1,16 @@
 # Change Log
 
-### 0.10.0 (2019-07-16)
+### 0.10.0 (2019-10-21)
 
 Features
 
   - Added module for CONSTANd normalization.
-  - Significant speed improvements with large data sets.
+  - Significant speed and memory improvements with large data sets.
   - Fixed several bugs when using groups with duplicated sample IDs.
+  - Fixed plotting bugs when using data sets with duplicate samples / groups.
+  - Added Hensen et al. backend to brainrnaseq.
+  - Updated PTMSigDB to 1.9.1.
+
 
 ### 0.9.1 (2019-01-10)
 

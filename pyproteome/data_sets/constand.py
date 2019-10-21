@@ -8,6 +8,8 @@ structured format.
 # Built-ins
 from __future__ import absolute_import, division
 
+from pyproteome import levels
+
 import logging
 
 # Core data analysis libraries
@@ -15,19 +17,29 @@ import numpy as np
 
 
 LOGGER = logging.getLogger("pyproteome.constand")
+CONSTAND_METHODS = {
+    'mean': np.nanmean,
+    'median': np.nanmedian,
+
+    # Fit a gaussian function to each row/column and select its max point
+    'kde': lambda k: np.apply_along_axis(levels.kde_max, 0, k),
+}
 
 
 def constand(
     ds, 
     name='', 
-    inplace=False, 
+    inplace=False,
     n_iters=25, 
     tol=1e-5,
+    row_method='mean',
+    col_method='median',
 ):
     """
-    Normalize channels to given levels for intra-run comparisons.
-
-    Divides all channel values by a given level.
+    Normalize channels for intra-run comparisons. Iteratively fits the matrix
+    of quantification values such that each row and column are centered around
+    a calculated value. Uses row means and column median values for centering
+    by default. See `constand.CONSTAND_METHODS` for other options.
 
     Parameters
     ----------
@@ -41,6 +53,8 @@ def constand(
         Modify this data set in place.
     n_iters : int, optional
     tol : float, optional
+    row_method : str, optional
+    col_method : str, optional
 
     Returns
     -------
@@ -57,7 +71,9 @@ def constand(
 
     k = new[channels].values
     err = np.inf
-    m, n = k.shape
+    
+    row_fn = lambda x: CONSTAND_METHODS[row_method](x, axis=1)
+    col_fn = lambda x: CONSTAND_METHODS[col_method](x, axis=0)
 
     for ind in range(1, n_iters + 1):
         if ind % 2 == 1:
@@ -68,10 +84,9 @@ def constand(
             #
             # The row multipliers R^(t + 1) are computed such that the mean
             # of the reporter ion intensities equals 1:
-            r = 1 / (np.nanmean(k, axis=1))
+            r = 1 / row_fn(k)
 
             # k^(2t + 1)
-            # print(r)
             k = np.einsum('..., ...', r, k.T).T
             err = (
                 # abs(np.nanmean(k, axis=0) - 1)
@@ -85,20 +100,14 @@ def constand(
             #
             # The column multipliers S^(t + 1) are computed such that the
             # mean of the reporter ion intensities equals 1:
-            s = 1 / (np.nanmedian(k, axis=0))
-            # s = 1 / (np.nanmean(k, axis=0))
-            # from pyproteome.levels import kde_max
-            # s = 1 / np.apply_along_axis(kde_max, 0, k)
+            s = 1 / col_fn(k)
 
             # k^(2t + 2)
-            # print(s)
             k = np.einsum('..., ...', k, s)
             err = (
                 abs(np.nanmean(k, axis=1) - 1)
                 # abs(np.nanmedian(k, axis=1) - 1)
             ).sum() / 2
-
-        # print(ind, err)
 
         if err < tol:
             break

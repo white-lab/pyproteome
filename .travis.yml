@@ -12,7 +12,8 @@ python:
 # - '3.4'
 - '3.5'
 - '3.6'
-# - '3.7'
+- '3.7'
+- '3.8'
 
 before_install:
 # Install miniconda packages to speed up / resolve install issuesa
@@ -42,8 +43,8 @@ install:
 - conda list
 - python setup.py install
 
-script:
-- travis_wait 30 coverage run --source=pyproteome,brainrnaseq setup.py test
+# script:
+# - travis_wait 30 coverage run --source=pyproteome,brainrnaseq setup.py test
 # - coverage run --source=pyproteome,brainrnaseq setup.py test
 
 after_success:
@@ -58,4 +59,4 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     repo: white-lab/pyproteome
-    python: '3.6'
+    python: '3.8'
