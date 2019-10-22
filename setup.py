@@ -24,7 +24,7 @@ REQUIREMENTS = [
     'genemap @ http://github.com/naderm/genemap/archive/master.zip',
     'goatools>=0.9',
     "ipython>=5.4.1",
-    "matplotlib>=3.1",
+    "matplotlib>=3.0",
     "numpy>=1.17",
     "numpydoc>=0.9",
     "pandas>=0.23",

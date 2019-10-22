@@ -39,7 +39,8 @@ install:
 - conda list
 - python setup.py install
 
-# script:
+script:
+- echo "Tests temporarily disabled"
 # - travis_wait 30 coverage run --source=pyproteome,brainrnaseq setup.py test
 # - coverage run --source=pyproteome,brainrnaseq setup.py test
 
