@@ -457,9 +457,10 @@ def calculate_es_s(gene_changes, gene_set, p=None, n_h=None):
     ]
     cumsum = np.cumsum(scores)
 
-    ess = cumsum.max() - cumsum.min()
-    ess *= np.sign(max(cumsum, key=abs))
+    # ess = cumsum.max() - cumsum.min()
+    # ess *= np.sign(max(cumsum, key=abs))
     # ess = max(cumsum, key=abs)
+    ess = np.trapz(cumsum)
 
     return {
         "hits": hits,

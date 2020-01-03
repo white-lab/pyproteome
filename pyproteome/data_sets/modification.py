@@ -149,6 +149,9 @@ class Modifications:
 
         return tuple(self_mods) == tuple(o_mods)
 
+    def __lt__(self, other):
+        return self.skip_labels() < other.skip_labels()
+
     def __repr__(self, absolute=True, skip_labels=True):
         return self.__str__(absolute=absolute, skip_labels=skip_labels)
 
@@ -248,6 +251,9 @@ class Modification:
 
     def __hash__(self):
         return hash(self.to_tuple())
+
+    def __lt__(self, other):
+        return self.to_tuple() < other.to_tuple()
 
     def __eq__(self, other):
         if not isinstance(other, Modification):

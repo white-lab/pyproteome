@@ -131,10 +131,15 @@ def hierarchical_heatmap(
     if row_colors:
         row_colors = raw_na.index.map(row_colors)
 
+    col_colors = (
+        [group_colors[i] for i in raw.columns]
+        if len(flat_cmp_groups) > 0 else None
+    )
+
     map = sns.clustermap(
         raw_na,
         row_colors=row_colors,
-        col_colors=[group_colors[i] for i in raw.columns],
+        col_colors=col_colors,
         vmin=-minmax,
         vmax=minmax,
         robust=True,

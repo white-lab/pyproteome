@@ -12,26 +12,26 @@ MSIGDB_URL = (
     "/master/msigdb/"
 )
 MSIGDB_FILES = (
-    "h.all.v6.1.entrez.gmt",
-    # "c1.all.v6.1.entrez.gmt",
-    # "c2.all.v6.1.entrez.gmt",
-    # "c2.cgp.v6.1.entrez.gmt",
-    # "c2.cp.biocarta.v6.1.entrez.gmt",
-    # "c2.cp.kegg.v6.1.entrez.gmt",
-    # "c2.cp.reactome.v6.1.entrez.gmt",
-    # "c2.cp.v6.1.entrez.gmt",
-    # "c3.all.v6.1.entrez.gmt",
-    # "c3.mir.v6.1.entrez.gmt",
-    # "c3.tft.v6.1.entrez.gmt",
-    # "c4.all.v6.1.entrez.gmt",
-    # "c4.cgn.v6.1.entrez.gmt",
-    # "c4.cm.v6.1.entrez.gmt",
-    # "c5.all.v6.1.entrez.gmt",
-    # "c5.bp.v6.1.entrez.gmt",
-    # "c5.cc.v6.1.entrez.gmt",
-    # "c5.mf.v6.1.entrez.gmt",
-    # "c6.all.v6.1.entrez.gmt",
-    # "c7.all.v6.1.entrez.gmt",
+    "h.all.v7.0.entrez.gmt",
+    # "c1.all.v7.0.entrez.gmt",
+    # "c2.all.v7.0.entrez.gmt",
+    # "c2.cgp.v7.0.entrez.gmt",
+    # "c2.cp.biocarta.v7.0.entrez.gmt",
+    # "c2.cp.kegg.v7.0.entrez.gmt",
+    # "c2.cp.reactome.v7.0.entrez.gmt",
+    # "c2.cp.v7.0.entrez.gmt",
+    # "c3.all.v7.0.entrez.gmt",
+    # "c3.mir.v7.0.entrez.gmt",
+    # "c3.tft.v7.0.entrez.gmt",
+    # "c4.all.v7.0.entrez.gmt",
+    # "c4.cgn.v7.0.entrez.gmt",
+    # "c4.cm.v7.0.entrez.gmt",
+    # "c5.all.v7.0.entrez.gmt",
+    # "c5.bp.v7.0.entrez.gmt",
+    # "c5.cc.v7.0.entrez.gmt",
+    # "c5.mf.v7.0.entrez.gmt",
+    # "c6.all.v7.0.entrez.gmt",
+    # "c7.all.v7.0.entrez.gmt",
 )
 
 LOGGER = logging.getLogger("pyproteome.msigdb")
@@ -45,7 +45,7 @@ except ImportError:
 @pyp.utils.memoize
 def get_msigdb_pathways(species, remap=None):
     """
-    Download gene sets from MSigDB. Currently downloads v6.1 of the gene
+    Download gene sets from MSigDB. Currently downloads v7.0 of the gene
     signature repositories.
 
     Parameters

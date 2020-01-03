@@ -10,7 +10,7 @@ import sklearn.cluster
 import pyproteome as pyp
 
 
-def get_data(ds, dropna=True, groups=None):
+def get_data(ds, dropna=True, corrcoef=True, groups=None):
     ds = ds.copy()
 
     if groups is None:
@@ -29,7 +29,9 @@ def get_data(ds, dropna=True, groups=None):
     chans = [ds.channels[chan] for chan in names]
     data = ds.data[chans]
 
-    c = np.corrcoef(data.values)
+    if corrcoef:
+        c = np.corrcoef(data.values)
+
     z = zscore(data, axis=1)
 
     classes = np.array([
@@ -46,7 +48,7 @@ def get_data(ds, dropna=True, groups=None):
         "ds": ds,
         "data": data,
         "z": z,
-        "c": c,
+        "c": c if corrcoef else None,
         "names": names,
         "labels": groups,
         "classes": classes,
