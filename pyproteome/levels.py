@@ -24,8 +24,11 @@ REL_CUTOFF = 5
 
 
 def kde_max(points):
-    gaus = stats.kde.gaussian_kde(points[~np.isnan(points)])
-    x = np.arange(0, 10, .01)
+    points = points[~np.isnan(points)]
+    gaus = stats.kde.gaussian_kde(points)
+    # .25 - .75 1000 slices
+    # x = np.arange(0, 10, .01)
+    x = np.linspace(np.quantile(points, .15), np.quantile(points, .85), 1000)
     y = np.array(gaus.pdf(x))
     return x[y == y.max()][0]
 
@@ -117,10 +120,12 @@ def get_channel_levels(
                 FutureWarning,
             )
             sns.distplot(
-                points,
+                points.apply(np.log2),
                 bins=25,
                 ax=ax,
             )
+
+        ax.set_xlim(left=-2, right=2)
 
         ax.set_title(
             "{} ({})".format(col_name, col)
@@ -132,10 +137,15 @@ def get_channel_levels(
             max_x,
             points.std(ddof=1),
         )
-        ax.axvline(max_x, color='k', linestyle='--')
-        ax.axvline(points.mean(), color='r', linestyle='--')
-        ax.axvline(points.median(), color='g', linestyle='--')
         ax.axvline(1, color='c', linestyle='--')
+        lines = [
+            ax.axvline(np.log2(points.median()), color='g', zorder=2, linestyle=':'),
+            ax.axvline(np.log2(points.mean()), color='r', zorder=3, linestyle='-.'),
+            ax.axvline(np.log2(max_x), color='c', zorder=4, linestyle='--'),
+            ax.axvline(np.log2(1), color='k', linestyle='-', zorder=0, lw=2),
+        ]
+        if col_name is norm_channels[0]:
+            ax.legend(lines[:-1], ['kde max', 'mean', 'median'])
 
         ax.text(
             s=txt,
