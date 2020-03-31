@@ -7,6 +7,7 @@ Functionality includes n-mer generation.
 from __future__ import division
 
 from collections import defaultdict, Iterable
+from copy import copy, deepcopy
 from functools import partial
 import logging
 import multiprocessing
@@ -57,6 +58,25 @@ class Motif:
         "+": "RK",
         ".": "ACDEFGHIKLMNPQRSTVWYystO-+x",
     }
+    
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        return result
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == '_re':
+                continue
+            setattr(result, k, deepcopy(v, memo))
+
+        setattr(result, '_re', result._compile_re(result._motif))
+
+        return result
 
     @property
     def motif(self):
