@@ -137,7 +137,6 @@ def get_channel_levels(
             max_x,
             points.std(ddof=1),
         )
-        ax.axvline(1, color='c', linestyle='--')
         lines = [
             ax.axvline(np.log2(points.median()), color='g', zorder=2, linestyle=':'),
             ax.axvline(np.log2(points.mean()), color='r', zorder=3, linestyle='-.'),
