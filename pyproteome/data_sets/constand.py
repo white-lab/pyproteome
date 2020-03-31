@@ -89,6 +89,9 @@ def constand(
     row_fn = lambda x: CONSTAND_METHODS[row_method](x, axis=1)
     col_fn = lambda x: CONSTAND_METHODS[col_method](x, axis=0)
 
+    row_err_fn = lambda x: CONSTAND_ERR_METHODS[col_method](x, axis=0)
+    col_err_fn = lambda x: CONSTAND_ERR_METHODS[row_method](x, axis=1)
+
     for ind in range(1, n_iters + 1):
         if ind % 2 == 1:
             # In the odd step the rows are fitted to match the row marginals
