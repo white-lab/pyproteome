@@ -85,6 +85,7 @@ def plot_binomial_enrichment(
     """
     if correlates is None:
         corr_cutoff = None
+        correlates = {'dummy': None}
 
     df = []
 
@@ -101,7 +102,6 @@ def plot_binomial_enrichment(
             if corr_cutoff:
                 fore = data_sets.update_correlation(fore, target, metric='spearman')
 
-            fore = cp.copy()
             fore.psms = fore.psms.dropna(subset=('Fold Change', 'p-value'))
             back = set(fore.genes)
 
@@ -148,6 +148,8 @@ def plot_binomial_enrichment(
     cp['Group'] = cp.apply(lambda x: x['Group'] + '-' + x['Direction'] + '-' + x['Subset'], axis=1)
     del cp['Direction']
     del cp['Subset']
+
+    display(cp[cp['Score'] == np.inf])
     
     cp = cp.pivot(
         index='Group', 
