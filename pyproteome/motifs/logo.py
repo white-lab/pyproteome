@@ -239,6 +239,7 @@ def _draw_logo(
     low_res_cutoff=0,
     show_title=True,
     show_ylabel=True,
+    minmaxy=None,
 ):
     length = len(list(scores.values())[0])
     left_margin = (
@@ -249,9 +250,9 @@ def _draw_logo(
 
     ax.add_patch(
         patches.Rectangle(
-            (left_margin, 0.001),
-            .9984 - left_margin,
-            .997,
+            (left_margin, 0.01),
+            .997 - left_margin,
+            .98,
             fill=False,
             linewidth=1,
             edgecolor='k',
@@ -317,7 +318,8 @@ def _draw_logo(
     yax.xaxis.set_ticks([])
     yax.yaxis.set_ticks([])
     xax.yaxis.set_ticks([])
-    xax.spines['bottom'].set_position(('data', .18))
+    xax.spines['bottom'].set_position(('data', 0))
+    xax.set_ylim(bottom=-2, top=2.4)
 
     for ax in (yax, xax) + axes:
         ax.spines['top'].set_color('none')
@@ -334,14 +336,16 @@ def _draw_logo(
     y_offset = (
         76 * np.power(xax.get_window_extent().height, -1.453)
     ) - .4
+    y_offset = 0
 
     xax.set_xticklabels(
         [
             "{:+d}".format(i) if i != 0 else "0"
             for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
         ],
-        verticalalignment='center',
+        va='center',
         y=y_offset,
+        fontsize=8,
     )
 
     for i in range(0, length):
@@ -372,7 +376,8 @@ def _draw_logo(
         x += 1
         maxy = max(maxy, y)
 
-    minmaxy = max(abs(i) for i in [miny, maxy])
+    if minmaxy is None:
+        minmaxy = max(abs(i) for i in [miny, maxy])
 
     for ind, ax in enumerate(axes):
         ax.set_xlim(
@@ -431,6 +436,7 @@ def logo(
     show_title=True,
     show_ylabel=True,
     show_n=True,
+    minmaxy=None,
 ):
     """
     Generate a sequence logo locally using pLogo's enrichment score.
@@ -489,6 +495,7 @@ def logo(
         show_title=show_title,
         show_ylabel=show_ylabel,
         ax=ax,
+        minmaxy=minmaxy,
     )
 
     if show_n:
@@ -498,8 +505,8 @@ def logo(
             "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
             color="darkred",
             fontsize=18,
-            horizontalalignment="right",
-            verticalalignment="bottom",
+            ha="right",
+            va="bottom",
         )
 
     return ax.get_figure(), axes
