@@ -157,13 +157,15 @@ class Sequence:
             )
         )
 
-    def __str__(self, skip_labels=True, skip_terminus=True, show_mods=False):
+    def __str__(self, skip_labels=True, skip_terminus=True, mods=None, show_mods=False):
         string = list('N-' + self.pep_seq.upper() + '-C')
         self_mods = self.modifications
 
         if skip_terminus:
             string = string[2:-2]
 
+        if mods:
+            self_mods = self_mods.get_mods(mods)
         if skip_labels:
             self_mods = self_mods.skip_labels()
 
