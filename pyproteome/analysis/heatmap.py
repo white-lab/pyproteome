@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 import numpy as np
 import seaborn as sns
+import re
 
 import pyproteome as pyp
 
@@ -16,6 +17,7 @@ def hierarchical_heatmap(
     cmp_groups=None,
     baseline_channels=None,
     minmax=0,
+    zscore=False,
     show_y=False,
     title=None,
     **kwargs
@@ -73,8 +75,13 @@ def hierarchical_heatmap(
             " : "
             if len(x['Modifications'].get_mods(['S', 'T', 'Y', 'M'])) > 0 else
             "",
-            x["Modifications"].get_mods(['S', 'T', 'Y', 'M']).__str__(
-                prot_index=0,
+            re.sub(
+                r'(\d+)',
+                # r'$_{\1}$',
+                r'\1',
+                x["Modifications"].get_mods(['S', 'T', 'Y', 'M']).__str__(
+                    prot_index=0,
+                ),
             ),
             # [
             #     r"$\textbf{{{0}}}${1}$\textbf{{{2}}}${3}$\textbf{{{4}}}$".format(
@@ -99,8 +106,9 @@ def hierarchical_heatmap(
     # raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
 
-    # raw = raw.apply(_zscore, axis=1)
     raw = raw.apply(np.log2, axis=1)
+    if zscore:
+        raw = raw.apply(_zscore, axis=1)
     raw = raw.replace([np.inf, -np.inf], np.nan)
     raw = raw.dropna(how="all")
     raw = raw.T.dropna(how="all").T
@@ -127,14 +135,19 @@ def hierarchical_heatmap(
         return
 
     row_colors = kwargs.pop('row_colors', None)
+    col_colors = kwargs.pop('col_colors', None)
 
     if row_colors:
-        row_colors = raw_na.index.map(row_colors)
-
-    col_colors = (
-        [group_colors[i] for i in raw.columns]
-        if len(flat_cmp_groups) > 0 else None
-    )
+        row_colors = raw_na.index.map(row_colors).tolist()
+        row_colors = np.array(row_colors).T.tolist()
+        print(row_colors)
+    if col_colors is None:
+        col_colors = (
+            [group_colors[i] for i in raw.columns]
+            if len(flat_cmp_groups) > 0 else None
+        )
+    elif callable(col_colors):
+        col_colors = col_colors(raw.columns)
 
     map = sns.clustermap(
         raw_na,
