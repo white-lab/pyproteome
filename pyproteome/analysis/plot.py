@@ -160,6 +160,7 @@ def plot_group(
     title=None,
     ax=None,
     show_p=True,
+    show_ns=False,
     log_2=True,
 ):
     """
@@ -331,7 +332,7 @@ def plot_group(
                 elif (p < 0.05):
                     return "*"
                 else:
-                    return "-"
+                    return "ns"
 
             v = [
                 vals
@@ -360,7 +361,7 @@ def plot_group(
                         values_b.values,
                     ).pvalue
 
-                    if pval < 0.05:
+                    if pval < 0.05 or show_ns:
                         plot_ax.annotate(
                             "",
                             xy=(
@@ -380,7 +381,7 @@ def plot_group(
                         )
                         plot_ax.text(
                             x=np.mean([index_a, index_b]),
-                            y=y_max + offset + y_max / 40,
+                            y=y_max + offset + (y_max / 40) * (2 if stars(pval) == 'ns' else 1),
                             s=stars(pval),
                             horizontalalignment='center',
                             verticalalignment='center',
