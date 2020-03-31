@@ -6,12 +6,13 @@ Functions include volcano plots, sorted tables, and plotting sequence
 levels.
 """
 
-from . import correlation, heatmap, plot, tables, qc, volcano
+from . import correlation, heatmap, plot, protein, tables, qc, volcano
 
 __all__ = [
     "correlation",
     "heatmap",
     "plot",
+    "protein",
     "tables",
     "qc",
     "volcano",

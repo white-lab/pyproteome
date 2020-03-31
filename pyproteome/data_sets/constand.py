@@ -120,6 +120,8 @@ def constand(
             k = np.einsum('..., ...', k, s)
             err = col_err_fn(k)
 
+        # print(ind, err)
+
         if err < tol:
             break
 
