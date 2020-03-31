@@ -96,8 +96,10 @@ def plot_binomial_enrichment(
 
     for axis_name, target in correlates.items():
         for sub_name, sub_cp in subsets.items():
+            fore = sub_cp.copy()
+
             if corr_cutoff:
-                cp = data_sets.update_correlation(sub_cp, target, metric='spearman')
+                fore = data_sets.update_correlation(fore, target, metric='spearman')
 
             fore = cp.copy()
             fore.psms = fore.psms.dropna(subset=('Fold Change', 'p-value'))
@@ -110,7 +112,7 @@ def plot_binomial_enrichment(
                 fore_up = set(fore.filter(fn=lambda x: x['Fold Change'] > corr_cutoff).genes)
                 fore_down = set(fore.filter(fn=lambda x: x['Fold Change'] < -corr_cutoff).genes)
             else:
-                fore_up = set(fore.filter(aym_fold=fold_cutoff).genes)
+                fore_up = set(fore.filter(asym_fold=fold_cutoff).genes)
                 fore_down = set(fore.filter(asym_fold=1/fold_cutoff).genes)
 
             for set_name, up_score, down_score in binomial_scores(
@@ -131,11 +133,11 @@ def plot_binomial_enrichment(
                     down_score,
                 ))
             
-        
     df = pd.DataFrame(
         df,
         columns=['Group', 'Gene Set', 'Subset', 'Direction', 'Score'],
     )
+    df = df[df['Direction'].isin(['correlated', 'upregulated'])]
 
     # f, ax = plt.subplots(
     #     dpi=200,
@@ -156,18 +158,38 @@ def plot_binomial_enrichment(
         [-np.inf], 0,
     ).replace(
         [np.inf], minmax,
-    )
+        # [np.inf], 0,
+    ).iloc[::-1]
 
-    gene_colors = [
-        ['magenta'] * (2 * len(subsets)) + ['cyan'] * (2 * len(subsets)),
-        (['blue'] * len(subsets) + ['yellow'] * len(subsets)) * len(correlates),
-        ['orange', 'green', 'red'] * (2 * len(correlates)),
+    gene_colors = []
+
+    if correlates and len(correlates) > 1:
+        gene_colors += [
+            ['magenta'] * (len(correlates) * len(subsets) // 2) + 
+            ['cyan'] * (len(correlates) * len(subsets) // 2),
+        ]
+    
+    gene_colors += [
+        # (
+        #     ['blue'] * len(subsets) + ['yellow'] * len(subsets)
+        # ) * len(correlates),
+        ['orange', 'green', 'red'] * (
+            # 2 * len(correlates)
+            len(correlates)
+        ),
     ]
+    print(list(correlates.keys()))
+    print(list(subsets.keys()))
+    print(gene_colors)
 
     figsize = (
-        len(cp.index) * 1.2,
-        len(cp.columns) / 16, 
+        len(cp.index) * 2,
+        len(cp.columns) / 10 / 2, 
     )
+    # figsize = (
+    #     len(cp.index) * 1.2,
+    #     len(cp.columns),
+    # )
 
     if gene_rows:
         figsize = tuple(reversed(figsize))
@@ -184,9 +206,9 @@ def plot_binomial_enrichment(
     
     if gene_rows:
         cp = cp.T
-        kwargs['col_colors'] = gene_colors
+        cluster_kwargs['col_colors'] = gene_colors
     else:
-        kwargs['row_colors'] = gene_colors
+        cluster_kwargs['row_colors'] = gene_colors
 
     g = sns.clustermap(
         cp,
@@ -199,25 +221,35 @@ def plot_binomial_enrichment(
         **cluster_kwargs
     )
 
-    g.cax.set_position([.95, .3, .03, .2])
+    g.cax.set_position([.92, .27, .03, .3])
 
-    # g.ax_row_dendrogram.set_visible(False)
-    # g.ax_col_dendrogram.set_visible(False)
-    g.ax_row_dendrogram.set_xlim([0, 0])
-    g.ax_col_dendrogram.set_ylim([0, 0])
+    g.ax_row_dendrogram.set_visible(False)
+    g.ax_col_dendrogram.set_visible(False)
 
     ax = g.ax_heatmap
-    ax.yaxis.tick_left()
-    ax.yaxis.set_label_position('left')
+
+    ax.tick_params(
+        top=False, 
+        bottom=False, 
+        left=False, 
+        right=False, 
+        labelleft=True, 
+        labelbottom=True,
+        labelright=False,
+        labeltop=False,
+    )
 
     ax.set_xlabel('')
     ax.set_ylabel('')
 
     (ax.set_xticklabels if gene_rows else ax.set_yticklabels)([])
-    (ax.set_yticklabels if gene_rows else ax.set_xticklabels)([
-        i.get_text().split('-', 1)[-1]#.split(' ')[-1]
-        for i in (ax.get_yticklabels() if gene_rows else ax.get_xticklabels())
-    ],
+    (ax.set_yticklabels if gene_rows else ax.set_xticklabels)(
+        [
+            i.get_text().split('-', 1)[-1]#.split(' ')[-1]
+            for i in (ax.get_yticklabels() if gene_rows else ax.get_xticklabels())
+        ],
+        rotation=0 if gene_rows else 45,
+        ha='right',
     )
     # ax.get_colorbar()
     for v in range(

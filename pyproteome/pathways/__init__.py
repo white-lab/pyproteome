@@ -21,6 +21,7 @@ from matplotlib import pyplot as plt
 import pyproteome as pyp
 import brainrnaseq as brs
 from . import (
+    binomial,
     enrichments,
     gskb,
     msigdb,
@@ -656,6 +657,7 @@ __all__ = [
     sspsea,
     filter_fn,
     get_pathways,
+    binomial,
     enrichments,
     gskb,
     msigdb,
