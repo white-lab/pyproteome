@@ -22,8 +22,16 @@ CONSTAND_METHODS = {
     'median': np.nanmedian,
 
     # Fit a gaussian function to each row/column and select its max point
-    'kde': lambda k: np.apply_along_axis(levels.kde_max, 0, k),
+    'kde': lambda k, **kw: np.apply_along_axis(levels.kde_max, kw['axis'], k),
 }
+
+CONSTAND_ERR_METHODS = {
+    'mean': lambda x, **kw: np.sqrt(abs(np.nanmean(x, **kw) - 1)).sum() / 2,
+    'median': lambda x, **kw: np.sqrt(abs(np.nanmedian(x, **kw) - 1)).sum() / 2,
+    'kde': lambda x, **kw: np.sqrt(abs(np.apply_along_axis(levels.kde_max, kw['axis'], x) - 1)).sum() / 2,
+}
+DEFAULT_CONSTAND_ROW = 'mean'
+DEFAULT_CONSTAND_COL = 'median'
 
 
 def constand(
@@ -32,8 +40,8 @@ def constand(
     inplace=False,
     n_iters=25, 
     tol=1e-5,
-    row_method='mean',
-    col_method='median',
+    row_method=None,
+    col_method=None,
 ):
     """
     Normalize channels for intra-run comparisons. Iteratively fits the matrix
@@ -62,6 +70,12 @@ def constand(
     """
     new = ds
 
+    if row_method is None:
+        row_method = DEFAULT_CONSTAND_ROW
+
+    if col_method is None:
+        col_method = DEFAULT_CONSTAND_COL
+
     if not inplace:
         new = new.copy()
 
@@ -88,10 +102,7 @@ def constand(
 
             # k^(2t + 1)
             k = np.einsum('..., ...', r, k.T).T
-            err = (
-                # abs(np.nanmean(k, axis=0) - 1)
-                abs(np.nanmedian(k, axis=0) - 1)
-            ).sum() / 2
+            err = row_err_fn(k)
         else:
             # In the even step the columns are fitted to match the column
             # marginals (i.e. constraints):
@@ -104,10 +115,7 @@ def constand(
 
             # k^(2t + 2)
             k = np.einsum('..., ...', k, s)
-            err = (
-                abs(np.nanmean(k, axis=1) - 1)
-                # abs(np.nanmedian(k, axis=1) - 1)
-            ).sum() / 2
+            err = col_err_fn(k)
 
         if err < tol:
             break
