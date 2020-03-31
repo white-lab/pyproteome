@@ -21,10 +21,10 @@ from pyproteome import (
 
 LOGGER = logging.getLogger("pyproteome.discoverer")
 RE_PSP = re.compile(r"(\w+)\((\d+)\): ([\d\.]+)")
-RE_GENE = re.compile(r"^>.* GN=(.+) PE=")
-RE_GENE_BACKUP = re.compile(r"^>sp\|[\dA-Za-z]+\|([\dA-Za-z_]+) ")
+RE_GENE = re.compile(r"^>.* GN=([A-Za-z0-9_\-]+)( \w+)?")
+RE_GENE_BACKUP = re.compile(r"^>(gi\|[\dA-Za-z]+\|)?sp\|[\dA-Za-z\-]+\|([\dA-Za-z_]+) ")
 RE_DESCRIPTION = re.compile(
-    r"^>sp\|[\dA-Za-z]+\|[\dA-Za-z_]+ (.*?) (OS=|GN=|PE=|SV=)"
+    r"^>(gi\|[\dA-Za-z]+\|)?sp\|[\dA-Za-z\-]+\|[\dA-Za-z_]+ (.*?) (OS=|GN=|PE=|SV=)"
 )
 CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
 
@@ -329,20 +329,26 @@ def _get_proteins(df, cursor, pd_version):
 
     for peptide_id, prot_string, seq in prots:
         for fasta_line in prot_string.split('\n'):
-            accessions[peptide_id].append(
-                pypuniprot.RE_DISCOVERER_ACCESSION.match(fasta_line).group(1)
-            )
+            try:
+                accessions[peptide_id].append(
+                    pypuniprot.RE_DISCOVERER_ACCESSION.match(fasta_line).group(2)
+                )
+            except:
+                print(fasta_line)
+                raise
 
             gene = RE_GENE.match(prot_string)
 
-            if not gene:
-                gene = RE_GENE_BACKUP.match(prot_string)
+            if gene:
+                gene = gene.group(1)
+            else:
+                gene = RE_GENE_BACKUP.match(prot_string).group(2)
 
             genes[peptide_id].append(
-                gene.group(1)
+                gene
             )
             descriptions[peptide_id].append(
-                RE_DESCRIPTION.match(prot_string).group(1)
+                RE_DESCRIPTION.match(prot_string).group(2)
             )
             sequences[peptide_id].append(seq)
 
