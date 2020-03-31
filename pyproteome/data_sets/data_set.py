@@ -969,6 +969,8 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
+        filters = copy.deepcopy(filters)
+
         confidence = {
             "High": ["High"],
             "Medium": ["Medium", "High"],
@@ -1515,6 +1517,41 @@ class DataSet:
             ),
             axis=1,
         )
+
+        return d
+
+    @property
+    def intensity_data(self, groups=None, norm_cmp=False):
+        """
+        Get the quantification data for all samples and peptides in a data set.
+
+        Parameters
+        ----------
+        norm_cmp : bool, optional
+
+        Returns
+        -------
+        df : :class:`pandas.DataFrame`
+        """
+        if groups is None:
+            channel_names = self.samples
+
+        d = self.psms[
+            [
+                self.channels[chan] + '_weight'
+                for chan in channel_names
+            ]
+        ]
+        d.index = self.psms.apply(
+            lambda row:
+            "{} {} - {}".format(
+                " / ".join(row["Proteins"].genes)[:16],
+                row["Modifications"].__str__(prot_index=0),
+                row['Sequence'],
+            ),
+            axis=1,
+        )
+        d.columns = [i.rsplit('_', 1)[0] for i in d.columns]
 
         return d
 
