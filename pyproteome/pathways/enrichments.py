@@ -44,6 +44,7 @@ Correlation metrics used for enrichment analysis. "spearman", "pearson", and
 "zscore" takes ranking values from a log2 z-scored "Fold Change" column.
 """
 DEFAULT_P = 0.75
+DEFAULT_ESS_METHOD = 'integral'
 DEFAULT_Q = 0.25
 DEFAULT_RANK_CPUS = 6
 """
@@ -53,6 +54,11 @@ DEFAULT_CORR_CPUS = 4
 """
 Default number of CPUs to use when scrambling columns of a data set.
 """
+ESS_METHODS = {
+    'max_abs': lambda x: max(x, key=abs),
+    'max_min': lambda x: (max(x) - min(x)) * np.sign(max(x, key=abs)),
+    'integral': lambda x: np.trapz(x),
+}
 
 
 class PrPDF(object):
@@ -127,10 +133,10 @@ def simulate_es_s_pi(
     psms,
     gene_sets,
     phenotype=None,
-    p=None,
     metric="spearman",
     p_iter=1000,
     n_cpus=None,
+    **kwargs
 ):
     """
     Simulate ES(S, pi) by scrambling the phenotype / correlation values for a
@@ -142,7 +148,6 @@ def simulate_es_s_pi(
     psms : :class:`pandas.DataFrame`
     gene_sets : :class:`pandas.DataFrame`
     phenotype : :class:`pandas.Series`, optional
-    p : float, optional
     metric : str, optional
     p_iter : int, optional
     n_cpus : int, optional
@@ -172,8 +177,8 @@ def simulate_es_s_pi(
                 _calc_essdist,
                 psms=psms.copy(),
                 gene_sets=gene_sets,
-                p=p,
                 metric=metric,
+                **kwargs
             ),
             [phenotype for _ in range(p_iter)],
         )
@@ -183,8 +188,8 @@ def simulate_es_s_pi(
                 phen=phenotype,
                 psms=psms,
                 gene_sets=gene_sets,
-                p=p,
                 metric=metric,
+                **kwargs
             )
             for _ in range(p_iter)
         )
@@ -345,7 +350,13 @@ def get_gene_changes(psms):
     return gene_changes
 
 
-def _calc_essdist(phen, psms=None, gene_sets=None, p=None, metric="spearman"):
+def _calc_essdist(
+    phen=None, 
+    psms=None, 
+    gene_sets=None, 
+    metric="spearman",
+    **kwargs
+):
     assert metric in CORRELATION_METRICS
 
     if phen is not None:
@@ -360,9 +371,9 @@ def _calc_essdist(phen, psms=None, gene_sets=None, p=None, metric="spearman"):
         gene_sets,
         phenotype=phen,
         metric=metric,
-        p=p,
         recorrelate=True,
         pval=False,
+        **kwargs
     )
 
     return vals["ES(S)"]
@@ -418,7 +429,7 @@ def correlate_phenotype(psms, phenotype=None, metric="spearman"):
     return psms
 
 
-def calculate_es_s(gene_changes, gene_set, p=None, n_h=None):
+def calculate_es_s(gene_changes, gene_set, p=None, n_h=None, ess_method=None):
     """
     Calculate the enrichment score for an individual gene set.
 
@@ -428,9 +439,16 @@ def calculate_es_s(gene_changes, gene_set, p=None, n_h=None):
     gene_set : set of str
     p : float, optional
     n_h : int, optional
+    ess_method : str, optional
+        One of {'integral', 'max_abs', 'max_min'}.
     """
     if p is None:
         p = DEFAULT_P
+
+    if ess_method is None:
+        ess_method = DEFAULT_ESS_METHOD
+
+    assert ess_method in ESS_METHODS
 
     n = len(gene_changes)
 
@@ -457,10 +475,7 @@ def calculate_es_s(gene_changes, gene_set, p=None, n_h=None):
     ]
     cumsum = np.cumsum(scores)
 
-    # ess = cumsum.max() - cumsum.min()
-    # ess *= np.sign(max(cumsum, key=abs))
-    # ess = max(cumsum, key=abs)
-    ess = np.trapz(cumsum)
+    ess = ESS_METHODS.get(ess_method)(cumsum)
 
     return {
         "hits": hits,
@@ -470,7 +485,7 @@ def calculate_es_s(gene_changes, gene_set, p=None, n_h=None):
     }
 
 
-def calculate_es_s_ud(gene_changes, up_set, down_set, p=None):
+def calculate_es_s_ud(gene_changes, up_set, down_set, **kwargs):
     """
     Calculate the enrichment score for an individual gene set.
 
@@ -478,7 +493,8 @@ def calculate_es_s_ud(gene_changes, up_set, down_set, p=None):
     ----------
     gene_changes : :class:`pandas.DataFrame`
     gene_set : set of str
-    p : float, optional
+    kwargs : dict, optional
+        See extra arguments passed to calculate_es_s.
     """
     up_set = set(
         gene
@@ -498,8 +514,8 @@ def calculate_es_s_ud(gene_changes, up_set, down_set, p=None):
             calculate_es_s(
                 gene_changes,
                 gene_set,
-                p=p,
                 n_h=len(up_set) + len(down_set),
+                **kwargs
             )
         )
 
@@ -538,13 +554,11 @@ def _get_set_cols(cols):
 def enrichment_scores(
     psms,
     gene_sets,
-    metric=None,
-    phenotype=None,
-    p=None,
     pval=True,
     recorrelate=False,
-    p_iter=1000,
-    n_cpus=None,
+    metric=None,
+    phenotype=None,
+    **kwargs
 ):
     """
     Calculate enrichment scores for each gene set.
@@ -557,13 +571,10 @@ def enrichment_scores(
     ----------
     psms : :class:`pandas.DataFrame`
     gene_sets : :class:`pandas.DataFrame`, optional
-    metric : str, optional
-    phenotype : :class:`pandas.Series`, optional
-    p : float, optional
     pval : bool, optional
     recorrelate : bool, optional
-    p_iter : int, optional
-    n_cpus : int, optional
+    kwargs : dict, optional
+        See extra arguments passed to `calculate_es_s` and `simulate_es_s_pi`.
 
     Returns
     -------
@@ -598,19 +609,25 @@ def enrichment_scores(
         columns=cols,
     )
 
+    ess_args = {
+        i: kwargs[i] 
+        for i in ['p', 'ess_method'] 
+        if i in kwargs
+    }
+
     for set_id, row in gene_sets.iterrows():
         if set(set_cols) == set(["set"]):
             es_vals = calculate_es_s(
                 gene_changes,
                 row["set"],
-                p=p,
+                **ess_args
             )
         else:
             es_vals = calculate_es_s_ud(
                 gene_changes,
                 row["up_set"],
                 row["down_set"],
-                p=p,
+                **ess_args
             )
 
         vals = vals.append(
@@ -630,14 +647,18 @@ def enrichment_scores(
             )
         )
 
+    ess_pi_args = {
+        i: kwargs[i] 
+        for i in ['p', 'p_iter', 'n_cpus', 'ess_method'] 
+        if i in kwargs
+    }
+
     if pval:
         vals = simulate_es_s_pi(
             vals, psms, gene_sets,
             phenotype=phenotype,
-            p=p,
             metric=metric,
-            p_iter=p_iter,
-            n_cpus=n_cpus,
+            **ess_pi_args
         )
 
         vals = estimate_pq(vals)
