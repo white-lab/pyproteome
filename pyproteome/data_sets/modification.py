@@ -155,7 +155,13 @@ class Modifications:
     def __repr__(self, absolute=True, skip_labels=True):
         return self.__str__(absolute=absolute, skip_labels=skip_labels)
 
-    def __str__(self, absolute=True, skip_labels=True, prot_index=None):
+    def __str__(
+        self, 
+        absolute=True, 
+        skip_labels=True, 
+        prot_index=None, 
+        show_mod_type=True,
+    ):
         if len(self.mods) == 0:
             return ""
 
@@ -170,7 +176,7 @@ class Modifications:
         def _mod_prot(i):
             return ", ".join(
                 "{}{}{}{}".format(
-                    mod.display_mod_type(),
+                    mod.display_mod_type() if show_mod_type else '',
                     mod.letter,
                     1 + (mod.abs_pos[i] if absolute else mod.rel_pos),
                     "" if mod.exact[i] else "*"
