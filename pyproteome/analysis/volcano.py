@@ -247,8 +247,8 @@ def plot_volcano_labels(
             texts=texts,
             ax=ax,
             lim=100,
-            force_text=0.2,
-            force_points=0.01,
+            force_text=(.05, .3),
+            force_points=.01,
             arrowprops=dict(
                 arrowstyle="->",
                 relpos=(0, 0),
@@ -258,7 +258,7 @@ def plot_volcano_labels(
             ),
             only_move={
                 "points": "y",
-                "text": "xy",
+                "text": 'xy',
             }
         )
 
@@ -336,6 +336,18 @@ def plot_volcano(
             how="any",
         )
 
+    if yminmax:
+        data.psms = data[
+            (data['p-value'] <= yminmax[1]) &
+            (data['p-value'] >= yminmax[0])
+        ]
+
+    if xminmax:
+        data.psms = data[
+            (data['Fold Change'] <= xminmax[1]) &
+            (data['Fold Change'] >= xminmax[0])
+        ]
+
     if bonferoni:
         p += np.log10(data.shape[0])
 
@@ -372,29 +384,6 @@ def plot_volcano(
             linewidth=0.5,
         )
 
-    ax.set_xticks(
-        list(
-            sorted(
-                tick
-                for tick in ax.get_xticks()
-                if tick < lower_fold - .25 or tick > upper_fold + .25
-            ) + [lower_fold, upper_fold]
-        )
-    )
-    ax.set_yticks(
-        list(
-            sorted(
-                [
-                    tick
-                    for tick in ax.get_yticks()
-                    if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
-                    ["1", "5"] and
-                    tick > p
-                ] + [p]
-            )
-        )
-    )
-
     if xminmax:
         ax.set_xlim(left=xminmax[0], right=xminmax[1])
     else:
@@ -407,6 +396,33 @@ def plot_volcano(
         ax.set_ylim(bottom=yminmax[0], top=yminmax[1])
     else:
         ax.set_ylim(bottom=-0.1)
+
+    ax.set_xticks(
+        list(
+            sorted(
+                tick
+                for tick in tuple(ax.get_xticks()) + (lower_fold, upper_fold)
+                if (
+                    tick < lower_fold - .25 or
+                    tick > upper_fold + .25
+                ) and (tick <= ax.get_xlim()[1] and tick >= ax.get_xlim()[0])
+            )
+        )
+    )
+    ax.set_yticks(
+        list(
+            sorted(
+                [
+                    tick
+                    for tick in tuple(ax.get_yticks()) + (p,)
+                    if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
+                    ["1", "5"] and
+                    tick >= p and
+                    (tick <= ax.get_ylim()[1] and tick >= ax.get_ylim()[0])
+                ]
+            )
+        )
+    )
 
     ax.set_xticklabels(
         [
