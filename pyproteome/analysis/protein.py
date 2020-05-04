@@ -3,19 +3,22 @@ import numpy as np
 from matplotlib import pyplot as plt
 from collections import Counter
 
+
 def get_protein_seq(slc, gene):
     for _, row in slc.iterrows():
         for protein in row['Proteins'].proteins:
             if protein.gene == gene:
                 return protein.full_sequence
             
+
 def get_lc(fc, p, edge=False):
-    if p < 1e-2:
+    if p < 5e-2:
         if fc > 1.25:
             return '#ff0000' if edge else '#ff8888'
         elif fc < 1/1.25:
             return '#0000ff' if edge else '#8888ff'
     return '#000000' if edge else '#888888'
+
 
 def draw_line(
     ax, 
@@ -29,16 +32,11 @@ def draw_line(
     col_offset=-.5,
     z=0,
 ):
-    lr_arrow = '{}-{}, head_width=.2, head_length=.2'.format(
-        '<' if larrow else '',
-        '>' if rarrow else '',
-    )
-    
     return ax.add_artist(
         FancyBboxPatch(
-            (col + col_offset, row - .35), 
+            (col + col_offset, row - .43), 
             col2 - col, 
-            .6,
+            .76,
             ec=None,
             fc=line_color,
             zorder=-1,
@@ -46,24 +44,6 @@ def draw_line(
         )
     )
 
-    return ax.annotate(
-        "",
-        xy=(
-            col + col_offset,
-            row + row_offset,
-        ),
-        xytext=(
-            col2 + col_offset,
-            row + row_offset,
-        ),
-        xycoords='data',
-        textcoords='data',
-        arrowprops=dict(
-            arrowstyle=lr_arrow,
-            ec=line_color,
-        ),
-        zorder=z,
-    )
 
 def draw_protein_seq(
     ds,
@@ -107,7 +87,6 @@ def draw_protein_seq(
         slc = slc.sort_values('Sort', ascending=False)
 #         display(slc[['Proteins', 'Sequence', 'Fold Change', 'p-value']])
 
-        z = 0
         prot_seq = get_protein_seq(slc, gene)
         row_max = int(np.ceil(len(prot_seq) / max_col))
 
@@ -132,6 +111,7 @@ def draw_protein_seq(
                 ha='center',
                 va='center',
                 family='monospace',
+                zorder=20,
             )
             col += 1
             if col >= max_col:
@@ -149,7 +129,7 @@ def draw_protein_seq(
             ec_lc = get_lc(pep['Fold Change'], pep['p-value'], edge=True)
 
             mods = seq.modifications.get_mods(mod_types)
-            print(seq.pep_seq, match.rel_pos, match.exact, str(seq))
+            # print(seq.pep_seq, match.rel_pos, match.exact, str(seq))
 
             row = match.rel_pos // max_col
             col = match.rel_pos % max_col
@@ -173,9 +153,12 @@ def draw_protein_seq(
                     s=letter,
                     ha='center',
                     va='center',
-                    color=ec_lc,
+                    color='k',
                     family='monospace',
+                    zorder=20,
                 )
+                if ec_lc not in ['#888888', '#000000']:
+                    print(seq.pep_seq, mod, ind + 1)
                 ax.add_artist(
                     Ellipse(
                         (mod_col, mod_row - .04), 
@@ -184,7 +167,10 @@ def draw_protein_seq(
                         ec=ec_lc,
                         fc='#ffffff',
                         lw=1.5,
-#                         fc=colors[mod_types.index(mod.mod_type)],
+                        zorder={
+                            '#888888': 11,
+                            '#000000': 11,
+                        }.get(ec_lc, 12),
                     ),
                 )
             
@@ -195,6 +181,7 @@ def draw_protein_seq(
 
             # Draw peptide lines
             rarrow = True
+            # print(seq, fc_lc)
             while col2 > 0:
                 draw_line(
                     ax,
@@ -203,14 +190,15 @@ def draw_protein_seq(
                     rarrow=rarrow,
                     larrow=col2 < max_col,
                     line_color=fc_lc,
-                    z=z,
+                    z={
+                        '#cccccc': 1,
+                        '#888888': 2,
+                    }.get(fc_lc, 3),
                     row_offset=ro,
                 )
                 row += 1
                 col = 0
                 col2 -= max_col
                 rarrow = False
-                
-            z += 1
         
     return figs
