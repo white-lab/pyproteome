@@ -70,7 +70,7 @@ def hierarchical_heatmap(
     raw = data.psms
     raw.index = data.psms.apply(
         lambda x:
-        "{0}{1}{2}{3}{3}".format(
+        "{0}{1}{2}{3}".format(
             pyp.analysis.volcano._get_name(x["Proteins"]),
             " : "
             if len(x['Modifications'].get_mods(['S', 'T', 'Y', 'M'])) > 0 else
@@ -81,6 +81,7 @@ def hierarchical_heatmap(
                 r'\1',
                 x["Modifications"].get_mods(['S', 'T', 'Y', 'M']).__str__(
                     prot_index=0,
+                    show_mod_type=False,
                 ),
             ),
             # [
@@ -99,6 +100,7 @@ def hierarchical_heatmap(
             #     )
             # ][0],
             "",
+            # ': ' + x["Sequence"].pep_seq,
         ),
         axis=1,
     )
@@ -149,6 +151,9 @@ def hierarchical_heatmap(
     elif callable(col_colors):
         col_colors = col_colors(raw.columns)
 
+    if 'cmap' not in kwargs:
+        kwargs['cmap'] = 'coolwarm'
+
     map = sns.clustermap(
         raw_na,
         row_colors=row_colors,
@@ -163,6 +168,7 @@ def hierarchical_heatmap(
     kwargs.pop('method', None)
     kwargs.pop('row_cluster', None)
     kwargs.pop('col_cluster', None)
+    kwargs.pop('colors_ratio', None)
     kwargs.pop('figsize', None)
     kwargs.pop('cmap', None)
 
