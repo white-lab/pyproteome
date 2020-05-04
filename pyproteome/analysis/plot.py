@@ -24,6 +24,7 @@ def plot(
     title=None,
     ax=None,
     log_2=True,
+    box=True,
 ):
     """
     Plot the levels of a sequence across multiple channels.
@@ -102,7 +103,7 @@ def plot(
         if log_2:
             df["val"] = df["val"].apply(np.log2)
 
-        sns.barplot(
+        (sns.barplot if box else sns.barplot)(
             x="name",
             y="val",
             hue="group",
@@ -154,14 +155,42 @@ def plot(
     return figures
 
 
+def stars(p):
+    if p < 0.0001:
+        return "****"
+    elif (p < 0.001):
+        return "***"
+    elif (p < 0.01):
+        return "**"
+    elif (p < 0.05):
+        return "*"
+    else:
+        return "ns"
+
+
+def gen_groups(cmp_groups):
+    ret = []
+
+    for i in cmp_groups:
+        lst = list(itertools.combinations(i, 2))
+        for ind, i in enumerate(lst, start=1):
+            ret.append(i + (ind != len(lst),))
+
+    return ret
+
+
 def plot_group(
     data,
     cmp_groups=None,
+    cmp_groups_star=None,
     title=None,
     ax=None,
+    box=True,
     show_p=True,
     show_ns=False,
     log_2=True,
+    offset_frac=20,
+    y_max=None,
 ):
     """
     Plot the levels of a sequence across each group.
@@ -282,7 +311,7 @@ def plot_group(
             ],
             columns=("y", 'log2_y', "label"),
         )
-        sns.boxplot(
+        (sns.boxplot if box else sns.barplot)(
             x="label",
             y="log2_y" if log_2 else 'y',
             hue="label",
@@ -290,7 +319,7 @@ def plot_group(
             data=df,
             ax=plot_ax,
             dodge=False,
-            boxprops=dict(alpha=.3),
+            # boxprops=dict(alpha=.3),
         )
         sns.swarmplot(
             x=x,
@@ -320,19 +349,10 @@ def plot_group(
         plot_ax.xaxis.grid(False)
 
         if show_p:
-            y_max = y.max()
-
-            def stars(p):
-                if p < 0.0001:
-                    return "****"
-                elif (p < 0.001):
-                    return "***"
-                elif (p < 0.01):
-                    return "**"
-                elif (p < 0.05):
-                    return "*"
-                else:
-                    return "ns"
+            if y_max is None:
+                y_max_cp = y.max()
+            else:
+                y_max_cp = y_max
 
             v = [
                 vals
@@ -340,61 +360,75 @@ def plot_group(
                 for vals in group_vals
             ]
 
-            for grp_set in cmp_groups:
-                offset = y_max / 10
+            cmp_star = cmp_groups_star
+            
+            if cmp_star is None:
+                cmp_star = gen_groups(cmp_groups)
 
-                for label_a, label_b in itertools.combinations(grp_set, 2):
-                    if label_a not in labels or label_b not in labels:
-                        continue
+            offset = y_max_cp / offset_frac
 
-                    index_a = labels.index(label_a)
-                    index_b = labels.index(label_b)
+            for x in cmp_star:
+                move_offset = True
+                ha = 'center'
 
-                    values_a = v[index_a]
-                    values_b = v[index_b]
+                if len(x) == 4:
+                    group_a, group_b, move_offset, ha = x
+                elif len(x) == 3:
+                    group_a, group_b, move_offset = x
+                else:
+                    group_a, group_b = x
 
-                    if values_a.shape[0] < 2 or values_b.shape[0] < 2:
-                        continue
+                if group_a not in labels or group_b not in labels:
+                    continue
 
-                    pval = ttest_ind(
-                        values_a.values,
-                        values_b.values,
-                    ).pvalue
+                index_a = labels.index(group_a)
+                index_b = labels.index(group_b)
 
-                    if pval < 0.05 or show_ns:
-                        plot_ax.annotate(
-                            "",
-                            xy=(
-                                index_a,
-                                y_max + offset,
-                            ),
-                            xytext=(
-                                index_b,
-                                y_max + offset,
-                            ),
-                            xycoords='data',
-                            textcoords='data',
-                            arrowprops=dict(
-                                arrowstyle="-",
-                                ec='#000000',
-                            ),
-                        )
-                        plot_ax.text(
-                            x=np.mean([index_a, index_b]),
-                            y=y_max + offset + (y_max / 40) * (2 if stars(pval) == 'ns' else 1),
-                            s=stars(pval),
-                            horizontalalignment='center',
-                            verticalalignment='center',
-                        )
-                        offset += y_max / 10
+                values_a = v[index_a]
+                values_b = v[index_b]
 
-                plot_ax.set_ylim(
-                    bottom=plot_ax.get_ylim()[0],
-                    top=max([
-                        plot_ax.get_ylim()[1],
-                        y_max + offset + y_max / 10,
-                    ]),
-                )
+                if values_a.shape[0] < 2 or values_b.shape[0] < 2:
+                    continue
+
+                pval = ttest_ind(
+                    values_a.values,
+                    values_b.values,
+                ).pvalue
+                txt = stars(pval)
+
+                if txt != 'ns' or show_ns:
+                    plot_ax.annotate(
+                        "",
+                        xy=(
+                            index_a,
+                            y_max_cp + offset,
+                        ),
+                        xytext=(
+                            index_b,
+                            y_max_cp + offset,
+                        ),
+                        xycoords='data',
+                        textcoords='data',
+                        arrowprops=dict(arrowstyle="-", ec='#000000'),
+                    )
+                    plot_ax.text(
+                        x=np.mean([index_a, index_b]),
+                        y=y_max_cp + offset + y_max_cp / offset_frac / 4 * (2 if txt == 'ns' else 1),
+                        s=txt,
+                        ha=ha,
+                        va='center',
+                    )
+
+                    if move_offset:
+                        offset += y_max_cp / offset_frac
+
+        plot_ax.set_ylim(
+            bottom=plot_ax.get_ylim()[0],
+            top=max([
+                plot_ax.get_ylim()[1],
+                y_max_cp + offset + y_max_cp / offset_frac,
+            ]),
+        )
 
         plot_ax.set_xlabel("")
         plot_ax.set_ylabel(
@@ -406,10 +440,11 @@ def plot_group(
             plot_ax.get_legend().set_visible(False)
 
         if log_2:
+            plot_ax.set_yticks(plot_ax.get_yticks())
             plot_ax.set_yticklabels(
                 [
-                    "{:.2f}".format(i)
-                    for i in np.power(2, plot_ax.get_yticks())
+                    "{:.2f}".format(np.power(2, i))
+                    for i in plot_ax.get_yticks()
                 ],
             )
 
