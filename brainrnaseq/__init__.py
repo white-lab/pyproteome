@@ -1,5 +1,5 @@
 
-from . import cache, mapping, enrichments, plot
+from . import cache, mapping, enrichments
 
 
 CELL_TYPE_COLS = {
@@ -97,7 +97,6 @@ __all__ = [
     "cache",
     "mapping",
     "enrichments",
-    'plot',
 
     "CELL_TYPE_COLS",
     "CELL_TYPES",
