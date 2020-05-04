@@ -1470,6 +1470,31 @@ class DataSet:
         )
 
     @property
+    def phosphosites(self):
+        return sorted(
+            set(
+                self.psms.apply(
+                    lambda x:
+                    "{0}{1}{2}".format(
+                        pyp.analysis.volcano._get_name(x["Proteins"]),
+                        " : "
+                        if len(x['Modifications'].get_mods('Phospho')) > 0 else
+                        "",
+                        re.sub(
+                            r'(\d+)',
+                            r'\1',
+                            x["Modifications"].get_mods('Phospho').__str__(
+                                prot_index=0,
+                                show_mod_type=False,
+                            ),
+                        ),
+                    ),
+                    axis=1,
+                )
+            )
+        )
+
+    @property
     def accessions(self):
         """
         Get all uniprot accessions occuring in this data set.
@@ -1781,7 +1806,11 @@ def norm_all_data(
             if not constand_norm:
                 data = data.normalize(datas[val], inplace=replace_norm)
             else:
-                data = constand.constand(data, name=name, inplace=replace_norm)
+                data = constand.constand(
+                    data, 
+                    name=name, 
+                    inplace=replace_norm,
+                )
 
             data.name += "-norm"
 
