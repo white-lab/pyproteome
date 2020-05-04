@@ -25,7 +25,7 @@ REL_CUTOFF = 5
 
 def kde_max(points):
     points = points[~np.isnan(points)]
-    gaus = stats.kde.gaussian_kde(points)
+    gaus = stats.kde.gaussian_kde(points, bw_method='silverman')
     # .25 - .75 1000 slices
     # x = np.arange(0, 10, .01)
     x = np.linspace(np.quantile(points, .15), np.quantile(points, .85), 1000)
