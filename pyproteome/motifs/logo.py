@@ -251,7 +251,7 @@ def _draw_logo(
     ax.add_patch(
         patches.Rectangle(
             (left_margin, 0.01),
-            .997 - left_margin,
+            .998 - left_margin,
             .98,
             fill=False,
             linewidth=1,
@@ -336,7 +336,7 @@ def _draw_logo(
     y_offset = (
         76 * np.power(xax.get_window_extent().height, -1.453)
     ) - .4
-    y_offset = 0
+    y_offset = -.15
 
     xax.set_xticklabels(
         [
@@ -344,6 +344,7 @@ def _draw_logo(
             for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
         ],
         va='center',
+        ha='center',
         y=y_offset,
         fontsize=8,
     )
