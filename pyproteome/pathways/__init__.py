@@ -190,7 +190,6 @@ def _filter_ambiguous_peptides(ds):
         "Filtering ambiguous peptides ({} proteins)".format(len(set(ds.genes)))
     )
 
-    ds = ds.filter(fn=lambda x: len(x["Proteins"].genes) == 1)
     ds = ds.filter(ambiguous=False)
 
     LOGGER.info("Filtered down to {} proteins".format(len(set(ds.genes))))
@@ -421,6 +420,9 @@ def gsea(
     if ds is not None:
         ds = _filter_ambiguous_peptides(ds)
 
+        # Don't scramble peptides without quantification values
+        ds = ds.dropna(columns=['Fold Change'])
+
         if species is None:
             species = list(ds.species)[0]
 
@@ -460,7 +462,7 @@ def gsea(
     }
     es_args.update({
         i: kwargs.pop(i)
-        for i in ["p", "pval", "p_iter", "n_cpus"]
+        for i in ["p", "pval", "p_iter", "n_cpus", 'ess_method']
         if i in kwargs
     })
 
