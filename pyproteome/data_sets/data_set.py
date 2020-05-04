@@ -12,6 +12,7 @@ from collections import OrderedDict
 import copy
 import logging
 import os
+import re
 import warnings
 from itertools import chain
 from functools import partial
@@ -228,6 +229,7 @@ class DataSet:
                 filter_bad,
                 inplace=True,
             )
+            self.log_stats()
 
         if pick_best_ptm and (
             not search_name or
