@@ -363,6 +363,8 @@ def plot_volcano(
     )
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position('bottom')
 
     if not np.isnan(p):
         ax.axhline(
@@ -403,6 +405,7 @@ def plot_volcano(
                 tick
                 for tick in tuple(ax.get_xticks()) + (lower_fold, upper_fold)
                 if (
+                    tick in [lower_fold, upper_fold] or
                     tick < lower_fold - .25 or
                     tick > upper_fold + .25
                 ) and (tick <= ax.get_xlim()[1] and tick >= ax.get_xlim()[0])
