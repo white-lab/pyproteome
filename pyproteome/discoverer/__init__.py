@@ -977,18 +977,24 @@ def _get_phosphors(df, cursor, pd_version, name=None):
             field_ids,
         )
     elif pd_version[:2] in [(2, 2)]:
-        try:
-            psp_vals = cursor.execute(
-                """
-                SELECT
-                TargetPsms.PeptideID,
-                TargetPsms.ptmRSPhosphoSiteProbabilities
+        for ptmrs_col in [
+            'ptmRSPhosphoSiteProbabilities',
+            'ptmRSPhosphorylationSiteProbabilities',
+        ]:
+            try:
+                psp_vals = cursor.execute(
+                    """
+                    SELECT
+                    TargetPsms.PeptideID,
+                    TargetPsms.{}
 
-                FROM TargetPsms
-                """,
-            )
-        except sqlite3.OperationalError:
-            pass
+                    FROM TargetPsms
+                    """.format(ptmrs_col),
+                )
+            except sqlite3.OperationalError:
+                pass
+            else:
+                break
     else:
         raise Exception(
             "Unsupported Proteome Discoverer Version: {}".format(pd_version)
