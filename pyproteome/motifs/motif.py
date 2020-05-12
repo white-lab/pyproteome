@@ -713,7 +713,11 @@ def motif_enrichment(
     # Set the starting motif and begin adding modifications to it.
     # Note: Order matters, put less specific to the end of this list
     if start_letters is None:
-        start_letters = ["k", "y", "s", "t", "x"]
+        start_letters = [
+            # 'k', 
+            's', 't', 'y',
+            'x',
+        ]
 
     starts = [
         Motif(
