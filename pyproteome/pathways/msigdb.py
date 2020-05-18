@@ -37,7 +37,6 @@ MSIGDB_FILES = tuple([
         # "c7.all.{}.entrez.gmt",
     ]
 ])
-)
 
 LOGGER = logging.getLogger("pyproteome.msigdb")
 
