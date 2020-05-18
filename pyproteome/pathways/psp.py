@@ -100,7 +100,9 @@ def get_phosphosite(species, remap=False):
                     ].apply(
                         lambda x:
                         ",".join([
-                            x["SUB_ACC_ID"].split("-")[0],
+                            x["SUB_ACC_ID"].split("-")[0]
+                            if isinstance(x['SUB_ACC_ID'], str) else
+                            '',
                             x["SUB_MOD_RSD"] + ("" if remap else "-p"),
                         ]),
                         axis=1,
