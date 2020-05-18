@@ -163,6 +163,8 @@ def plot_binomial_enrichment(
         # [np.inf], 0,
     ).iloc[::-1]
 
+    cp.columns = cp.columns.droplevel()
+
     gene_colors = []
 
     if correlates and len(correlates) > 1:
@@ -185,13 +187,9 @@ def plot_binomial_enrichment(
     print(gene_colors)
 
     figsize = (
-        len(cp.index) * 2,
-        len(cp.columns) / 10 / 2, 
+        len(cp.columns) * .38,
+        len(cp.index) / 2,
     )
-    # figsize = (
-    #     len(cp.index) * 1.2,
-    #     len(cp.columns),
-    # )
 
     if gene_rows:
         figsize = tuple(reversed(figsize))
@@ -215,15 +213,14 @@ def plot_binomial_enrichment(
     g = sns.clustermap(
         cp,
         cbar_kws=dict(
-            label='log odds enrichment',
-    #         use_gridspec=False,
-    #         location="top",
-            orientation="vertical",
+            orientation='vertical',
+            ticks=[-minmax, -minmax/2, 0, minmax/2, minmax],
         ),
         **cluster_kwargs
     )
 
-    g.cax.set_position([.92, .27, .03, .3])
+    g.cax.set_position([.75, .6, .02, .15])
+    g.cax.set_title('LOE', loc='left', pad=10)
 
     g.ax_row_dendrogram.set_visible(False)
     g.ax_col_dendrogram.set_visible(False)
