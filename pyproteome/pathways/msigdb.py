@@ -11,27 +11,32 @@ MSIGDB_URL = (
     "https://raw.githubusercontent.com/white-lab/pyproteome-data"
     "/master/msigdb/"
 )
-MSIGDB_FILES = (
-    "h.all.v7.0.entrez.gmt",
-    # "c1.all.v7.0.entrez.gmt",
-    # "c2.all.v7.0.entrez.gmt",
-    # "c2.cgp.v7.0.entrez.gmt",
-    # "c2.cp.biocarta.v7.0.entrez.gmt",
-    # "c2.cp.kegg.v7.0.entrez.gmt",
-    # "c2.cp.reactome.v7.0.entrez.gmt",
-    # "c2.cp.v7.0.entrez.gmt",
-    # "c3.all.v7.0.entrez.gmt",
-    # "c3.mir.v7.0.entrez.gmt",
-    # "c3.tft.v7.0.entrez.gmt",
-    # "c4.all.v7.0.entrez.gmt",
-    # "c4.cgn.v7.0.entrez.gmt",
-    # "c4.cm.v7.0.entrez.gmt",
-    # "c5.all.v7.0.entrez.gmt",
-    # "c5.bp.v7.0.entrez.gmt",
-    # "c5.cc.v7.0.entrez.gmt",
-    # "c5.mf.v7.0.entrez.gmt",
-    # "c6.all.v7.0.entrez.gmt",
-    # "c7.all.v7.0.entrez.gmt",
+MSIGDB_VERSION = 'v7.1'
+MSIGDB_FILES = tuple([
+    i.format(MSIGDB_VERSION)
+    for i in [
+        "h.all.{}.entrez.gmt",
+        # "c1.all.{}.entrez.gmt",
+        # "c2.all.{}.entrez.gmt",
+        # "c2.cgp.{}.entrez.gmt",
+        # "c2.cp.biocarta.{}.entrez.gmt",
+        # "c2.cp.kegg.{}.entrez.gmt",
+        # "c2.cp.reactome.{}.entrez.gmt",
+        # "c2.cp.{}.entrez.gmt",
+        # "c3.all.{}.entrez.gmt",
+        # "c3.mir.{}.entrez.gmt",
+        # "c3.tft.{}.entrez.gmt",
+        # "c4.all.{}.entrez.gmt",
+        # "c4.cgn.{}.entrez.gmt",
+        # "c4.cm.{}.entrez.gmt",
+        # "c5.all.{}.entrez.gmt",
+        # "c5.bp.{}.entrez.gmt",
+        # "c5.cc.{}.entrez.gmt",
+        # "c5.mf.{}.entrez.gmt",
+        # "c6.all.{}.entrez.gmt",
+        # "c7.all.{}.entrez.gmt",
+    ]
+])
 )
 
 LOGGER = logging.getLogger("pyproteome.msigdb")
