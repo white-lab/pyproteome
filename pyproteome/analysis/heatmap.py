@@ -104,9 +104,9 @@ def hierarchical_heatmap(
         ),
         axis=1,
     )
-    raw = raw[~raw.index.duplicated(keep='first')]
     # raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
+    raw = raw.groupby(raw.index).agg('median')
 
     raw = raw.apply(np.log2, axis=1)
     if zscore:
