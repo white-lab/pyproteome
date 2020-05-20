@@ -265,7 +265,21 @@ def _ds_to_df(data):
         inplace=True,
     )
     df.insert(
-        2, "Modifications",
+        1, 'Genes',
+        df['Proteins'].apply(
+            lambda x:
+            ' / '.join(x.genes)
+        ),
+    )
+    df.insert(
+        2, 'Uniprot Accessions',
+        df['Proteins'].apply(
+            lambda x:
+            ' / '.join(x.accessions)
+        ),
+    )
+    df.insert(
+        3, "Modifications",
         df["Sequence"].apply(
             lambda x: str(x.modifications)
         ),
@@ -277,7 +291,9 @@ def _ds_to_df(data):
         if isinstance(x, collections.Iterable) else
         str(x)
     )
-    df.sort_values("p-value", inplace=True, ascending=True)
+
+    if 'p-value' in cols:
+        df.sort_values("p-value", inplace=True, ascending=True)
 
     return df
 
