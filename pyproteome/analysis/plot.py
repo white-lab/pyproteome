@@ -190,6 +190,7 @@ def plot_group(
     show_ns=False,
     log_2=True,
     offset_frac=20,
+    size=4,
     y_max=None,
 ):
     """
@@ -326,7 +327,7 @@ def plot_group(
             y=y,
             color=".25",
             ax=plot_ax,
-            # size=10,
+            size=size,
         )
         plot_ax.axhline(
             np.log2(1) if log_2 else 1,
@@ -421,6 +422,9 @@ def plot_group(
 
                     if move_offset:
                         offset += y_max_cp / offset_frac
+        else:
+            y_max_cp, offset = 0, 0
+
 
         plot_ax.set_ylim(
             bottom=plot_ax.get_ylim()[0],
@@ -429,6 +433,9 @@ def plot_group(
                 y_max_cp + offset + y_max_cp / offset_frac,
             ]),
         )
+
+        plot_ax.yaxis.set_ticks_position('left')
+        plot_ax.xaxis.set_ticks_position('bottom')
 
         plot_ax.set_xlabel("")
         plot_ax.set_ylabel(
