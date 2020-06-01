@@ -23,6 +23,10 @@ LABEL_NAMES["TMT6"].add("N-term")
 """
 Names of modifications used for quantification of peptide abundances.
 """
+MERGE_UNDERLABELED = True
+'''
+Merge peptides that have satured TMT labeling with peptides that are underlabeled.
+'''
 
 
 class Modifications:
@@ -142,10 +146,12 @@ class Modifications:
         if not isinstance(other, Modifications):
             raise TypeError()
 
-        self_mods = sorted(self.skip_labels(), key=lambda x: x.to_tuple())
-        o_mods = sorted(other.skip_labels(), key=lambda x: x.to_tuple())
-        # self_mods = sorted(self.mods, key=lambda x: x.to_tuple())
-        # o_mods = sorted(other.mods, key=lambda x: x.to_tuple())
+        if MERGE_UNDERLABELED:
+            self_mods = sorted(self.skip_labels(), key=lambda x: x.to_tuple())
+            o_mods = sorted(other.skip_labels(), key=lambda x: x.to_tuple())
+        else:
+            self_mods = sorted(self.mods, key=lambda x: x.to_tuple())
+            o_mods = sorted(other.mods, key=lambda x: x.to_tuple())
 
         return tuple(self_mods) == tuple(o_mods)
 
