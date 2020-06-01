@@ -34,9 +34,9 @@ def draw_line(
 ):
     return ax.add_artist(
         FancyBboxPatch(
-            (col + col_offset, row - .43), 
+            (col + col_offset, row - .5),
             col2 - col, 
-            .76,
+            .9,
             ec=None,
             fc=line_color,
             zorder=-1,
