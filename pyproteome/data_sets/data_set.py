@@ -945,6 +945,8 @@ class DataSet:
         fold                Change > cutoff or Change < 1 / cutoff.
         motif               Filter for motif.
         protein             Filter for protein or list of proteins.
+        protein             Filter for protein or list of proteins.
+        accession           Filter for protein or list of UniProt accessions.
         sequence            Filter for sequence or list of sequences.
         mod                 Filter for modifications.
         only_validated      Use rows validated by CAMV.
@@ -1070,7 +1072,14 @@ class DataSet:
                 lambda x: bool(set(val).intersection(x.genes))
             )
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            psms["Proteins"] == val.strip(),
+            any([i == val.strip() for i in psms["Proteins"].genes]),
+
+            "accession": lambda val, psms:
+            psms["Proteins"].apply(
+                lambda x: bool(set(val).intersection(x.accessions))
+            )
+            if isinstance(val, (list, set, tuple, pd.Series)) else
+            any([i == val.strip() for i in psms["Proteins"].accessions]),
 
             "sequence": lambda val, psms:
             psms["Sequence"].apply(lambda x: any(i in x for i in val))
@@ -1492,7 +1501,7 @@ class DataSet:
                         ),
                     ),
                     axis=1,
-                )
+                ).values
             )
         )
 
