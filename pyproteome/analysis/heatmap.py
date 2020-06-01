@@ -106,11 +106,16 @@ def hierarchical_heatmap(
     )
     # raw = raw.sort_values("Fold Change", ascending=False)
     raw = raw[channels]
+    sort_index = list(raw.index.drop_duplicates())
     raw = raw.groupby(raw.index).agg('median')
+    raw['Sort Index'] = raw.index.map(lambda x: sort_index.index(x)) 
+    raw = raw.sort_values('Sort Index')
+    del raw['Sort Index']
 
     raw = raw.apply(np.log2, axis=1)
     if zscore:
         raw = raw.apply(_zscore, axis=1)
+
     raw = raw.replace([np.inf, -np.inf], np.nan)
     raw = raw.dropna(how="all")
     raw = raw.T.dropna(how="all").T
