@@ -138,14 +138,15 @@ def get_enrichments(
         if val[1] >= cutoff
     }
 
-    for index, row in cache.get_mapping_data(species=species).iterrows():
-        if index not in enrichments:
-            continue
-
-        for syn in row["Synonyms"].split("|"):
-            if syn in enrichments or syn == "-":
+    if add_mappings:
+        for index, row in cache.get_mapping_data(species=species).iterrows():
+            if index not in enrichments:
                 continue
 
-            enrichments[syn] = enrichments[index]
+            for syn in row["Synonyms"].split("|"):
+                if syn in enrichments or syn == "-":
+                    continue
+
+                enrichments[syn] = enrichments[index]
 
     return enrichments
