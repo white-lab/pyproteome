@@ -17,7 +17,7 @@ from . import clusterer
 
 LOGGER = logging.getLogger('pyp.cluster.plot')
 COLOR_MAP = plt.cm.rainbow
-CORR_COLOR_MAP = plt.cm.Spectral_r
+CORR_COLOR_MAP = plt.cm.coolwarm
 
 
 def hierarchical_clusters(data, y_pred):
@@ -78,6 +78,7 @@ def cluster_corrmap(
     f=None,
     ax=None,
     div_scale=None,
+    show_names=None,
 ):
     if ax is None:
         f, ax = plt.subplots(figsize=(13, 12))
@@ -104,6 +105,13 @@ def cluster_corrmap(
         vmin=-1, vmax=1,
     )
 
+    if show_names:
+        sorted_clusters = [
+            i
+            for i in sorted_clusters
+            if i in show_names
+        ]
+
     for cluster_n in sorted_clusters:
         ind = np.arange(
             0,
@@ -111,14 +119,17 @@ def cluster_corrmap(
         )[y_pred == cluster_n]
         xy = np.median(ind) / div_scale
 
+        if show_names and isinstance(show_names, dict):
+            cluster_n = show_names.get(cluster_n)
+
         ax.text(
             s=str(cluster_n),
             x=xy,
             y=xy,
-            fontsize=sqrt(ind.shape[0]),
+            # fontsize=sqrt(ind.shape[0]),
             color='k',
-            horizontalalignment='center',
-            verticalalignment='center',
+            ha='center',
+            va='center',
         )
 
     if colorbar:
