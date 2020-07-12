@@ -127,7 +127,7 @@ class Sequence:
                 other in i
                 for i in [
                     self.__str__(),
-                    self.__str__(skip_labels=False, skip_terminus=False),
+                    self.__str__(skip_labels=True, skip_terminus=False),
                 ]
             ])
 
