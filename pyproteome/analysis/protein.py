@@ -13,9 +13,9 @@ def get_protein_seq(slc, gene):
 
 def get_lc(fc, p, edge=False):
     if p < 5e-2:
-        if fc > 1.25:
+        if fc > 1.05:
             return '#ff0000' if edge else '#ff8888'
-        elif fc < 1/1.25:
+        elif fc < 1/1.05:
             return '#0000ff' if edge else '#8888ff'
     return '#000000' if edge else '#888888'
 
@@ -75,16 +75,19 @@ def draw_protein_seq(
 
     for gene in genes:
         slc = ds[ds['Proteins'] == gene]
-        slc['Sort'] = slc.apply(
-            lambda x: 
-            (
-                len(x['Modifications'].get_mods(mod_types)) > 0,
-                len(x['Sequence']),
-                x['p-value'],
-            ), 
-            axis=1,
-        )
-        slc = slc.sort_values('Sort', ascending=False)
+        try:
+            slc['Sort'] = slc.apply(
+                lambda x: 
+                (
+                    len(x['Modifications'].get_mods(mod_types)) > 0,
+                    len(x['Sequence']),
+                    x['p-value'],
+                ), 
+                axis=1,
+            )
+            slc = slc.sort_values('Sort', ascending=False)
+        except:
+            continue
 #         display(slc[['Proteins', 'Sequence', 'Fold Change', 'p-value']])
 
         prot_seq = get_protein_seq(slc, gene)
@@ -117,7 +120,6 @@ def draw_protein_seq(
             if col >= max_col:
                 col = 0
                 row += 1
-                
 
         count = Counter()
 
