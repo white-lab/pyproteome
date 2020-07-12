@@ -122,8 +122,8 @@ def plot(
         ax_i.axhline(
             np.log2(1) if log_2 else 1,
             linestyle=":",
-            color="k",
-            alpha=.5,
+            color='#4C4D4F',
+            # alpha=.5,
         )
 
         mod_str = row["Modifications"].__str__(prot_index=0)
