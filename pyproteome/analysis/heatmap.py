@@ -71,7 +71,7 @@ def hierarchical_heatmap(
     raw.index = data.psms.apply(
         lambda x:
         "{0}{1}{2}{3}".format(
-            pyp.analysis.volcano._get_name(x["Proteins"]),
+            pyp.utils.get_name(x["Proteins"]),
             " : "
             if len(x['Modifications'].get_mods(['S', 'T', 'Y', 'M'])) > 0 else
             "",

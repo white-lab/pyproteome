@@ -195,26 +195,26 @@ def plot_nes(
         for _, row in v[v[col] > sig_cutoff].iterrows()
     ]
 
-    pyp.utils.adjust_text(
-        x=[i._x for i in texts],
-        y=[i._y for i in texts],
-        texts=texts,
-        ax=ax,
-        lim=100,
-        force_text=0.3,
-        force_points=0.01,
-        arrowprops=dict(
-            arrowstyle="->",
-            relpos=(0, 0),
-            lw=1,
-            zorder=1,
-            color="k",
-        ),
-        only_move={
-            "points": "y",
-            "text": "y",
-        }
-    )
+    if texts:
+        pyp.utils.adjust_text(
+            texts=texts,
+            ax=ax,
+            lim=100,
+            force_text=0.3,
+            force_points=0.01,
+            arrowprops=dict(
+                arrowstyle="->",
+                relpos=(0, 0),
+                lw=1,
+                zorder=1,
+                color="k",
+            ),
+            only_move={
+                "points": "y",
+                "text": "y",
+            }
+        )
+    
     ax.legend(
         loc='right',
         bbox_to_anchor=(1.25, .5),

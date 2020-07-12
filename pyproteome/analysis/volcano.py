@@ -36,20 +36,6 @@ def _remove_lesser_dups(labels, compress_sym=False):
     return labels
 
 
-def _get_name(proteins):
-    genes = sorted(proteins.genes)
-    common = ""
-    sep = " / "
-
-    if len(genes) > 1:
-        common = os.path.commonprefix(genes)
-
-        if common:
-            sep = "/"
-
-    return common + sep.join(i[len(common):] for i in genes)
-
-
 def plot_volcano_labels(
     data,
     ax,
@@ -90,26 +76,28 @@ def plot_volcano_labels(
         (labels["y"] <= yminmax[1])
     ]
 
+    if labels.shape[0] < 1:
+        return labels
+
     if sequence_labels:
         labels["Label"] = labels["Sequence"].apply(str)
     elif not mods:
-        labels["Label"] = labels["Proteins"].apply(_get_name)
+        labels["Label"] = labels["Proteins"].apply(pyp.utils.get_name)
     else:
         labels["Label"] = labels.apply(
             lambda x:
-            " / ".join(
-                [
-                    "{} {}".format(
-                        rename.get(gene, gene),
-                        x["Modifications"].get_mods(
-                            mods,
-                        ).__str__(prot_index=index),
-                    )
+            '{}{}{}'.format(
+                pyp.utils.get_name(x["Proteins"]),
+                ' ' if len(x["Modifications"].get_mods(mods)) > 0 else '',
+                ' / '.join([
+                    x["Modifications"].get_mods(
+                        mods,
+                    ).__str__(prot_index=index)
                     for index, gene in enumerate(x["Proteins"].genes)
-                ]
-            )
-            if len(list(x["Modifications"].get_mods(mods))) > 0 else
-            " / ".join(x["Proteins"].genes),
+                ]) if len(x["Modifications"].get_mods(mods)) > 0 else '',
+            ),
+            # if len(list(x["Modifications"].get_mods(mods))) > 0 else
+            # " / ".join(x["Proteins"].genes),
             axis=1,
         )
 
@@ -239,11 +227,9 @@ def plot_volcano_labels(
 
     LOGGER.info("Plotting volcano labels for {} peptides".format(len(texts)))
 
-    if adjust:
+    if adjust and texts:
         texts = texts[:MAX_VOLCANO_LABELS]
         pyp.utils.adjust_text(
-            x=[i._x for i in texts],
-            y=[i._y for i in texts],
             texts=texts,
             ax=ax,
             lim=100,

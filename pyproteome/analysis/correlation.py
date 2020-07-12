@@ -95,10 +95,8 @@ def correlate_data_sets(
 
             texts.append(text)
 
-        if adjust:
+        if adjust and texts:
             pyp.utils.adjust_text(
-                x=[i._x for i in texts],
-                y=[i._y for i in texts],
                 texts=texts,
                 ax=ax,
                 lim=400,
@@ -416,20 +414,19 @@ def correlate_signal(
             )
         )
 
-    pyp.utils.adjust_text(
-        x=sig_x,
-        y=sig_y,
-        texts=texts,
-        ax=ax,
-        lim=400,
-        force_text=0.3,
-        force_points=0.01,
-        arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
-        only_move={
-            "points": "y",
-            "text": "xy",
-        }
-    )
+    if texts:
+        pyp.utils.adjust_text(
+            texts=texts,
+            ax=ax,
+            lim=400,
+            force_text=0.3,
+            force_points=0.01,
+            arrowprops=dict(arrowstyle="->", relpos=(0, 0), lw=1),
+            only_move={
+                "points": "y",
+                "text": "xy",
+            }
+        )
 
     ax.set_xlabel(
         "Index",

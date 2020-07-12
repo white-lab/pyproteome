@@ -338,3 +338,17 @@ def adjust_text(*args, **kwargs):
     """
     from adjustText import adjust_text as at
     return at(*args, **kwargs)
+
+
+def get_name(proteins):
+    genes = sorted(proteins.genes)
+    common = ""
+    sep = " / "
+
+    if len(genes) > 1:
+        common = os.path.commonprefix(genes)
+
+        if common:
+            sep = "/"
+
+    return common + sep.join(i[len(common):] for i in genes)
