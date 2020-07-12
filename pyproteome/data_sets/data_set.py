@@ -1529,10 +1529,6 @@ class DataSet:
         """
         Get the quantification data for all samples and peptides in a data set.
 
-        Parameters
-        ----------
-        norm_cmp : bool, optional
-
         Returns
         -------
         df : :class:`pandas.DataFrame`
