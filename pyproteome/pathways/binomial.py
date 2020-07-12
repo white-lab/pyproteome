@@ -68,6 +68,33 @@ def binomial_scores(fore_up, fore_down, back, gene_sets):
         yield key, up_score, down_score
 
 
+def _get_mods(ds, mods, accessions=False):
+    for ind, row in ds.psms.iterrows():
+        for prot in row['Proteins']:
+            for mod in row['Modifications'].get_mods(mods):
+                acc = prot.accession if accessions else prot.gene
+
+                mod = '{}{}'.format(
+                    mod.letter,
+                    mod.abs_pos[
+                        [
+                            i.protein
+                            for i in mod.sequence.protein_matches
+                        ].index(prot)
+                    ] + 1,
+                )
+
+                yield acc, mod
+
+def _get_set(ds, mods=None, accessions=False):
+    if mods:
+        ret = _get_mods(ds, mods=mods, accessions=accessions)
+    else:
+        ret = ds.accessions if accessions else ds.genes
+
+    return set(ret)
+
+
 def plot_binomial_enrichment(
     ds, 
     gene_sets,
@@ -77,6 +104,8 @@ def plot_binomial_enrichment(
     fold_cutoff=1.5, 
     p_cutoff=1e-2,
     gene_rows=True,
+    accessions=False,
+    mods=None,
     minmax=4,
     **kwargs
 ):
@@ -103,17 +132,32 @@ def plot_binomial_enrichment(
                 fore = data_sets.update_correlation(fore, target, metric='spearman')
 
             fore.psms = fore.psms.dropna(subset=('Fold Change', 'p-value'))
-            back = set(fore.genes)
+            back = _get_set(
+                fore, 
+                accessions=accessions, 
+                mods=mods,
+            )
 
             if p_cutoff:
                 fore = fore.filter(p=p_cutoff)
 
             if corr_cutoff:
-                fore_up = set(fore.filter(fn=lambda x: x['Fold Change'] > corr_cutoff).genes)
-                fore_down = set(fore.filter(fn=lambda x: x['Fold Change'] < -corr_cutoff).genes)
+                fore_up_ds = fore.filter(fn=lambda x: x['Fold Change'] > corr_cutoff)
+                fore_down_ds = fore.filter(fn=lambda x: x['Fold Change'] < -corr_cutoff)
             else:
-                fore_up = set(fore.filter(asym_fold=fold_cutoff).genes)
-                fore_down = set(fore.filter(asym_fold=1/fold_cutoff).genes)
+                fore_up_ds = fore.filter(asym_fold=fold_cutoff)
+                fore_down_ds = fore.filter(asym_fold=1/fold_cutoff)
+
+            fore_up = _get_set(
+                fore_up_ds,
+                accessions=accessions, 
+                mods=mods,
+            )
+            fore_down = _get_set(
+                fore_down_ds,
+                accessions=accessions, 
+                mods=mods,
+            )
 
             for set_name, up_score, down_score in binomial_scores(
                 fore_up, fore_down, back, gene_sets,
@@ -148,8 +192,6 @@ def plot_binomial_enrichment(
     cp['Group'] = cp.apply(lambda x: x['Group'] + '-' + x['Direction'] + '-' + x['Subset'], axis=1)
     del cp['Direction']
     del cp['Subset']
-
-    display(cp[cp['Score'] == np.inf])
     
     cp = cp.pivot(
         index='Group', 
@@ -166,18 +208,29 @@ def plot_binomial_enrichment(
     cp.columns = cp.columns.droplevel()
 
     gene_colors = []
+    n_sub = len(subsets)
 
     if correlates and len(correlates) > 1:
-        gene_colors += [
-            ['magenta'] * (len(correlates) * len(subsets) // 2) + 
-            ['cyan'] * (len(correlates) * len(subsets) // 2),
+        colors = [
+            'cyan',
+            'magenta',
+            'yellow',
+            'blue',
         ]
+        colors = sns.color_palette(
+            "hls", len(correlates),
+        ).as_hex()
+        gene_colors += [[
+            colors[i]
+            for i in range(len(correlates))
+            for j in range(n_sub)
+        ]]
     
     gene_colors += [
         # (
         #     ['blue'] * len(subsets) + ['yellow'] * len(subsets)
         # ) * len(correlates),
-        ['orange', 'green', 'red'] * (
+        ['orange', 'green', 'red'][:n_sub] * (
             # 2 * len(correlates)
             len(correlates)
         ),
@@ -187,9 +240,10 @@ def plot_binomial_enrichment(
     print(gene_colors)
 
     figsize = (
-        len(cp.columns) * .38,
-        len(cp.index) / 2,
+        len(cp.columns) * .75,
+        len(cp.index) / n_sub * 1.5,
     )
+    print(cp.columns, cp.index)
 
     if gene_rows:
         figsize = tuple(reversed(figsize))
@@ -203,12 +257,25 @@ def plot_binomial_enrichment(
         'figsize': figsize,
     }
     cluster_kwargs.update(kwargs)
+
+    cp = cp.loc[
+        sorted(
+            cp.index,
+            key=lambda x: (
+                list(correlates.keys()).index(x.split('-')[0]),
+                list(filters.keys()).index(x.split('-')[-1]),
+            )
+        )
+    ]
     
     if gene_rows:
         cp = cp.T
         cluster_kwargs['col_colors'] = gene_colors
     else:
         cluster_kwargs['row_colors'] = gene_colors
+
+    display(cp)
+    print(cluster_kwargs['col_colors'])
 
     g = sns.clustermap(
         cp,
@@ -219,7 +286,7 @@ def plot_binomial_enrichment(
         **cluster_kwargs
     )
 
-    g.cax.set_position([.75, .6, .02, .15])
+    # g.cax.set_position([.75, .6, .02, .15])
     g.cax.set_title('LOE', loc='left', pad=10)
 
     g.ax_row_dendrogram.set_visible(False)
@@ -256,6 +323,6 @@ def plot_binomial_enrichment(
         len(cp.columns if gene_rows else cp.index), 
         len(subsets)
     ):
-        (ax.axvline if gene_rows else ax.axhline)(v, ls='-', color='k', lw=1)
+        (ax.axvline if gene_rows else ax.axhline)(v, ls='-', color='#4C4D4F', lw=1)
     
     return g, df
