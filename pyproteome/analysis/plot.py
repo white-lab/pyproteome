@@ -192,6 +192,8 @@ def plot_group(
     offset_frac=20,
     size=4,
     y_max=None,
+    p_ha='center',
+    cmap='cool',
 ):
     """
     Plot the levels of a sequence across each group.
@@ -296,7 +298,7 @@ def plot_group(
                 if val == label
             ][0]
             return sns.color_palette(
-                "hls", len(lst),
+                cmap, len(lst),
             ).as_hex()[lst.index(label)]
 
         df = pd.DataFrame(
@@ -312,6 +314,12 @@ def plot_group(
             ],
             columns=("y", 'log2_y', "label"),
         )
+
+        if box:
+            kwargs = {'showfliers': False}
+        else:
+            kwargs = {}
+        
         (sns.boxplot if box else sns.barplot)(
             x="label",
             y="log2_y" if log_2 else 'y',
@@ -320,7 +328,8 @@ def plot_group(
             data=df,
             ax=plot_ax,
             dodge=False,
-            # boxprops=dict(alpha=.3),
+            linewidth=None if box else 0,
+            **kwargs
         )
         sns.swarmplot(
             x=x,
@@ -332,7 +341,7 @@ def plot_group(
         plot_ax.axhline(
             np.log2(1) if log_2 else 1,
             linestyle="--",
-            alpha=.25,
+            color='#4C4D4F',
         )
 
         mod_str = row["Modifications"].__str__(prot_index=0)
@@ -370,10 +379,9 @@ def plot_group(
 
             for x in cmp_star:
                 move_offset = True
-                ha = 'center'
 
                 if len(x) == 4:
-                    group_a, group_b, move_offset, ha = x
+                    group_a, group_b, move_offset, p_ha = x
                 elif len(x) == 3:
                     group_a, group_b, move_offset = x
                 else:
@@ -412,11 +420,16 @@ def plot_group(
                         textcoords='data',
                         arrowprops=dict(arrowstyle="-", ec='#000000'),
                     )
+                    p_x = {
+                        'left': index_a,
+                        'center': np.mean([index_a, index_b]),
+                        'right': index_b,
+                    }.get(p_ha, index_b)
                     plot_ax.text(
-                        x=np.mean([index_a, index_b]),
+                        x=p_x,
                         y=y_max_cp + offset + y_max_cp / offset_frac / 4 * (2 if txt == 'ns' else 1),
                         s=txt,
-                        ha=ha,
+                        ha='center',
                         va='center',
                     )
 
@@ -473,6 +486,7 @@ def plot_together(
     ax=None,
     show_p=True,
     log_2=True,
+    cmap='cool',
 ):
     """
     Plot the levels of a sequence across each group in one shared plot.
@@ -577,7 +591,7 @@ def plot_together(
                 if val == label
             ][0]
             return sns.color_palette(
-                "hls", len(lst),
+                cmap, len(lst),
             ).as_hex()[lst.index(label)]
 
         df = pd.DataFrame(
@@ -613,7 +627,7 @@ def plot_together(
         plot_ax.axhline(
             np.log2(1) if log_2 else 1,
             linestyle="--",
-            alpha=.25,
+            color='#4C4D4F',
         )
 
         if title:
