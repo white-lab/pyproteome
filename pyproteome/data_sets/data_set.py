@@ -1072,14 +1072,16 @@ class DataSet:
                 lambda x: bool(set(val).intersection(x.genes))
             )
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            any([i == val.strip() for i in psms["Proteins"].genes]),
+            psms["Proteins"] == val.strip(),
 
             "accession": lambda val, psms:
             psms["Proteins"].apply(
                 lambda x: bool(set(val).intersection(x.accessions))
             )
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            any([i == val.strip() for i in psms["Proteins"].accessions]),
+            psms['Proteins'].apply(
+                lambda x: any([i == val.strip() for i in x.accessions])
+            ),
 
             "sequence": lambda val, psms:
             psms["Sequence"].apply(lambda x: any(i in x for i in val))
@@ -1487,7 +1489,7 @@ class DataSet:
                 self.psms.apply(
                     lambda x:
                     "{0}{1}{2}".format(
-                        pyp.analysis.volcano._get_name(x["Proteins"]),
+                        pyp.utils.get_name(x["Proteins"]),
                         " : "
                         if len(x['Modifications'].get_mods('Phospho')) > 0 else
                         "",
@@ -1523,7 +1525,7 @@ class DataSet:
         )
 
     @property
-    def data(self, groups=None, norm_cmp=False):
+    def data(self):
         """
         Get the quantification data for all samples and peptides in a data set.
 
@@ -1535,6 +1537,9 @@ class DataSet:
         -------
         df : :class:`pandas.DataFrame`
         """
+        return self.get_data()
+
+    def get_data(self, groups=None, mods=None, short_name=False):
         if groups is None:
             channel_names = self.samples
 
@@ -1547,8 +1552,16 @@ class DataSet:
         d.index = self.psms.apply(
             lambda row:
             "{} {} - {}".format(
-                " / ".join(row["Proteins"].genes)[:16],
-                row["Modifications"].__str__(prot_index=0),
+                (
+                    pyp.utils.get_name(row['Proteins'])
+                    if short_name else
+                    " / ".join(row["Proteins"].genes)[:16]
+                ),
+                (
+                    row["Modifications"].get_mods(mods)
+                    if mods else
+                    row["Modifications"]
+                ).__str__(prot_index=0),
                 row['Sequence'],
             ),
             axis=1,
@@ -2140,7 +2153,12 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
 
     metric = {
         "spearman": partial(spearmanr, b=corr, nan_policy="omit"),
-        "pearson": partial(pearsonr, y=corr),
+        "pearson":
+        lambda x: 
+        pearsonr(
+            x[~x.isnull()], 
+            y=corr[~x.isnull()],
+        ),
     }[metric]
 
     # Avoids errors with correlation of 2 points
