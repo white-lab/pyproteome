@@ -16,6 +16,8 @@ import pandas as pd
 import seaborn as sns
 from scipy.stats import ttest_ind
 
+import pyproteome as pyp
+
 LOGGER = logging.getLogger("pyproteome.plot")
 
 
@@ -133,7 +135,7 @@ def plot(
             if title else
             "{} ({}{})".format(
                 seq,
-                " / ".join(row["Proteins"].genes)[:20],
+                pyp.utils.get_name(row['Proteins'])[:20],
                 (" " + mod_str) if mod_str else "",
             ),
         )
@@ -190,6 +192,7 @@ def plot_group(
     show_ns=False,
     log_2=True,
     offset_frac=20,
+    title_mods=None,
     size=4,
     y_max=None,
     p_ha='center',
@@ -328,7 +331,7 @@ def plot_group(
             data=df,
             ax=plot_ax,
             dodge=False,
-            linewidth=None if box else 0,
+            linewidth=.75 if box else 0,
             **kwargs
         )
         sns.swarmplot(
@@ -344,7 +347,7 @@ def plot_group(
             color='#4C4D4F',
         )
 
-        mod_str = row["Modifications"].__str__(prot_index=0)
+        mod_str = row["Modifications"].get_mods(title_mods).__str__(prot_index=0)
 
         plot_ax.set_title(
             title
@@ -352,7 +355,7 @@ def plot_group(
             "{}{}({}{})".format(
                 row["Sequence"],
                 ' ' if len(plot_ax.get_xticklabels()) > 2 else '\n',
-                " / ".join(row["Proteins"].genes)[:20],
+                pyp.utils.get_name(row['Proteins'])[:20],
                 (" " + mod_str) if mod_str else "",
             ),
         )
@@ -375,9 +378,9 @@ def plot_group(
             if cmp_star is None:
                 cmp_star = gen_groups(cmp_groups)
 
-            offset = y_max_cp / offset_frac
+            offset = y_max_cp / offset_frac / 2
 
-            for x in cmp_star:
+            for x_ind, x in enumerate(cmp_star):
                 move_offset = True
 
                 if len(x) == 4:
@@ -427,13 +430,13 @@ def plot_group(
                     }.get(p_ha, index_b)
                     plot_ax.text(
                         x=p_x,
-                        y=y_max_cp + offset + y_max_cp / offset_frac / 4 * (2 if txt == 'ns' else 1),
+                        y=y_max_cp + offset + y_max_cp / offset_frac / 4 * (2 if txt == 'ns' else .75),
                         s=txt,
                         ha='center',
                         va='center',
                     )
 
-                    if move_offset:
+                    if move_offset and x_ind != len(cmp_star) - 1:
                         offset += y_max_cp / offset_frac
         else:
             y_max_cp, offset = 0, 0
@@ -460,7 +463,11 @@ def plot_group(
             plot_ax.get_legend().set_visible(False)
 
         if log_2:
-            plot_ax.set_yticks(plot_ax.get_yticks())
+            plot_ax.set_yticks([
+                i
+                for i in plot_ax.get_yticks()
+                if i >= plot_ax.get_ylim()[0] and i <= plot_ax.get_ylim()[1]
+            ])
             plot_ax.set_yticklabels(
                 [
                     "{:.2f}".format(np.power(2, i))
