@@ -193,10 +193,13 @@ def _remap_psp(
     mod_col="MOD_RSD",
     org_col="ORGANISM",
     append_mod="-p",
+    mapping=None,
 ):
     LOGGER.info("Remapping sites to species: {}".format(species))
 
-    mapping = get_phosphomap_data()
+    if mapping is None:
+        mapping = get_phosphomap_data()
+    
     mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
 
     mod_mapping = mapping[
