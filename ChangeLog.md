@@ -1,5 +1,24 @@
 # Change Log
 
+### 0.11.0 (2020-08-08)
+
+Features
+
+  - Added binomial enrichment plots for pathway analysis.
+  - Added protein-peptide mapping display.
+  - Added MERGE_UNDERLABELED option to combine peptides with variable TMT labeling.
+  - Added pathway analysis module for fetching Gene Ontology terms.
+  - Added pathway analysis module for partial least square regression (PLSR) analyses.
+  - Added pairwise correlation function.
+  - Improved speed and modularity of data normalization.
+  - Updated MSigDB to v7.1.
+  - Cleaned up the display of several plotting functions.
+
+Bug fixes
+
+  - Fixed several data mutability bugs.
+  - Fixed bugs with phosphosite localization with different versions of PhosphoRS/ptmRS.
+
 ### 0.10.0 (2019-10-21)
 
 Features
@@ -10,7 +29,6 @@ Features
   - Fixed plotting bugs when using data sets with duplicate samples / groups.
   - Added Hensen et al. backend to brainrnaseq.
   - Updated PTMSigDB to 1.9.1.
-
 
 ### 0.9.1 (2019-01-10)
 
