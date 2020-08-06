@@ -147,7 +147,6 @@ def hierarchical_heatmap(
     if row_colors:
         row_colors = raw_na.index.map(row_colors).tolist()
         row_colors = np.array(row_colors).T.tolist()
-        print(row_colors)
     if col_colors is None:
         col_colors = (
             [group_colors[i] for i in raw.columns]
