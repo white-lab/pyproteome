@@ -19,6 +19,7 @@ from functools import partial
 
 # Core data analysis libraries
 import pandas as pd
+import pingouin as pg
 import numpy as np
 import numpy.ma as ma
 from scipy.stats import ttest_ind, pearsonr, spearmanr, variation
@@ -256,6 +257,9 @@ class DataSet:
             self.rename_channels(inplace=True)
             self.inter_normalized = True
 
+            # Display quant distribution
+            # pyp.levels.get_channel_levels(self)
+
         if merge_duplicates:
             LOGGER.info(
                 "{}: Merging duplicate peptide hits together."
@@ -322,9 +326,26 @@ class DataSet:
         -------
         list of str
         """
+        return self.get_samples()
+
+    def get_samples(self, groups=None):
+        """
+        Get a list of sample names in this data set.
+
+        Parameters
+        ----------
+        groups : optional, list of (list of str)
+
+        Returns
+        -------
+        list of str
+        """
+        if groups is None:
+            groups = self.cmp_groups or [list(self.groups.keys())]
+        
         channel_names = [
             sample_name
-            for lst in self.cmp_groups or [list(self.groups.keys())]
+            for lst in groups
             for group in lst
             for sample_name in self.groups[group]
             if sample_name in self.channels
@@ -2171,6 +2192,52 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
 
     ds.psms[['Fold Change', 'p-value']] = vals
 
+    return ds
+
+
+def _pair_corr(row, x_val, y_val):
+    pcorr_df = pd.DataFrame([
+        pd.to_numeric(row[x_val.index.tolist()]),
+        x_val,
+        y_val
+    ]).T
+    pcorr_df.columns = ['row', 'x', 'y']
+
+    x_pair_corr = pcorr_df.pairwise_corr(
+        covar='y',
+        method='spearman',
+    )
+    y_pair_corr = pcorr_df.pairwise_corr(
+        covar='x',
+        method='spearman',
+    )
+    x_corr = x_pair_corr['r'].iloc[0]
+    y_corr = y_pair_corr['r'].iloc[0]
+
+    x_p = x_pair_corr['p-unc'].iloc[0]
+    y_p = y_pair_corr['p-unc'].iloc[0]
+    
+    return pd.Series(
+        (x_corr, y_corr, x_p, y_p),
+        index=[
+        'Correlation-x',
+        'Correlation-y',
+        'p-value-x',
+        'p-value-y',
+    ])
+
+
+def update_pairwise_corr(ds, x_val, y_val, inplace=False):
+    if not inplace:
+        ds = ds.copy()
+    
+    vals = ds.psms.apply(
+        partial(_pair_corr, x_val=x_val, y_val=y_val),
+        axis=1,
+        result_type='expand',
+    )
+    ds[vals.columns.tolist()] = vals
+    
     return ds
 
 
