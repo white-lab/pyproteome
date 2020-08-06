@@ -347,6 +347,14 @@ def get_name(proteins):
 
     if len(genes) > 1:
         common = os.path.commonprefix(genes)
+        last_digit = [
+            ind
+            for ind, i in list(enumerate(common))[::-1]
+            if i.isdigit()
+        ]
+        
+        if last_digit:
+            common = common[:last_digit[0]]
 
         if common:
             sep = "/"
