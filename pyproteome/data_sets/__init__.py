@@ -14,6 +14,7 @@ from .data_set import (
     merge_data,
     merge_proteins,
     update_correlation,
+    update_pairwise_corr,
 )
 
 from .modification import (

@@ -11,8 +11,8 @@ def get_protein_seq(slc, gene):
                 return protein.full_sequence
             
 
-def get_lc(fc, p, edge=False):
-    if p < 5e-2:
+def get_lc(fc, p, edge=False, p_cutoff=1e-2):
+    if p < p_cutoff:
         if fc > 1.05:
             return '#ff0000' if edge else '#ff8888'
         elif fc < 1/1.05:
@@ -49,6 +49,7 @@ def draw_protein_seq(
     ds,
     genes,
     max_col=50,
+    p_cutoff=1e-2,
 ):
     ds = ds.filter(protein=genes)
     # ds = ds.filter(missed_cleavage=0)
@@ -127,8 +128,8 @@ def draw_protein_seq(
             seq = pep['Sequence']
             match = [i for i in seq.protein_matches if i.protein.gene == gene][0]
 
-            fc_lc = get_lc(pep['Fold Change'], pep['p-value'])
-            ec_lc = get_lc(pep['Fold Change'], pep['p-value'], edge=True)
+            fc_lc = get_lc(pep['Fold Change'], pep['p-value'], p_cutoff=p_cutoff)
+            ec_lc = get_lc(pep['Fold Change'], pep['p-value'], edge=True, p_cutoff=p_cutoff)
 
             mods = seq.modifications.get_mods(mod_types)
             # print(seq.pep_seq, match.rel_pos, match.exact, str(seq))
