@@ -243,13 +243,15 @@ def plot_group(
             # Check normalization group is not null and at least one other
             # group of channels is not null
             if (
-                group_vals.shape[0] < 1 or (
-                    len(cmp_groups) > 1 and
-                    groups[0] not in group_vals.index
-                ) or all(
-                    group not in group_vals.index
-                    for group in groups[1:]
-                )
+                group_vals.shape[0] < 1
+                # or (
+                #     len(cmp_groups) > 1
+                #     # and groups[0] not in group_vals.index
+                # )
+                # or all([
+                #     group not in group_vals.index
+                #     for group in groups[1:]
+                # ])
             ):
                 continue
 
