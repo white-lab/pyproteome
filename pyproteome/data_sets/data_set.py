@@ -255,7 +255,7 @@ class DataSet:
 
             constand.constand(self, name=name, inplace=True)
             self.rename_channels(inplace=True)
-            self.inter_normalized = True
+            # self.inter_normalized = True
 
             # Display quant distribution
             # pyp.levels.get_channel_levels(self)
@@ -644,7 +644,6 @@ class DataSet:
         -------
         ds : :class:`.DataSet`
         """
-        print('inter_normalizing', self.name, norm_channels)
         assert (
             norm_channels is not None or
             other is not None
@@ -660,6 +659,7 @@ class DataSet:
         if norm_channels is None:
             norm_channels = set(new.channels).intersection(other.channels)
 
+        # If there are no common channels, do not change anything
         if len(norm_channels) == 0:
             return new
 
@@ -1829,7 +1829,7 @@ def norm_all_data(
 
     if norm_mapping in ['self', 'constand']:
         norm_mapping = {
-            name: name
+            name: name + ('' if replace_norm else '-norm')
             for name in datas.keys()
             if not name.endswith("-norm")
         }

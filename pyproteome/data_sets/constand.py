@@ -142,7 +142,6 @@ def constand(
         if key != norm_key:
             del new.psms[key]
 
-    new.inter_normalized = True
     new.channels = new_channels
     new.groups = new.groups.copy()
 
