@@ -1,6 +1,6 @@
 # Change Log
 
-### 0.11.0 (2020-08-08)
+### 0.11.0 (2020-09-14)
 
 Features
 
@@ -13,6 +13,12 @@ Features
   - Improved speed and modularity of data normalization.
   - Updated MSigDB to v7.1.
   - Cleaned up the display of several plotting functions.
+
+Changes
+
+  - Use log2 Fold Change when calling PHOTON.
+  - Added `save_cols` argument to `tables.write_full_tables()` to save custom columns.
+  - Added the ability to use multiple control groups to `DataSet.norm_cmp_groups()`.
 
 Bug fixes
 
