@@ -10,6 +10,7 @@ import uuid
 import pyproteome as pyp
 import brainrnaseq as brs
 import pandas as pd
+import numpy as np
 
 LOGGER = logging.getLogger("pathways.photon_ptm")
 
@@ -94,7 +95,7 @@ def _get_templates(template_dir):
         f.write(r.content)
 
 
-def photon(ds, folder_name=None):
+def photon(ds, folder_name=None, write_output=False):
     """
     Run PHOTON algorithm on a data set to find functional phosphorylation sites
     using protein-protein interaction networks.
@@ -138,22 +139,31 @@ def photon(ds, folder_name=None):
     symbol_mapping = symbol_mapping.set_index("GeneID")["Symbol"]
 
     def _get_phos_data(psms):
+        hit = 0
+        miss = 0
+
         for _, row in psms.iterrows():
             gene = row["Proteins"].genes[0]
 
             entrez, symbol = _map_gene(mapper, symbol_mapping, gene, species)
 
             if not entrez:
+                # print(gene, entrez, symbol)
+                miss += 1
                 continue
+
+            hit += 1
 
             for mod in row["Modifications"].get_mods("Phospho"):
                 yield pd.Series(OrderedDict([
                     ("GeneID", entrez),
                     ("Amino.Acid", mod.letter),
                     ("Position", 1 + mod.abs_pos[0]),
-                    ("avg", row["Fold Change"]),
+                    ("avg", np.log2(row["Fold Change"])),
                     ("Symbol", symbol),
                 ]))
+
+        print(hit, miss)
 
     LOGGER.info("Generated data frame: {}, {}".format(ds.name, ds.shape))
 
@@ -189,15 +199,27 @@ def photon(ds, folder_name=None):
     with open(csv_path, "w") as csv_file:
         df.to_csv(csv_file, index=False)
 
-    phos.pipeline.run(
-        name,
-        csv_path,
-        _parameters,
-        template_dir,
-        folder_name,
-        defaults['db'],
-    )
+    if write_output:
+        phos.pipeline.run(
+            name,
+            csv_path,
+            _parameters,
+            template_dir,
+            folder_name,
+            defaults['db'],
+        )
 
-    LOGGER.info("Wrote results to: {}".format(folder_name))
+        LOGGER.info("Wrote results to: {}".format(folder_name))
 
-    return folder_name
+        return folder_name
+    else:
+        exp, scores, subnet, go_scores, predictions = phos.pipeline._run(
+            name,
+            csv_path,
+            _parameters,
+            # template_dir,
+            # folder_name,
+            defaults['db'],
+        )
+
+        return exp, scores, subnet, go_scores, predictions
