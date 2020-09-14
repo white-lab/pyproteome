@@ -239,23 +239,24 @@ def ptmsigdb_changes_table(
     )
 
 
-def _ds_to_df(data):
+def _ds_to_df(data, save_cols=None, sample_values=True):
     channels = [
         (name, data.channels[name])
-        for group in data.groups.values()
-        for name in group
-        if name in data.channels and
-        data.channels[name] in data.psms.columns
+        for name in data.samples
+    ] if sample_values else []
+    
+    if save_cols is None:
+        save_cols = ["Fold Change", "p-value"]
+    else:
+        save_cols = [i for i in save_cols if i in data.psms.columns]
+    
+    cols = [
+        'Proteins', 'Sequence', #'Scan',
+    ] + save_cols + [
+        chan
+        for _, chan in channels
     ]
-    df = data.psms[
-        [
-            "Proteins", "Sequence", "Scan",
-            "Fold Change", "p-value", "Validated",
-        ] + [
-            chan
-            for _, chan in channels
-        ]
-    ].copy()
+    df = data.psms[cols].copy()
 
     df.rename(
         columns={
@@ -285,12 +286,12 @@ def _ds_to_df(data):
         ),
     )
     df["Sequence"] = df["Sequence"].apply(str)
-    df["Scan"] = df["Scan"].apply(
-        lambda x:
-        ", ".join([str(i) for i in x])
-        if isinstance(x, collections.Iterable) else
-        str(x)
-    )
+    # df["Scan"] = df["Scan"].apply(
+    #     lambda x:
+    #     ", ".join([str(i) for i in x])
+    #     if isinstance(x, collections.Iterable) else
+    #     str(x)
+    # )
 
     if 'p-value' in cols:
         df.sort_values("p-value", inplace=True, ascending=True)
@@ -333,7 +334,13 @@ def write_csv(data, folder_name=None, out_name="DataSet.csv"):
     return out_name
 
 
-def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
+def write_full_tables(
+    datas, 
+    save_cols=None, 
+    sample_values=True,
+    folder_name=None, 
+    out_name="Full Data.xlsx", 
+):
     """
     Write information for a list of data sets to sheets of a .xlsx file.
 
@@ -343,6 +350,10 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     Parameters
     ----------
     datas : list of :class:`pyproteome.data_sets.DataSet`
+    save_cols : list of str, optional
+        Extra column names to save from in each dataset.
+    sample_values : bool, optional
+        Save normalized TMT values for each sample to the output.
     folder_name : str, optional
     out_name : str, optional
 
@@ -361,7 +372,11 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
     writer = pd.ExcelWriter(out_name, engine="xlsxwriter")
 
     for data in datas:
-        df = _ds_to_df(data)
+        df = _ds_to_df(
+            data, 
+            save_cols=save_cols,
+            sample_values=sample_values,
+        )
 
         ws_name = re.sub(
             "/",
@@ -375,12 +390,30 @@ def write_full_tables(datas, folder_name=None, out_name="Full Data.xlsx"):
         )
 
         ws = writer.sheets[ws_name]
+        
         ws.freeze_panes(1, 0)
+        
         ws.set_column(0, 0, 60)
-        ws.set_column(1, 1, 30)
-        ws.set_column(2, 2, 20)
-        ws.set_column(3, 3, 12)
-        ws.set_column(4, 4, 12)
+        ws.set_column(1, 1, 15)
+        ws.set_column(2, 2, 15)
+        ws.set_column(3, 3, 20)
+        ws.set_column(4, 4, 20)
+
+        ws.autofilter(0, 0, df.shape[0], df.shape[1] - 1)
+
+        for ind, col in enumerate(df.columns):
+            args = 0, ind, df.shape[0], ind
+
+            if col.endswith('-p'):
+                args += {'type': '2_color_scale', 'minimum': 0, 'maximum': 5e-2},
+            elif col.endswith('-FC'):
+                args += {'type': '3_color_scale'},
+            elif col.endswith('-Corr') or col.endswith('-Correlation'):
+                args += {'type': '3_color_scale', 'minimum': -1, 'maximum': 1},
+            else:
+                continue
+
+            ws.conditional_format(*args)
 
     writer.save()
 
