@@ -255,7 +255,6 @@ class DataSet:
 
             constand.constand(self, name=name, inplace=True)
             self.rename_channels(inplace=True)
-            # self.inter_normalized = True
 
             # Display quant distribution
             # pyp.levels.get_channel_levels(self)
@@ -1318,7 +1317,7 @@ class DataSet:
             self.psms["Fold Change"] = np.nan
             self.psms["p-value"] = np.nan
 
-    def norm_cmp_groups(self, cmp_groups, inplace=False):
+    def norm_cmp_groups(self, cmp_groups, ctrl_groups=None, inplace=False):
         """
         Normalize between groups in a list. This can be used to compare data
         sets that have comparable control groups.
@@ -1328,9 +1327,12 @@ class DataSet:
 
         Parameters
         ----------
-        cmp_gorups : list of list of str
+        cmp_groups : list of list of str
             List of groups to be normalized to each other.
-            i.e. [["CK-p25 Hip", "CK Hip"], ["CK-p25 Cortex", "CK Cortex"]]
+            i.e. [('CK Hip', 'CK-p25 Hip'), ('CK Cortex', 'CK-p25 Cortex')]
+        ctrl_groups : list of str, optional
+            List of groups to use for baseline normalization. If not set,
+            the first group from each comparison will be used.
         inplace : bool, optional
             Modify the data set in place, otherwise create a copy and return
             the new object.
@@ -1373,7 +1375,6 @@ class DataSet:
         #     for ind, groups in enumerate(cmp_groups)
         #     for group in groups
         # )
-
         for groups in cmp_groups:
             channels = [
                 [
@@ -1383,15 +1384,29 @@ class DataSet:
                 ]
                 for group in groups
             ]
+            group_names = [
+                group
+                for ind, group in enumerate(groups)
+            ]
 
-            if not any(len(i) > 0 for i in channels):
+            if not any([len(i) > 0 for i in channels]):
                 continue
 
             vals = new[
                 [chan for chan_group in channels for chan in chan_group]
             ]
 
-            norm_vals = vals[channels[0]].median(axis=1)
+            if ctrl_groups:
+                norm_vals = vals[[
+                    chan
+                    for i in ctrl_groups
+                    if i in group_names
+                    for chan in channels[group_names.index(i)]
+                ]].median(axis=1)
+            else:
+                norm_vals = vals[
+                    channels[0]
+                ].median(axis=1)
 
             vals = vals.apply(lambda col: col / norm_vals)
 
