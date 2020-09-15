@@ -53,8 +53,7 @@ if __name__ == '__main__':
             'photon': [
                 'photon_ptm '
                 '@ http://github.com/jdrudolph/photon/archive/master.zip',
-                'perseuspy '
-                '@ http://github.com/naderm/perseuspy/archive/master.zip',
+                'perseuspy>=0.3.8',
             ],
         },
         classifiers=[
