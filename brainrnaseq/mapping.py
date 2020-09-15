@@ -14,7 +14,7 @@ def _find_uniprot_gene(gene, data):
         return rows
 
     rows = data[
-        data["Synonyms"].apply(lambda x: gene in x.split("|"))
+        data['Synonyms'].apply(lambda x: gene in x.split('|'))
     ]
 
     if rows.shape[0] > 0:
@@ -24,12 +24,12 @@ def _find_uniprot_gene(gene, data):
 
 
 @utils.memoize
-def get_symbol_mapping(gene, species="Mouse"):
-    """
+def get_symbol_mapping(gene, species='Mouse'):
+    '''
     Returns
     -------
     pandas.Series
-    """
+    '''
     data = cache.get_mapping_data(species=species)
 
     row = _find_uniprot_gene(gene, data)
@@ -37,13 +37,13 @@ def get_symbol_mapping(gene, species="Mouse"):
 
 
 @utils.memoize
-def get_entrez_mapping(gene, species="Mouse"):
-    """
+def get_entrez_mapping(gene, species='Mouse'):
+    '''
     Returns
     -------
     pandas.Series
-    """
+    '''
     data = cache.get_mapping_data(species=species)
 
     row = _find_uniprot_gene(gene, data)
-    return str(row["GeneID"]) if row is not None else None
+    return str(row['GeneID']) if row is not None else None

@@ -10,13 +10,13 @@ import pandas as pd
 import brainrnaseq as brs
 from . import cache
 
-LOGGER = logging.getLogger("brainrnaseq.enrichments")
+LOGGER = logging.getLogger('brainrnaseq.enrichments')
 
 
 def build_barres_table(cell_types=None, force=False):
     if not force:
         try:
-            with open(cache.ENRICHMENT_CACHE, "rb") as f:
+            with open(cache.ENRICHMENT_CACHE, 'rb') as f:
                 return pickle.load(f)
         except:
             pass
@@ -26,14 +26,14 @@ def build_barres_table(cell_types=None, force=False):
 
     cache.get_barres_seq_data(force=force)
 
-    LOGGER.info("Calculating cell type enrichment")
+    LOGGER.info('Calculating cell type enrichment')
     enriched = {}
 
     for species, data in cache.BARRES_SPECIES_DATA.items():
         enriched[species] = {}
 
         for col in data.columns:
-            if hasattr(col, "lower") and col.lower() == "gene":
+            if hasattr(col, 'lower') and col.lower() == 'gene':
                 gene_col_name = col
                 break
 
@@ -51,11 +51,11 @@ def build_barres_table(cell_types=None, force=False):
             enriched[species][row[gene_col_name]] = max_cell, enrichment
 
     try:
-        with open(cache.ENRICHMENT_CACHE, "wb") as f:
+        with open(cache.ENRICHMENT_CACHE, 'wb') as f:
             pickle.dump(enriched, f)
     except Exception as e:
         LOGGER.warning(
-            "Unable to save enrichment information to cache: {}"
+            'Unable to save enrichment information to cache: {}'
             .format(e)
         )
 
@@ -65,11 +65,11 @@ def build_barres_table(cell_types=None, force=False):
 def _fix_name(name):
     name = name.title()
     return {
-        "Endothelial": "Endothelia",
-        "Endothelial Cells": "Endothelia",
-        "Myeloid": "Microglia",
-        "Oligodendrocyte": "Myelinating Oligodendrocytes",
-        "Oligodendrocyte Precursor Cells": "OPC",
+        'Endothelial': 'Endothelia',
+        'Endothelial Cells': 'Endothelia',
+        'Myeloid': 'Microglia',
+        'Oligodendrocyte': 'Myelinating Oligodendrocytes',
+        'Oligodendrocyte Precursor Cells': 'OPC',
     }.get(name, name)
 
 
@@ -83,7 +83,7 @@ def build_hansen_table(
 
     cache.get_hansen_seq_data(force=force)
 
-    LOGGER.info("Calculating cell type enrichment")
+    LOGGER.info('Calculating cell type enrichment')
     enriched = {}
 
     for species, data in cache.HANSEN_SPECIES_DATA.items():
@@ -111,7 +111,7 @@ def get_enrichments(
     backend='Barres',
     **kwargs
 ):
-    """
+    '''
     Fetch enrichment table mapping genes to cell types with enriched expression
     in the brain.
 
@@ -126,7 +126,7 @@ def get_enrichments(
     Returns
     -------
     dict of (str, str)
-    """
+    '''
     build_table = {
         'Barres': build_barres_table,
         'Hansen': build_hansen_table,
@@ -143,8 +143,8 @@ def get_enrichments(
             if index not in enrichments:
                 continue
 
-            for syn in row["Synonyms"].split("|"):
-                if syn in enrichments or syn == "-":
+            for syn in row['Synonyms'].split('|'):
+                if syn in enrichments or syn == '-':
                     continue
 
                 enrichments[syn] = enrichments[index]

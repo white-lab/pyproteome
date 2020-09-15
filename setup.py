@@ -16,7 +16,7 @@ with open(
         if not line.startswith('version ='):
             continue
 
-        __version__ = line.split('=')[1].strip().strip('\'')
+        __version__ = line.split('=')[1].strip().strip('\'').strip('\"')
 
 REQUIREMENTS = [
     'adjustText>=0.7.3',
