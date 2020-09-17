@@ -262,7 +262,7 @@ class DataSet:
                 weight = "{}_weight".format(channel)
                 self.psms[weight] = self.psms[channel]
 
-            constand.constand(self, name=name, inplace=True)
+            constand.constand(self, inplace=True)
             self.rename_channels(inplace=True)
 
             # Display quant distribution

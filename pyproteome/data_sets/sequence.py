@@ -1,6 +1,6 @@
-"""
+'''
 This module provides functionality for manipulating sequences.
-"""
+'''
 
 # Built-ins
 import logging
@@ -10,19 +10,22 @@ from . import modification, protein
 import pyproteome as pyp
 
 
-LOGGER = logging.getLogger("pyproteome.sequence")
+LOGGER = logging.getLogger('pyproteome.sequence')
 
 
 class ProteinMatch:
-    """
-    Contains information mapping a sequence onto a protein.
+    '''
+    Contains information about how a peptide sequence maps onto a protein.
 
     Attributes
     ----------
     protein : :class:`.protein.Protein`
+        Protein object.
     rel_pos : int
+        Relative position of the peptide start within the protein sequence.
     exact : bool
-    """
+        Indicates whether a peptide sequence exact matches its protein sequence.
+    '''
 
     def __init__(self, protein, rel_pos, exact):
         self.protein = protein
@@ -50,30 +53,32 @@ class ProteinMatch:
 
 
 class Sequence:
-    """
+    '''
     Contains information about a sequence and which proteins it matches to.
 
     Attributes
     ----------
     pep_seq : str
-    protein_matches :
+        Peptide sequence, in 1-letter amino code.
     protein_matches : list of :class:`.ProteinMatch`
+        Object mapping all proteins that a peptide sequence matches.
     modifications : :class:`.modification.Modifications`
-    """
+        Object listing all post-translation modifications identified on a peptide.
+    '''
 
     def __init__(
         self,
-        pep_seq="",
+        pep_seq='',
         protein_matches=None,
         modifications=None,
     ):
-        """
+        '''
         Parameters
         ----------
         pep_seq : str
         protein_matches : list of :class:`.ProteinMatch`
         modifications : :class:`.modification.Modifications`, optional
-        """
+        '''
         if protein_matches is None:
             protein_matches = ()
 
@@ -157,7 +162,32 @@ class Sequence:
             )
         )
 
-    def __str__(self, skip_labels=True, skip_terminus=True, mods=None, show_mods=False):
+    def __str__(
+        self, 
+        skip_labels=True, 
+        skip_terminus=True, 
+        mods=None, 
+        show_mods=False,
+    ):
+        '''
+        Converts a peptide into a string.
+
+        Parameters
+        ----------
+        skip_labels : bool, optional
+            Don't include TMT/iTRAQ quantitification tags in string.
+        skip_terminus : bool, optional
+            Don't show N-/C-terminal modifications.
+        mods : list of str, optional
+            Only show this subset of modifications (i.e. ['Phospho', 'Oxidation']).
+        show_mods : bool, optional
+            If true, show modification identities (i.e. 'y(Phospho)').
+            Otherwise residues with modifications are shown as lowercase.
+
+        Returns
+        -------
+        str
+        '''
         string = list('N-' + self.pep_seq.upper() + '-C')
         self_mods = self.modifications
 
@@ -203,14 +233,14 @@ class Sequence:
 
     @property
     def is_labeled(self):
-        """
+        '''
         Checks whether a sequence is modified on any residue with a
         quantification label.
 
         Returns
         -------
         is_labeled : bool
-        """
+        '''
         if self._is_labeled is not None:
             return self._is_labeled
 
@@ -225,14 +255,14 @@ class Sequence:
 
     @property
     def is_underlabeled(self):
-        """
+        '''
         Checks whether a sequence is modified with quantification labels on
         fewer than all expected residues.
 
         Returns
         -------
         is_underlabeled : bool
-        """
+        '''
 
         if self._is_underlabeled is not None:
             return self._is_underlabeled
@@ -245,10 +275,10 @@ class Sequence:
             underlabeled = not any(
                 j.mod_type in modification.LABEL_NAMES and j.nterm
                 for j in self.modifications.mods
-            ) or self.pep_seq.count("K") != sum(
+            ) or self.pep_seq.count('K') != sum(
                 j.mod_type in modification.LABEL_NAMES
                 for j in self.modifications.mods
-                if j.letter == "K" and not j.nterm
+                if j.letter == 'K' and not j.nterm
             )
 
         self._is_underlabeled = underlabeled
@@ -257,7 +287,7 @@ class Sequence:
 
 
 def extract_sequence(proteins, sequence_string):
-    """
+    '''
     Extract a Sequence object from a list of proteins and sequence string.
 
     Does not set the Sequence.modifications attribute.
@@ -270,7 +300,7 @@ def extract_sequence(proteins, sequence_string):
     Returns
     -------
     seqs : list of :class:`.Sequence`
-    """
+    '''
     prot_matches = []
 
     # Skip peptides with no protein matches

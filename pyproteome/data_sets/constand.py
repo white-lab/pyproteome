@@ -24,6 +24,13 @@ CONSTAND_METHODS = {
     # Fit a gaussian function to each row/column and select its max point
     'kde': lambda k, **kw: np.apply_along_axis(levels.kde_max, kw['axis'], k),
 }
+'''
+Methods to estimate the center of a data set's rows or columns.
+
+One of ['mean', 'median', 'kde']. 'mean': applies `:func:numpy.nanmean()`,
+'median' applies `:func:numpy.nanmedian()`, and 'kde' applies
+`:func:.levels.kde_max()`.
+'''
 
 CONSTAND_ERR_METHODS = {
     'mean': lambda x, **kw: np.sqrt(abs(np.nanmean(x, **kw) - 1)).sum() / 2,
@@ -35,8 +42,7 @@ DEFAULT_CONSTAND_COL = 'median'
 
 
 def constand(
-    ds, 
-    name='', 
+    ds,
     inplace=False,
     n_iters=25, 
     tol=1e-5,
@@ -51,18 +57,19 @@ def constand(
 
     Parameters
     ----------
-    lvls : dict of str, float or
     ds : :class:`.DataSet`
-        Mapping of channel names to normalized levels. Alternatively,
-        a data set to pass to levels.get_channel_levels() or use
-        pre-calculated levels from.
-    name : str, optional
+        Data set to apply CONSTANd normalization on.
     inplace : bool, optional
         Modify this data set in place.
     n_iters : int, optional
+        Max number of normalization iterations. Rows are normalized on
+        the odd step and columns are normalized on the even step.
     tol : float, optional
+        Minimum error tolerance to use to end iterations early.
     row_method : str, optional
+        Row normalization method to use. Default value is 'mean'.
     col_method : str, optional
+        Column normalization method to use. Default value is 'median'.
 
     Returns
     -------
@@ -127,7 +134,7 @@ def constand(
 
     LOGGER.info(
         "{}Applied CONSTANd normalization: iters = {}, err = {:.2e}.".format(
-            name + ': ' if name else '',
+            new.name + ': ' if new.name else '',
             ind,
             err,
         )

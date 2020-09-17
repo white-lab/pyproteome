@@ -1,24 +1,24 @@
-"""
+'''
 This module provides functionality for interfacing with protein data.
-"""
+'''
 
 import logging
 
 import pyproteome as pyp
 
 
-LOGGER = logging.getLogger("pyproteome.protein")
+LOGGER = logging.getLogger('pyproteome.protein')
 
 
 class Proteins:
-    """
+    '''
     Wraps a list of proteins.
 
     Attributes
     ----------
-    proteins : list of :class:`.Protein`
+    proteins : tuple of :class:`.Protein`
         List of proteins to which a peptide sequence is mapped.
-    """
+    '''
 
     def __init__(self, proteins=None):
         if proteins is None:
@@ -56,61 +56,61 @@ class Proteins:
         return self.proteins < other.proteins
 
     def __str__(self):
-        return " / ".join(
+        return ' / '.join(
             str(i)
             for i in self.proteins
         )
 
     @property
     def accessions(self):
-        """
+        '''
         List of UniPort accessions for a group of proteins.
 
         Returns
         -------
         tuple of str
-        """
+        '''
         return tuple(i.accession for i in self.proteins)
 
     @property
     def descriptions(self):
-        """
+        '''
         List of protein descriptions for a group of proteins.
 
         Returns
         -------
         tuple of str
-        """
+        '''
         return tuple(i.description for i in self.proteins)
 
     @property
     def genes(self):
-        """
+        '''
         List of UniPort gene names for a group of proteins.
 
         Returns
         -------
         tuple of str
-        """
+        '''
         return tuple(i.gene for i in self.proteins)
 
 
 class Protein:
-    """
+    '''
     Contains information about a single protein.
 
     Attributes
     ----------
     accession : str
-        The UniProt accession (i.e. "P40763")
+        The UniProt accession (i.e. 'P40763').
     gene : str
-        The UniProt gene name (i.e. "STAT3")
+        The UniProt gene name (i.e. 'STAT3').
     description : str
-        A brief description of the protein (i.e. "Signal transducer and
-        activator of transcription 3")
+        A brief description of the protein (i.e. 'Signal transducer and
+        activator of transcription 3').
     full_sequence : str
         The full sequence of the protein.
-    """
+    '''
 
     def __init__(
         self, accession,
@@ -124,18 +124,18 @@ class Protein:
         if any(i is None for i in [gene, description, full_sequence]):
             up_data = pyp.pypuniprot.get_uniprot_data(accession)
 
-            if "gene" in up_data:
-                self.gene = up_data["gene"]
-            elif "id" in up_data:
-                self.gene = up_data["id"]
+            if 'gene' in up_data:
+                self.gene = up_data['gene']
+            elif 'id' in up_data:
+                self.gene = up_data['id']
             else:
                 LOGGER.warning(
-                    "Unable to find {} in uniprot db".format(accession)
+                    'Unable to find {} in uniprot db'.format(accession)
                 )
                 self.gene = accession
 
-            self.description = up_data.get("descriptions", [""])[0]
-            self.full_sequence = up_data.get("sequence", None)
+            self.description = up_data.get('descriptions', [''])[0]
+            self.full_sequence = up_data.get('sequence', None)
 
     def __hash__(self):
         return hash(self.accession)
@@ -150,7 +150,7 @@ class Protein:
         return self.gene < other.gene
 
     def __str__(self):
-        return "{} ({})".format(
+        return '{} ({})'.format(
             self.description,
             self.gene,
         )
