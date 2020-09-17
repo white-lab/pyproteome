@@ -25,7 +25,6 @@ def get_ptmsigdb(species):
     Returns
     -------
     df : :class:`pandas.DataFrame`
-
     """
     species = pyp.species.ORGANISM_MAPPING.get(species, species).lower()
 
