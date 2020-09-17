@@ -133,6 +133,10 @@ class DataSet:
         Parameters
         ----------
         name : str, optional
+            Name of the data set, by default this is also the .msf file that
+            is used to load peptide-spectrum matches.
+        psms : `:class:pandas.DataFrame`, optional
+            Prebuilt dataframe of peptide-spectrum matches.
         search_name : str, optional
             Read psms from MASCOT / Discoverer data files.
         channels : dict of (str, str), optional
@@ -141,6 +145,9 @@ class DataSet:
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
+        cmp_groups : list of list of str
+            cmp_groups that are passed to `:func:.DataSet.norm_cmp_groups()`.
+        fix_channel_names : bool, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
             values.
@@ -148,6 +155,7 @@ class DataSet:
             Select the peptide sequence for each scan that has the highest
             MASCOT ion score. (i.e. ["pSTY": 5, "SpTY": 10, "STpY": 20] =>
             "STpY")
+        constand_norm : bool, optional
         merge_duplicates : bool, optional
             Merge scans that have the same peptide sequence into one peptide,
             summing the quantification channel intensities to give a weighted
@@ -155,6 +163,7 @@ class DataSet:
         filter_bad : bool or dict, optional
             Remove peptides that do not have a "High" confidence score from
             ProteomeDiscoverer.
+        check_raw : bool, optional
         skip_load : bool, optional
             Just initialize the structure, don't load any data.
         skip_logging : bool, optional
@@ -534,14 +543,26 @@ class DataSet:
     def merge_subsequences(self, inplace=False):
         """
         Merges petides that are a subsequence of another peptide.
+        (i.e. SVYTEIKIHK + SVYTEIK -> SVYTEIK)
 
         Only merges peptides that contain the same set of modifications and
         that map to the same protein(s).
+
+        Parameters
+        ----------
+        inplace : bool, optional
+
+        Returns
+        -------
+        ds : :class:`.DataSet`
         """
         new = self
 
         if not inplace:
             new = new.copy()
+
+        new['__sort__'] = new['Sequence'].apply(len)
+        new.psms = new.psms.sort_values('__sort__', ascending=True)
 
         # Find all proteins that have more than one peptide mapping to them
         for index, row in new.psms[
@@ -566,6 +587,9 @@ class DataSet:
                     ]
                     new.psms.at[o_index, cols] = row[cols]
 
+
+        del new.psms['__sort__']
+
         # And finally group together peptides that were renamed
         return new.merge_duplicates(inplace=inplace)
 
@@ -588,12 +612,16 @@ class DataSet:
 
     def rename_channels(self, inplace=False):
         """
-        Rename all channels from quantification channel name to sample name.
-        (i.e. "126" => "Mouse #1")
+        Rename all columns names for quantification channels to sample names.
+        (i.e. "126" => "Mouse #1").
 
         Parameters
         ----------
         inplace : bool, optional
+
+        Returns
+        -------
+        ds : :class:`.DataSet`
         """
         new = self
 
@@ -628,14 +656,22 @@ class DataSet:
 
         return new
 
-    def inter_normalize(self, norm_channels=None, other=None, inplace=False):
+    def inter_normalize(
+        self, 
+        norm_channels=None, 
+        other=None, 
+        inplace=False,
+    ):
         """
         Normalize runs to one channel for inter-run comparions.
 
         Parameters
         ----------
-        norm_channels : list of str, optional
         other : :class:`.DataSet`, optional
+            Second data set to normalize quantification values against,
+            using a common normalization channels.
+        norm_channels : list of str, optional
+            Normalization channels to use for cross-run normalization.
         inplace : bool, optional
             Modify this data set in place.
 
@@ -739,11 +775,9 @@ class DataSet:
 
         Parameters
         ----------
-        lvls : dict of str, float or
-        ds : :class:`.DataSet`
-            Mapping of channel names to normalized levels. Alternatively,
-            a data set to pass to levels.get_channel_levels() or use
-            pre-calculated levels from.
+        lvls : dict of str, float
+            Mapping of channel names to normalized levels. All quantification
+            values for each channel are divided by the normalization factor.
         inplace : bool, optional
             Modify this data set in place.
 
@@ -1262,15 +1296,17 @@ class DataSet:
 
     def update_group_changes(self, group_a=None, group_b=None):
         """
-        Update a table's Fold-Change, and p-value columns.
+        Update a DataSet's Fold Change, and p-value for each peptide using the give two-group comparison.
 
-        Values are calculated based on changes between group_a and group_b.
+        Values are calculated based on changes between group_a and group_b. p-values are calculated as a 2-sample t-test.
 
         Parameters
         ----------
         psms : :class:`pandas.DataFrame`
         group_a : str or list of str, optional
+            Single or multiple groups to use for fold change numerator.
         group_b : str or list of str, optional
+            Single or multiple groups to use for fold change denominator.
         """
         (group_a, group_b), _, (self.group_a, self.group_b) = self.get_groups(
             group_a=group_a,
