@@ -1,6 +1,6 @@
-"""
+'''
 Plot calculated levels of a given sequence across channels or groups.
-"""
+'''
 
 from __future__ import division
 
@@ -18,7 +18,7 @@ from scipy.stats import ttest_ind
 
 import pyproteome as pyp
 
-LOGGER = logging.getLogger("pyproteome.plot")
+LOGGER = logging.getLogger('pyproteome.plot')
 
 
 def plot(
@@ -28,7 +28,7 @@ def plot(
     log_2=True,
     box=True,
 ):
-    """
+    '''
     Plot the levels of a sequence across multiple channels.
 
     Parameters
@@ -40,7 +40,7 @@ def plot(
     Returns
     -------
     figs : list of :class:`matplotlib.figure.Figure`
-    """
+    '''
 
     cmp_groups = data.cmp_groups or [list(data.groups.keys())]
 
@@ -60,7 +60,7 @@ def plot(
     figures = []
 
     for _, row in data.psms.iterrows():
-        seq = str(row["Sequence"])
+        seq = str(row['Sequence'])
 
         values = row[channels]
         mask = ~pd.isnull(row[channels])
@@ -99,16 +99,16 @@ def plot(
                 )
                 for name, val in zip(names, values)
             ],
-            columns=("name", "val", "group"),
+            columns=('name', 'val', 'group'),
         )
 
         if log_2:
-            df["val"] = df["val"].apply(np.log2)
+            df['val'] = df['val'].apply(np.log2)
 
         (sns.barplot if box else sns.barplot)(
-            x="name",
-            y="val",
-            hue="group",
+            x='name',
+            y='val',
+            hue='group',
             data=df,
             ax=ax_i,
             dodge=False,
@@ -116,36 +116,36 @@ def plot(
         ax_i.set_xticklabels(
             ax_i.get_xticklabels(),
             rotation=45,
-            horizontalalignment="right",
+            horizontalalignment='right',
         )
-        ax_i.set_xlabel("")
-        ax_i.get_legend().set_title("")
+        ax_i.set_xlabel('')
+        ax_i.get_legend().set_title('')
 
         ax_i.axhline(
             np.log2(1) if log_2 else 1,
-            linestyle=":",
+            linestyle=':',
             color='#4C4D4F',
             # alpha=.5,
         )
 
-        mod_str = row["Modifications"].__str__(prot_index=0)
+        mod_str = row['Modifications'].__str__(prot_index=0)
 
         ax_i.set_title(
             title
             if title else
-            "{} ({}{})".format(
+            '{} ({}{})'.format(
                 seq,
                 pyp.utils.get_name(row['Proteins'])[:20],
-                (" " + mod_str) if mod_str else "",
+                (' ' + mod_str) if mod_str else '',
             ),
         )
 
-        ylabel = "Intensity"
+        ylabel = 'Intensity'
         # if data.cmp_groups:
         # else:
         #     ylabel = (
-        #         "Cummulative Intensity" +
-        #         (" (Normalized)" if data.intra_normalized else "")
+        #         'Cummulative Intensity' +
+        #         (' (Normalized)' if data.intra_normalized else '')
         #     )
 
         ax_i.set_ylabel(
@@ -157,17 +157,17 @@ def plot(
     return figures
 
 
-def stars(p):
+def stars(p, ns='ns'):
     if p < 0.0001:
-        return "****"
+        return '****'
     elif (p < 0.001):
-        return "***"
+        return '***'
     elif (p < 0.01):
-        return "**"
+        return '**'
     elif (p < 0.05):
-        return "*"
+        return '*'
     else:
-        return "ns"
+        return ns
 
 
 def gen_groups(cmp_groups):
@@ -198,20 +198,31 @@ def plot_group(
     p_ha='center',
     cmap='cool',
 ):
-    """
+    '''
     Plot the levels of a sequence across each group.
 
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
     cmp_groups : list of tuple, optional
+    cmp_groups_star : list of tuple, optional
     title : str, optional
-    figsize : tuple of (int, int), optional
+    ax : :class:`matplotlib.axes.Axes`, optional
+    box : bool, optional
+    show_p : bool, optional
+    show_ns : bool, optional
+    log_2 : bool, optional
+    offset_frac : float, optional
+    title_mods : list of str, optional
+    size : float, optional
+    y_max : float, optional
+    p_ha : str, optional
+    cmap : str, optional
 
     Returns
     -------
     figs : list of :class:`matplotlib.figure.Figure`
-    """
+    '''
     if cmp_groups is None:
         cmp_groups = data.cmp_groups or [list(data.groups.keys())]
 
@@ -317,7 +328,7 @@ def plot_group(
                 for label, j in i.iteritems()
                 for k in j.values
             ],
-            columns=("y", 'log2_y', "label"),
+            columns=('y', 'log2_y', 'label'),
         )
 
         if box:
@@ -326,9 +337,9 @@ def plot_group(
             kwargs = {}
         
         (sns.boxplot if box else sns.barplot)(
-            x="label",
-            y="log2_y" if log_2 else 'y',
-            hue="label",
+            x='label',
+            y='log2_y' if log_2 else 'y',
+            hue='label',
             palette={label: _get_color(label) for label in df['label']},
             data=df,
             ax=plot_ax,
@@ -339,26 +350,26 @@ def plot_group(
         sns.swarmplot(
             x=x,
             y=y,
-            color=".25",
+            color='.25',
             ax=plot_ax,
             size=size,
         )
         plot_ax.axhline(
             np.log2(1) if log_2 else 1,
-            linestyle="--",
+            linestyle='--',
             color='#4C4D4F',
         )
 
-        mod_str = row["Modifications"].get_mods(title_mods).__str__(prot_index=0)
+        mod_str = row['Modifications'].get_mods(title_mods).__str__(prot_index=0)
 
         plot_ax.set_title(
             title
             if title else
-            "{}{}({}{})".format(
-                row["Sequence"],
+            '{}{}({}{})'.format(
+                row['Sequence'],
                 ' ' if len(plot_ax.get_xticklabels()) > 2 else '\n',
                 pyp.utils.get_name(row['Proteins'])[:20],
-                (" " + mod_str) if mod_str else "",
+                (' ' + mod_str) if mod_str else '',
             ),
         )
         plot_ax.xaxis.grid(False)
@@ -412,7 +423,7 @@ def plot_group(
 
                 if txt != 'ns' or show_ns:
                     plot_ax.annotate(
-                        "",
+                        '',
                         xy=(
                             index_a,
                             y_max_cp + offset,
@@ -423,7 +434,7 @@ def plot_group(
                         ),
                         xycoords='data',
                         textcoords='data',
-                        arrowprops=dict(arrowstyle="-", ec='#000000'),
+                        arrowprops=dict(arrowstyle='-', ec='#000000'),
                     )
                     p_x = {
                         'left': index_a,
@@ -455,10 +466,10 @@ def plot_group(
         plot_ax.yaxis.set_ticks_position('left')
         plot_ax.xaxis.set_ticks_position('bottom')
 
-        plot_ax.set_xlabel("")
+        plot_ax.set_xlabel('')
         plot_ax.set_ylabel(
-            "{} Signal".format(
-                "Relative" if cmp_groups else "Cumulative",
+            '{} Signal'.format(
+                'Relative' if cmp_groups else 'Cumulative',
             ),
         )
         if plot_ax.get_legend():
@@ -472,7 +483,7 @@ def plot_group(
             ])
             plot_ax.set_yticklabels(
                 [
-                    "{:.2f}".format(np.power(2, i))
+                    '{:.2f}'.format(np.power(2, i))
                     for i in plot_ax.get_yticks()
                 ],
             )
@@ -480,7 +491,7 @@ def plot_group(
         plot_ax.set_xticklabels(
             labels,
             rotation=45,
-            horizontalalignment="right",
+            horizontalalignment='right',
         )
 
         figures.append((plot_ax.get_figure(), plot_ax))
@@ -497,7 +508,7 @@ def plot_together(
     log_2=True,
     cmap='cool',
 ):
-    """
+    '''
     Plot the levels of a sequence across each group in one shared plot.
 
     Parameters
@@ -505,12 +516,15 @@ def plot_together(
     data : :class:`pyproteome.data_sets.DataSet`
     cmp_groups : list of tuple, optional
     title : str, optional
-    figsize : tuple of (int, int), optional
+    ax : :class:`matplotlib.axes.Axes`, optional
+    show_p : bool, optional
+    log_2 : bool, optional
+    cmap : str, optional
 
     Returns
     -------
     figs : list of :class:`matplotlib.figure.Figure`
-    """
+    '''
     if cmp_groups is None:
         cmp_groups = data.cmp_groups or [list(data.groups.keys())]
 
@@ -615,12 +629,12 @@ def plot_together(
                 for label, j in i.iteritems()
                 for k in j.values
             ],
-            columns=("y", 'log2_y', "label", "color"),
+            columns=('y', 'log2_y', 'label', 'color'),
         )
         sns.boxplot(
-            x="label",
-            y="log2_y" if log_2 else 'y',
-            hue="color",
+            x='label',
+            y='log2_y' if log_2 else 'y',
+            hue='color',
             data=df,
             ax=plot_ax,
             dodge=False,
@@ -629,13 +643,13 @@ def plot_together(
         sns.swarmplot(
             x=x,
             y=y,
-            color=".25",
+            color='.25',
             ax=plot_ax,
             # size=10,
         )
         plot_ax.axhline(
             np.log2(1) if log_2 else 1,
-            linestyle="--",
+            linestyle='--',
             color='#4C4D4F',
         )
 
@@ -646,18 +660,6 @@ def plot_together(
 
         if show_p:
             y_max = y.max()
-
-            def stars(p):
-                if p < 0.0001:
-                    return "****"
-                elif (p < 0.001):
-                    return "***"
-                elif (p < 0.01):
-                    return "**"
-                elif (p < 0.05):
-                    return "*"
-                else:
-                    return "-"
 
             v = [
                 vals
@@ -688,7 +690,7 @@ def plot_together(
 
                     if pval < 0.05:
                         plot_ax.annotate(
-                            "",
+                            '',
                             xy=(
                                 index_a,
                                 y_max + offset,
@@ -700,14 +702,14 @@ def plot_together(
                             xycoords='data',
                             textcoords='data',
                             arrowprops=dict(
-                                arrowstyle="-",
+                                arrowstyle='-',
                                 ec='#000000',
                             ),
                         )
                         plot_ax.text(
                             x=np.mean([index_a, index_b]),
                             y=y_max + offset + y_max / 40,
-                            s=stars(pval),
+                            s=stars(pval, ns='-'),
                             horizontalalignment='center',
                             verticalalignment='center',
                         )
@@ -721,10 +723,10 @@ def plot_together(
                     ]),
                 )
 
-        plot_ax.set_xlabel("")
+        plot_ax.set_xlabel('')
         plot_ax.set_ylabel(
-            "{} Signal".format(
-                "Relative" if cmp_groups else "Cumulative",
+            '{} Signal'.format(
+                'Relative' if cmp_groups else 'Cumulative',
             ),
         )
         plot_ax.get_legend().set_visible(False)
@@ -732,7 +734,7 @@ def plot_together(
         if log_2:
             plot_ax.set_yticklabels(
                 [
-                    "{:.2f}".format(i)
+                    '{:.2f}'.format(i)
                     for i in np.power(2, plot_ax.get_yticks())
                 ],
             )
@@ -740,7 +742,7 @@ def plot_together(
         plot_ax.set_xticklabels(
             labels,
             rotation=45,
-            horizontalalignment="right",
+            horizontalalignment='right',
         )
 
         figures.append((plot_ax.get_figure(), plot_ax))
@@ -750,23 +752,20 @@ def plot_together(
 
 def plot_all(
     data,
-    individual=True,
-    between=True,
     cmp_groups=None,
 ):
-    """
+    '''
     Runs :func:`.plot` and :func:`.plot_group` for all peptides in a data set.
 
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    figsize : tuple of (int, int), optional
     cmp_groups : list of tuple, optional
 
     Returns
     -------
     figs : list of :class:`matplotlib.figure.Figure`
-    """
+    '''
     figures = []
 
     figures += plot(

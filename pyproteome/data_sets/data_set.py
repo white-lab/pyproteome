@@ -135,7 +135,7 @@ class DataSet:
         name : str, optional
             Name of the data set, by default this is also the .msf file that
             is used to load peptide-spectrum matches.
-        psms : `:class:pandas.DataFrame`, optional
+        psms : :class:`pandas.DataFrame`, optional
             Prebuilt dataframe of peptide-spectrum matches.
         search_name : str, optional
             Read psms from MASCOT / Discoverer data files.
@@ -146,7 +146,7 @@ class DataSet:
             Ordered dictionary mapping sample names to larger groups
             (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
         cmp_groups : list of list of str
-            cmp_groups that are passed to `:func:.DataSet.norm_cmp_groups()`.
+            cmp_groups that are passed to :func:`.DataSet.norm_cmp_groups()`.
         fix_channel_names : bool, optional
         dropna : bool, optional
             Drop scans that have any channels with missing quantification

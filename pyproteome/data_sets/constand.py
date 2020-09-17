@@ -1,9 +1,9 @@
-"""
+'''
 This module provides functionality for manipulating proteomics data sets.
 
 Functionality includes merging data sets and interfacing with attributes in a
 structured format.
-"""
+'''
 
 # Built-ins
 from __future__ import absolute_import, division
@@ -16,7 +16,7 @@ import logging
 import numpy as np
 
 
-LOGGER = logging.getLogger("pyproteome.constand")
+LOGGER = logging.getLogger('pyproteome.constand')
 CONSTAND_METHODS = {
     'mean': np.nanmean,
     'median': np.nanmedian,
@@ -27,9 +27,9 @@ CONSTAND_METHODS = {
 '''
 Methods to estimate the center of a data set's rows or columns.
 
-One of ['mean', 'median', 'kde']. 'mean': applies `:func:numpy.nanmean()`,
-'median' applies `:func:numpy.nanmedian()`, and 'kde' applies
-`:func:.levels.kde_max()`.
+One of ['mean', 'median', 'kde']. 'mean': applies :func:`numpy.nanmean()`,
+'median' applies :func:`numpy.nanmedian()`, and 'kde' applies
+:func:`.levels.kde_max()`.
 '''
 
 CONSTAND_ERR_METHODS = {
@@ -49,7 +49,7 @@ def constand(
     row_method=None,
     col_method=None,
 ):
-    """
+    '''
     Normalize channels for intra-run comparisons. Iteratively fits the matrix
     of quantification values such that each row and column are centered around
     a calculated value. Uses row means and column median values for centering
@@ -74,7 +74,7 @@ def constand(
     Returns
     -------
     ds : :class:`.DataSet`
-    """
+    '''
     new = ds
 
     if row_method is None:
@@ -133,7 +133,7 @@ def constand(
             break
 
     LOGGER.info(
-        "{}Applied CONSTANd normalization: iters = {}, err = {:.2e}.".format(
+        '{}Applied CONSTANd normalization: iters = {}, err = {:.2e}.'.format(
             new.name + ': ' if new.name else '',
             ind,
             err,
