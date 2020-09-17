@@ -31,7 +31,7 @@ to manage their Python environment and provide pyproteome's dependencies.
 
   1. Install pyproteome::
 
-      $ pip install --process-dependency-links pyproteome
+      $ pip install pyproteome
 
   2. Open Python and load your data sets::
 

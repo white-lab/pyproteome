@@ -258,15 +258,13 @@ class DataSet:
             # Display quant distribution
             pyp.levels.get_channel_levels(self)
 
+            # Save channel intensities as weights for data integration
             for channel in channels:
                 weight = "{}_weight".format(channel)
                 self.psms[weight] = self.psms[channel]
 
+            # Run CONSTANd normalization
             constand.constand(self, inplace=True)
-            self.rename_channels(inplace=True)
-
-            # Display quant distribution
-            # pyp.levels.get_channel_levels(self)
 
         if merge_duplicates:
             LOGGER.info(
@@ -1812,6 +1810,10 @@ def load_all_data(
         kws = kwargs.copy()
         kws.update(kw_mapping.get(name, {}))
 
+        # Run CONSTANd normalization before data filtering and integration
+        if 'constand_norm' not in kws and norm_mapping == 'constand':
+            kws['constand_norm'] = True
+
         chan = kws.pop("channels", None)
         group = kws.pop("groups", None)
 
@@ -1898,11 +1900,11 @@ def norm_all_data(
             if not constand_norm:
                 data = data.normalize(datas[val], inplace=replace_norm)
             else:
-                data = constand.constand(
-                    data, 
-                    name=name, 
-                    inplace=replace_norm,
-                )
+                # data = constand.constand(
+                #     data, 
+                #     inplace=replace_norm,
+                # )
+                pass
 
             data.name += "-norm"
 

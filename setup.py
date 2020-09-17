@@ -21,7 +21,6 @@ with open(
 REQUIREMENTS = [
     'adjustText>=0.7.3',
     'fastcluster>=1.1.25',
-    'genemap @ http://github.com/naderm/genemap/archive/master.zip',
     'goatools>=0.9',
     'ipython>=5.4.1',
     'matplotlib>=3.0',
@@ -54,6 +53,10 @@ if __name__ == '__main__':
                 'photon_ptm '
                 '@ http://github.com/jdrudolph/photon/archive/master.zip',
                 'perseuspy>=0.3.8',
+            ],
+            'genemap': [
+                'genemap '
+                '@ http://github.com/naderm/genemap/archive/master.zip',
             ],
         },
         classifiers=[
