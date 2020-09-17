@@ -120,7 +120,7 @@ author = u'Nader Morshed'
 #
 # The short X.Y version.
 version = [
-    line.split("=", 1)[1][1:]
+    line.split("=", 1)[1].strip('\'').strip('\"')
     for line in open(
         os.path.join(THIS_DIR, "..", "pyproteome", "version.py")
     )

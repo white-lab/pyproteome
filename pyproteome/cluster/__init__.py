@@ -6,10 +6,10 @@ from .clusterer import (
 )
 
 __all__ = [
-    "auto",
-    "clusterer",
-    "plot",
+    'auto',
+    'clusterer',
+    'plot',
 
-    "cluster",
-    "get_data",
+    'cluster',
+    'get_data',
 ]

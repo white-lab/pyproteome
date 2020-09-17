@@ -7,8 +7,6 @@ import pandas as pd
 import pyproteome as pyp
 
 
-__dir__ = os.path.abspath(os.path.split(__file__)[0])
-
 PTMSIGDB_URL = (
     "https://raw.githubusercontent.com/broadinstitute/ssGSEA2.0/master/db/"
     "ptmsigdb/ptm.sig.db.all.uniprot.{name}.v1.9.0.gmt"

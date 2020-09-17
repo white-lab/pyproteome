@@ -1149,3 +1149,7 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_ptm=False):
     )
 
     return df, species
+
+__all__ = [
+    'read_discoverer_msf',
+]

@@ -89,7 +89,7 @@ class DataSet:
     :func:`merge_duplicates<pyproteome.data_sets.data_set.DataSet.merge_duplicates>`
     for info on how multiple peptide-spectrum matches are integrated together.
 
-    Attributes`
+    Attributes
     ----------
     search_name : str, optional
         Name of the search file this data set was loaded from.
