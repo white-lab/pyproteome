@@ -64,7 +64,7 @@ def import_all(line=None):
 
             'pylab.rcParams[\'figure.figsize\'] = (6, 4)',
             'pylab.rcParams[\'figure.dpi\'] = 144',
-            'pylab.rcParams[\'mathtext.default\'] = 'regular'',
+            'pylab.rcParams[\'mathtext.default\'] = \'regular\'',
             'pylab.rcParams[\'figure.max_open_warning\'] = 0',
 
             'sns.set_style(\'white\')',

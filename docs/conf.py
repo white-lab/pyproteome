@@ -111,7 +111,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyproteome'
-copyright = u'2016-2018, Nader Morshed'
+copyright = u'2016-2020, Nader Morshed'
 author = u'Nader Morshed'
 
 # The version info for the project you're documenting, acts as replacement for
