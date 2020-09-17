@@ -25,6 +25,16 @@ def auto_clusterer(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
+
+    Returns
+    -------
+    data : dict
+        Dictionary containing the data set and exact matrix used
+        for clustering, as well as accessory objects.
+    y_pred : :class:`numpy.array`
+        List of cluster IDs for each peptide.
+    clr
+        scikit-learn's cluster object.
     """
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}

@@ -151,12 +151,15 @@ def get_pathways(species, p_sites=False, remap=False):
     Parameters
     ----------
     species : str
+        Target species to use to generate gene / phospho sets.
     p_sites : bool, optional
+        Build phospho sets if true else build gene sets.
     remap : bool, optional
+        Remap proteins / phosphosites from all species to the target species.
 
     Returns
     -------
-    df : :class:`pandas.DataFrame`, optional
+    df : :class:`pandas.DataFrame`
     """
     LOGGER.info(
         "Building gene sets (psites={}, remap={})"
@@ -371,31 +374,13 @@ def gsea(
 
     Parameters
     ----------
-    ds : :class:`pyproteome.data_sets.DataSet`
+    psms : :class:`pandas.DataFrame`, optional
+    ds : :class:`pyproteome.data_sets.DataSet`, optional
         The data set to perform enrichment analysis on.
     phenotype : :class:`pandas.Series`, optional
         A series object with index values equal to the quantification columns
         in the data set. This object is used when calculating correlation
         statistics for each peptide.
-    name : str, optional
-        The name of this analysis. Defaults to `ds.name`.
-    metric : str, optional
-        Correlation metric to use.
-
-        Can be one of ["zscore", "fold", "spearman", "pearson", "kendall"].
-    p_sites : bool, optional
-        Perform Phospho Set Enrichment Analysis (PSEA) on data set.
-    remap : bool, optional
-        Remap database of phosphosites using information from all species.
-    species : str, optional
-        The species used to generate gene sets.
-
-        Value should be in binomial nomenclature (i.e. "Homo sapiens",
-        "Mus musculus").
-
-        If different from that of the input data set, IDs will be mapped to
-        the target species using Phosphosite Plus's database.
-    min_hits : int, optional
     gene_sets : :class:`pandas.DataFrame`, optional
         A dataframe with two columns: "name" and "set".
 
@@ -405,6 +390,25 @@ def gsea(
         Gene IDs should be strings of Entrez Gene IDs for protein sets and
         strings of "<Entrez>,<letter><pos>-p" (i.e. "8778,Y544-p") for
         phospho sets.
+    metric : str, optional
+        Correlation metric to use. One of ["zscore", "fold", "spearman", "pearson",
+        "kendall"].
+    phenotype : :class:`pandas.Series`, optional
+    species : str, optional
+        The species used to generate gene sets.
+
+        Value should be in binomial nomenclature (i.e. "Homo sapiens",
+        "Mus musculus").
+
+        If different from that of the input data set, IDs will be mapped to
+        the target species using Phosphosite Plus's database.
+    min_hits : int, optional
+    p_sites : bool, optional
+        Perform Phospho Set Enrichment Analysis (PSEA) on data set.
+    remap : bool, optional
+        Remap database of phosphosites using information from all species.
+    name : str, optional
+        The name of this analysis. Defaults to `ds.name`.
     show_plots : bool, optional
 
     See Also
@@ -486,6 +490,8 @@ def gsea(
             vals, gene_changes,
             **kwargs
         )
+    else:
+        figures = []
 
     return vals, gene_changes, figures
 
@@ -543,7 +549,7 @@ def ssgsea(
         )
 
         ds.psms["Fold Change"] = ds.psms[chan]
-        vals, gene_changes = gsea(ds=ds, show_plots=False, *args, **kwargs)
+        vals, gene_changes, figures = gsea(ds=ds, show_plots=False, *args, **kwargs)
 
         gsea_vals[sample] = vals
 

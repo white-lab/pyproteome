@@ -17,6 +17,14 @@ pyproteome.pathways.enrichments module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.pathways.go module
+-----------------------------
+
+.. automodule:: pyproteome.pathways.go
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.pathways.gskb module
 -------------------------------
 
@@ -42,18 +50,34 @@ pyproteome.pathways.pathwayscommon module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.pathways.psp module
-------------------------------
-
-.. automodule:: pyproteome.pathways.psp
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.pathways.photon_ptm module
 -------------------------------------
 
 .. automodule:: pyproteome.pathways.photon_ptm
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.pathways.plot module
+-------------------------------
+
+.. automodule:: pyproteome.pathways.plot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.pathways.plsr module
+-------------------------------
+
+.. automodule:: pyproteome.pathways.plsr
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.pathways.psp module
+------------------------------
+
+.. automodule:: pyproteome.pathways.psp
     :members:
     :undoc-members:
     :show-inheritance:

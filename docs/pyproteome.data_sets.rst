@@ -9,6 +9,14 @@ pyproteome.data_sets package
 Submodules
 ----------
 
+pyproteome.data_sets.constand module
+------------------------------------
+
+.. automodule:: pyproteome.data_sets.constand
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.data_sets.data_set module
 ------------------------------------
 

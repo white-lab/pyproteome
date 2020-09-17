@@ -33,6 +33,22 @@ pyproteome.analysis.plot module
     :undoc-members:
     :show-inheritance:
 
+pyproteome.analysis.protein module
+----------------------------------
+
+.. automodule:: pyproteome.analysis.protein
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyproteome.analysis.qc module
+-----------------------------
+
+.. automodule:: pyproteome.analysis.qc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 pyproteome.analysis.tables module
 ---------------------------------
 

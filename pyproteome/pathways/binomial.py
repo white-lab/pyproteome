@@ -182,11 +182,6 @@ def plot_binomial_enrichment(
         columns=['Group', 'Gene Set', 'Subset', 'Direction', 'Score'],
     )
     df = df[df['Direction'].isin(['correlated', 'upregulated'])]
-
-    # f, ax = plt.subplots(
-    #     dpi=200,
-    #     figsize=(3.5, 12),
-    # )
     
     cp = df.copy()
     cp['Group'] = cp.apply(lambda x: x['Group'] + '-' + x['Direction'] + '-' + x['Subset'], axis=1)
@@ -235,15 +230,11 @@ def plot_binomial_enrichment(
             len(correlates)
         ),
     ]
-    print(list(correlates.keys()))
-    print(list(subsets.keys()))
-    print(gene_colors)
 
     figsize = (
         len(cp.columns) * .75,
         len(cp.index) / n_sub * 1.5,
     )
-    print(cp.columns, cp.index)
 
     if gene_rows:
         figsize = tuple(reversed(figsize))

@@ -1,9 +1,9 @@
-"""
+'''
 This module provides functionality for normalizing protein data.
 
 Levels can be extracted from supernatant or phosphotyrosine runs using median
 or mean peptide levels across multiple channels.
-"""
+'''
 
 from __future__ import absolute_import, division
 
@@ -18,7 +18,7 @@ import numpy as np
 import seaborn as sns
 from scipy import stats
 
-LOGGER = logging.getLogger("pyproteome.levels")
+LOGGER = logging.getLogger('pyproteome.levels')
 WARN_PEP_CUTOFF = 50
 REL_CUTOFF = 5
 
@@ -36,10 +36,10 @@ def kde_max(points):
 def get_channel_levels(
     data,
     norm_channels=None,
-    method="median",
+    method='median',
     cols=2,
 ):
-    """
+    '''
     Calculate channel normalization levels. This value is calculated by
     selecting the peak of Gaussian KDE distribution fitted to channel ratio
     values.
@@ -47,18 +47,18 @@ def get_channel_levels(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    cols : int, optional
-        Number of columns used when displaying KDE distributions.
     norm_channels : list of str, optional
         Sample names of channels to use for normalization.
     method : str, optional
-        Normalize to the "mean" or "median" of each row.
+        Normalize to the 'mean' or 'median' of each row.
+    cols : int, optional
+        Number of columns used when displaying KDE distributions.
 
     Returns
     -------
-    :class:`matplotlib.figure.Figure`
-    dict of str, float
-    """
+    fig : :class:`matplotlib.figure.Figure`
+    channel_levels : dict of str, float
+    '''
     if norm_channels is None:
         norm_channels = list(data.channels.keys())
 
@@ -81,7 +81,7 @@ def get_channel_levels(
     elif method in ['median']:
         norm = data.psms[channels].median(axis=1)
     else:
-        raise Exception("Unknown normalization method: {}".format(method))
+        raise Exception('Unknown normalization method: {}'.format(method))
 
     for col_name, col in zip(norm_channels, channels):
         points = (data.psms[col] / norm).dropna()
@@ -95,9 +95,9 @@ def get_channel_levels(
         if points.shape[0] < WARN_PEP_CUTOFF:
             LOGGER.warning(
                 (
-                    "{}: Too few peptides for normalization, "
-                    "quantification may be inaccurate "
-                    " ({} peptides for {}: {})"
+                    '{}: Too few peptides for normalization, '
+                    'quantification may be inaccurate '
+                    ' ({} peptides for {}: {})'
                 ).format(data.name, points.shape[0], col_name, col)
             )
 
@@ -128,12 +128,12 @@ def get_channel_levels(
         ax.set_xlim(left=-2, right=2)
 
         ax.set_title(
-            "{} ({})".format(col_name, col)
+            '{} ({})'.format(col_name, col)
             if isinstance(data.channels, dict) else
             col,
         )
 
-        txt = "center = {:.2f}\n$\\sigma$ = {:.2f}".format(
+        txt = 'center = {:.2f}\n$\\sigma$ = {:.2f}'.format(
             max_x,
             points.std(ddof=1),
         )
@@ -158,18 +158,18 @@ def get_channel_levels(
                 # facecolor=_get_color(txt, x, y),
                 alpha=1,
                 linewidth=0.5,
-                facecolor="white",
+                facecolor='white',
                 zorder=1,
-                edgecolor="black",
-                boxstyle="round",
+                edgecolor='black',
+                boxstyle='round',
             )
         )
 
     for ax in ax_iter:
-        ax.axis("off")
+        ax.axis('off')
 
     f.suptitle(
-        "{}".format(data.name),
+        '{}'.format(data.name),
         fontsize=16,
     )
 

@@ -14,6 +14,18 @@ TAXA = {
 }
 
 def get_go_ids(go_ids, species='Homo sapiens'):
+    """
+    Fetch all gene symbols associated with a list of gene ontology term IDs.
+
+    Parameters
+    ----------
+    go_ids : str or list of str
+    species : str, optional
+
+    Returns
+    -------
+    list of str
+    """
     assert species in TAXA
 
     if isinstance(go_ids, str):

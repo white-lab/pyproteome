@@ -390,6 +390,10 @@ def correlate_phenotype(psms, phenotype=None, metric="spearman"):
     metric : str, optional
         The correlation function to use. See CORRELATION_METRICS for a full
         list of choices.
+    
+    Returns
+    -------
+    psms : :class:`pandas.DataFrame`
     """
     assert metric in CORRELATION_METRICS
 
@@ -441,6 +445,10 @@ def calculate_es_s(gene_changes, gene_set, p=None, n_h=None, ess_method=None):
     n_h : int, optional
     ess_method : str, optional
         One of {'integral', 'max_abs', 'max_min'}.
+
+    Returns
+    -------
+    dict
     """
     if p is None:
         p = DEFAULT_P
@@ -495,6 +503,10 @@ def calculate_es_s_ud(gene_changes, up_set, down_set, **kwargs):
     gene_set : set of str
     kwargs : dict, optional
         See extra arguments passed to calculate_es_s.
+
+    Returns
+    -------
+    dict
     """
     up_set = set(
         gene
@@ -570,9 +582,11 @@ def enrichment_scores(
     Parameters
     ----------
     psms : :class:`pandas.DataFrame`
-    gene_sets : :class:`pandas.DataFrame`, optional
+    gene_sets : :class:`pandas.DataFrame`
     pval : bool, optional
     recorrelate : bool, optional
+    metric : str, optional
+    phenotype : :class:`pandas.Series`, optional
     kwargs : dict, optional
         See extra arguments passed to `calculate_es_s` and `simulate_es_s_pi`.
 

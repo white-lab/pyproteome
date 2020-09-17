@@ -1,6 +1,17 @@
 import numpy as np
 
 def vip(model):
+    '''
+    Calculate VIP scores for a PLSR model.
+
+    Parameters
+    ----------
+    model
+
+    Returns
+    -------
+    :class:`numpy.array`
+    '''
     try:
         t = model.x_scores_
         w = model.x_weights_

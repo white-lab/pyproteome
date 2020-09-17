@@ -32,6 +32,10 @@ def fetch_uniprot_data(accessions):
     Parameters
     ----------
     accessions : list of str
+
+    Returns
+    -------
+    dict of str, dict
     """
     accessions = set(accessions).difference(UNIPROT_DATA)
 
