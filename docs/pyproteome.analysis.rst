@@ -41,14 +41,6 @@ pyproteome.analysis.protein module
     :undoc-members:
     :show-inheritance:
 
-pyproteome.analysis.qc module
------------------------------
-
-.. automodule:: pyproteome.analysis.qc
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyproteome.analysis.tables module
 ---------------------------------
 

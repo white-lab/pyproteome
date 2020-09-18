@@ -7,7 +7,7 @@ from .motifs import (
     logo, motif, phosphosite,
 )
 from . import (
-    analysis, bca, data_sets, discoverer, levels, loading, motifs, paths,
+    analysis, data_sets, discoverer, levels, loading, motifs, paths,
     pride, species, utils, version,
 )
 from . import cluster, pathways
@@ -96,7 +96,6 @@ if (
 
 __all__ = [
     'analysis',
-    'bca',
     'cluster',
     'correlation',
     'data_sets',

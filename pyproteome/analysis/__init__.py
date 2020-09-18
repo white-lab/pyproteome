@@ -6,7 +6,7 @@ Functions include volcano plots, sorted tables, and plotting sequence
 levels.
 '''
 
-from . import correlation, heatmap, plot, protein, tables, qc, volcano
+from . import correlation, heatmap, plot, protein, tables, volcano
 
 __all__ = [
     'correlation',
@@ -14,6 +14,5 @@ __all__ = [
     'plot',
     'protein',
     'tables',
-    'qc',
     'volcano',
 ]

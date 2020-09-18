@@ -15,7 +15,6 @@ Subpackages
 .. toctree::
 
     pyproteome.analysis
-    pyproteome.bca
     pyproteome.camv
     pyproteome.cluster
     pyproteome.data_sets
