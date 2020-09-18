@@ -9,17 +9,37 @@ import os
 LOGGER = logging.getLogger('pyproteome.paths')
 
 BASE_DIR = os.path.abspath('.')
+'''
+Location of the base directory containing proteomics data.
+By default this is set to the current or parent directory, whichever contains
+any folders matching the expected directory structure.
+'''
+
 BASE_DIR_OPTS = (
     os.path.abspath('.'),
     os.path.abspath('..'),
 )
 
-(
-    CAMV_OUT_DIR,
-    MS_SEARCHED_DIR,
-    MS_RAW_DIR,
-    FIGURES_DIR,
-) = (None,) * 4
+CAMV_OUT_DIR = None
+'''
+Location of the directory containing validated CAMV data.
+By default it is set to :const:`.FIGURES_NAME` in the current or parent directory.
+'''
+MS_SEARCHED_DIR = None
+'''
+Location of the directory containing Proteome Discoverer .msf search files.
+By default it is set to :const:`.FIGURES_NAME` in the current or parent directory.
+'''
+MS_RAW_DIR = None
+'''
+Location of the directory containing raw mass spectrometry files.
+By default it is set to :const:`.FIGURES_NAME` in the current or parent directory.
+'''
+FIGURES_DIR = None
+'''
+Location of the directory for saving output figures.
+By default it is set to :const:`.FIGURES_NAME` in the current or parent directory.
+'''
 
 CAMV_NAME = 'CAMV Output'
 '''

@@ -24,6 +24,18 @@ REL_CUTOFF = 5
 
 
 def kde_max(points):
+    '''
+    Estimate the center of a quantification channel by fitting a gaussian
+    KDE function and finding its maximum.
+
+    Parameters
+    ----------
+    points : list of float
+
+    Returns
+    -------
+    float
+    '''
     points = points[~np.isnan(points)]
     gaus = stats.kde.gaussian_kde(points, bw_method='silverman')
     # .25 - .75 1000 slices

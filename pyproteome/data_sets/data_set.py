@@ -817,7 +817,7 @@ class DataSet:
     def check_raw(self):
         """
         Checks that all raw files referenced in search data can be found in
-        paths.MS_RAW_DIR
+        :const:`pyproteome.paths.MS_RAW_DIR`.
 
         Returns
         -------
