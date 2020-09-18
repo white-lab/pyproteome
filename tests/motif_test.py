@@ -5,75 +5,75 @@ from pyproteome import data_sets, motif
 
 class MotifTest(TestCase):
     def setUp(self):
-        self.motif = motif.Motif("O..x.-+")
+        self.motif = motif.Motif('O..x.-+')
 
     def test_repr(self):
         self.assertEqual(
             repr(self.motif),
-            "<pyproteome.Motif: O..x.-+>",
+            '<pyproteome.Motif: O..x.-+>',
         )
 
     def test_match(self):
-        self.assertIn("IEFtFER", self.motif)
-        self.assertIn("LEFsFER", self.motif)
-        self.assertIn("VEFtFER", self.motif)
-        self.assertIn("MEFsFER", self.motif)
+        self.assertIn('IEFtFER', self.motif)
+        self.assertIn('LEFsFER', self.motif)
+        self.assertIn('VEFtFER', self.motif)
+        self.assertIn('MEFsFER', self.motif)
 
-        self.assertIn("IEFsFER", self.motif)
-        self.assertIn("IEFtFER", self.motif)
+        self.assertIn('IEFsFER', self.motif)
+        self.assertIn('IEFtFER', self.motif)
 
-        self.assertIn("IEFsFER", self.motif)
-        self.assertIn("IEFsFEK", self.motif)
+        self.assertIn('IEFsFER', self.motif)
+        self.assertIn('IEFsFEK', self.motif)
 
     def test_no_match(self):
-        self.assertNotIn("QEFtFER", self.motif)
-        self.assertNotIn("HEFsFER", self.motif)
-        self.assertNotIn("EEFtFER", self.motif)
-        self.assertNotIn("DEFsFER", self.motif)
+        self.assertNotIn('QEFtFER', self.motif)
+        self.assertNotIn('HEFsFER', self.motif)
+        self.assertNotIn('EEFtFER', self.motif)
+        self.assertNotIn('DEFsFER', self.motif)
 
-        self.assertNotIn("IEFYFER", self.motif)
-        self.assertNotIn("IEFSFER", self.motif)
-        self.assertNotIn("IEFTFER", self.motif)
+        self.assertNotIn('IEFYFER', self.motif)
+        self.assertNotIn('IEFSFER', self.motif)
+        self.assertNotIn('IEFTFER', self.motif)
 
-        self.assertNotIn("IEFsFED", self.motif)
-        self.assertNotIn("IEFsFEE", self.motif)
+        self.assertNotIn('IEFsFED', self.motif)
+        self.assertNotIn('IEFsFEE', self.motif)
 
     def test_match_motif(self):
         # Motifs will match themselves and any more specific motifs, though
         # they will not match less specific motifs
-        self.assertTrue(self.motif.match("O..x.-+"))
-        self.assertTrue(self.motif.match("O..x.E+"))
-        self.assertTrue(self.motif.match("O..s.-+"))
-        self.assertTrue(self.motif.match("O..t.-+"))
-        self.assertTrue(self.motif.match("M..x.-+"))
-        self.assertTrue(self.motif.match("O..x.-K"))
+        self.assertTrue(self.motif.match('O..x.-+'))
+        self.assertTrue(self.motif.match('O..x.E+'))
+        self.assertTrue(self.motif.match('O..s.-+'))
+        self.assertTrue(self.motif.match('O..t.-+'))
+        self.assertTrue(self.motif.match('M..x.-+'))
+        self.assertTrue(self.motif.match('O..x.-K'))
 
-        self.assertFalse(self.motif.match("...x.-+"))
-        self.assertFalse(self.motif.match("O....-+"))
-        self.assertFalse(self.motif.match("O..x..+"))
-        self.assertFalse(self.motif.match("O..x.-."))
+        self.assertFalse(self.motif.match('...x.-+'))
+        self.assertFalse(self.motif.match('O....-+'))
+        self.assertFalse(self.motif.match('O..x..+'))
+        self.assertFalse(self.motif.match('O..x.-.'))
 
 
 class GenerateNMersTest(TestCase):
     def setUp(self):
         self.sequence = data_sets.Sequence(
-            pep_seq="GEPNVsyICSR",
+            pep_seq='GEPNVsyICSR',
             protein_matches=(
                 data_sets.ProteinMatch(
                     protein=data_sets.Protein(
-                        accession="Q9WV60",
-                        gene="Gsk3b",
-                        description="Glycogen synthase kinase-3 beta",
+                        accession='Q9WV60',
+                        gene='Gsk3b',
+                        description='Glycogen synthase kinase-3 beta',
                         full_sequence=(
-                            "MSGRPRTTSFAESCKPVQQPSAFGSMKVSRDKDGSKVTTVVATPGQGPD"
-                            "RPQEVSYTDTKVIGNGSFGVVYQAKLCDSGELVAIKKVLQDKRFKNREL"
-                            "QIMRKLDHCNIVRLRYFFYSSGEKKDEVYLNLVLDYVPETVYRVARHYS"
-                            "RAKQTLPVIYVKLYMYQLFRSLAYIHSFGICHRDIKPQNLLLDPDTAVL"
-                            "KLCDFGSAKQLVRGEPNVSYICSRYYRAPELIFGATDYTSSIDVWSAGC"
-                            "VLAELLLGQPIFPGDSGVDQLVEIIKVLGTPTREQIREMNPNYTEFKFP"
-                            "QIKAHPWTKVFRPRTPPEAIALCSRLLEYTPTARLTPLEACAHSFFDEL"
-                            "RDPNVKLPNGRDTPALFNFTTQELSSNPPLATILIPPHARIQAAASPPA"
-                            "NATAASDTNAGDRGQTNNAASASASNST"
+                            'MSGRPRTTSFAESCKPVQQPSAFGSMKVSRDKDGSKVTTVVATPGQGPD'
+                            'RPQEVSYTDTKVIGNGSFGVVYQAKLCDSGELVAIKKVLQDKRFKNREL'
+                            'QIMRKLDHCNIVRLRYFFYSSGEKKDEVYLNLVLDYVPETVYRVARHYS'
+                            'RAKQTLPVIYVKLYMYQLFRSLAYIHSFGICHRDIKPQNLLLDPDTAVL'
+                            'KLCDFGSAKQLVRGEPNVSYICSRYYRAPELIFGATDYTSSIDVWSAGC'
+                            'VLAELLLGQPIFPGDSGVDQLVEIIKVLGTPTREQIREMNPNYTEFKFP'
+                            'QIKAHPWTKVFRPRTPPEAIALCSRLLEYTPTARLTPLEACAHSFFDEL'
+                            'RDPNVKLPNGRDTPALFNFTTQELSSNPPLATILIPPHARIQAAASPPA'
+                            'NATAASDTNAGDRGQTNNAASASASNST'
                         ),
                     ),
                     rel_pos=209,
@@ -86,13 +86,13 @@ class GenerateNMersTest(TestCase):
                 # S215-p
                 data_sets.Modification(
                     rel_pos=5,
-                    mod_type="Phospho",
+                    mod_type='Phospho',
                     sequence=self.sequence,
                 ),
                 # Y216-p
                 data_sets.Modification(
                     rel_pos=6,
-                    mod_type="Phospho",
+                    mod_type='Phospho',
                     sequence=self.sequence,
                 ),
             ),
@@ -102,7 +102,7 @@ class GenerateNMersTest(TestCase):
         nmers = list(
             motif.generate_n_mers(
                 self.sequence,
-                mods=[(None, "Phospho")],
+                mods=[(None, 'Phospho')],
             )
         )
 
@@ -111,11 +111,11 @@ class GenerateNMersTest(TestCase):
             all(len(i) == 15 for i in nmers)
         )
         self.assertIn(
-            "VRGEPNVsYICSRYY",
+            'VRGEPNVsYICSRYY',
             nmers,
         )
         self.assertIn(
-            "RGEPNVSyICSRYYR",
+            'RGEPNVSyICSRYYR',
             nmers,
         )
 
@@ -128,29 +128,29 @@ class GenerateNMersTest(TestCase):
 
 
 class MotifEnrichmentTest(TestCase):
-    """
+    '''
     Test that the motif_enrichment function runs without error on a simple
     list of sequences.
-    """
+    '''
     def setUp(self):
         self.sequence = data_sets.Sequence(
-            pep_seq="GEPNVsyICSR",
+            pep_seq='GEPNVsyICSR',
             protein_matches=(
                 data_sets.ProteinMatch(
                     protein=data_sets.Protein(
-                        accession="Q9WV60",
-                        gene="Gsk3b",
-                        description="Glycogen synthase kinase-3 beta",
+                        accession='Q9WV60',
+                        gene='Gsk3b',
+                        description='Glycogen synthase kinase-3 beta',
                         full_sequence=(
-                            "MSGRPRTTSFAESCKPVQQPSAFGSMKVSRDKDGSKVTTVVATPGQGPD"
-                            "RPQEVSYTDTKVIGNGSFGVVYQAKLCDSGELVAIKKVLQDKRFKNREL"
-                            "QIMRKLDHCNIVRLRYFFYSSGEKKDEVYLNLVLDYVPETVYRVARHYS"
-                            "RAKQTLPVIYVKLYMYQLFRSLAYIHSFGICHRDIKPQNLLLDPDTAVL"
-                            "KLCDFGSAKQLVRGEPNVSYICSRYYRAPELIFGATDYTSSIDVWSAGC"
-                            "VLAELLLGQPIFPGDSGVDQLVEIIKVLGTPTREQIREMNPNYTEFKFP"
-                            "QIKAHPWTKVFRPRTPPEAIALCSRLLEYTPTARLTPLEACAHSFFDEL"
-                            "RDPNVKLPNGRDTPALFNFTTQELSSNPPLATILIPPHARIQAAASPPA"
-                            "NATAASDTNAGDRGQTNNAASASASNST"
+                            'MSGRPRTTSFAESCKPVQQPSAFGSMKVSRDKDGSKVTTVVATPGQGPD'
+                            'RPQEVSYTDTKVIGNGSFGVVYQAKLCDSGELVAIKKVLQDKRFKNREL'
+                            'QIMRKLDHCNIVRLRYFFYSSGEKKDEVYLNLVLDYVPETVYRVARHYS'
+                            'RAKQTLPVIYVKLYMYQLFRSLAYIHSFGICHRDIKPQNLLLDPDTAVL'
+                            'KLCDFGSAKQLVRGEPNVSYICSRYYRAPELIFGATDYTSSIDVWSAGC'
+                            'VLAELLLGQPIFPGDSGVDQLVEIIKVLGTPTREQIREMNPNYTEFKFP'
+                            'QIKAHPWTKVFRPRTPPEAIALCSRLLEYTPTARLTPLEACAHSFFDEL'
+                            'RDPNVKLPNGRDTPALFNFTTQELSSNPPLATILIPPHARIQAAASPPA'
+                            'NATAASDTNAGDRGQTNNAASASASNST'
                         ),
                     ),
                     rel_pos=209,
@@ -163,13 +163,13 @@ class MotifEnrichmentTest(TestCase):
                 # S215-p
                 data_sets.Modification(
                     rel_pos=5,
-                    mod_type="Phospho",
+                    mod_type='Phospho',
                     sequence=self.sequence,
                 ),
                 # Y216-p
                 data_sets.Modification(
                     rel_pos=6,
-                    mod_type="Phospho",
+                    mod_type='Phospho',
                     sequence=self.sequence,
                 ),
             ),

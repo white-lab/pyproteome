@@ -6,7 +6,7 @@ import pandas as pd
 from pyproteome import motif
 
 
-FOREGROUND = """
+FOREGROUND = '''
 KQTDLELsPLTKEEK
 SLSTKRSsPDDGNDV
 DVSPYSLsPVSNKSQ
@@ -32,9 +32,9 @@ REKEAVItPVASATQ
 KGSTLDLsDLEAEKL
 STEDGDGtDDFLTDK
 DGTDDFLtDKEDEKA
-"""
+'''
 
-BACKGROUND = """
+BACKGROUND = '''
 KKMPLDLsPLATPII
 SSPAQNWtPPQPRTL
 PIRSSAFsPLGGCTP
@@ -130,9 +130,9 @@ DGTDDFLtDKEDEKA
 STEDGDGtDDFLTDK
 DGTDDFLtDKEDEKA
 EEWDPEYtPKSKKYY
-"""
+'''
 
-OUTPUT = """
+OUTPUT = '''
 | .....D.x....... |     8 /    25 |    10 /    95 | 2.73E-04 |
 | .....-.x....... |    12 /    25 |    20 /    95 | 3.27E-04 |
 | .....-.s....... |    10 /    25 |    15 /    95 | 3.98E-04 |
@@ -164,43 +164,43 @@ OUTPUT = """
 | .......sD.-.-.. |     6 /    25 |     9 /    95 | 9.30E-03 |
 | ....-..x....... |     6 /    25 |     9 /    95 | 9.30E-03 |
 | .......x-.-.... |    10 /    25 |    20 /    95 | 9.60E-03 |
-"""
+'''
 
 
 class MotifEnrichmentFullTest(TestCase):
-    """
+    '''
     Test pyproteome.motif.motif_enrichment using a full data set, provided
     by Brian Joughin. Compares the results to those produced by his set of
     perl scripts.
-    """
+    '''
     def setUp(self):
         self.foreground = [
             i.strip()
-            for i in FOREGROUND.split("\n")
+            for i in FOREGROUND.split('\n')
             if i.strip()
         ]
         self.background = [
             i.strip()
-            for i in BACKGROUND.split("\n")
+            for i in BACKGROUND.split('\n')
             if i.strip()
         ]
         self.output = []
 
-        for line in OUTPUT.split("\n"):
+        for line in OUTPUT.split('\n'):
             line = line.strip()
 
             if not line:
                 continue
 
-            tokens = line.split("|")
+            tokens = line.split('|')
 
             m = motif.Motif(tokens[1].strip())
 
-            fore_hits = int(tokens[2].split("/")[0])
-            fore_size = int(tokens[2].split("/")[1])
+            fore_hits = int(tokens[2].split('/')[0])
+            fore_size = int(tokens[2].split('/')[1])
 
-            back_hits = int(tokens[3].split("/")[0])
-            back_size = int(tokens[3].split("/")[1])
+            back_hits = int(tokens[3].split('/')[0])
+            back_size = int(tokens[3].split('/')[1])
 
             p_val = float(tokens[4])
 
@@ -216,28 +216,28 @@ class MotifEnrichmentFullTest(TestCase):
         self.output = pd.DataFrame(
             data=self.output,
             columns=[
-                "Motif",
-                "Foreground Hits",
-                "Foreground Size",
-                "Background Hits",
-                "Background Size",
-                "p-value",
+                'Motif',
+                'Foreground Hits',
+                'Foreground Size',
+                'Background Hits',
+                'Background Size',
+                'p-value',
             ],
         )
         # Re-sort as the p-values on Brian's tables are truncated a bit short.
-        self.output["sort-p-value"] = pd.Series(
+        self.output['sort-p-value'] = pd.Series(
             [
                 motif._motif_sig(
-                    row["Foreground Hits"],
-                    row["Foreground Size"],
-                    row["Background Hits"],
-                    row["Background Size"],
+                    row['Foreground Hits'],
+                    row['Foreground Size'],
+                    row['Background Hits'],
+                    row['Background Size'],
                 )
                 for _, row in self.output.iterrows()
             ],
             index=self.output.index,
         )
-        self.output.sort_values(by=["sort-p-value", "Motif"], inplace=True)
+        self.output.sort_values(by=['sort-p-value', 'Motif'], inplace=True)
         self.output.reset_index(drop=True)
 
     def test_motif_enrichment(self):
@@ -245,8 +245,8 @@ class MotifEnrichmentFullTest(TestCase):
             self.foreground, self.background,
         )[0]
 
-        true_positives = list(self.output["Motif"])
-        true_hits = list(hits["Motif"])
+        true_positives = list(self.output['Motif'])
+        true_hits = list(hits['Motif'])
 
         # Check for false positives
         for m in true_hits:
@@ -262,20 +262,20 @@ class MotifEnrichmentFullTest(TestCase):
             _, out_row = out_row
 
             self.assertEqual(
-                calc_row["Motif"], out_row["Motif"],
+                calc_row['Motif'], out_row['Motif'],
             )
             self.assertEqual(
-                calc_row["Foreground Hits"], out_row["Foreground Hits"],
+                calc_row['Foreground Hits'], out_row['Foreground Hits'],
             )
             self.assertEqual(
-                calc_row["Foreground Size"], out_row["Foreground Size"],
+                calc_row['Foreground Size'], out_row['Foreground Size'],
             )
             self.assertEqual(
-                calc_row["Background Hits"], out_row["Background Hits"],
+                calc_row['Background Hits'], out_row['Background Hits'],
             )
             self.assertEqual(
-                calc_row["Background Size"], out_row["Background Size"],
+                calc_row['Background Size'], out_row['Background Size'],
             )
             self.assertLess(
-                abs(calc_row["p-value"] - out_row["p-value"]), 0.001,
+                abs(calc_row['p-value'] - out_row['p-value']), 0.001,
             )

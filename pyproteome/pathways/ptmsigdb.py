@@ -8,14 +8,14 @@ import pyproteome as pyp
 
 
 PTMSIGDB_URL = (
-    "https://raw.githubusercontent.com/broadinstitute/ssGSEA2.0/master/db/"
-    "ptmsigdb/ptm.sig.db.all.uniprot.{name}.v1.9.0.gmt"
+    'https://raw.githubusercontent.com/broadinstitute/ssGSEA2.0/master/db/'
+    'ptmsigdb/ptm.sig.db.all.uniprot.{name}.v1.9.0.gmt'
 )
 
 
 @pyp.utils.memoize
 def get_ptmsigdb(species):
-    """
+    '''
     Download phospho sets for PTMSigDB.
 
     Parameters
@@ -25,26 +25,26 @@ def get_ptmsigdb(species):
     Returns
     -------
     df : :class:`pandas.DataFrame`
-    """
+    '''
     species = pyp.species.ORGANISM_MAPPING.get(species, species).lower()
 
-    assert species in ["human", "mouse", "rat"]
+    assert species in ['human', 'mouse', 'rat']
 
     def _get_data(line):
-        line = line.split("\t")
+        line = line.split('\t')
         sites = set(
-            i.strip().replace(";", ",")
+            i.strip().replace(';', ',')
             for i in line[2:]
         )
         up_sites = set(
-            i.rsplit(",", 1)[0]
+            i.rsplit(',', 1)[0]
             for i in sites
-            if i.endswith("u")
+            if i.endswith('u')
         )
         down_sites = set(
-            i.rsplit(",", 1)[0]
+            i.rsplit(',', 1)[0]
             for i in sites
-            if i.endswith("d")
+            if i.endswith('d')
         )
         title, description = line[:2]
         return (
@@ -67,7 +67,7 @@ def get_ptmsigdb(species):
 
     pathways_df = pd.DataFrame(
         data=data,
-        columns=["name", "Description", "up_set", "down_set"],
+        columns=['name', 'Description', 'up_set', 'down_set'],
     )
 
-    return pathways_df[["name", "up_set", "down_set"]]
+    return pathways_df[['name', 'up_set', 'down_set']]

@@ -8,26 +8,26 @@ import pandas as pd
 
 import pyproteome as pyp
 
-LOGGER = logging.getLogger("pyproteome.phosphosite")
+LOGGER = logging.getLogger('pyproteome.phosphosite')
 
 PSP_REGULATORY_URL = (
-    "https://www.phosphosite.org/downloads/Regulatory_sites.gz"
+    'https://www.phosphosite.org/downloads/Regulatory_sites.gz'
 )
 PSP_SITE_MAPPING_URL = (
-    "https://www.phosphosite.org/downloads/Phosphorylation_site_dataset.gz"
+    'https://www.phosphosite.org/downloads/Phosphorylation_site_dataset.gz'
 )
 
 
 @pyp.utils.memoize
 def get_phosphomap_data():
-    """
+    '''
     Fetch mapping between phosphorylation sites of different species.
 
     Returns
     -------
     df : :class:`pandas.DataFrame`
-    """
-    LOGGER.info("Fetching Phosphosite Plus mapping data")
+    '''
+    LOGGER.info('Fetching Phosphosite Plus mapping data')
 
     url = PSP_SITE_MAPPING_URL
 
@@ -36,19 +36,19 @@ def get_phosphomap_data():
 
     gz = gzip.GzipFile(fileobj=io.BytesIO(r.content))
 
-    return pd.read_csv(gz, skiprows=[0, 1, 2], sep="\t")
+    return pd.read_csv(gz, skiprows=[0, 1, 2], sep='\t')
 
 
 @pyp.utils.memoize
 def get_phosphoreg_data():
-    """
+    '''
     Fetch Phosphosite Plus regulation data.
 
     Returns
     -------
     df : :class:`pandas.DataFrame`
-    """
-    LOGGER.info("Fetching Phosphosite Plus regulation data")
+    '''
+    LOGGER.info('Fetching Phosphosite Plus regulation data')
 
     url = PSP_REGULATORY_URL
 
@@ -57,12 +57,12 @@ def get_phosphoreg_data():
 
     gz = gzip.GzipFile(fileobj=io.BytesIO(r.content))
 
-    return pd.read_table(gz, skiprows=[0, 1, 2], sep="\t", usecols=range(21))
+    return pd.read_table(gz, skiprows=[0, 1, 2], sep='\t', usecols=range(21))
 
 
 @pyp.utils.memoize
 def get_phosphosite(species, remap=False):
-    """
+    '''
     Download phospho sets from PhophoSite Plus.
 
     Parameters
@@ -73,8 +73,8 @@ def get_phosphosite(species, remap=False):
     Returns
     -------
     df : :class:`pandas.DataFrame`, optional
-    """
-    LOGGER.info("Getting phosphosite data for {}".format(species))
+    '''
+    LOGGER.info('Getting phosphosite data for {}'.format(species))
 
     species = pyp.species.ORGANISM_MAPPING.get(species, species)
 
@@ -83,12 +83,12 @@ def get_phosphosite(species, remap=False):
     if remap:
         psp_data = _remap_psp(
             psp_data, species,
-            acc_col="SUB_ACC_ID",
-            mod_col="SUB_MOD_RSD",
-            org_col="SUB_ORGANISM",
+            acc_col='SUB_ACC_ID',
+            mod_col='SUB_MOD_RSD',
+            org_col='SUB_ORGANISM',
         )
 
-    psp_data = psp_data[psp_data["SUB_ORGANISM"] == species]
+    psp_data = psp_data[psp_data['SUB_ORGANISM'] == species]
 
     return pd.DataFrame(
         [
@@ -96,29 +96,29 @@ def get_phosphosite(species, remap=False):
                 kinase,
                 set(
                     psp_data[
-                        psp_data["KINASE"] == kinase
+                        psp_data['KINASE'] == kinase
                     ].apply(
                         lambda x:
-                        ",".join([
-                            x["SUB_ACC_ID"].split("-")[0]
+                        ','.join([
+                            x['SUB_ACC_ID'].split('-')[0]
                             if isinstance(x['SUB_ACC_ID'], str) else
                             '',
-                            x["SUB_MOD_RSD"] + ("" if remap else "-p"),
+                            x['SUB_MOD_RSD'] + ('' if remap else '-p'),
                         ]),
                         axis=1,
                     )
                 ),
                 set(),
             )
-            for kinase in set(psp_data["KINASE"])
+            for kinase in set(psp_data['KINASE'])
         ],
-        columns=["name", "up_set", "down_set"]
+        columns=['name', 'up_set', 'down_set']
     )
 
 
 @pyp.utils.memoize
 def get_phosphosite_regulation(species, remap=False):
-    """
+    '''
     Download phospho sets from PhophoSite Plus.
 
     Parameters
@@ -129,8 +129,8 @@ def get_phosphosite_regulation(species, remap=False):
     Returns
     -------
     df : :class:`pandas.DataFrame`, optional
-    """
-    LOGGER.info("Getting phosphosite regulation data for {}".format(species))
+    '''
+    LOGGER.info('Getting phosphosite regulation data for {}'.format(species))
 
     species = pyp.species.ORGANISM_MAPPING.get(species, species).lower()
 
@@ -139,20 +139,20 @@ def get_phosphosite_regulation(species, remap=False):
     if remap:
         psp_data = _remap_psp(
             psp_data, species,
-            set_col="ON_PROCESS",
-            acc_col="ACC_ID",
-            mod_col="MOD_RSD",
-            org_col="ORGANISM",
-            append_mod="",
+            set_col='ON_PROCESS',
+            acc_col='ACC_ID',
+            mod_col='MOD_RSD',
+            org_col='ORGANISM',
+            append_mod='',
         )
 
-    psp_data = psp_data[psp_data["ORGANISM"] == species]
+    psp_data = psp_data[psp_data['ORGANISM'] == species]
 
     paths = set(
         proc.strip()
-        for row in psp_data["ON_PROCESS"]
+        for row in psp_data['ON_PROCESS']
         if pd.notna(row)
-        for proc in row.split(";")
+        for proc in row.split(';')
         if proc.strip()
     )
 
@@ -162,18 +162,18 @@ def get_phosphosite_regulation(species, remap=False):
                 path,
                 set(
                     psp_data[
-                        psp_data["ON_PROCESS"].apply(
+                        psp_data['ON_PROCESS'].apply(
                             lambda x:
                             pd.notna(x) and any([
                                 path in i.strip()
-                                for i in x.split(";")
+                                for i in x.split(';')
                             ])
                         )
                     ].apply(
                         lambda x:
-                        ",".join([
-                            x["ACC_ID"].split("-")[0],
-                            x["MOD_RSD"],
+                        ','.join([
+                            x['ACC_ID'].split('-')[0],
+                            x['MOD_RSD'],
                         ]),
                         axis=1,
                     )
@@ -182,35 +182,35 @@ def get_phosphosite_regulation(species, remap=False):
             )
             for path in paths
         ],
-        columns=["name", "up_set", "down_set"]
+        columns=['name', 'up_set', 'down_set']
     )
 
 
 def _remap_psp(
     psp, species,
-    set_col="KINASE",
-    acc_col="ACC_ID",
-    mod_col="MOD_RSD",
-    org_col="ORGANISM",
-    append_mod="-p",
+    set_col='KINASE',
+    acc_col='ACC_ID',
+    mod_col='MOD_RSD',
+    org_col='ORGANISM',
+    append_mod='-p',
     mapping=None,
 ):
-    LOGGER.info("Remapping sites to species: {}".format(species))
+    LOGGER.info('Remapping sites to species: {}'.format(species))
 
     if mapping is None:
         mapping = get_phosphomap_data()
     
-    mapping = mapping[["ACC_ID", "MOD_RSD", "ORGANISM", "SITE_GRP_ID"]]
+    mapping = mapping[['ACC_ID', 'MOD_RSD', 'ORGANISM', 'SITE_GRP_ID']]
 
     mod_mapping = mapping[
-        mapping["ORGANISM"] != species
+        mapping['ORGANISM'] != species
     ].set_index(
-        ["ACC_ID", "MOD_RSD", "ORGANISM"]
+        ['ACC_ID', 'MOD_RSD', 'ORGANISM']
     ).sort_index()
     site_mapping = mapping[
-        mapping["ORGANISM"] == species
+        mapping['ORGANISM'] == species
     ].set_index(
-        "SITE_GRP_ID"
+        'SITE_GRP_ID'
     ).sort_index()
     del mapping
 
@@ -229,9 +229,9 @@ def _remap_psp(
             except KeyError:
                 pass
             else:
-                site = site["SITE_GRP_ID"]
+                site = site['SITE_GRP_ID']
 
-                if hasattr(site, "iloc"):
+                if hasattr(site, 'iloc'):
                     site = site.iloc[0]
 
                 try:
@@ -242,7 +242,7 @@ def _remap_psp(
                     if len(re_map.shape) > 1:
                         re_map = re_map.iloc[0]
 
-                    acc, mod = re_map[["ACC_ID", "MOD_RSD"]]
+                    acc, mod = re_map[['ACC_ID', 'MOD_RSD']]
                     old_species = species
 
         return pd.Series([

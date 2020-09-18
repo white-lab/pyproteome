@@ -12,12 +12,12 @@ import pyproteome as pyp
 
 from . import enrichments
 
-LOGGER = logging.getLogger("pyp.pathways.plot")
+LOGGER = logging.getLogger('pyp.pathways.plot')
 
 
 def _fix_name(name):
     if name.startswith('HALLMARK_'):
-        name = name[len("HALLMARK_"):]
+        name = name[len('HALLMARK_'):]
 
     name = name.replace('_', ' ')
     # name = name.split('-', 1)[-1]
@@ -29,7 +29,7 @@ def _fix_name(name):
 
 
 def plot_nes_dist(nes_vals, nes_pi_vals):
-    """
+    '''
     Generate a histogram plot showing the distribution of NES(S) values
     alongside the distribution of NES(S, pi) values.
 
@@ -42,8 +42,8 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
     -------
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
-    """
-    LOGGER.info("Plotting NES(S) and NES(S, pi) distributions")
+    '''
+    LOGGER.info('Plotting NES(S) and NES(S, pi) distributions')
 
     f, ax = plt.subplots(
         figsize=(4, 3),
@@ -51,7 +51,7 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
 
     if nes_pi_vals.shape[0] > 0:
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=FutureWarning)
+            warnings.simplefilter('ignore', category=FutureWarning)
             sns.distplot(
                 nes_pi_vals,
                 color='k',
@@ -69,7 +69,7 @@ def plot_nes_dist(nes_vals, nes_pi_vals):
                 ax=ax,
             )
         except ValueError as err:
-            LOGGER.warning("sns.distplot threw an error: {}".format(err))
+            LOGGER.warning('sns.distplot threw an error: {}'.format(err))
 
     return f, ax
 
@@ -84,7 +84,7 @@ def plot_nes(
     col=None,
     ax=None,
 ):
-    """
+    '''
     Plot the ranked normalized enrichment score values.
 
     Annotates significant gene sets with their name on the figure.
@@ -103,8 +103,8 @@ def plot_nes(
     -------
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
-    """
-    LOGGER.info("Plotting ranked NES(S) values")
+    '''
+    LOGGER.info('Plotting ranked NES(S) values')
 
     v = vals.copy()
 
@@ -152,7 +152,7 @@ def plot_nes(
         size='n_hits',
         hue='n_hits',
         ax=ax,
-        palette="Spectral",
+        palette='Spectral',
     )
 
     if title is not None:
@@ -180,7 +180,7 @@ def plot_nes(
             s=_fix_name(row['name']),
             zorder=10,
             horizontalalignment=(
-                'left' if row["NES(S)"] > 0 else "right"
+                'left' if row['NES(S)'] > 0 else 'right'
             ),
             fontsize=12,
             bbox=dict(
@@ -189,7 +189,7 @@ def plot_nes(
                 pad=.05,
                 zorder=1,
                 facecolor='white',
-                boxstyle="round",
+                boxstyle='round',
             ),
         )
         for _, row in v[v[col] > sig_cutoff].iterrows()
@@ -203,15 +203,15 @@ def plot_nes(
             force_text=0.3,
             force_points=0.01,
             arrowprops=dict(
-                arrowstyle="->",
+                arrowstyle='->',
                 relpos=(0, 0),
                 lw=1,
                 zorder=1,
-                color="k",
+                color='k',
             ),
             only_move={
-                "points": "y",
-                "text": "y",
+                'points': 'y',
+                'text': 'y',
             }
         )
     
@@ -227,7 +227,7 @@ def plot_correlations(
     gene_changes,
     ax=None,
 ):
-    """
+    '''
     Plot the ranked list of correlations.
 
     Parameters
@@ -240,8 +240,8 @@ def plot_correlations(
     -------
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
-    """
-    LOGGER.info("Plotting gene correlations")
+    '''
+    LOGGER.info('Plotting gene correlations')
 
     if ax is None:
         f, ax = plt.subplots(
@@ -249,12 +249,12 @@ def plot_correlations(
         )
 
     ax.plot(
-        gene_changes["Correlation"].sort_values(ascending=False).tolist(),
+        gene_changes['Correlation'].sort_values(ascending=False).tolist(),
     )
-    ax.axhline(0, color="k")
+    ax.axhline(0, color='k')
 
-    ax.set_xlabel("Gene List Rank")
-    ax.set_ylabel("Correlation")
+    ax.set_xlabel('Gene List Rank')
+    ax.set_ylabel('Correlation')
 
     return ax.get_figure(), ax
 
@@ -263,7 +263,7 @@ def plot_enrichment(
     vals,
     cols=5,
 ):
-    """
+    '''
     Plot enrichment score curves for each gene set.
 
     Parameters
@@ -271,8 +271,8 @@ def plot_enrichment(
     vals : :class:`pandas.DataFrame`
         The gene sets and scores calculated by enrichment_scores().
     cols : int, optional
-    """
-    LOGGER.info("Plotting ES(S) graphs")
+    '''
+    LOGGER.info('Plotting ES(S) graphs')
 
     rows = max([int(np.ceil(len(vals) / cols)), 1])
     scale = 3
@@ -286,7 +286,7 @@ def plot_enrichment(
     )
     axes = [i for j in axes for i in j]
 
-    nes = "NES(S)" if "NES(S)" in vals.columns else "ES(S)"
+    nes = 'NES(S)' if 'NES(S)' in vals.columns else 'ES(S)'
 
     ax_iter = iter(axes)
 
@@ -294,54 +294,54 @@ def plot_enrichment(
         ax = next(ax_iter)
 
         if (
-            "cumscore" in row and
-            len(row["cumscore"]) > 0 and
-            row["hits"].any()
+            'cumscore' in row and
+            len(row['cumscore']) > 0 and
+            row['hits'].any()
         ):
-            ax.plot(row["cumscore"], color="g")
+            ax.plot(row['cumscore'], color='g')
 
         if (
-            "down_cumscore" in row and
-            len(row["down_cumscore"]) > 0 and
-            row["down_hits"].any()
+            'down_cumscore' in row and
+            len(row['down_cumscore']) > 0 and
+            row['down_hits'].any()
         ):
-            ax.plot(row["down_cumscore"], color="r")
+            ax.plot(row['down_cumscore'], color='r')
 
-        for ind, hit in enumerate(row["hits"]):
+        for ind, hit in enumerate(row['hits']):
             if hit:
-                ax.axvline(ind, linestyle=":", alpha=.25, color="g")
+                ax.axvline(ind, linestyle=':', alpha=.25, color='g')
 
-        if "down_hits" in row:
-            for ind, hit in enumerate(row["down_hits"]):
+        if 'down_hits' in row:
+            for ind, hit in enumerate(row['down_hits']):
                 if hit:
-                    ax.axvline(ind, linestyle=":", alpha=.25, color="r")
+                    ax.axvline(ind, linestyle=':', alpha=.25, color='r')
 
-        name = _fix_name(row["name"])
-        name = name if len(name) < 35 else name[:35] + "..."
+        name = _fix_name(row['name'])
+        name = name if len(name) < 35 else name[:35] + '...'
 
         ax.set_title(name)
 
-        txt = "hits: {} {}={:.2f}".format(
-            row["n_hits"],
-            nes.split("(")[0],
+        txt = 'hits: {} {}={:.2f}'.format(
+            row['n_hits'],
+            nes.split('(')[0],
             row[nes],
         ) + (
-            "\np={:.2f}".format(
-                row["p-value"],
-            ) if "p-value" in row.index else ""
+            '\np={:.2f}'.format(
+                row['p-value'],
+            ) if 'p-value' in row.index else ''
         ) + (
-            ", q={:.2f}".format(
-                row["q-value"],
-            ) if "q-value" in row.index else ""
+            ', q={:.2f}'.format(
+                row['q-value'],
+            ) if 'q-value' in row.index else ''
         )
 
-        ax.axhline(0, color="k")
+        ax.axhline(0, color='k')
 
         if index >= len(axes) - cols:
-            ax.set_xlabel("Gene List Rank")
+            ax.set_xlabel('Gene List Rank')
 
         if index % cols == 0:
-            ax.set_ylabel("ES(S)")
+            ax.set_ylabel('ES(S)')
 
         ax.set_ylim(-1, 1)
 
@@ -356,10 +356,10 @@ def plot_enrichment(
             bbox=dict(
                 alpha=1,
                 linewidth=0.5,
-                facecolor="white",
+                facecolor='white',
                 zorder=1,
-                edgecolor="black",
-                boxstyle="round",
+                edgecolor='black',
+                boxstyle='round',
             )
         )
 
@@ -376,10 +376,10 @@ def plot_gsea(
     min_abs_score=0,
     max_pval=1,
     max_qval=1,
-    name="",
+    name='',
     **kwargs
 ):
-    """
+    '''
     Run set enrichment analysis on a data set and generate all figures
     associated with that analysis.
 
@@ -391,7 +391,7 @@ def plot_gsea(
     Returns
     -------
     figs : list of :class:`matplotlib.figure.Figure`
-    """
+    '''
     figs = ()
 
     figs += plot_correlations(gene_changes)[0],
@@ -408,7 +408,7 @@ def plot_gsea(
             **kwargs
         )[0],
 
-        if "NES(S)" in vals.columns:
+        if 'NES(S)' in vals.columns:
             figs += plot_nes(
                 vals,
                 min_hits=min_hits,

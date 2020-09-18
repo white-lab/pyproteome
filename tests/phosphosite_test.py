@@ -11,7 +11,7 @@ class PhosphositeTest(TestCase):
     #     pylab.rcParams['figure.max_open_warning'] = 0
 
     def test_generate_logos(self):
-        for species in ["Human", "Mouse"]:
+        for species in ['Human', 'Mouse']:
             phosphosite.generate_logos(
                 species,
                 min_foreground=50,

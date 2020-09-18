@@ -14,7 +14,7 @@ TAXA = {
 }
 
 def get_go_ids(go_ids, species='Homo sapiens'):
-    """
+    '''
     Fetch all gene symbols associated with a list of gene ontology term IDs.
 
     Parameters
@@ -25,25 +25,25 @@ def get_go_ids(go_ids, species='Homo sapiens'):
     Returns
     -------
     list of str
-    """
+    '''
     assert species in TAXA
 
     if isinstance(go_ids, str):
         go_ids = [go_ids]
 
-    obo_fname = download_go_basic_obo("db/go/go-basic.obo")
-    gene2go = download_ncbi_associations("db/go/gene2go")
+    obo_fname = download_go_basic_obo('db/go/go-basic.obo')
+    gene2go = download_ncbi_associations('db/go/gene2go')
 
     taxid = TAXA[species]
 
-    fin_symbols = "genes_NCBI_{TAXID}_All.py".format(TAXID=taxid)
+    fin_symbols = 'genes_NCBI_{TAXID}_All.py'.format(TAXID=taxid)
 
-    module_name = "".join(["goatools.test_data.", fin_symbols[:-3]])
+    module_name = ''.join(['goatools.test_data.', fin_symbols[:-3]])
     module = importlib.import_module(module_name)
     GeneID2nt = module.GENEID2NT
 
     go2geneids = Gene2GoReader(
-        "db/go/gene2go",
+        'db/go/gene2go',
         taxids=[taxid],
     )
 
@@ -51,9 +51,9 @@ def get_go_ids(go_ids, species='Homo sapiens'):
     for i in go2geneids.taxid2asscs[taxid]:
         go2items[i.GO_ID].append(i.DB_ID)
 
-    srchhelp = GoSearch("db/go/go-basic.obo", go2items=go2items)
+    srchhelp = GoSearch('db/go/go-basic.obo', go2items=go2items)
 
-    with open("go.log", "w") as log:
+    with open('go.log', 'w') as log:
         # Add children GOs
         gos_all = srchhelp.add_children_gos(go_ids)
         

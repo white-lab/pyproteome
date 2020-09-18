@@ -17,6 +17,6 @@ def fetch_data(dirname, datas, base_url):
         response = requests.get(url, stream=True)
         response.raise_for_status()
 
-        with open(out_path, mode="wb") as f:
+        with open(out_path, mode='wb') as f:
             for block in response.iter_content(1024):
                 f.write(block)

@@ -1,4 +1,4 @@
-"""Utility functions used in other modules."""
+'''Utility functions used in other modules.'''
 
 # Built-ins
 from collections import OrderedDict, Callable
@@ -16,13 +16,13 @@ from . import paths
 
 
 DEFAULT_DPI = 300
-"""
+'''
 The DPI to use when generating all image figures.
-"""
+'''
 
 
 def fuzzy_find(needle, haystack):
-    """
+    '''
     Find the longest matching subsequence of needle within haystack.
 
     Returns the corresponding index from the beginning of needle.
@@ -35,19 +35,19 @@ def fuzzy_find(needle, haystack):
     Returns
     -------
     index : int
-    """
+    '''
     s = difflib.SequenceMatcher(a=haystack, b=needle)
     best = s.find_longest_match(0, len(haystack), 0, len(needle))
     return best.a - len(needle) + best.size
 
 
-def make_folder(data=None, folder_name=None, sub="Output"):
+def make_folder(data=None, folder_name=None, sub='Output'):
     if folder_name is None:
         folder_name = os.path.join(
             paths.FIGURES_DIR,
             data.name
             if data is not None else
-            "All",
+            'All',
             sub,
         )
 
@@ -55,7 +55,7 @@ def make_folder(data=None, folder_name=None, sub="Output"):
 
 
 def makedirs(folder_name=None):
-    """
+    '''
     Creates a folder if it does not exist.
 
     Parameters
@@ -65,7 +65,7 @@ def makedirs(folder_name=None):
     Returns
     -------
     folder_name : str
-    """
+    '''
     if folder_name:
         try:
             os.makedirs(folder_name)
@@ -76,7 +76,7 @@ def makedirs(folder_name=None):
 
 
 def norm(channels):
-    """
+    '''
     Converts a list of channels to their normalized names.
 
     Parameters
@@ -86,12 +86,12 @@ def norm(channels):
     Returns
     -------
     new_channels : list of str or dict of str, str
-    """
+    '''
     if channels is None:
         return None
 
     if isinstance(channels, str):
-        return channels + "_norm"
+        return channels + '_norm'
 
     if isinstance(channels, list):
         return [norm(i) for i in channels]
@@ -104,7 +104,7 @@ def norm(channels):
 
 
 def which(program):
-    """
+    '''
     Checks if a program exists in PATH's list of directories.
 
     Parameters
@@ -114,18 +114,18 @@ def which(program):
     Returns
     -------
     path : str or None
-    """
+    '''
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-    fpath, fname = os.path.split(program)
+    fpath, _ = os.path.split(program)
 
     if fpath:
         if is_exe(program):
             return program
     else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
+        for path in os.environ['PATH'].split(os.pathsep):
+            path = path.strip('\'')
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file
@@ -134,7 +134,7 @@ def which(program):
 
 
 def flatten_set(lst):
-    """
+    '''
     Flattens an Iterable with arbitrary nesting into a single set.
 
     Parameters
@@ -147,9 +147,9 @@ def flatten_set(lst):
 
     Examples
     --------
-        >>> utils.flatten_set([0, [1, 2], [[3]], "string"])
-        set([0, 1, 2, 3, "string"])
-    """
+        >>> utils.flatten_set([0, [1, 2], [[3]], 'string'])
+        set([0, 1, 2, 3, 'string'])
+    '''
     if isinstance(
         lst,
         (list, tuple, set, types.GeneratorType, pd.Series, np.ndarray)
@@ -166,7 +166,7 @@ def flatten_set(lst):
 
 
 def flatten_list(lst):
-    """
+    '''
     Flattens an Iterable with arbitrary nesting into a single list.
 
     Parameters
@@ -179,9 +179,9 @@ def flatten_list(lst):
 
     Examples
     --------
-        >>> utils.flatten_list([0, [1, 2], [[3]], "string"])
-        [0, 1, 2, 3, "string"]
-    """
+        >>> utils.flatten_list([0, [1, 2], [[3]], 'string'])
+        [0, 1, 2, 3, 'string']
+    '''
     if isinstance(
         lst,
         (list, tuple, set, types.GeneratorType, pd.Series, np.ndarray)
@@ -243,7 +243,7 @@ class DefaultOrderedDict(OrderedDict):
 
 
 def memoize(func):
-    """
+    '''
     Memoize a function, saving its returned value for a given set of parameters
     in an in-memory cache.
 
@@ -262,7 +262,7 @@ def memoize(func):
     Returns
     -------
     memorized : func
-    """
+    '''
     cache = func.cache = {}
 
     @functools.wraps(func)
@@ -277,14 +277,14 @@ def memoize(func):
     return memoized_func
 
 
-PICKLE_DIR = ".pyproteome"
+PICKLE_DIR = '.pyproteome'
 '''
 Default directory to use for saving / loading pickle files.
 '''
 
 
 def save(name, val=None):
-    """
+    '''
     Save a variable using the pickle module.
 
     Parameters
@@ -296,19 +296,19 @@ def save(name, val=None):
     Returns
     -------
     val : object
-    """
-    filename = os.path.join(PICKLE_DIR, "{}.pkl".format(name))
+    '''
+    filename = os.path.join(PICKLE_DIR, '{}.pkl'.format(name))
 
     makedirs(PICKLE_DIR)
 
-    with open(filename, "wb") as f:
+    with open(filename, 'wb') as f:
         pickle.dump(val, f)
 
     return val
 
 
 def load(name, default=None):
-    """
+    '''
     Load a variable using the pickle module.
 
     Parameters
@@ -320,11 +320,11 @@ def load(name, default=None):
     Returns
     -------
     val : object
-    """
-    filename = os.path.join(PICKLE_DIR, "{}.pkl".format(name))
+    '''
+    filename = os.path.join(PICKLE_DIR, '{}.pkl'.format(name))
 
     try:
-        with open(filename, "rb") as f:
+        with open(filename, 'rb') as f:
             val = pickle.load(f)
     except (
         OSError, pickle.UnpicklingError, IOError,
@@ -336,9 +336,9 @@ def load(name, default=None):
 
 
 def adjust_text(*args, **kwargs):
-    """
+    '''
     Wraps importing and calling :func:`adjustText.adjust_text`.
-    """
+    '''
     from adjustText import adjust_text as at
     return at(*args, **kwargs)
 
@@ -386,8 +386,8 @@ def get_name(proteins):
     'Tuba1a/1b/1c/3a/4a/8'
     '''
     genes = sorted(proteins.genes)
-    common = ""
-    sep = " / "
+    common = ''
+    sep = ' / '
 
     if len(genes) > 1:
         common = os.path.commonprefix(genes)
@@ -401,7 +401,7 @@ def get_name(proteins):
             common = common[:last_digit[0]]
 
         if common:
-            sep = "/"
+            sep = '/'
 
     return common + sep.join(i[len(common):] for i in genes)
 

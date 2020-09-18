@@ -109,9 +109,9 @@ def plot_binomial_enrichment(
     minmax=4,
     **kwargs
 ):
-    """
+    '''
     Plot binomial enrichment scores of arbitrary gene set lists.
-    """
+    '''
     if correlates is None:
         corr_cutoff = None
         correlates = {'dummy': None}
@@ -213,7 +213,7 @@ def plot_binomial_enrichment(
             'blue',
         ]
         colors = sns.color_palette(
-            "hls", len(correlates),
+            'hls', len(correlates),
         ).as_hex()
         gene_colors += [[
             colors[i]
