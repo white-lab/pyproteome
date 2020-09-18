@@ -84,17 +84,17 @@ class DataSet:
     between channels, samples, and sample groups.
 
     Data sets are automatically loaded, filtered, and merged by default. See
-    :any:`DEFAULT_FILTER_BAD<pyproteome.data_sets.data_set.DEFAULT_FILTER_BAD>`
-    for default filtering parameters. See
-    :func:`merge_duplicates<pyproteome.data_sets.data_set.DataSet.merge_duplicates>`
-    for info on how multiple peptide-spectrum matches are integrated together.
+    :const:`.DEFAULT_FILTER_BAD` for default filtering parameters.
+    See :func:`.DataSet.merge_duplicates` for info on how multiple
+    peptide-spectrum matches are integrated together.
 
     Attributes
     ----------
     search_name : str, optional
         Name of the search file this data set was loaded from.
     psms : :class:`pandas.DataFrame`
-        Contains at least 'Proteins', 'Sequence', and 'Modifications' columns.
+        Contains at least 'Proteins', 'Sequence', and 'Modifications' columns as
+        well as any quantication data.
     channels : dict of str, str
         Maps label channel to sample name.
     groups : dict of str, list of str
@@ -106,6 +106,11 @@ class DataSet:
         Name of this data set.
     levels : dict or str, float
         Peptide levels used for normalization.
+    intra_normalized : bool
+        Indicates if the data set has been normalized within a TMT-plex analysis.
+    inter_normalized : bool
+        Indicates if the data set has been normalized for comparison across
+        TMT-plex analyses.
     sets : int
         Number of sets merged into this data set.
     '''
