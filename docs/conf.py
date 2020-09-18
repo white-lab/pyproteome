@@ -19,7 +19,7 @@ import importlib.machinery
 import importlib.util
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-SETUP_PATH = os.path.join(THIS_DIR, "..", "setup.py")
+SETUP_PATH = os.path.join(THIS_DIR, '..', 'setup.py')
 
 SETUP_SPEC = importlib.util.spec_from_file_location('setup', SETUP_PATH)
 SETUP_MODULE = importlib.util.module_from_spec(SETUP_SPEC)
@@ -27,13 +27,13 @@ SETUP_SPEC.loader.exec_module(SETUP_MODULE)
 REQUIREMENTS = SETUP_MODULE.REQUIREMENTS
 
 PROJ_REQUIREMENTS = [
-    re.split("[><=]", i)[0]
+    re.split('[><=]', i)[0]
     for i in REQUIREMENTS
 ]
 
 DOCS_REQUIREMENTS = [
-    re.split("\W+", i)[0]
-    for i in open(os.path.join(THIS_DIR, "requirements.txt")).readlines()
+    re.split('\W+', i)[0]
+    for i in open(os.path.join(THIS_DIR, 'requirements.txt')).readlines()
 ]
 # PROJ_REQUIREMENTS = []
 # DOCS_REQUIREMENTS = []
@@ -60,37 +60,39 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
-    "sphinx.ext.intersphinx",
+    'sphinx.ext.intersphinx',
     'numpydoc',
 ]
 
 intersphinx_mapping = {
-    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
-    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'seaborn': ('http://seaborn.pydata.org/', None),
+    'python' : ('https://docs.python.org/3/', None),
 }
 
 autodoc_mock_imports = [
-    mod_name.replace("-", "_")
+    mod_name.replace('-', '_')
     for mod_name in PROJ_REQUIREMENTS
     if mod_name not in DOCS_REQUIREMENTS
 ] + [
-    "numpy",
-    "pandas",
-    "seaborn",
-    "sklearn",
-    "sklearn.cluster",
-    "sklearn.decomposition",
-    "sklearn.utils",
-    "IPython",
-    "IPython.display",
-    "scipy",
-    "scipy.cluster",
-    "scipy.cluster.hierarchy",
-    "scipy.misc",
-    "scipy.spatial",
-    "scipy.stats",
+    'numpy',
+    'pandas',
+    'seaborn',
+    'sklearn',
+    'sklearn.cluster',
+    'sklearn.decomposition',
+    'sklearn.utils',
+    'IPython',
+    'IPython.display',
+    'scipy',
+    'scipy.cluster',
+    'scipy.cluster.hierarchy',
+    'scipy.misc',
+    'scipy.spatial',
+    'scipy.stats',
 ]
 
 numpydoc_show_class_members = False
@@ -110,9 +112,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pyproteome'
-copyright = u'2016-2020, Nader Morshed'
-author = u'Nader Morshed'
+project = 'pyproteome'
+copyright = '2016-2020, Nader Morshed'
+author = 'Nader Morshed'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -120,11 +122,11 @@ author = u'Nader Morshed'
 #
 # The short X.Y version.
 version = [
-    line.split("=", 1)[1].strip('\'').strip('\"')
+    line.split('=', 1)[1].strip('\'').strip('\'')
     for line in open(
-        os.path.join(THIS_DIR, "..", "pyproteome", "version.py")
+        os.path.join(THIS_DIR, '..', 'pyproteome', 'version.py')
     )
-    if line.startswith("__version__ =")
+    if line.startswith('__version__ =')
 ][0]
 # The full version, including alpha/beta/rc tags.
 release = version
@@ -133,7 +135,7 @@ release = version
 # for a list of supported languages.
 #
 # This is also used if you do content translation via gettext catalogs.
-# Usually you set "language" from the command line for these cases.
+# Usually you set 'language' from the command line for these cases.
 language = None
 
 # There are two options for replacing |today|: either, you set today to some
@@ -167,7 +169,7 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
-# If true, keep warnings as "system message" paragraphs in the built documents.
+# If true, keep warnings as 'system message' paragraphs in the built documents.
 # keep_warnings = False
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
@@ -189,7 +191,7 @@ html_theme = 'classic'
 # html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
-# "<project> v<release> documentation".
+# '<project> v<release> documentation'.
 # html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
@@ -206,7 +208,7 @@ html_theme = 'classic'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# so a file named 'default.css' will overwrite the builtin 'default.css'.
 # html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
@@ -241,10 +243,10 @@ html_theme = 'classic'
 # If true, links to the reST sources are added to the pages.
 # html_show_sourcelink = True
 
-# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+# If true, 'Created using Sphinx' is shown in the HTML footer. Default is True.
 # html_show_sphinx = True
 
-# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+# If true, '(C) Copyright ...' is shown in the HTML footer. Default is True.
 # html_show_copyright = True
 
 # If true, an OpenSearch description file will be output, and all pages will
@@ -252,7 +254,7 @@ html_theme = 'classic'
 # base URL from which the finished HTML is served.
 # html_use_opensearch = ''
 
-# This is the file name suffix for HTML files (e.g. ".xhtml").
+# This is the file name suffix for HTML files (e.g. '.xhtml').
 # html_file_suffix = None
 
 # Language to be used for generating the HTML full-text search index.
@@ -292,15 +294,15 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'pyproteome.tex', u'pyproteome Documentation',
-   u'Nader Morshed', 'manual'),
+  (master_doc, 'pyproteome.tex', 'pyproteome Documentation',
+   'Nader Morshed', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
 # latex_logo = None
 
-# For "manual" documents, if this is true, then toplevel headings are parts,
+# For 'manual' documents, if this is true, then toplevel headings are parts,
 # not chapters.
 # latex_use_parts = False
 
@@ -322,7 +324,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pyproteome', u'pyproteome Documentation',
+    (master_doc, 'pyproteome', 'pyproteome Documentation',
      [author], 1)
 ]
 
@@ -336,7 +338,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'pyproteome', u'pyproteome Documentation',
+  (master_doc, 'pyproteome', 'pyproteome Documentation',
    author, 'pyproteome',
    'Python library for analyzing mass spectrometry proteomics data..',
    'Miscellaneous'),
@@ -351,5 +353,5 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
 
-# If true, do not generate a @detailmenu in the "Top" node's menu.
+# If true, do not generate a @detailmenu in the 'Top' node's menu.
 # texinfo_no_detailmenu = False

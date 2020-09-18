@@ -162,7 +162,7 @@ def _get_quant_tags(cursor, pd_version):
     return tag_names
 
 
-def _read_peptides(conn, pd_version, pick_best_ptm=False):
+def _read_peptides(conn, pd_version, pick_best_psm=False):
     if pd_version[:2] in [(1, 4)]:
         sql_query = """
         SELECT
@@ -195,7 +195,7 @@ def _read_peptides(conn, pd_version, pick_best_ptm=False):
             """
             WHERE Peptides.SearchEngineRank=1
             """
-            if pick_best_ptm else
+            if pick_best_psm else
             ""
         )
     elif pd_version[:2] in [(2, 2)]:
@@ -223,7 +223,7 @@ def _read_peptides(conn, pd_version, pick_best_ptm=False):
             """
             WHERE TargetPsms.SearchEngineRank=1
             """
-            if pick_best_ptm else
+            if pick_best_psm else
             ""
         )
     else:
@@ -1070,7 +1070,7 @@ def _get_species(cursor, pd_version):
     return species
 
 
-def read_discoverer_msf(basename, msf_path=None, pick_best_ptm=False):
+def read_discoverer_msf(basename, msf_path=None, pick_best_psm=False):
     """
     Read a Proteome Discoverer .msf file.
 
@@ -1080,7 +1080,7 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_ptm=False):
     Parameters
     ----------
     path : str
-    pick_best_ptm : bool, optional
+    pick_best_psm : bool, optional
 
     Returns
     -------
@@ -1112,7 +1112,7 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_ptm=False):
         tag_names = _get_quant_tags(cursor, pd_version)
 
         # Read the main peptide properties
-        df = _read_peptides(conn, pd_version, pick_best_ptm=pick_best_ptm)
+        df = _read_peptides(conn, pd_version, pick_best_psm=pick_best_psm)
 
         LOGGER.info(
             "{}: -- Loading information for {} peptides".format(

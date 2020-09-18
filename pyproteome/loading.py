@@ -1,7 +1,7 @@
 '''
 This module provides functionality for loading data sets.
 
-Functionality includes loading CAMV and MASCOT / Discoverer data sets.
+Functionality includes loading CAMV and Proteome Discoverer data sets.
 '''
 
 # Built-ins
@@ -99,14 +99,17 @@ def _calculate_accepted(psms, accepted):
     return psms
 
 
-def load_mascot_psms(basename, pick_best_ptm=False):
+def load_psms(basename, pick_best_psm=True):
     '''
-    Load a list of sequences from a MSF file produced by MASCOT / Discoverer.
+    Load a list of peptide-spectrum matches (PSMs) from a .msf file produced by
+    Proteome Discoverer.
 
     Parameters
     ----------
-    basenme : str
-    pick_best_ptm : bool, optional
+    basename : str
+        Base name of the data set (i.e. 'CK-H1-pY' for 'CK-H1-pY.msf').
+    pick_best_psm : bool, optional
+        Select the best scoring PSM for a given scan, otherwise load all PSMs.
 
     Returns
     -------
@@ -118,9 +121,9 @@ def load_mascot_psms(basename, pick_best_ptm=False):
 
     psms, species = discoverer.read_discoverer_msf(
         basename,
-        pick_best_ptm=(
-            pick_best_ptm and
-            all(not i for i in lst)
+        pick_best_psm=(
+            pick_best_psm and
+            all([not i for i in lst])
         ),
     )
 

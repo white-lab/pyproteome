@@ -93,23 +93,26 @@ class Modifications:
         --------
         >>> from pyproteome.sequence import Sequence
         >>> from pyproteome.modification import Modification, Modifications
-        >>> s = Sequence(pep_seq="AVYSEIK")
+        >>> s = Sequence(pep_seq="SVYTEIK")
         >>> m = Modifications(
         ...     [
         ...         Modification(mod_type="TMT", nterm=True, sequence=s),
         ...         Modification(mod_type="Phospho", rel_pos=2, sequence=s),
-        ...         Modification(mod_type="Phospho", rel_pos=3, sequence=s),
         ...         Modification(mod_type="TMT", rel_pos=6, sequence=s),
         ...     ]
         ... )
         >>> m.get_mods("TMT")
         ["TMT A0", "TMT K6"]
         >>> m.get_mods("Phospho")
-        ["p Y2", "p S3"]
+        ["pY2"]
         >>> m.get_mods("Y")
-        ["p Y2"]
+        ["pY2"]
+        >>> m.get_mods("S")
+        []
         >>> m.get_mods([("Y", "Phospho")])
-        ["p Y2"]
+        ["pY2"]
+        >>> m.get_mods([("S", "Phospho")])
+        []
 
         Parameters
         ----------

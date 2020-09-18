@@ -119,7 +119,7 @@ class DataSet:
         cmp_groups=None,
         fix_channel_names=True,
         dropna=False,
-        pick_best_ptm=True,
+        pick_best_psm=True,
         constand_norm=False,
         merge_duplicates=True,
         filter_bad=True,
@@ -151,7 +151,7 @@ class DataSet:
         dropna : bool, optional
             Drop scans that have any channels with missing quantification
             values.
-        pick_best_ptm : bool, optional
+        pick_best_psm : bool, optional
             Select the peptide sequence for each scan that has the highest
             MASCOT ion score. (i.e. ["pSTY": 5, "SpTY": 10, "STpY": 20] =>
             "STpY")
@@ -183,9 +183,9 @@ class DataSet:
         species, lst = set(), []
 
         if search_name and not skip_load:
-            self.psms, species, lst = pyp.loading.load_mascot_psms(
+            self.psms, species, lst = pyp.loading.load_psms(
                 search_name,
-                pick_best_ptm=pick_best_ptm,
+                pick_best_psm=pick_best_psm,
             )
             for col in DATA_SET_COLS:
                 assert col in self.psms.columns
@@ -241,7 +241,7 @@ class DataSet:
             )
             self.log_stats()
 
-        if pick_best_ptm and (
+        if pick_best_psm and (
             not search_name or
             os.path.splitext(search_name)[1] != ".msf" or
             any(i for i in lst)
@@ -250,7 +250,7 @@ class DataSet:
                 "{}: Picking peptides with best ion score for each scan."
                 .format(self.name)
             )
-            self._pick_best_ptm()
+            self._pick_best_psm()
 
         if constand_norm:
             channels = list(self.channels.values())
@@ -405,7 +405,7 @@ class DataSet:
         """
         return self.psms.shape
 
-    def _pick_best_ptm(self):
+    def _pick_best_psm(self):
         reject_mask = np.zeros(self.shape[0], dtype=bool)
 
         for index, row in self.psms.iterrows():
@@ -906,6 +906,77 @@ class DataSet:
         Parameters
         ----------
         insert : dict or list of dict
+
+        Examples
+        --------
+            prots = data_sets.protein.Proteins(
+                proteins=(
+                    data_sets.protein.Protein(
+                        accession="Q920G3",
+                        gene="Siglec5",
+                        description="Sialic acid-binding Ig-like lectin 5",
+                        full_sequence=(
+                            "MRWAWLLPLLWAGCLATDGYSLSVTGSVTVQEGLCVFVACQVQYPNSKGPVFGYWFREGA"
+                            "NIFSGSPVATNDPQRSVLKEAQGRFYLMGKENSHNCSLDIRDAQKIDTGTYFFRLDGSVK"
+                            "YSFQKSMLSVLVIALTEVPNIQVTSTLVSGNSTKLLCSVPWACEQGTPPIFSWMSSALTS"
+                            "LGHRTTLSSELNLTPRPQDNGTNLTCQVNLPGTGVTVERTQQLSVIYAPQKMTIRVSWGD"
+                            "DTGTKVLQSGASLQIQEGESLSLVCMADSNPPAVLSWERPTQKPFQLSTPAELQLPRAEL"
+                            "EDQGKYICQAQNSQGAQTASVSLSIRSLLQLLGPSCSFEGQGLHCSCSSRAWPAPSLRWR"
+                            "LGEGVLEGNSSNGSFTVKSSSAGQWANSSLILSMEFSSNHRLSCEAWSDNRVQRATILLV"
+                            "SGPKVSQAGKSETSRGTVLGAIWGAGLMALLAVCLCLIFFTVKVLRKKSALKVAATKGNH"
+                            "LAKNPASTINSASITSSNIALGYPIQGHLNEPGSQTQKEQPPLATVPDTQKDEPELHYAS"
+                            "LSFQGPMPPKPQNTEAMKSVYTEIKIHKC"
+                        ),
+                    ),
+                ),
+            )
+            seq = data_sets.sequence.extract_sequence(prots, "SVyTEIK")
+
+            mods = data_sets.modification.Modifications(
+                mods=[
+                    data_sets.modification.Modification(
+                        rel_pos=0,
+                        mod_type="TMT10plex",
+                        nterm=True,
+                        sequence=seq,
+                    ),
+                    data_sets.modification.Modification(
+                        rel_pos=2,
+                        mod_type="Phospho",
+                        sequence=seq,
+                    ),
+                    data_sets.modification.Modification(
+                        rel_pos=6,
+                        mod_type="TMT10plex",
+                        sequence=seq,
+                    ),
+                ],
+            )
+
+            seq.modifications = mods
+
+            ckh_sigf1_py_insert = {
+                "Proteins": prots,
+                "Sequence": seq,
+                "Modifications": mods,
+                "126":  1.46e4,
+                "127N": 2.18e4,
+                "127C": 1.88e4,
+                "128N": 4.66e3,
+                "128C": 6.70e3,
+                "129N": 7.88e3,
+                "129C": 1.03e4,
+                "130N": 7.28e3,
+                "130C": 2.98e3,
+                "131":  6.01e3,
+                "Validated": True,
+                "First Scan": {23074},
+                "Raw Paths": {"2019-04-24-CKp25-SiglecF-1-py-SpinCol-col189.raw"},
+                "Scan Paths": {"CK-7wk-H1-pY"},
+                "IonScore": 30,
+                "Isolation Interference": 0,
+            }
+            ds.add_peptide([ckh_sigf1_py_insert])
         """
         defaults = {
             "Proteins": protein.Proteins(),
@@ -1554,6 +1625,18 @@ class DataSet:
 
     @property
     def phosphosites(self):
+        '''
+        Get a list of all unique phosphosites identified in a data set.
+
+        Returns
+        -------
+        list of str
+
+        Examples
+        --------
+            >>> ds.phosphosites
+            ['Siglec5 pY561', 'Stat3 pY705', 'Inpp5d pY868']
+        '''
         return sorted(
             set(
                 self.psms.apply(
@@ -1585,6 +1668,11 @@ class DataSet:
         Returns
         -------
         list of str
+
+        Examples
+        --------
+            >>> ds.accessions
+            ['P42227', 'Q920G3', 'Q9ES52']
         """
         return sorted(
             set(
@@ -1606,6 +1694,24 @@ class DataSet:
         return self.get_data()
 
     def get_data(self, groups=None, mods=None, short_name=False):
+        '''
+        Get the quantification data for all samples and peptides in a data set, with
+        more customizable options.
+
+        Parameters
+        ----------
+        groups : list of str, optional
+            Select samples from a given list of groups, otherwise select all samples.
+        mods : str or list of str, optional
+            Option passed to :func:`.modification.Modification.__str__`.
+        short_name : bool, optional
+            Use the short abbreviation of a gene name (using :func:`pyproteome.utils.get_name`).
+            Otherwise use the long version.
+
+        Returns
+        -------
+        df : :class:`pandas.DataFrame`
+        '''
         if groups is None:
             channel_names = self.samples
 
