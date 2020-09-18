@@ -15,8 +15,8 @@ except ImportError:
 from . import motif
 
 
-LOGGER = logging.getLogger("pyproteome.plogo")
-PLOGO_BASE = "https://plogo.uconn.edu/main"
+LOGGER = logging.getLogger('pyproteome.plogo')
+PLOGO_BASE = 'https://plogo.uconn.edu/main'
 
 
 def format_title(
@@ -39,26 +39,26 @@ def format_title(
 
     if 'fold' in f:
         title.append(
-            "abs(FC) > {:.2f}".format(f['fold'])
+            'abs(FC) > {:.2f}'.format(f['fold'])
         )
 
     if 'asym_fold' in f:
         title.append(
-            "FC {} {:.2f}".format(
-                ">" if f["asym_fold"] > 1 else "<",
+            'FC {} {:.2f}'.format(
+                '>' if f['asym_fold'] > 1 else '<',
                 f['asym_fold'],
             )
         )
 
     if 'p' in f:
         title.append(
-            "p < {:.2f}".format(f['p'])
+            'p < {:.2f}'.format(f['p'])
         )
 
-    title = ", ".join(title)
+    title = ', '.join(title)
 
     if data:
-        title = "{} - {}".format(data.name, title)
+        title = '{} - {}'.format(data.name, title)
 
     return title
 
@@ -85,7 +85,7 @@ def make_logo(data, f, **kwargs):
     fore = [
         n
         for n in motif.generate_n_mers(
-            data.filter(f)["Sequence"],
+            data.filter(f)['Sequence'],
             **nmer_args
         )
     ]
@@ -93,7 +93,7 @@ def make_logo(data, f, **kwargs):
     back = [
         n
         for n in motif.generate_n_mers(
-            data["Sequence"],
+            data['Sequence'],
             **nmer_args
         )
     ]
@@ -118,23 +118,23 @@ def _plogo_wait_job(s, job, delay=1):
         time.sleep(delay)
 
 
-def _check_plogo_response(response, message=""):
+def _check_plogo_response(response, message=''):
     response.raise_for_status()
     json = response.json()
-    assert json["message"] == message
-    assert json["success"]
+    assert json['message'] == message
+    assert json['success']
     return json
 
 
 def plogo(
     foreground, background,
     fix_letter_pos=None,
-    title="",
+    title='',
     width=800,
     height=600,
     ymax=None,
 ):
-    """
+    '''
     Wraps calls to the pLogo web server [1]_, returning an image showing the enrichment
     of a sequence in a foreground set compared to a background set.
 
@@ -157,7 +157,7 @@ def plogo(
     .. [1] O’Shea, Joseph P et al. “pLogo: A Probabilistic Approach to
        Visualizing Sequence Motifs.” Nature Methods 10.12 (2013): 1211–1212.
        Web.
-    """
+    '''
     if fix_letter_pos is None:
         fix_letter_pos = []
 
@@ -171,21 +171,21 @@ def plogo(
     response = s.post(
         '{}/uploadforeground/'.format(PLOGO_BASE),
         data={
-            'fg': "\n".join(foreground),
+            'fg': '\n'.join(foreground),
             'fix': 1,
             'dataType': 'text',
             'remove_duplicates': True,
         },
     )
     json = _check_plogo_response(
-        response, message="Foreground uploaded. See stats.",
+        response, message='Foreground uploaded. See stats.',
     )
     fore_dir = json['dir']
 
     response = s.post(
         '{}/uploadbackground/'.format(PLOGO_BASE),
         data={
-            'bg_text': "\n".join(background),
+            'bg_text': '\n'.join(background),
             'dataType': 'text',
             'datasetType': None,
             'name': 'unknown',

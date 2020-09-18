@@ -17,59 +17,59 @@ import pyproteome as pyp
 from . import motif, plogo
 
 
-BASES = list("ACDEFGHIKLMNPQRSTVWY")
+BASES = list('ACDEFGHIKLMNPQRSTVWY')
 GLOBSCALE = 1.4
 LETTERS = {
     base: TextPath(
         (-0.303, 0),
         base,
         size=1,
-        prop=FontProperties(family="monospace", weight="bold"),
+        prop=FontProperties(family='monospace', weight='bold'),
     )
     for base in BASES
 }
-LETTERS["Q"] = TextPath(
+LETTERS['Q'] = TextPath(
     (-0.303, .11),
-    "Q",
+    'Q',
     size=1,
-    prop=FontProperties(family="monospace", weight="bold"),
+    prop=FontProperties(family='monospace', weight='bold'),
 )
-LETTERS["G"] = TextPath(
+LETTERS['G'] = TextPath(
     (-0.303, .01),
-    "G",
+    'G',
     size=1,
-    prop=FontProperties(family="monospace", weight="bold"),
+    prop=FontProperties(family='monospace', weight='bold'),
 )
 LETTER_YSCALE = {
-    "Q": .84,
-    "G": .95,
+    'Q': .84,
+    'G': .95,
 }
 
 COLORS_SCHEME = {
-    i: "black"
+    i: 'black'
     for i in BASES
 }
 COLORS_SCHEME.update({
-    "C": "#BEB86B",
-    "D": "#800000",
-    "E": "#800000",
-    "F": "#6F6F6F",
-    "G": "#155939",
-    "H": "#142B4F",
-    "K": "#142B4F",
-    "R": "#142B4F",
-    "N": "#A97C50",
-    "P": "#1C5E3F",
-    "Q": "#A97C50",
-    "S": "#4A79A5",
-    "T": "#4A79A5",
-    "L": "#000000",
-    "A": "#000000",
-    "I": "#000000",
-    "M": "#000000",
-    "V": "#000000",
-    "W": "#000000",
-    "Y": "#6F6F6F",
+    'C': '#BEB86B',
+    'D': '#800000',
+    'E': '#800000',
+    'F': '#6F6F6F',
+    'G': '#155939',
+    'H': '#142B4F',
+    'K': '#142B4F',
+    'R': '#142B4F',
+    'N': '#A97C50',
+    'P': '#1C5E3F',
+    'Q': '#A97C50',
+    'S': '#4A79A5',
+    'T': '#4A79A5',
+    'L': '#000000',
+    'A': '#000000',
+    'I': '#000000',
+    'M': '#000000',
+    'V': '#000000',
+    'W': '#000000',
+    'Y': '#6F6F6F',
 })
 LOGGER = logging.getLogger('pyp.motifs.logo')
 
@@ -102,9 +102,9 @@ def _calc_score(
     prob_fn=None,
 ):
     if prob_fn is None:
-        prob_fn = "hypergeom"
+        prob_fn = 'hypergeom'
 
-    assert prob_fn in ["hypergeom", "binom"]
+    assert prob_fn in ['hypergeom', 'binom']
 
     if back_hit_size <= 0:
         return 0
@@ -115,7 +115,7 @@ def _calc_score(
     N = back_size
     p = K / N
 
-    if prob_fn == "hypergeom":
+    if prob_fn == 'hypergeom':
         binomial = stats.hypergeom(N, K, n)
     else:
         binomial = stats.binom(n, p)
@@ -157,7 +157,7 @@ def _calc_scores(bases, fore, back, p=0.05, prob_fn=None):
 
 
 def _calc_hline(back_counts, p=0.05):
-    """
+    '''
     Calculate the significance cutoff using multiple-hypothesis correction.
 
     Parameters
@@ -170,7 +170,7 @@ def _calc_hline(back_counts, p=0.05):
     -------
     float
         Signficance cutoff in log-odds space.
-    """
+    '''
     num_calc = sum(
         1
         for counts in back_counts
@@ -182,7 +182,7 @@ def _calc_hline(back_counts, p=0.05):
 
 
 def make_logo(data, f, **kwargs):
-    """
+    '''
     Create a logo from a pyproteome data set using a given filter to define
     the foreground set.
 
@@ -197,7 +197,7 @@ def make_logo(data, f, **kwargs):
     Returns
     -------
     fig, axes
-    """
+    '''
     LOGGER.info('Generating motif logo')
 
     nmer_args = motif.get_nmer_args(kwargs)
@@ -205,7 +205,7 @@ def make_logo(data, f, **kwargs):
     fore = [
         n.upper()
         for n in motif.generate_n_mers(
-            data.filter(f)["Sequence"],
+            data.filter(f)['Sequence'],
             **nmer_args
         )
     ]
@@ -213,11 +213,11 @@ def make_logo(data, f, **kwargs):
     back = [
         n.upper()
         for n in motif.generate_n_mers(
-            data["Sequence"],
+            data['Sequence'],
             **nmer_args
         )
     ]
-    title = kwargs.pop("title", plogo.format_title(data=data, f=f))
+    title = kwargs.pop('title', plogo.format_title(data=data, f=f))
     fig, ax = logo(
         fore, back,
         title=title,
@@ -232,7 +232,7 @@ def _draw_logo(
     ax,
     p_line=None,
     title=None,
-    ytitle="",
+    ytitle='',
     width=10,
     height=6,
     fade_power=1,
@@ -306,8 +306,8 @@ def _draw_logo(
     xax.patch.set_alpha(0)
 
     if p_line is not None:
-        axes[0].axhline(p_line, color="red")
-        axes[1].axhline(-p_line, color="red")
+        axes[0].axhline(p_line, color='red')
+        axes[1].axhline(-p_line, color='red')
 
         miny, maxy = -p_line, p_line
     else:
@@ -340,7 +340,7 @@ def _draw_logo(
 
     xax.set_xticklabels(
         [
-            "{:+d}".format(i) if i != 0 else "0"
+            '{:+d}'.format(i) if i != 0 else '0'
             for i in range(-(length - 1) // 2, (length - 1) // 2 + 1)
         ],
         va='center',
@@ -427,7 +427,7 @@ def _draw_logo(
 def logo(
     fore, back,
     ax=None,
-    title="",
+    title='',
     width=12,
     height=8,
     p=0.05,
@@ -439,7 +439,7 @@ def logo(
     show_n=True,
     minmaxy=None,
 ):
-    """
+    '''
     Generate a sequence logo locally using pLogo's enrichment score.
 
     Parameters
@@ -457,13 +457,13 @@ def logo(
         Hide residues with scores below p * low_res_cutoff.
     prob_fn : str, optional
         Probability function to use for calculating enrichment. Either
-        "hypergeom" or "binom". The default, hypergeom, is more accurate but
+        'hypergeom' or 'binom'. The default, hypergeom, is more accurate but
         more computationally expensive.
 
     Returns
     -------
     fig, axes
-    """
+    '''
     if len(back) == 0:
         return None, None
 
@@ -488,7 +488,7 @@ def logo(
         scores=rel_info,
         p_line=p_line,
         title=title,
-        ytitle="log odds",
+        ytitle='log odds',
         width=width,
         height=height,
         fade_power=fade_power,
@@ -503,11 +503,11 @@ def logo(
         axes[3].text(
             length + .4,
             -minmaxy,
-            "n(fg) = {}\nn(bg) = {}".format(len(fore), len(back)),
-            color="darkred",
+            'n(fg) = {}\nn(bg) = {}'.format(len(fore), len(back)),
+            color='darkred',
             fontsize=18,
-            ha="right",
-            va="bottom",
+            ha='right',
+            va='bottom',
         )
 
     return ax.get_figure(), axes

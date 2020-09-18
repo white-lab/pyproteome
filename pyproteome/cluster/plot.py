@@ -21,8 +21,8 @@ CORR_COLOR_MAP = plt.cm.coolwarm
 
 
 def hierarchical_clusters(data, y_pred):
-    ds = data["ds"]
-    z = data["z"]
+    ds = data['ds']
+    z = data['z']
 
     ss = sorted(
         set(y_pred),
@@ -52,7 +52,7 @@ def hierarchical_clusters(data, y_pred):
         link,
         labels=[str(x) for x in ss],
         no_plot=True,
-    )["leaves"]
+    )['leaves']
 
     mapping = {
         val: key
@@ -60,7 +60,7 @@ def hierarchical_clusters(data, y_pred):
     }
 
     new_ind = np.argsort(np.vectorize(lambda x: mapping[x])(y_pred))
-    cn = np.corrcoef(data["data"].values[new_ind])
+    cn = np.corrcoef(data['data'].values[new_ind])
 
     cmapping = {
         cluster_n: index
@@ -86,7 +86,7 @@ def cluster_corrmap(
         f = ax.get_figure()
 
     if div_scale is None:
-        div_scale = max([data["data"].shape[0] // 1000, 1])
+        div_scale = max([data['data'].shape[0] // 1000, 1])
 
     if len(set(y_pred)) > 1:
         mapping, new_ind, _, cn = hierarchical_clusters(data, y_pred)
@@ -94,7 +94,7 @@ def cluster_corrmap(
         y_pred = y_pred.values[new_ind]
     else:
         sorted_clusters = sorted(set(y_pred))
-        cn = data["c"]
+        cn = data['c']
 
     if div_scale > 1:
         cn = cn[::div_scale, ::div_scale]
@@ -115,7 +115,7 @@ def cluster_corrmap(
     for cluster_n in sorted_clusters:
         ind = np.arange(
             0,
-            data["data"].shape[0],
+            data['data'].shape[0],
         )[y_pred == cluster_n]
         xy = np.median(ind) / div_scale
 
@@ -155,8 +155,8 @@ def plot_cluster(
     elif f is None:
         f = ax.get_figure()
 
-    z = data["z"]
-    names = data["names"]
+    z = data['z']
+    names = data['names']
 
     dad = z[y_pred.values == cluster_n]
     n = dad.shape[0]
@@ -170,20 +170,20 @@ def plot_cluster(
     prev_ind = 0
     means = np.mean(dad, axis=0)
 
-    for ind, v in enumerate(data["classes"]):
+    for ind, v in enumerate(data['classes']):
         n_v, p_v = None, None
 
         if ind > 0:
-            p_v = data["classes"][ind - 1]
+            p_v = data['classes'][ind - 1]
 
-        if ind + 1 < len(data["classes"]):
-            n_v = data["classes"][ind + 1]
+        if ind + 1 < len(data['classes']):
+            n_v = data['classes'][ind + 1]
 
         if v != p_v and p_v is not None:
             ax.axvline(
                 x=ind - .5,
-                color="k",
-                linestyle=":",
+                color='k',
+                linestyle=':',
             )
 
         if v == n_v:
@@ -208,13 +208,13 @@ def plot_cluster(
         prev_ind = ind + 1
 
     if ylabel:
-        ax.set_ylabel("Z-scored Change")
+        ax.set_ylabel('Z-scored Change')
 
     ax.set_facecolor((.9,) * 3)
     ax.set_xticks(range(dad.shape[1]))
-    ax.set_xticklabels(names, rotation=45, horizontalalignment="right")
+    ax.set_xticklabels(names, rotation=45, horizontalalignment='right')
     ax.set_title(
-        "Cluster #{}, N={}".format(cluster_n, n)
+        'Cluster #{}, N={}'.format(cluster_n, n)
         if title is None else
         title
     )
@@ -267,28 +267,28 @@ def show_cluster(
     elif f is None:
         f = ax.get_figure()
 
-    ds = data["ds"]
-    z = data["z"]
+    ds = data['ds']
+    z = data['z']
     dp = ds.copy()
-    mod = ""
+    mod = ''
     mask = None
 
     if seq is not None:
-        mask = dp["Sequence"] == seq
-        mod = dp[mask].iloc[0]["Modifications"]
-        protein = " / ".join(dp.filter(series=mask).genes)
+        mask = dp['Sequence'] == seq
+        mod = dp[mask].iloc[0]['Modifications']
+        protein = ' / '.join(dp.filter(series=mask).genes)
         cluster = y_pred[mask].iloc[0]
     elif protein is not None:
-        mask = dp["Proteins"] == protein
-        mod = dp[mask].iloc[0]["Modifications"]
-        protein = " / ".join(dp.filter(series=mask).genes)
+        mask = dp['Proteins'] == protein
+        mod = dp[mask].iloc[0]['Modifications']
+        protein = ' / '.join(dp.filter(series=mask).genes)
         cluster = y_pred[mask].iloc[0]
 
-    mod_str = mod.get_mods([(None, "Phospho")]).__str__(prot_index=0)
+    mod_str = mod.get_mods([(None, 'Phospho')]).__str__(prot_index=0)
 
-    title = "{}{}".format(
-        (protein[:15] + " ...") if len(protein) > 15 else protein,
-        " {}".format(mod_str) if mod_str else "",
+    title = '{}{}'.format(
+        (protein[:15] + ' ...') if len(protein) > 15 else protein,
+        ' {}'.format(mod_str) if mod_str else '',
     )
     plot_cluster(
         data, y_pred, cluster,
@@ -303,11 +303,11 @@ def show_cluster(
         z_m = z[mask]
         prev_ind = 0
 
-        for ind, v in enumerate(data["classes"]):
+        for ind, v in enumerate(data['classes']):
             n_v = None
 
-            if ind + 1 < len(data["classes"]):
-                n_v = data["classes"][ind + 1]
+            if ind + 1 < len(data['classes']):
+                n_v = data['classes'][ind + 1]
 
             if v == n_v:
                 continue
@@ -318,8 +318,8 @@ def show_cluster(
                     (z_m.shape[0], 1),
                 ).T,
                 z_m[:, prev_ind:ind + 1].T,
-                color="k",
-                linestyle=":",
+                color='k',
+                linestyle=':',
                 linewidth=5,
             )
 
@@ -350,9 +350,9 @@ def show_peptide_clusters(
         sorted(
             set(
                 y_pred[
-                    data["ds"]["Sequence"] == fil["seq"]
-                    if "seq" in fil else
-                    data["ds"]["Proteins"] == fil["protein"]
+                    data['ds']['Sequence'] == fil['seq']
+                    if 'seq' in fil else
+                    data['ds']['Proteins'] == fil['protein']
                 ]
             )
         )
@@ -392,14 +392,14 @@ def show_peptide_clusters(
 
 
 def pca(data):
-    classes = data["classes"]
-    z = data["z"]
-    names = data["names"]
+    classes = data['classes']
+    z = data['z']
+    names = data['names']
 
     f, ax = plt.subplots(1, 1, figsize=(4, 4))
     x = sklearn.decomposition.PCA().fit_transform(z.T)
 
-    for ind, label in enumerate(data["labels"]):
+    for ind, label in enumerate(data['labels']):
         ax.scatter(
             x[classes == ind, 0],
             x[classes == ind, 1],
@@ -415,9 +415,9 @@ def pca(data):
         )
 
     ax.legend()
-    ax.set_title("PCA {}".format(data["ds"].name))
-    ax.set_xlabel("Component 1")
-    ax.set_ylabel("Component 2")
+    ax.set_title('PCA {}'.format(data['ds'].name))
+    ax.set_xlabel('Component 1')
+    ax.set_ylabel('Component 2')
 
     return f, ax
 
@@ -451,9 +451,9 @@ def cluster_range(
             colorbar=False,
         )
 
-        ax.set_title("{} Clusters".format(n))
+        ax.set_title('{} Clusters'.format(n))
 
     for ax in axes.ravel()[len(clusters):]:
-        ax.axis("off")
+        ax.axis('off')
 
     return f, axes

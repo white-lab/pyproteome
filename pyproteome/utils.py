@@ -410,13 +410,13 @@ def stars(p, ns='ns'):
     '''
     Calculate the stars to indicate significant changes.
 
-    **** : p < 1e-4
+    \\*\\*\\*\\* : p < 1e-4
     
-    *** : p < 1e-3
+    \\*\\*\\* : p < 1e-3
     
-    ** : p < 1e-2
+    \\*\\* : p < 1e-2
     
-    \* : p < 5e-2
+    \\* : p < 5e-2
     
     ns : not significant
 

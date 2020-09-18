@@ -1,28 +1,28 @@
-"""
+'''
 This module provides functionality for post-translational modifications.
 
 Wraps modifications in a structured class and allows filtering of
 modifications by amino acid and modification type.
-"""
+'''
 
 from collections import defaultdict
 import copy
 
 LABEL_NAME_TARGETS = (
-    "TMT", "ITRAQ", "plex",
+    'TMT', 'ITRAQ', 'plex',
 )
-"""
+'''
 Substrings used to identify and import novel label names from .msf files.
-"""
+'''
 
 LABEL_NAMES = defaultdict(set)
-LABEL_NAMES["TMT10"].add("K")
-LABEL_NAMES["TMT10"].add("N-term")
-LABEL_NAMES["TMT6"].add("K")
-LABEL_NAMES["TMT6"].add("N-term")
-"""
+LABEL_NAMES['TMT10'].add('K')
+LABEL_NAMES['TMT10'].add('N-term')
+LABEL_NAMES['TMT6'].add('K')
+LABEL_NAMES['TMT6'].add('N-term')
+'''
 Names of modifications used for quantification of peptide abundances.
-"""
+'''
 MERGE_UNDERLABELED = True
 '''
 Merge peptides that have satured TMT labeling with peptides that are underlabeled.
@@ -30,7 +30,7 @@ Merge peptides that have satured TMT labeling with peptides that are underlabele
 
 
 class Modifications:
-    """
+    '''
     A list of modifications.
 
     Wraps the Modification objects and provides several utility functions.
@@ -38,16 +38,16 @@ class Modifications:
     Attributes
     ----------
     mods : list of :class:`.Modification`
-    """
+    '''
 
     def __init__(self, mods=None):
-        """
+        '''
         Initialize from a list of modifications.
 
         Parameters
         ----------
         mods : list of :class:`.Modification`
-        """
+        '''
         self.mods = mods or ()
 
     def __iter__(self):
@@ -57,26 +57,26 @@ class Modifications:
         return len(self.mods)
 
     def copy(self):
-        """
+        '''
         Creates a copy of a set of modifications. Does not copy the underlying
         sequence object.
 
         Returns
         -------
         mods : :class:`.Modifications`
-        """
+        '''
         new = copy.copy(self)
         new.mods = tuple(i.copy() for i in new.mods)
         return new
 
     def skip_labels(self):
-        """
+        '''
         Get modifications, skipping over any that are peptide labels.
 
         Returns
         -------
         mods : list of :class:`.Modification`
-        """
+        '''
         return [
             mod
             for mod in self.mods
@@ -84,7 +84,7 @@ class Modifications:
         ]
 
     def get_mods(self, letter_mod_types):
-        """
+        '''
         Filter the list of modifications.
 
         Only keeps modifications with a given letter, mod_type, or both.
@@ -93,25 +93,25 @@ class Modifications:
         --------
         >>> from pyproteome.sequence import Sequence
         >>> from pyproteome.modification import Modification, Modifications
-        >>> s = Sequence(pep_seq="SVYTEIK")
+        >>> s = Sequence(pep_seq='SVYTEIK')
         >>> m = Modifications(
         ...     [
-        ...         Modification(mod_type="TMT", nterm=True, sequence=s),
-        ...         Modification(mod_type="Phospho", rel_pos=2, sequence=s),
-        ...         Modification(mod_type="TMT", rel_pos=6, sequence=s),
+        ...         Modification(mod_type='TMT', nterm=True, sequence=s),
+        ...         Modification(mod_type='Phospho', rel_pos=2, sequence=s),
+        ...         Modification(mod_type='TMT', rel_pos=6, sequence=s),
         ...     ]
         ... )
-        >>> m.get_mods("TMT")
-        ["TMT A0", "TMT K6"]
-        >>> m.get_mods("Phospho")
-        ["pY2"]
-        >>> m.get_mods("Y")
-        ["pY2"]
-        >>> m.get_mods("S")
+        >>> m.get_mods('TMT')
+        ['TMT A0', 'TMT K6']
+        >>> m.get_mods('Phospho')
+        ['pY2']
+        >>> m.get_mods('Y')
+        ['pY2']
+        >>> m.get_mods('S')
         []
-        >>> m.get_mods([("Y", "Phospho")])
-        ["pY2"]
-        >>> m.get_mods([("S", "Phospho")])
+        >>> m.get_mods([('Y', 'Phospho')])
+        ['pY2']
+        >>> m.get_mods([('S', 'Phospho')])
         []
 
         Parameters
@@ -121,7 +121,7 @@ class Modifications:
         Returns
         -------
         mods : :class:`.Modifications`
-        """
+        '''
         any_letter, any_mod, letter_mod = \
             _extract_letter_mods(letter_mod_types)
         return Modifications(
@@ -172,7 +172,7 @@ class Modifications:
         show_mod_type=True,
     ):
         if len(self.mods) == 0:
-            return ""
+            return ''
 
         if skip_labels:
             lst = list(self.skip_labels())
@@ -180,21 +180,21 @@ class Modifications:
             lst = list(iter(self))
 
         if not lst:
-            return ""
+            return ''
 
         def _mod_prot(i):
-            return ", ".join(
-                "{}{}{}{}".format(
+            return ', '.join(
+                '{}{}{}{}'.format(
                     mod.display_mod_type() if show_mod_type else '',
                     mod.letter,
                     1 + (mod.abs_pos[i] if absolute else mod.rel_pos),
-                    "" if mod.exact[i] else "*"
+                    '' if mod.exact[i] else '*'
                 )
                 for mod in lst
             )
 
         if prot_index is None:
-            return " / ".join(
+            return ' / '.join(
                 _mod_prot(i)
                 for i in range(len(lst[0].exact))
             )
@@ -203,7 +203,7 @@ class Modifications:
 
 
 class Modification:
-    """
+    '''
     Contains information for a single peptide modification.
 
     Attributes
@@ -212,20 +212,20 @@ class Modification:
         The relative position of a modification in a peptide sequence
         (0-indexed).
     mod_type : str
-        A short name for this type of modification (i.e. "Phospho",
-        "Carbamidomethyl", "Oxidation", "TMT6", "TMT10")
+        A short name for this type of modification (i.e. 'Phospho',
+        'Carbamidomethyl', 'Oxidation', 'TMT6', 'TMT10')
     nterm : bool
         Boolean indicator of whether this modification is applied to the
         peptide N-terminus.
     cterm : bool
         Boolean indicator of whether this modification is applied to the
         peptide C-terminus.
-    """
+    '''
 
     def __init__(
         self,
         rel_pos=0,
-        mod_type="",
+        mod_type='',
         sequence=None,
         nterm=False,
         cterm=False,
@@ -237,19 +237,19 @@ class Modification:
         self.sequence = sequence
 
     def display_mod_type(self):
-        """
-        Return the mod_type in an abbreviated form (i.e. "p" for "Phospho")
+        '''
+        Return the mod_type in an abbreviated form (i.e. 'p' for 'Phospho')
 
         Returns
         -------
         abbrev : str
-        """
-        if self.mod_type in ["Phospho"]:
-            return "p"
-        if self.mod_type in ["Carbamidomethyl"]:
-            return "cm"
-        if self.mod_type in ["Oxidation"]:
-            return "ox"
+        '''
+        if self.mod_type in ['Phospho']:
+            return 'p'
+        if self.mod_type in ['Carbamidomethyl']:
+            return 'cm'
+        if self.mod_type in ['Oxidation']:
+            return 'ox'
 
         return self.mod_type
 
@@ -277,47 +277,47 @@ class Modification:
         return self.to_tuple() == other.to_tuple()
 
     def copy(self):
-        """
+        '''
         Creates a copy of a modification. Does not copy the underlying sequence
         object.
 
         Returns
         -------
         mod : :class:`.Modification`
-        """
+        '''
         new = copy.copy(self)
         return new
 
     @property
     def letter(self):
-        """
-        This modification's one-letter amino acid code (i.e. "Y"), or "N-term"
-        / "C-term" for terminal modifications.
+        '''
+        This modification's one-letter amino acid code (i.e. 'Y'), or 'N-term'
+        / 'C-term' for terminal modifications.
 
         Returns
         -------
         letter : str
-        """
+        '''
         if self.sequence is None:
-            return ""
+            return ''
 
         if self.nterm:
-            return "N-term"
+            return 'N-term'
         elif self.cterm:
-            return "C-term"
+            return 'C-term'
 
         return self.sequence.pep_seq[self.rel_pos].upper()
 
     @property
     def abs_pos(self):
-        """
+        '''
         The absolute positions of this modification in the full sequence
         of each mapped protein (0-indexed).
 
         Returns
         -------
         tuple of int
-        """
+        '''
         if self.sequence is None:
             return ()
 
@@ -328,14 +328,14 @@ class Modification:
 
     @property
     def exact(self):
-        """
+        '''
         Indicates whether each peptide-protein mapping for this modification is
         an exact or partial match.
 
         Returns
         -------
         exact : tuple of bool
-        """
+        '''
         if self.sequence is None:
             return ()
 
@@ -346,16 +346,16 @@ class Modification:
 
     def __repr__(self):
         return (
-            "<Modification {}{}({})>"
+            '<Modification {}{}({})>'
         ).format(
             self.letter,
-            (self.rel_pos + 1) if not self.cterm and not self.nterm else "",
+            (self.rel_pos + 1) if not self.cterm and not self.nterm else '',
             self.mod_type,
         )
 
 
 def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
-    """
+    '''
     Check if a modification is of a given type.
 
     Filters by letter, mod_type, or both.
@@ -370,7 +370,7 @@ def allowed_mod_type(mod, any_letter=None, any_mod=None, letter_mod=None):
     Returns
     -------
     is_type : bool
-    """
+    '''
     return (
         (
             any_letter is None or
@@ -408,7 +408,7 @@ def _extract_letter_mods(letter_mod_types=None):
         letter, mod_type = elem
 
         if letter is None and mod_type is None:
-            raise Exception("Need at least one letter or mod type not None")
+            raise Exception('Need at least one letter or mod type not None')
         elif letter is None and mod_type is not None:
             any_mod.add(mod_type)
         elif letter is not None and mod_type is None:

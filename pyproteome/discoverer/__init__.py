@@ -1,7 +1,7 @@
-"""
+'''
 This module provides functionality for accessing searched data from Proteome
 Discoverer.
-"""
+'''
 
 from collections import defaultdict
 import logging
@@ -19,26 +19,26 @@ from pyproteome import (
 )
 
 
-LOGGER = logging.getLogger("pyproteome.discoverer")
-RE_PSP = re.compile(r"(\w+)\((\d+)\): ([\d\.]+)")
-RE_GENE = re.compile(r"^>.* GN=([A-Za-z0-9_\-]+)( \w+)?")
-RE_GENE_BACKUP = re.compile(r"^>(gi\|[\dA-Za-z]+\|)?sp\|[\dA-Za-z\-]+\|([\dA-Za-z_]+) ")
+LOGGER = logging.getLogger('pyproteome.discoverer')
+RE_PSP = re.compile(r'(\w+)\((\d+)\): ([\d\.]+)')
+RE_GENE = re.compile(r'^>.* GN=([A-Za-z0-9_\-]+)( \w+)?')
+RE_GENE_BACKUP = re.compile(r'^>(gi\|[\dA-Za-z]+\|)?sp\|[\dA-Za-z\-]+\|([\dA-Za-z_]+) ')
 RE_DESCRIPTION = re.compile(
-    r"^>(gi\|[\dA-Za-z]+\|)?sp\|[\dA-Za-z\-]+\|[\dA-Za-z_]+ (.*?) (OS=|GN=|PE=|SV=)"
+    r'^>(gi\|[\dA-Za-z]+\|)?sp\|[\dA-Za-z\-]+\|[\dA-Za-z_]+ (.*?) (OS=|GN=|PE=|SV=)'
 )
-CONFIDENCE_MAPPING = {1: "Low", 2: "Medium", 3: "High"}
+CONFIDENCE_MAPPING = {1: 'Low', 2: 'Medium', 3: 'High'}
 
 
 def _get_pd_version(cursor):
     query = cursor.execute(
-        """
+        '''
         SELECT
         SoftwareVersion
 
         FROM SchemaInfo
 
         WHERE Kind=='Result'
-        """,
+        ''',
     )
     return tuple([int(i) for i in next(query)[0].split('.')])
 
@@ -46,7 +46,7 @@ def _get_pd_version(cursor):
 def _update_label_names(cursor, pd_version):
     if pd_version[:2] in [(1, 4)]:
         fields = cursor.execute(
-            """
+            '''
             SELECT
             AminoAcidModifications.Abbreviation,
             AminoAcidModifications.ModificationName,
@@ -64,11 +64,11 @@ def _update_label_names(cursor, pd_version):
             AminoAcidModificationsAminoAcids.AminoAcidID
 
             WHERE AminoAcidModifications.isActive
-            """,
+            ''',
         )
     elif pd_version[:2] in [(2, 2)]:
         fields = cursor.execute(
-            """
+            '''
             SELECT
             FoundModifications.Abbreviation,
             FoundModifications.Name,
@@ -84,11 +84,11 @@ def _update_label_names(cursor, pd_version):
             JOIN AminoAcids
             ON AminoAcids.AminoAcidID=
             FoundModificationsAminoAcids.AminoAcidsAminoAcidID
-            """,
+            ''',
         )
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     for abbrev, mod_name, aa_name, letter in fields:
@@ -96,10 +96,10 @@ def _update_label_names(cursor, pd_version):
             i in abbrev or i in mod_name
             for i in data_sets.modification.LABEL_NAME_TARGETS
         ):
-            if aa_name in ["N-Terminus"]:
-                letter = "N-term"
-            elif aa_name in ["C-Terminus"]:
-                letter = "C-term"
+            if aa_name in ['N-Terminus']:
+                letter = 'N-term'
+            elif aa_name in ['C-Terminus']:
+                letter = 'C-term'
 
             data_sets.modification.LABEL_NAMES[abbrev].add(letter)
 
@@ -107,56 +107,56 @@ def _update_label_names(cursor, pd_version):
 def _get_quant_tags(cursor, pd_version):
     if pd_version[:2] in [(1, 4)]:
         quantification = cursor.execute(
-            """
+            '''
             SELECT
             ParameterValue
 
             FROM ProcessingNodeParameters
 
-            WHERE ProcessingNodeParameters.ParameterName="QuantificationMethod"
-            """,
+            WHERE ProcessingNodeParameters.ParameterName='QuantificationMethod'
+            ''',
         ).fetchone()
 
         if quantification:
             quantification = quantification[0]
 
             if sys.version_info.major < 3:
-                quantification = quantification.encode("utf-8")
+                quantification = quantification.encode('utf-8')
 
             root = ET.fromstring(quantification)
             quant_tags = root.findall(
-                "MethodPart/MethodPart/Parameter[@name='TagName']",
+                'MethodPart/MethodPart/Parameter[@name=\'TagName\']',
             )
             tag_names = [i.text for i in quant_tags]
         else:
             tag_names = None
     elif pd_version[:2] in [(2, 2)]:
         quantification = cursor.execute(
-            """
+            '''
             SELECT
             AnalysisDefinitionXML
 
             FROM AnalysisDefinition
-            """,
+            ''',
         ).fetchone()
 
         if quantification:
             quantification = quantification[0]
 
             if sys.version_info.major < 3:
-                quantification = quantification.encode("utf-8")
+                quantification = quantification.encode('utf-8')
 
             root = ET.fromstring(quantification)
             quant_tags = root.findall(
-                "StudyDefinition/QuanMethods/"
-                "QuanMethod/QuanChannels/QuanChannel",
+                'StudyDefinition/QuanMethods/'
+                'QuanMethod/QuanChannels/QuanChannel',
             )
             tag_names = [i.get('Name') for i in quant_tags]
         else:
             tag_names = None
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     return tag_names
@@ -164,19 +164,19 @@ def _get_quant_tags(cursor, pd_version):
 
 def _read_peptides(conn, pd_version, pick_best_psm=False):
     if pd_version[:2] in [(1, 4)]:
-        sql_query = """
+        sql_query = '''
         SELECT
         Peptides.PeptideID,
         Peptides.SpectrumID,
         Peptides.Sequence,
-        Peptides.SearchEngineRank AS "Rank",
-        Peptides.ConfidenceLevel AS "Confidence Level",
-        Peptides.MissedCleavages AS "Missed Cleavages",
-        PeptideScores.ScoreValue AS "Ion Score",
-        SpectrumHeaders.FirstScan AS "Scan",
-        SpectrumHeaders.LastScan AS "Last Scan",
-        FileInfos.FileName AS "Spectrum File",
-        MassPeaks.PercentIsolationInterference AS "Isolation Interference"
+        Peptides.SearchEngineRank AS 'Rank',
+        Peptides.ConfidenceLevel AS 'Confidence Level',
+        Peptides.MissedCleavages AS 'Missed Cleavages',
+        PeptideScores.ScoreValue AS 'Ion Score',
+        SpectrumHeaders.FirstScan AS 'Scan',
+        SpectrumHeaders.LastScan AS 'Last Scan',
+        FileInfos.FileName AS 'Spectrum File',
+        MassPeaks.PercentIsolationInterference AS 'Isolation Interference'
 
         FROM Peptides
 
@@ -191,26 +191,26 @@ def _read_peptides(conn, pd_version, pick_best_psm=False):
 
         JOIN Masspeaks
         ON Masspeaks.MassPeakID=SpectrumHeaders.MassPeakID
-        """ + (
-            """
+        ''' + (
+            '''
             WHERE Peptides.SearchEngineRank=1
-            """
+            '''
             if pick_best_psm else
-            ""
+            ''
         )
     elif pd_version[:2] in [(2, 2)]:
-        sql_query = """
+        sql_query = '''
         SELECT
         TargetPsms.PeptideID,
         TargetPsmsMSnSpectrumInfo.MSnSpectrumInfoSpectrumID,
         TargetPsms.Sequence,
-        TargetPsms.SearchEngineRank AS "Rank",
-        TargetPsms.MissedCleavages AS "Missed Cleavages",
-        TargetPsms.IonsScore AS "Ion Score",
-        TargetPsms.FirstScan AS "Scan",
-        TargetPsms.LastScan AS "Last Scan",
-        WorkflowInputFiles.FileName AS "Spectrum File",
-        TargetPsms.PercentIsolationInterference AS "Isolation Interference"
+        TargetPsms.SearchEngineRank AS 'Rank',
+        TargetPsms.MissedCleavages AS 'Missed Cleavages',
+        TargetPsms.IonsScore AS 'Ion Score',
+        TargetPsms.FirstScan AS 'Scan',
+        TargetPsms.LastScan AS 'Last Scan',
+        WorkflowInputFiles.FileName AS 'Spectrum File',
+        TargetPsms.PercentIsolationInterference AS 'Isolation Interference'
 
         FROM TargetPsms
 
@@ -219,22 +219,22 @@ def _read_peptides(conn, pd_version, pick_best_psm=False):
 
         JOIN WorkflowInputFiles
         ON WorkflowInputFiles.FileID=TargetPsms.SpectrumFileID
-        """ + (
-            """
+        ''' + (
+            '''
             WHERE TargetPsms.SearchEngineRank=1
-            """
+            '''
             if pick_best_psm else
-            ""
+            ''
         )
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     df = pd.read_sql_query(
         sql=sql_query,
         con=conn,
-        index_col="PeptideID",
+        index_col='PeptideID',
     )
 
     if 'Confidence Level' not in df.columns:
@@ -248,11 +248,11 @@ def _extract_sequence(df):
     if df.shape[0] < 1:
         return df
 
-    df["Sequence"] = df.apply(
+    df['Sequence'] = df.apply(
         lambda row:
         data_sets.extract_sequence(
-            row["Proteins"],
-            row["Sequence"],
+            row['Proteins'],
+            row['Sequence'],
         ),
         axis=1,
     )
@@ -261,7 +261,7 @@ def _extract_sequence(df):
 
 
 def _extract_confidence(df):
-    df["Confidence Level"] = df["Confidence Level"].apply(
+    df['Confidence Level'] = df['Confidence Level'].apply(
         lambda x: CONFIDENCE_MAPPING[x]
     )
 
@@ -269,8 +269,8 @@ def _extract_confidence(df):
 
 
 def _extract_spectrum_file(df):
-    # "path/to/file.ext" => "file.ext"
-    df["Spectrum File"] = df["Spectrum File"].apply(
+    # 'path/to/file.ext' => 'file.ext'
+    df['Spectrum File'] = df['Spectrum File'].apply(
         lambda x: os.path.split(x)[1]
     )
 
@@ -280,7 +280,7 @@ def _extract_spectrum_file(df):
 def _get_proteins(df, cursor, pd_version):
     if pd_version[:2] in [(1, 4)]:
         prots = cursor.execute(
-            """
+            '''
             SELECT
             Peptides.PeptideID,
             ProteinAnnotations.Description,
@@ -296,11 +296,11 @@ def _get_proteins(df, cursor, pd_version):
 
             JOIN Proteins
             ON Proteins.ProteinID=PeptidesProteins.ProteinID
-            """,
+            ''',
         )
     elif pd_version[:2] in [(2, 2)]:
         prots = cursor.execute(
-            """
+            '''
             SELECT
             TargetPsms.PeptideID,
             TargetProteins.FastaTitleLines,
@@ -315,11 +315,11 @@ def _get_proteins(df, cursor, pd_version):
             JOIN TargetProteins
             ON TargetProteins.UniqueSequenceID=
             TargetProteinsTargetPsms.TargetProteinsUniqueSequenceID
-            """,
+            ''',
         )
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     accessions = defaultdict(list)
@@ -352,17 +352,17 @@ def _get_proteins(df, cursor, pd_version):
             )
             sequences[peptide_id].append(seq)
 
-    df["Protein Descriptions"] = df.index.map(
+    df['Protein Descriptions'] = df.index.map(
         lambda peptide_id:
-        "; ".join(descriptions[peptide_id])
+        '; '.join(descriptions[peptide_id])
     )
 
-    df["Protein Group Accessions"] = df.index.map(
+    df['Protein Group Accessions'] = df.index.map(
         lambda peptide_id:
-        "; ".join(accessions[peptide_id])
+        '; '.join(accessions[peptide_id])
     )
 
-    df["Proteins"] = df.index.map(
+    df['Proteins'] = df.index.map(
         lambda peptide_id:
         data_sets.Proteins(
             proteins=tuple(
@@ -390,7 +390,7 @@ def _get_modifications(df, cursor, pd_version):
 
     if pd_version[:2] in [(1, 4)]:
         aa_mods = cursor.execute(
-            """
+            '''
             SELECT
             Peptides.PeptideID,
             AminoAcidModifications.Abbreviation,
@@ -404,7 +404,7 @@ def _get_modifications(df, cursor, pd_version):
             JOIN AminoAcidModifications
             ON PeptidesAminoAcidModifications.AminoAcidModificationID=
             AminoAcidModifications.AminoAcidModificationID
-            """,
+            ''',
         )
 
         for peptide_id, name, pos in aa_mods:
@@ -421,7 +421,7 @@ def _get_modifications(df, cursor, pd_version):
             mod_dict[peptide_id].append(mod)
 
         term_mods = cursor.execute(
-            """
+            '''
             SELECT
             Peptides.PeptideID,
             Peptides.Sequence,
@@ -436,7 +436,7 @@ def _get_modifications(df, cursor, pd_version):
             JOIN AminoAcidModifications
             ON PeptidesTerminalModifications.TerminalModificationID=
             AminoAcidModifications.AminoAcidModificationID
-            """,
+            ''',
         )
 
         # PositionType rules taken from:
@@ -461,7 +461,7 @@ def _get_modifications(df, cursor, pd_version):
             mod_dict[peptide_id].append(mod)
     elif pd_version[:2] in [(2, 2)]:
         aa_mods = cursor.execute(
-            """
+            '''
             SELECT
             TargetPsms.PeptideID,
             FoundModifications.Abbreviation,
@@ -480,7 +480,7 @@ def _get_modifications(df, cursor, pd_version):
 
             WHERE
             FoundModifications.PositionType NOT IN (1, 2)
-            """,
+            ''',
         )
 
         for peptide_id, name, pos in aa_mods:
@@ -499,7 +499,7 @@ def _get_modifications(df, cursor, pd_version):
             mod_dict[peptide_id].append(mod)
 
         term_mods = cursor.execute(
-            """
+            '''
             SELECT
             TargetPsms.PeptideID,
             TargetPsms.Sequence,
@@ -519,7 +519,7 @@ def _get_modifications(df, cursor, pd_version):
 
             WHERE
             FoundModifications.PositionType IN (1, 2)
-            """,
+            ''',
         )
 
         # PositionType rules taken from:
@@ -544,7 +544,7 @@ def _get_modifications(df, cursor, pd_version):
             mod_dict[peptide_id].append(mod)
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     mod_dict = {
@@ -561,13 +561,13 @@ def _get_modifications(df, cursor, pd_version):
 
         for mod in mods.mods:
             assert mod.sequence is None
-            mod.sequence = row["Sequence"]
+            mod.sequence = row['Sequence']
 
-        row["Sequence"].modifications = mods
+        row['Sequence'].modifications = mods
 
         return mods
 
-    df["Modifications"] = df.apply(_get_mods, axis=1)
+    df['Modifications'] = df.apply(_get_mods, axis=1)
 
     return df
 
@@ -580,7 +580,7 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
 
     if pd_version[:2] in [(1, 4)]:
         vals = cursor.execute(
-            """
+            '''
             SELECT
             Peptides.PeptideID,
             ReporterIonQuanResults.QuanChannelID,
@@ -595,11 +595,11 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
             JOIN ReporterIonQuanResultsSearchSpectra
             ON ReporterIonQuanResultsSearchSpectra.SpectrumID=
             ReporterIonQuanResults.SpectrumID
-            """,
+            ''',
         )
     elif pd_version[:2] in [(2, 2)]:
         vals = cursor.execute(
-            """
+            '''
             SELECT
             TargetPsms.PeptideID,
             ReporterQuanResults.QuanChannelID,
@@ -617,11 +617,11 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
             INNER JOIN TargetPsms
             ON TargetPsms.PeptideID=
             QuanSpectrumInfoTargetPsms.TargetPsmsPeptideID
-            """,
+            ''',
         )
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     mapping = {
@@ -648,7 +648,7 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
             for val in vals
         ]
 
-        if not row["Sequence"].is_labeled:
+        if not row['Sequence'].is_labeled:
             vals = [np.nan] * len(vals)
 
         return pd.Series(vals, index=col_names)
@@ -664,7 +664,7 @@ def _get_quantifications(df, cursor, pd_version, tag_names):
 def _get_ms_data(df, cursor, pd_version):
     if pd_version[:2] in [(1, 4)]:
         vals = cursor.execute(
-            """
+            '''
             SELECT
             Peptides.PeptideID,
             SpectrumHeaders.Charge,
@@ -679,11 +679,11 @@ def _get_ms_data(df, cursor, pd_version):
 
             JOIN MassPeaks
             ON MassPeaks.MassPeakID=SpectrumHeaders.MassPeakID
-            """,
+            ''',
         )
     elif pd_version[:2] in [(2, 2)]:
         vals = cursor.execute(
-            """
+            '''
             SELECT
             TargetPsms.PeptideID,
             TargetPsms.Charge,
@@ -692,11 +692,11 @@ def _get_ms_data(df, cursor, pd_version):
             TargetPsms.Intensity
 
             FROM TargetPsms
-            """,
+            ''',
         )
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     mapping = {
@@ -720,19 +720,19 @@ def _get_ms_data(df, cursor, pd_version):
         for key, val in mapping.items()
     }
 
-    df["Charges"] = df.index.map(
+    df['Charges'] = df.index.map(
         lambda peptide_id:
         charge_mapping.get(peptide_id, set()),
     )
-    df["Masses"] = df.index.map(
+    df['Masses'] = df.index.map(
         lambda peptide_id:
         mass_mapping.get(peptide_id, set()),
     )
-    df["RTs"] = df.index.map(
+    df['RTs'] = df.index.map(
         lambda peptide_id:
         rt_mapping.get(peptide_id, set()),
     )
-    df["Intensities"] = df.index.map(
+    df['Intensities'] = df.index.map(
         lambda peptide_id:
         i_mapping.get(peptide_id, set()),
     )
@@ -741,9 +741,9 @@ def _get_ms_data(df, cursor, pd_version):
 
 
 def _set_defaults(df):
-    df["Validated"] = False
-    df["Fold Change"] = np.nan
-    df["p-value"] = np.nan
+    df['Validated'] = False
+    df['Fold Change'] = np.nan
+    df['p-value'] = np.nan
 
     return df
 
@@ -751,7 +751,7 @@ def _set_defaults(df):
 def _get_filenames(df, cursor, pd_version):
     if pd_version[:2] in [(1, 4)]:
         files = cursor.execute(
-            """
+            '''
             SELECT
             Peptides.PeptideID,
             FileInfos.PhysicalFileName
@@ -766,11 +766,11 @@ def _get_filenames(df, cursor, pd_version):
 
             JOIN FileInfos
             ON FileInfos.FileID=MassPeaks.FileID
-            """,
+            ''',
         )
     elif pd_version[:2] in [(2, 2)]:
         files = cursor.execute(
-            """
+            '''
             SELECT
             TargetPsms.PeptideID,
             WorkflowInputFiles.PhysicalFileName
@@ -779,11 +779,11 @@ def _get_filenames(df, cursor, pd_version):
 
             JOIN WorkflowInputFiles
             ON WorkflowInputFiles.FileID=TargetPsms.SpectrumFileID
-            """,
+            ''',
         )
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     mapping = {
@@ -791,7 +791,7 @@ def _get_filenames(df, cursor, pd_version):
         for index, val in files
     }
 
-    df["Raw Paths"] = df.index.map(
+    df['Raw Paths'] = df.index.map(
         lambda peptide_id:
         mapping.get(peptide_id, {})
     )
@@ -800,31 +800,31 @@ def _get_filenames(df, cursor, pd_version):
 
 
 def _get_q_values(df, cursor, pd_version):
-    df["q-value"] = np.nan
+    df['q-value'] = np.nan
     q_vals = []
 
     if pd_version[:2] in [(1, 4)]:
         fields = cursor.execute(
-            """
+            '''
             SELECT
             CustomDataFields.FieldID,
             CustomDataFields.DisplayName
 
             FROM CustomDataFields
-            """,
+            ''',
         )
 
         field_ids = [
             field_id
             for field_id, name in fields
-            if name in ["q-Value"]
+            if name in ['q-Value']
         ]
 
         if not field_ids:
             return df
 
         q_vals = cursor.execute(
-            """
+            '''
             SELECT
             CustomDataPeptides.PeptideID,
             CustomDataPeptides.FieldValue
@@ -832,27 +832,27 @@ def _get_q_values(df, cursor, pd_version):
             FROM CustomDataPeptides
 
             WHERE CustomDataPeptides.FieldID IN ({})
-            """.format(
-                ", ".join("?" * len(field_ids))
+            '''.format(
+                ', '.join('?' * len(field_ids))
             ),
             field_ids,
         )
     elif pd_version[:2] in [(2, 2)]:
         try:
             q_vals = cursor.execute(
-                """
+                '''
                 SELECT
                 TargetPsms.PeptideID,
                 TargetPsms.PercolatorqValue
 
                 FROM TargetPsms
-                """,
+                ''',
             )
         except sqlite3.OperationalError:
             pass
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     if q_vals:
@@ -862,7 +862,7 @@ def _get_q_values(df, cursor, pd_version):
             if index in df.index
         ])
 
-        df.at[indices, "q-value"] = vals
+        df.at[indices, 'q-value'] = vals
 
     return df
 
@@ -871,7 +871,7 @@ def _is_pmod(mod):
     return (
         not mod.nterm and
         not mod.cterm and
-        mod.mod_type in ["Phospho"]
+        mod.mod_type in ['Phospho']
     )
 
 
@@ -888,14 +888,14 @@ def _reassign_mods(mods, psp_val, probability_cutoff=75):
     reassigned = False
     ambiguous = False
 
-    # phophoRS example format: "T(4): 99.6; S(6): 0.4; S(10): 0.0"
-    # Error messages include: "Too many isoforms"
+    # phophoRS example format: 'T(4): 99.6; S(6): 0.4; S(10): 0.0'
+    # Error messages include: 'Too many isoforms'
     if psp_val is None:
         psp_val = ''
 
     psp_val = [
         RE_PSP.match(i.strip())
-        for i in psp_val.split(";")
+        for i in psp_val.split(';')
     ]
     psp_val = [
         i.groups()
@@ -913,14 +913,14 @@ def _reassign_mods(mods, psp_val, probability_cutoff=75):
 
     if len(p_mods) != len(psp_val_f):
         LOGGER.debug(
-            "Not enough info to assign phophosite: {}".format(psp_val)
+            'Not enough info to assign phophosite: {}'.format(psp_val)
         )
         ambiguous = True
     elif set(i.rel_pos + 1 for i in p_mods) != set(i[1] for i in psp_val_f):
         p_mods = [
             data_sets.Modification(
                 rel_pos=i[1] - 1,
-                mod_type="Phospho",
+                mod_type='Phospho',
                 nterm=False,
                 cterm=False,
                 sequence=p_mods[0].sequence,
@@ -940,30 +940,30 @@ def _reassign_mods(mods, psp_val, probability_cutoff=75):
 
 
 def _get_phosphors(df, cursor, pd_version, name=None):
-    df["Ambiguous"] = False
+    df['Ambiguous'] = False
     psp_vals = []
 
     if pd_version[:2] in [(1, 4)]:
         fields = cursor.execute(
-            """
+            '''
             SELECT
             CustomDataFields.FieldID,
             CustomDataFields.DisplayName
 
             FROM CustomDataFields
-            """,
+            ''',
         )
         field_ids = [
             field_id
             for field_id, name in fields
-            if name in ["phosphoRS Site Probabilities"]
+            if name in ['phosphoRS Site Probabilities']
         ]
 
         if not field_ids:
             return df
 
         psp_vals = cursor.execute(
-            """
+            '''
             SELECT
             CustomDataPeptides.PeptideID,
             CustomDataPeptides.FieldValue
@@ -971,8 +971,8 @@ def _get_phosphors(df, cursor, pd_version, name=None):
             FROM CustomDataPeptides
 
             WHERE CustomDataPeptides.FieldID IN ({})
-            """.format(
-                ", ".join("?" * len(field_ids))
+            '''.format(
+                ', '.join('?' * len(field_ids))
             ),
             field_ids,
         )
@@ -983,13 +983,13 @@ def _get_phosphors(df, cursor, pd_version, name=None):
         ]:
             try:
                 psp_vals = cursor.execute(
-                    """
+                    '''
                     SELECT
                     TargetPsms.PeptideID,
                     TargetPsms.{}
 
                     FROM TargetPsms
-                    """.format(ptmrs_col),
+                    '''.format(ptmrs_col),
                 )
             except sqlite3.OperationalError:
                 pass
@@ -997,7 +997,7 @@ def _get_phosphors(df, cursor, pd_version, name=None):
                 break
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     changed_peptides = 0
@@ -1006,18 +1006,18 @@ def _get_phosphors(df, cursor, pd_version, name=None):
         if pep_id not in df.index:
             continue
 
-        old_mods = df.loc[pep_id]["Modifications"]
+        old_mods = df.loc[pep_id]['Modifications']
 
         new_mods, reassigned, ambiguous = _reassign_mods(old_mods, psp_val)
 
         if reassigned:
             changed_peptides += 1
 
-        df.at[pep_id, "Modifications"] = new_mods
-        df.at[pep_id, "Ambiguous"] = ambiguous
+        df.at[pep_id, 'Modifications'] = new_mods
+        df.at[pep_id, 'Ambiguous'] = ambiguous
 
     LOGGER.info(
-        "{}: -- Reassigned {} phosphosites using phosphoRS".format(
+        '{}: -- Reassigned {} phosphosites using phosphoRS'.format(
             name,
             changed_peptides,
         )
@@ -1029,25 +1029,25 @@ def _get_phosphors(df, cursor, pd_version, name=None):
 def _get_species(cursor, pd_version):
     if pd_version[:2] in [(1, 4)]:
         fields = cursor.execute(
-            """
+            '''
             SELECT
             ProcessingNodeParameters.ParameterValue
 
             FROM ProcessingNodeParameters
 
-            WHERE ProcessingNodeParameters.ParameterName="Taxonomy"
-            """,
+            WHERE ProcessingNodeParameters.ParameterName='Taxonomy'
+            ''',
         )
     elif pd_version[:2] in [(2, 2)]:
         fields = cursor.execute(
-            """
+            '''
             SELECT
             ProcessingNodeCustomData.CustomValue
 
             FROM ProcessingNodeCustomData
 
-            WHERE ProcessingNodeCustomData.Name="FASTA database information"
-            """,
+            WHERE ProcessingNodeCustomData.Name='FASTA database information'
+            ''',
         )
         fields = [
             (line[len('Taxonomy:'):].strip(),)
@@ -1057,21 +1057,21 @@ def _get_species(cursor, pd_version):
         ]
     else:
         raise Exception(
-            "Unsupported Proteome Discoverer Version: {}".format(pd_version)
+            'Unsupported Proteome Discoverer Version: {}'.format(pd_version)
         )
 
     species = set()
 
     for name, in fields:
-        # ". . . . . . . . . . . . . . . . Homo sapiens (human)"
-        # => "Homo sapiens"
-        species.add(" ".join(name.strip(". ").split(" ")[:2]))
+        # '. . . . . . . . . . . . . . . . Homo sapiens (human)'
+        # => 'Homo sapiens'
+        species.add(' '.join(name.strip('. ').split(' ')[:2]))
 
     return species
 
 
 def read_discoverer_msf(basename, msf_path=None, pick_best_psm=False):
-    """
+    '''
     Read a Proteome Discoverer .msf file.
 
     Converts file contents into a pandas DataFrame similar to what one would
@@ -1085,7 +1085,7 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_psm=False):
     Returns
     -------
     df : :class:`pandas.DataFrame`
-    """
+    '''
     if msf_path is None:
         msf_path = os.path.join(
             paths.MS_SEARCHED_DIR,
@@ -1093,12 +1093,12 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_psm=False):
         )
 
     if not os.path.exists(msf_path):
-        raise Exception("Search database does not exist: {}".format(msf_path))
+        raise Exception('Search database does not exist: {}'.format(msf_path))
 
     name = os.path.splitext(basename)[0]
 
     LOGGER.info(
-        "{}: Loading ProteomeDiscoverer peptides...".format(name)
+        '{}: Loading ProteomeDiscoverer peptides...'.format(name)
     )
 
     with sqlite3.connect(msf_path) as conn:
@@ -1115,7 +1115,7 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_psm=False):
         df = _read_peptides(conn, pd_version, pick_best_psm=pick_best_psm)
 
         LOGGER.info(
-            "{}: -- Loading information for {} peptides".format(
+            '{}: -- Loading information for {} peptides'.format(
                 name,
                 df.shape[0],
             )
@@ -1136,12 +1136,12 @@ def read_discoverer_msf(basename, msf_path=None, pick_best_psm=False):
 
         species = _get_species(cursor, pd_version)
 
-    df["Scan Paths"] = basename
+    df['Scan Paths'] = basename
 
     df.reset_index(inplace=True, drop=True)
 
     LOGGER.info(
-        "{}: Loaded {} peptides"
+        '{}: Loaded {} peptides'
         .format(
             os.path.splitext(basename)[0],
             df.shape[0],

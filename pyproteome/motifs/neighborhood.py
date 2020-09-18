@@ -43,15 +43,15 @@ def enriched_neighborhood(
         Size of the foreground list of sequences.
     '''
     if mods is None:
-        mods = [(None, "Phospho")]
+        mods = [(None, 'Phospho')]
     background = motif.generate_n_mers(
-        data["Sequence"],
+        data['Sequence'],
         mods=mods,
         n=nmer_length,
         all_matches=False,
     )
     foreground = motif.generate_n_mers(
-        data.filter(f)["Sequence"],
+        data.filter(f)['Sequence'],
         mods=mods,
         n=nmer_length,
         all_matches=False,
@@ -87,9 +87,9 @@ def enriched_neighborhood(
             ],
             density=True,
             alpha=0.5,
-            color="green",
+            color='green',
             bins=range(0, nmer_length, 1),
-            label="background",
+            label='background',
         )
 
     if foreground:
@@ -100,12 +100,12 @@ def enriched_neighborhood(
             ],
             density=True,
             alpha=0.7,
-            color="orange",
+            color='orange',
             bins=range(0, nmer_length, 1),
             label=plogo.format_title(f=f),
         )
         ax.legend()
 
-    ax.set_ylabel("Frequency")
+    ax.set_ylabel('Frequency')
 
     return fig, ax, pval, K, N, k, n

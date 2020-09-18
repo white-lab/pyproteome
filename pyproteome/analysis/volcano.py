@@ -12,7 +12,7 @@ import pandas as pd
 import pyproteome as pyp
 
 
-LOGGER = logging.getLogger("pyproteome.volcano")
+LOGGER = logging.getLogger('pyproteome.volcano')
 MAX_VOLCANO_LABELS = 500
 VOLCANO_TEXT_SIZE = 10
 VOLCANO_LARGE_TEXT_SIZE = 20
@@ -22,15 +22,15 @@ def _remove_lesser_dups(labels, compress_sym=False):
     if labels.shape[0] < 1:
         return labels
 
-    labels["xy"] = labels.apply(lambda x: abs(x["x"]) + x["y"], axis=1)
-    labels = labels.sort_values("xy", ascending=False)
+    labels['xy'] = labels.apply(lambda x: abs(x['x']) + x['y'], axis=1)
+    labels = labels.sort_values('xy', ascending=False)
 
     if compress_sym:
-        labels = labels.drop_duplicates(subset="Label")
+        labels = labels.drop_duplicates(subset='Label')
     else:
         labels = pd.concat([
-            labels[labels["x"] >= 0].drop_duplicates(subset="Label"),
-            labels[labels["x"] < 0].drop_duplicates(subset="Label"),
+            labels[labels['x'] >= 0].drop_duplicates(subset='Label'),
+            labels[labels['x'] < 0].drop_duplicates(subset='Label'),
         ])
 
     return labels
@@ -50,7 +50,7 @@ def plot_volcano_labels(
     adjust=True,
     mods=None,
 ):
-    """
+    '''
     Plot labels on a volcano plot.
 
     Parameters
@@ -71,7 +71,7 @@ def plot_volcano_labels(
     Returns
     -------
     labels : :class:`pandas.DataFrame`
-    """
+    '''
     options = options or {}
 
     highlight = options.get('highlight', {})
@@ -85,89 +85,89 @@ def plot_volcano_labels(
 
     labels = data.psms.copy()
 
-    labels["x"] = labels["Fold Change"]
-    labels["y"] = labels["p-value"]
+    labels['x'] = labels['Fold Change']
+    labels['y'] = labels['p-value']
 
     labels = labels[
-        (labels["x"] >= xminmax[0]) &
-        (labels["x"] <= xminmax[1]) &
-        (labels["y"] >= yminmax[0]) &
-        (labels["y"] <= yminmax[1])
+        (labels['x'] >= xminmax[0]) &
+        (labels['x'] <= xminmax[1]) &
+        (labels['y'] >= yminmax[0]) &
+        (labels['y'] <= yminmax[1])
     ]
 
     if labels.shape[0] < 1:
         return labels
 
     if sequence_labels:
-        labels["Label"] = labels["Sequence"].apply(str)
+        labels['Label'] = labels['Sequence'].apply(str)
     elif not mods:
-        labels["Label"] = labels["Proteins"].apply(pyp.utils.get_name)
+        labels['Label'] = labels['Proteins'].apply(pyp.utils.get_name)
     else:
-        labels["Label"] = labels.apply(
+        labels['Label'] = labels.apply(
             lambda x:
             '{}{}{}'.format(
-                pyp.utils.get_name(x["Proteins"]),
-                ' ' if len(x["Modifications"].get_mods(mods)) > 0 else '',
+                pyp.utils.get_name(x['Proteins']),
+                ' ' if len(x['Modifications'].get_mods(mods)) > 0 else '',
                 ' / '.join([
-                    x["Modifications"].get_mods(
+                    x['Modifications'].get_mods(
                         mods,
                     ).__str__(prot_index=index)
-                    for index, gene in enumerate(x["Proteins"].genes)
-                ]) if len(x["Modifications"].get_mods(mods)) > 0 else '',
+                    for index, gene in enumerate(x['Proteins'].genes)
+                ]) if len(x['Modifications'].get_mods(mods)) > 0 else '',
             ),
-            # if len(list(x["Modifications"].get_mods(mods))) > 0 else
-            # " / ".join(x["Proteins"].genes),
+            # if len(list(x['Modifications'].get_mods(mods))) > 0 else
+            # ' / '.join(x['Proteins'].genes),
             axis=1,
         )
 
     def _get_names(row):
         names = [
-            rename.get(row["Label"], row["Label"]),
-            row["Label"],
+            rename.get(row['Label'], row['Label']),
+            row['Label'],
         ]
-        if "Sequence" in row:
-            names += [str(row["Sequence"])]
-        if "Proteins" in row:
+        if 'Sequence' in row:
+            names += [str(row['Sequence'])]
+        if 'Proteins' in row:
             names += [
                 j
-                for i in row["Proteins"].genes
+                for i in row['Proteins'].genes
                 for j in [i, rename.get(i, i)]
             ]
 
         return names
 
-    labels["Names"] = labels.apply(_get_names, axis=1)
+    labels['Names'] = labels.apply(_get_names, axis=1)
 
     labels = labels[
-        labels["Names"].apply(lambda x: not any([i in hide for i in x]))
+        labels['Names'].apply(lambda x: not any([i in hide for i in x]))
     ]
     labels = labels[
-        labels["Names"].apply(lambda x: any([i in show for i in x])) | (
+        labels['Names'].apply(lambda x: any([i in show for i in x])) | (
             (
-                (labels["y"] >= p) &
+                (labels['y'] >= p) &
                 (
-                    (labels["x"] >= upper_fold) |
-                    (labels["x"] <= lower_fold)
+                    (labels['x'] >= upper_fold) |
+                    (labels['x'] <= lower_fold)
                 )
             )
             if fold_and_p else
             (
-                (labels["y"] >= p) |
+                (labels['y'] >= p) |
                 (
-                    (labels["x"] >= upper_fold) |
-                    (labels["x"] <= lower_fold)
+                    (labels['x'] >= upper_fold) |
+                    (labels['x'] <= lower_fold)
                 )
             )
         )
     ]
-    labels["Highlight"] = labels["Names"].apply(
+    labels['Highlight'] = labels['Names'].apply(
         lambda x:
         any([
             i in highlight
             for i in x
         ])
     )
-    labels["Label"] = labels["Names"].apply(
+    labels['Label'] = labels['Names'].apply(
         lambda x:
         x[0]
     )
@@ -175,7 +175,7 @@ def plot_volcano_labels(
     def _get_txt_color(row):
         colors = [
             edgecolors.get(i)
-            for i in row["Names"][:2]
+            for i in row['Names'][:2]
             if i in edgecolors
         ]
         edgecolor = colors[0] if colors else None
@@ -183,25 +183,25 @@ def plot_volcano_labels(
         if edgecolor is None:
             gene_colors = [
                 edgecolors.get(gene, None)
-                for gene in row["Proteins"].genes
+                for gene in row['Proteins'].genes
             ]
             if len(set(gene_colors)) == 1:
                 edgecolor = gene_colors[0]
 
         return edgecolor
 
-    labels["EdgeColor"] = labels.apply(
+    labels['EdgeColor'] = labels.apply(
         _get_txt_color,
         axis=1,
     ) if labels.shape[0] > 0 else []
 
     labels = labels[
         [
-            "x",
-            "y",
-            "Label",
-            "EdgeColor",
-            "Highlight",
+            'x',
+            'y',
+            'Label',
+            'EdgeColor',
+            'Highlight',
         ]
     ].copy()
 
@@ -213,38 +213,38 @@ def plot_volcano_labels(
 
     texts = [
         ax.text(
-            x=row["x"],
-            y=row["y"],
-            s=row["Label"][:txt_lim] + (
-                "..." if len(row["Label"]) > txt_lim else ""
+            x=row['x'],
+            y=row['y'],
+            s=row['Label'][:txt_lim] + (
+                '...' if len(row['Label']) > txt_lim else ''
             ),
             zorder=10,
             fontsize=(
                 VOLCANO_LARGE_TEXT_SIZE
-                if row["Highlight"] else
+                if row['Highlight'] else
                 VOLCANO_TEXT_SIZE
             ),
             horizontalalignment=(
-                'left' if row["x"] > 0 else "right"
+                'left' if row['x'] > 0 else 'right'
             ),
             bbox=dict(
                 alpha=1,
                 linewidth=0.1,
                 pad=.2,
-                facecolor=row["EdgeColor"] or (
-                    "#DDDDDD"
+                facecolor=row['EdgeColor'] or (
+                    '#DDDDDD'
                     if edgecolors else
-                    ("#BFEE90" if row["x"] > 0 else "#FFC1C1")
+                    ('#BFEE90' if row['x'] > 0 else '#FFC1C1')
                 ),
                 zorder=1,
-                # edgecolor="black",
-                boxstyle="round",
+                # edgecolor='black',
+                boxstyle='round',
             ),
         )
         for _, row in labels.iterrows()
     ]
 
-    LOGGER.info("Plotting volcano labels for {} peptides".format(len(texts)))
+    LOGGER.info('Plotting volcano labels for {} peptides'.format(len(texts)))
 
     if adjust and texts:
         texts = texts[:MAX_VOLCANO_LABELS]
@@ -255,15 +255,15 @@ def plot_volcano_labels(
             force_text=(.05, .3),
             force_points=.01,
             arrowprops=dict(
-                arrowstyle="->",
+                arrowstyle='->',
                 relpos=(0, 0),
                 lw=1,
                 zorder=1,
-                color="k",
+                color='k',
             ),
             only_move={
-                "points": "y",
-                "text": 'xy',
+                'points': 'y',
+                'text': 'xy',
             }
         )
 
@@ -287,7 +287,7 @@ def plot_volcano(
     bonferoni=False,
     **kwargs
 ):
-    """
+    '''
     Display a volcano plot of data.
 
     This plot inclues the fold-changes and p-values associated with said
@@ -316,7 +316,7 @@ def plot_volcano(
     -------
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
-    """
+    '''
     data = data.copy()
 
     (channels_a, channels_b), (label_a, label_b), _ = data.get_groups(
@@ -329,13 +329,13 @@ def plot_volcano(
 
     if log10_p:
         p = -np.log10(p)
-        data.psms["p-value"] = data.psms["p-value"].apply(
+        data.psms['p-value'] = data.psms['p-value'].apply(
             lambda x: -np.log10(x)
         )
 
     if log2_fold:
         fold = np.log2(fold)
-        data.psms["Fold Change"] = data.psms["Fold Change"].apply(
+        data.psms['Fold Change'] = data.psms['Fold Change'].apply(
             lambda x: np.log2(x)
         )
 
@@ -344,8 +344,8 @@ def plot_volcano(
 
     with pd.option_context('mode.use_inf_as_null', True):
         data.psms = data.psms.dropna(
-            subset=["p-value", "Fold Change"],
-            how="any",
+            subset=['p-value', 'Fold Change'],
+            how='any',
         )
 
     if yminmax:
@@ -368,33 +368,33 @@ def plot_volcano(
         _, ax = plt.subplots(figsize=(6, 6))
 
     ax.scatter(
-        data["Fold Change"],
-        data["p-value"],
+        data['Fold Change'],
+        data['p-value'],
         s=5,
-        c="grey",
+        c='grey',
     )
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
     ax.yaxis.set_ticks_position('left')
     ax.xaxis.set_ticks_position('bottom')
 
     if not np.isnan(p):
         ax.axhline(
             p,
-            color="r", linestyle="dashed", linewidth=0.5,
+            color='r', linestyle='dashed', linewidth=0.5,
         )
 
     if (abs(fold) if log2_fold else abs(fold - 1)) > 0.01:
         ax.axvline(
             upper_fold,
-            color="r",
-            linestyle="dashed",
+            color='r',
+            linestyle='dashed',
             linewidth=0.5,
         )
         ax.axvline(
             lower_fold,
-            color="r",
-            linestyle="dashed",
+            color='r',
+            linestyle='dashed',
             linewidth=0.5,
         )
 
@@ -402,8 +402,8 @@ def plot_volcano(
         ax.set_xlim(left=xminmax[0], right=xminmax[1])
     else:
         ax.set_xlim(
-            left=np.floor(min(data["Fold Change"] + [0]) * 2) / 2,
-            right=np.ceil(max(data["Fold Change"] + [0]) * 2) / 2,
+            left=np.floor(min(data['Fold Change'] + [0]) * 2) / 2,
+            right=np.ceil(max(data['Fold Change'] + [0]) * 2) / 2,
         )
 
     if yminmax:
@@ -430,8 +430,8 @@ def plot_volcano(
                 [
                     tick
                     for tick in tuple(ax.get_yticks()) + (p,)
-                    if "{}".format(np.power(1/10, tick)).strip("0.")[:1] in
-                    ["1", "5"] and
+                    if '{}'.format(np.power(1/10, tick)).strip('0.')[:1] in
+                    ['1', '5'] and
                     tick >= p and
                     (tick <= ax.get_ylim()[1] and tick >= ax.get_ylim()[0])
                 ]
@@ -441,14 +441,14 @@ def plot_volcano(
 
     ax.set_xticklabels(
         [
-            "{:.3}".format(np.exp2(i) if log2_fold else i)
+            '{:.3}'.format(np.exp2(i) if log2_fold else i)
             for i in ax.get_xticks()
         ],
     )
     ax.set_yticklabels(
         [
             (
-                "{:.3}" if i > 5e-3 else "{:.0e}"
+                '{:.3}' if i > 5e-3 else '{:.0e}'
             ).format(np.power(1/10, i) if log10_p else i)
             for i in ax.get_yticks()
         ],
@@ -457,17 +457,17 @@ def plot_volcano(
     if show_xlabel:
         max_len = 25
         ax.set_xlabel(
-            "{} (n={}) / {} (n={})".format(
-                label_a[:max_len] + ("..." if len(label_a) > max_len else ""),
+            '{} (n={}) / {} (n={})'.format(
+                label_a[:max_len] + ('...' if len(label_a) > max_len else ''),
                 len(channels_a),
-                label_b[:max_len] + ("..." if len(label_b) > max_len else ""),
+                label_b[:max_len] + ('...' if len(label_b) > max_len else ''),
                 len(channels_b),
             ),
         )
 
     if show_ylabel:
         ax.set_ylabel(
-            "p-value",
+            'p-value',
         )
 
     if title:
@@ -490,7 +490,7 @@ def plot_volcano(
 
 
 def plot_volcano_filtered(data, f, **kwargs):
-    """
+    '''
     Display a volcano plot, showing only peptides that are included by a given
     filter.
 
@@ -506,19 +506,19 @@ def plot_volcano_filtered(data, f, **kwargs):
     -------
     f : :class:`matplotlib.figure.Figure`
     ax : :class:`matplotlib.axes.Axes`
-    """
+    '''
     data = data.copy()
     data.update_group_changes(
-        group_a=kwargs.get("group_a", None),
-        group_b=kwargs.get("group_b", None),
+        group_a=kwargs.get('group_a', None),
+        group_b=kwargs.get('group_b', None),
     )
 
     changes = []
     pvals = []
 
     for _, row in data.psms.iterrows():
-        row_pval = -np.log10(row["p-value"])
-        row_change = np.log2(row["Fold Change"])
+        row_pval = -np.log10(row['p-value'])
+        row_change = np.log2(row['Fold Change'])
 
         if (
             np.isnan(row_pval) or
@@ -534,14 +534,14 @@ def plot_volcano_filtered(data, f, **kwargs):
     d = data.filter(f)
 
     xminmax = kwargs.pop(
-        "xminmax",
+        'xminmax',
         (
             np.floor(min(changes + [0]) * 2) / 2,
             np.ceil(max(changes + [0]) * 2) / 2,
         ),
     )
     yminmax = kwargs.pop(
-        "yminmax",
+        'yminmax',
         (-0.1, np.ceil(max(pvals + [1]))),
     )
 
@@ -565,8 +565,8 @@ def plot_volcano_filtered(data, f, **kwargs):
         pvals,
         s=5,
         zorder=0,
-        c="grey",
-        # c="lightblue",
+        c='grey',
+        # c='lightblue',
         # alpha=0.3,
     )
 

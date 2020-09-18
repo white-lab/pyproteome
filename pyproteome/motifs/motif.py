@@ -1,8 +1,8 @@
-"""
+'''
 This module provides functionality for finding motifs in sequences.
 
 Functionality includes n-mer generation.
-"""
+'''
 
 from __future__ import division
 
@@ -19,11 +19,11 @@ import pandas as pd
 from scipy.stats import hypergeom
 
 
-LOGGER = logging.getLogger("pyproteome.motif")
+LOGGER = logging.getLogger('pyproteome.motif')
 
 
 class Motif:
-    """
+    '''
     Contains a motif that may match to one or more protein sequences.
 
     Matches include the regular single-letter amino acid names as well as
@@ -37,14 +37,14 @@ class Motif:
     Examples
     --------
     >>> import pyproteome
-    >>> motif = pyproteome.Motif("O..x.-+")
-    >>> "IEFyFER" in motif
+    >>> motif = pyproteome.Motif('O..x.-+')
+    >>> 'IEFyFER' in motif
     True
-    >>> "IEFyFED" in motif
+    >>> 'IEFyFED' in motif
     False
-    >>> "FFFFFFR" in motif
+    >>> 'FFFFFFR' in motif
     False
-    """
+    '''
     def __init__(self, motif):
         # Set _motif and _re explicitly, py2.7 does not call motif's setter
         # if we just set self.motif here...
@@ -52,11 +52,11 @@ class Motif:
         self._re = self._compile_re(motif)
 
     char_mapping = {
-        "x": "st",
-        "O": "MILV",
-        "-": "DE",
-        "+": "RK",
-        ".": "ACDEFGHIKLMNPQRSTVWYystO-+x",
+        'x': 'st',
+        'O': 'MILV',
+        '-': 'DE',
+        '+': 'RK',
+        '.': 'ACDEFGHIKLMNPQRSTVWYystO-+x',
     }
     
     def __copy__(self):
@@ -88,22 +88,22 @@ class Motif:
         self._re = self._compile_re(value)
 
     def _compile_re(self, motif):
-        ret = ""
+        ret = ''
 
         for char in motif:
-            if char == "." or char not in self.char_mapping:
+            if char == '.' or char not in self.char_mapping:
                 ret += char
             else:
-                ret += "[{}{}]".format(self.char_mapping[char], char)
+                ret += '[{}{}]'.format(self.char_mapping[char], char)
 
         return re.compile(ret)
 
     def children(self):
         for index, x in enumerate(self.motif):
-            if x != ".":
+            if x != '.':
                 continue
 
-            for char in self.char_mapping.get(x, ""):
+            for char in self.char_mapping.get(x, ''):
                 yield Motif(
                     self.motif[:index] + char + self.motif[index + 1:],
                 )
@@ -123,7 +123,7 @@ class Motif:
 
         for key, val in aa_is.items():
             to_add = set()
-            for special_char in "O-+x":
+            for special_char in 'O-+x':
                 for aa_i, aa_j in val:
                     if aa_i in self.char_mapping[special_char]:
                         to_add.add((special_char, aa_j))
@@ -136,11 +136,11 @@ class Motif:
 
         # Then generate motifs with AAs that match the hit list
         for i, char_i in enumerate(self.motif):
-            if char_i != ".":
+            if char_i != '.':
                 continue
 
             for j, char_j in enumerate(self.motif[i + 1:], start=i + 1):
-                if char_j != ".":
+                if char_j != '.':
                     continue
 
                 for aa_i, aa_j in aa_is[(i, j)]:
@@ -151,7 +151,7 @@ class Motif:
                     )
 
     def __repr__(self):
-        return "<pyproteome.Motif: {}>".format(self.motif)
+        return '<pyproteome.Motif: {}>'.format(self.motif)
 
     def __str__(self):
         return self.motif
@@ -167,7 +167,7 @@ class Motif:
             raise TypeError
 
         if len(self.motif) != len(other):
-            raise ValueError("Incompatible sequence lengths.")
+            raise ValueError('Incompatible sequence lengths.')
 
         return self.match(other)
 
@@ -179,7 +179,7 @@ class Motif:
             raise TypeError
 
         if len(self.motif) != len(other):
-            raise ValueError("Incompatible sequence lengths.")
+            raise ValueError('Incompatible sequence lengths.')
 
         return self.match(other)
 
@@ -190,7 +190,7 @@ class Motif:
         return self.motif < other.motif
 
     def match(self, other):
-        """
+        '''
         Match a given sequence to this motif.
 
         Parameters
@@ -200,24 +200,24 @@ class Motif:
         Returns
         -------
         bool
-        """
+        '''
         return bool(self._re.match(other))
 
 
 def get_nmer_args(kwargs):
     nmer_args = {}
 
-    nmer_args["all_matches"] = kwargs.pop("all_matches", False)
+    nmer_args['all_matches'] = kwargs.pop('all_matches', False)
 
-    nmer_args["mods"] = kwargs.pop(
-        "mods", [(None, "Phospho")],
+    nmer_args['mods'] = kwargs.pop(
+        'mods', [(None, 'Phospho')],
     )
-    nmer_args["n"] = kwargs.pop(
-        "n", 15,
+    nmer_args['n'] = kwargs.pop(
+        'n', 15,
     )
-    nmer_args["use_ptms"] = kwargs.pop("use_ptms", True)
-    nmer_args["use_nterms"] = kwargs.pop("use_nterms", False)
-    nmer_args["use_cterms"] = kwargs.pop("use_cterms", False)
+    nmer_args['use_ptms'] = kwargs.pop('use_ptms', True)
+    nmer_args['use_nterms'] = kwargs.pop('use_nterms', False)
+    nmer_args['use_cterms'] = kwargs.pop('use_cterms', False)
 
     return nmer_args
 
@@ -226,14 +226,14 @@ def generate_n_mers(
     sequences,
     n=15,
     all_matches=True,
-    fill_left="A",
-    fill_right="A",
+    fill_left='A',
+    fill_right='A',
     mods=None,
     use_ptms=True,
     use_nterms=False,
     use_cterms=False,
 ):
-    """
+    '''
     Generate n-mers around all sites of modification in sequences.
 
     Parameters
@@ -252,7 +252,7 @@ def generate_n_mers(
     Returns
     -------
     set of str
-    """
+    '''
     # Check n is odd
     assert n % 2 == 1
 
@@ -307,11 +307,11 @@ def _motif_stats(motif, fore_size, back_size, done, pp_dist=None):
 
 
 def _is_a_submotif_with_same_size(submotif, fore_hits, done):
-    """
+    '''
     Test whether the 'submotif' is an ancestor of any known motif, and
     matches the same number of foreground sequences.
-    """
-    # We want to know if this "submotif" contains any completed motifs
+    '''
+    # We want to know if this 'submotif' contains any completed motifs
     return any(
         checked in submotif
         for checked, checked_hits in done.items()
@@ -336,11 +336,11 @@ def _check_anchestry(motif, parent, done):
     motif_length = len(motif.motif)
 
     for index, char in enumerate(motif.motif):
-        if index == motif_length // 2 or char != ".":
+        if index == motif_length // 2 or char != '.':
             continue
 
         new_motif = Motif(
-            motif.motif[:index] + "." + motif.motif[index + 1:]
+            motif.motif[:index] + '.' + motif.motif[index + 1:]
         )
 
         if new_motif != parent and new_motif in done:
@@ -374,7 +374,7 @@ def _pp_sig(p_value, pp_dist):
 
 # Taken from https://stackoverflow.com/questions/1023038/
 def _lowpriority():
-    """ Set the priority of the process to below-normal."""
+    ''' Set the priority of the process to below-normal.'''
 
     import sys
     try:
@@ -386,7 +386,7 @@ def _lowpriority():
 
     if isWindows:
         # Based on:
-        #   "Recipe 496767: Set Process Priority In Windows" on ActiveState
+        #   'Recipe 496767: Set Process Priority In Windows' on ActiveState
         #   http://code.activestate.com/recipes/496767/
         import win32api
         import win32process
@@ -426,7 +426,7 @@ def _generate_ppdist(
             cpu_count = 1
 
     kwargs = kwargs.copy()
-    kwargs["pp_value"] = False
+    kwargs['pp_value'] = False
 
     pp_dist = []
 
@@ -435,7 +435,7 @@ def _generate_ppdist(
     )
 
     LOGGER.info(
-        "Calculating distribution of {} p-values using {} CPUs".format(
+        'Calculating distribution of {} p-values using {} CPUs'.format(
             p_iter,
             cpu_count,
         )
@@ -454,12 +454,12 @@ def _generate_ppdist(
         start=1,
     ):
         pp_dist.append(
-            min(p_dist + [kwargs.get("sig_cutoff")])
+            min(p_dist + [kwargs.get('sig_cutoff')])
         )
 
         if ind % (p_iter // min([p_iter, 10])) == 0:
             LOGGER.info(
-                "Calculated {}/{} pvals".format(ind, p_iter)
+                'Calculated {}/{} pvals'.format(ind, p_iter)
             )
 
     return pp_dist
@@ -478,12 +478,12 @@ def _make_index(args):
 
 def _open_cache():
     try:
-        with open(".motif_cache.pickle", "rb") as f:
+        with open('.motif_cache.pickle', 'rb') as f:
             return pickle.load(f)
     except (OSError, IOError):
         return {}
     except (EOFError, pickle.UnpicklingError, KeyError, TypeError):
-        LOGGER.warning("Unable to open motif cache")
+        LOGGER.warning('Unable to open motif cache')
         return {}
 
 
@@ -492,12 +492,12 @@ def _get_cache(args):
 
 
 def _add_cache(args, ret):
-    LOGGER.info("Adding motifs to cache")
+    LOGGER.info('Adding motifs to cache')
     cache = _open_cache()
     cache[_make_index(args)] = ret
 
     try:
-        with open(".motif_cache.pickle", "wb") as f:
+        with open('.motif_cache.pickle', 'wb') as f:
             pickle.dump(cache, f)
             return ret
     except OSError:
@@ -507,10 +507,10 @@ def _add_cache(args, ret):
 def run_motif_enrichment(data, f, **kwargs):
     nmer_args = get_nmer_args(kwargs)
     foreground = sorted(
-        generate_n_mers(data.filter(f)["Sequence"], **nmer_args)
+        generate_n_mers(data.filter(f)['Sequence'], **nmer_args)
     )
     background = sorted(
-        generate_n_mers(data["Sequence"], **nmer_args)
+        generate_n_mers(data['Sequence'], **nmer_args)
     )
 
     return motif_enrichment(
@@ -530,7 +530,7 @@ def motif_enrichment(
     cpu_count=None,
     force=False,
 ):
-    """
+    '''
     Calculate motifs significantly enriched in a set of sequences. Uses a
     depth-first search algorithm to find discrete motifs that are enriched in
     a foreground set compared to a given background [1]_.
@@ -556,56 +556,56 @@ def motif_enrichment(
 
     Notes
     -----
-    .. [1] Joughin, Brian a et al. "An Integrated Comparative Phosphoproteomic
+    .. [1] Joughin, Brian a et al. 'An Integrated Comparative Phosphoproteomic
            and Bioinformatic Approach Reveals a Novel Class of MPM-2 Motifs
-           Upregulated in EGFRvIII-Expressing Glioblastoma Cells." Molecular
+           Upregulated in EGFRvIII-Expressing Glioblastoma Cells.' Molecular
            bioSystems 5.1 (2009): 59-67.
-    """
+    '''
 
     p_dist = []
 
     def _search_children(children, parent=None):
-        """
+        '''
         Run a depth-first search over a given motif.
-        """
+        '''
         motif_hits = set()
 
         for motif in children:
             if motif in visited:
-                failed["checkpat"] += 1
+                failed['checkpat'] += 1
                 continue
 
             # Mark motif as visited
             visited.add(motif)
 
             if motif in done:
-                failed["done"] += 1
+                failed['done'] += 1
                 continue
 
             # Calculate the number of foreground hits
             fore_hits = _count_occurences(motif, parent, fg_hit_list)
 
             if fore_hits < min_fore_hits:
-                failed["count"] = 1
+                failed['count'] = 1
                 del fg_hit_list[motif]
                 continue
 
             # Check if we've already completed the search for a parent of this
             # motif
             if parent and _check_anchestry(motif, parent, done):
-                failed["anchestry"] += 1
+                failed['anchestry'] += 1
                 del fg_hit_list[motif]
                 continue
 
             # Shortcut calculating back-hits if we can help it
             best_p = _motif_sig(fore_hits, fore_size, fore_hits, back_size)
             if best_p > sig_cutoff:
-                failed["bestsig"] += 1
+                failed['bestsig'] += 1
                 del fg_hit_list[motif]
                 continue
 
             if _is_a_submotif_with_same_size(motif, fore_hits, done):
-                failed["sub"] += 1
+                failed['sub'] += 1
                 del fg_hit_list[motif]
                 continue
 
@@ -617,14 +617,14 @@ def motif_enrichment(
             p_dist.append(p_value)
 
             if p_value > sig_cutoff:
-                failed["sig"] += 1
+                failed['sig'] += 1
                 del fg_hit_list[motif]
                 del bg_hit_list[motif]
                 continue
 
             # If we get this far, we have a hit!
             motif_hits.add(motif)
-            failed["succeed"] += 1
+            failed['succeed'] += 1
             done[motif] = (fore_hits, back_hits)
 
             # Now try adding to the list of modifications on the motif to find
@@ -656,13 +656,13 @@ def motif_enrichment(
         return (
             pd.DataFrame(
                 columns=[
-                    "Motif",
-                    "Foreground Hits",
-                    "Foreground Size",
-                    "Background Hits",
-                    "Background Size",
-                    "p-value",
-                    "pp-value",
+                    'Motif',
+                    'Foreground Hits',
+                    'Foreground Size',
+                    'Background Hits',
+                    'Background Size',
+                    'p-value',
+                    'pp-value',
                 ],
             ),
             [],
@@ -691,16 +691,16 @@ def motif_enrichment(
     if not force:
         cache = _get_cache(cache_args)
         if cache is not None:
-            LOGGER.info("Loading motifs from cache")
+            LOGGER.info('Loading motifs from cache')
             return cache
 
     LOGGER.info(
-        "Starting analysis, n={}, N={}".format(
+        'Starting analysis, n={}, N={}'.format(
             fore_size, back_size,
         )
     )
     LOGGER.info(
-        "Motif sig cutoff: {}, Minimum hits: {}".format(
+        'Motif sig cutoff: {}, Minimum hits: {}'.format(
             sig_cutoff, min_fore_hits,
         )
     )
@@ -721,13 +721,13 @@ def motif_enrichment(
 
     starts = [
         Motif(
-            "." * (motif_length // 2) + letter + "." * (motif_length // 2)
+            '.' * (motif_length // 2) + letter + '.' * (motif_length // 2)
         )
         for letter in start_letters
     ]
 
     LOGGER.info(
-        "Starting Motifs: {}".format(", ".join(str(i) for i in starts))
+        'Starting Motifs: {}'.format(', '.join(str(i) for i in starts))
     )
 
     for start in starts:
@@ -755,26 +755,26 @@ def motif_enrichment(
             del fg_hit_list[start]
             del bg_hit_list[start]
     except KeyboardInterrupt:
-        LOGGER.info("Keyboard interrupted motif search")
+        LOGGER.info('Keyboard interrupted motif search')
         return
     finally:
         # Output some debugging information to compare with Brian's output
         LOGGER.info(
-            "\n".join(
-                "FAIL_{}: {}".format(key.upper(), failed[key])
+            '\n'.join(
+                'FAIL_{}: {}'.format(key.upper(), failed[key])
                 for key in [
-                    "done", "sub", "count", "sig", "bestsig",
-                    "anchestry", "checkpat",
+                    'done', 'sub', 'count', 'sig', 'bestsig',
+                    'anchestry', 'checkpat',
                 ]
-            ) + "\nSUCCEED: {}".format(failed["succeed"])
+            ) + '\nSUCCEED: {}'.format(failed['succeed'])
         )
 
-    LOGGER.info("First pass: {} motifs".format(len(first_pass)))
+    LOGGER.info('First pass: {} motifs'.format(len(first_pass)))
 
     second_pass = _filter_less_specific(first_pass, done)
 
     LOGGER.info(
-        "Second pass (less specific motifs removed): {} motifs"
+        'Second pass (less specific motifs removed): {} motifs'
         .format(len(second_pass))
     )
 
@@ -790,7 +790,7 @@ def motif_enrichment(
         ) if pp_value else None
 
         if pp_dist is not None and len(pp_dist) != pp_iterations:
-            LOGGER.info("pp-dist size mismatch")
+            LOGGER.info('pp-dist size mismatch')
             return
 
     # Finally prepare the output as a sorted list with the motifs and their
@@ -801,16 +801,16 @@ def motif_enrichment(
             for motif in second_pass
         ],
         columns=[
-            "Motif",
-            "Foreground Hits",
-            "Foreground Size",
-            "Background Hits",
-            "Background Size",
-            "p-value",
-            "pp-value",
+            'Motif',
+            'Foreground Hits',
+            'Foreground Size',
+            'Background Hits',
+            'Background Size',
+            'p-value',
+            'pp-value',
         ],
     )
-    df.sort_values(by=["pp-value", "p-value", "Motif"], inplace=True)
+    df.sort_values(by=['pp-value', 'p-value', 'Motif'], inplace=True)
     df.reset_index(drop=True, inplace=True)
 
     ret = (df, p_dist, pp_dist)

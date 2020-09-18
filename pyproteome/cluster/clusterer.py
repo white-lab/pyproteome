@@ -31,7 +31,7 @@ def get_data(ds, dropna=True, corrcoef=True, groups=None):
         groups = ds.cmp_groups or [list(ds.groups.keys())]
 
     if dropna:
-        ds = ds.dropna(how="any", groups=pyp.utils.flatten_list(groups))
+        ds = ds.dropna(how='any', groups=pyp.utils.flatten_list(groups))
 
     names = [
         chan
@@ -59,13 +59,13 @@ def get_data(ds, dropna=True, corrcoef=True, groups=None):
     ])
 
     return {
-        "ds": ds,
-        "data": data,
-        "z": z,
-        "c": c if corrcoef else None,
-        "names": names,
-        "labels": groups,
-        "classes": classes,
+        'ds': ds,
+        'data': data,
+        'z': z,
+        'c': c if corrcoef else None,
+        'names': names,
+        'labels': groups,
+        'classes': classes,
     }
 
 
@@ -89,7 +89,7 @@ def cluster(data, z=False, log2=True, clr=None, n_clusters=20):
     y_pred : :class:`pandas.Series` of int
     '''
     if z:
-        x = data["z"]
+        x = data['z']
     else:
         if log2:
             x = data['ds'].data.applymap(np.log2)
@@ -106,7 +106,7 @@ def cluster(data, z=False, log2=True, clr=None, n_clusters=20):
             i if i >= 0 else max(y_pred_spec) + 1
             for i in y_pred_spec
         ],
-        index=data["ds"].psms.index,
+        index=data['ds'].psms.index,
     )
 
     return clr, y_pred

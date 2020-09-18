@@ -1,9 +1,9 @@
-"""
+'''
 This module provides functionality for manipulating proteomics data sets.
 
 Functionality includes merging data sets and interfacing with attributes in a
 structured format.
-"""
+'''
 
 # Built-ins
 from __future__ import absolute_import, division
@@ -29,7 +29,7 @@ from . import modification, protein, sequence, constand
 import pyproteome as pyp
 
 
-LOGGER = logging.getLogger("pyproteome.data_sets")
+LOGGER = logging.getLogger('pyproteome.data_sets')
 
 #:
 DEFAULT_FILTER_BAD = dict(
@@ -38,44 +38,44 @@ DEFAULT_FILTER_BAD = dict(
     median_quant=1.5e3,
     q=0.05,
 )
-"""
+'''
 Default parameters for filtering data sets.
 
 Selects all ions with an ion score > 15, isolation interference < 50,
 median quantification signal > 1e3, and optional false-discovery q-value <
 0.05.
-"""
+'''
 
 DATA_SET_COLS = [
-    "Proteins",
-    "Sequence",
-    "Modifications",
-    "Validated",
-    "Confidence Level",
-    "Ion Score",
-    "q-value",
-    "Isolation Interference",
-    "Missed Cleavages",
-    "Ambiguous",
-    "Charges",
-    "Masses",
-    "RTs",
-    "Intensities",
-    "Raw Paths",
-    "Scan Paths",
-    "Scan",
-    "Fold Change",
-    "p-value",
+    'Proteins',
+    'Sequence',
+    'Modifications',
+    'Validated',
+    'Confidence Level',
+    'Ion Score',
+    'q-value',
+    'Isolation Interference',
+    'Missed Cleavages',
+    'Ambiguous',
+    'Charges',
+    'Masses',
+    'RTs',
+    'Intensities',
+    'Raw Paths',
+    'Scan Paths',
+    'Scan',
+    'Fold Change',
+    'p-value',
 ]
-"""
+'''
 Columns available in DataSet.psms.
 
 Note that this does not include columns for quantification or weights.
-"""
+'''
 
 
 class DataSet:
-    """
+    '''
     Class that encompasses a proteomics data set. Data sets can be initialized
     by calling this class's constructor directly, or using
     :func:`.load_all_data`.
@@ -94,7 +94,7 @@ class DataSet:
     search_name : str, optional
         Name of the search file this data set was loaded from.
     psms : :class:`pandas.DataFrame`
-        Contains at least "Proteins", "Sequence", and "Modifications" columns.
+        Contains at least 'Proteins', 'Sequence', and 'Modifications' columns.
     channels : dict of str, str
         Maps label channel to sample name.
     groups : dict of str, list of str
@@ -108,10 +108,10 @@ class DataSet:
         Peptide levels used for normalization.
     sets : int
         Number of sets merged into this data set.
-    """
+    '''
     def __init__(
         self,
-        name="",
+        name='',
         psms=None,
         search_name=None,
         channels=None,
@@ -127,7 +127,7 @@ class DataSet:
         skip_load=False,
         skip_logging=False,
     ):
-        """
+        '''
         Initializes a data set.
 
         Parameters
@@ -141,10 +141,10 @@ class DataSet:
             Read psms from MASCOT / Discoverer data files.
         channels : dict of (str, str), optional
             Ordered dictionary mapping sample names to quantification channels
-            (i.e. {"X": "126", "Y": "127", "Z": "128", "W": "129"})
+            (i.e. {'X': '126', 'Y': '127', 'Z': '128', 'W': '129'})
         groups : dict of str, list of str, optional
             Ordered dictionary mapping sample names to larger groups
-            (i.e. {"WT": ["X", "Y"], "Diseased": ["W", "Z"]})
+            (i.e. {'WT': ['X', 'Y'], 'Diseased': ['W', 'Z']})
         cmp_groups : list of list of str
             cmp_groups that are passed to :func:`.DataSet.norm_cmp_groups()`.
         fix_channel_names : bool, optional
@@ -153,27 +153,27 @@ class DataSet:
             values.
         pick_best_psm : bool, optional
             Select the peptide sequence for each scan that has the highest
-            MASCOT ion score. (i.e. ["pSTY": 5, "SpTY": 10, "STpY": 20] =>
-            "STpY")
+            MASCOT ion score. (i.e. ['pSTY': 5, 'SpTY': 10, 'STpY': 20] =>
+            'STpY')
         constand_norm : bool, optional
         merge_duplicates : bool, optional
             Merge scans that have the same peptide sequence into one peptide,
             summing the quantification channel intensities to give a weighted
             estimate of relative abundances.
         filter_bad : bool or dict, optional
-            Remove peptides that do not have a "High" confidence score from
+            Remove peptides that do not have a 'High' confidence score from
             ProteomeDiscoverer.
         check_raw : bool, optional
         skip_load : bool, optional
             Just initialize the structure, don't load any data.
         skip_logging : bool, optional
             Don't log any information.
-        """
+        '''
         if search_name is None:
             search_name = name
 
-        if search_name and os.path.splitext(search_name)[1] == "":
-            search_name += ".msf"
+        if search_name and os.path.splitext(search_name)[1] == '':
+            search_name += '.msf'
 
         self.channels = channels.copy() if channels else OrderedDict()
         self.groups = groups.copy() if groups else OrderedDict()
@@ -214,25 +214,25 @@ class DataSet:
 
         if dropna:
             LOGGER.info(
-                "{}: Dropping channels with NaN values.".format(self.name)
+                '{}: Dropping channels with NaN values.'.format(self.name)
             )
             self.dropna(inplace=True)
 
         if filter_bad is True:
             filter_bad = DEFAULT_FILTER_BAD.copy()
 
-            if pd.isnull(self.psms["q-value"]).all() and "q" in filter_bad:
-                del filter_bad["q"]
+            if pd.isnull(self.psms['q-value']).all() and 'q' in filter_bad:
+                del filter_bad['q']
 
             if pd.isnull(self.psms[list(self.channels.values())]).all().all():
-                del filter_bad["median_quant"]
+                del filter_bad['median_quant']
 
         if not skip_logging:
             self.log_stats()
 
         if filter_bad:
             LOGGER.info(
-                "{}: Filtering peptides using: {}"
+                '{}: Filtering peptides using: {}'
                 .format(self.name, filter_bad)
             )
             self.filter(
@@ -243,11 +243,11 @@ class DataSet:
 
         if pick_best_psm and (
             not search_name or
-            os.path.splitext(search_name)[1] != ".msf" or
+            os.path.splitext(search_name)[1] != '.msf' or
             any(i for i in lst)
         ):
             LOGGER.info(
-                "{}: Picking peptides with best ion score for each scan."
+                '{}: Picking peptides with best ion score for each scan.'
                 .format(self.name)
             )
             self._pick_best_psm()
@@ -260,7 +260,7 @@ class DataSet:
 
             # Save channel intensities as weights for data integration
             for channel in channels:
-                weight = "{}_weight".format(channel)
+                weight = '{}_weight'.format(channel)
                 self.psms[weight] = self.psms[channel]
 
             # Run CONSTANd normalization
@@ -268,7 +268,7 @@ class DataSet:
 
         if merge_duplicates:
             LOGGER.info(
-                "{}: Merging duplicate peptide hits together."
+                '{}: Merging duplicate peptide hits together.'
                 .format(self.name)
             )
             self.merge_duplicates(inplace=True)
@@ -282,13 +282,13 @@ class DataSet:
             self.log_stats()
 
     def copy(self):
-        """
+        '''
         Make a copy of self.
 
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = copy.copy(self)
 
         new.psms = new.psms.copy()
@@ -299,12 +299,12 @@ class DataSet:
         return new
 
     def fix_channel_names(self):
-        """
+        '''
         Correct quantification channel names to those present in the search
         file.
 
         i.e. from 130_C to 130C (or vice versa).
-        """
+        '''
         for key, val in list(self.channels.items()):
             if '_' in val:
                 new_val = val.replace('_', '')
@@ -325,17 +325,17 @@ class DataSet:
 
     @property
     def samples(self):
-        """
+        '''
         Get a list of sample names in this data set.
 
         Returns
         -------
         list of str
-        """
+        '''
         return self.get_samples()
 
     def get_samples(self, groups=None):
-        """
+        '''
         Get a list of sample names in this data set.
 
         Parameters
@@ -345,7 +345,7 @@ class DataSet:
         Returns
         -------
         list of str
-        """
+        '''
         if groups is None:
             groups = self.cmp_groups or [list(self.groups.keys())]
         
@@ -362,13 +362,13 @@ class DataSet:
 
     def __str__(self):
         return (
-            "<pyproteome.DataSet object" +
+            '<pyproteome.DataSet object' +
             (
-                ": " + self.name
+                ': ' + self.name
                 if self.name else
-                " at " + hex(id(self))
+                ' at ' + hex(id(self))
             ) +
-            ">"
+            '>'
         )
 
     def __getitem__(self, key):
@@ -396,13 +396,13 @@ class DataSet:
 
     @property
     def shape(self):
-        """
+        '''
         Get the size of a data set in (rows, columns) format.
 
         Returns
         -------
         shape : tuple of (int, int)
-        """
+        '''
         return self.psms.shape
 
     def _pick_best_psm(self):
@@ -410,14 +410,14 @@ class DataSet:
 
         for index, row in self.psms.iterrows():
             hits = np.logical_and(
-                self.psms["Scan"] == row["Scan"],
-                self.psms["Sequence"] != row["Sequence"],
+                self.psms['Scan'] == row['Scan'],
+                self.psms['Sequence'] != row['Sequence'],
             )
 
-            if "Rank" in self.psms.columns:
-                better = self.psms["Rank"] < row["Rank"]
+            if 'Rank' in self.psms.columns:
+                better = self.psms['Rank'] < row['Rank']
             else:
-                better = self.psms["Ion Score"] > row["Ion Score"]
+                better = self.psms['Ion Score'] > row['Ion Score']
 
             hits = np.logical_and(hits, better)
 
@@ -427,7 +427,7 @@ class DataSet:
         self.psms = self.psms[~reject_mask].reset_index(drop=True)
 
     def merge_duplicates(self, inplace=False):
-        """
+        '''
         Merge together all duplicate peptides. New quantification values are
         calculated from a weighted sum of each channel's values.
 
@@ -440,7 +440,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         if not inplace:
@@ -453,7 +453,7 @@ class DataSet:
         agg_dict = OrderedDict()
 
         for channel in channels:
-            weight = "{}_weight".format(channel)
+            weight = '{}_weight'.format(channel)
             std = '{}_std'.format(channel)
             mean = '{}_mean'.format(channel)
             cv = '{}_cv'.format(channel)
@@ -473,41 +473,28 @@ class DataSet:
             else:
                 agg_dict[cv] = 'mean'
 
-        def _first(x):
-            if not all(i == x.values[0] for i in x.values):
-                LOGGER.warning(
-                    "{}: Mismatch between peptide data: '{}' not in {}"
-                    .format(
-                        new.name,
-                        x.values[0],
-                        [str(i) for i in x.values[1:]],
-                    )
-                )
+        agg_dict['Modifications'] = _first
+        agg_dict['Missed Cleavages'] = _first
+        agg_dict['Validated'] = all
 
-            return x.values[0]
+        agg_dict['Scan Paths'] = pyp.utils.flatten_set
+        agg_dict['Raw Paths'] = pyp.utils.flatten_set
 
-        agg_dict["Modifications"] = _first
-        agg_dict["Missed Cleavages"] = _first
-        agg_dict["Validated"] = all
+        agg_dict['Ambiguous'] = all
 
-        agg_dict["Scan Paths"] = pyp.utils.flatten_set
-        agg_dict["Raw Paths"] = pyp.utils.flatten_set
+        agg_dict['Masses'] = pyp.utils.flatten_set
+        agg_dict['Charges'] = pyp.utils.flatten_set
+        agg_dict['Intensities'] = pyp.utils.flatten_set
+        agg_dict['RTs'] = pyp.utils.flatten_set
 
-        agg_dict["Ambiguous"] = all
-
-        agg_dict["Masses"] = pyp.utils.flatten_set
-        agg_dict["Charges"] = pyp.utils.flatten_set
-        agg_dict["Intensities"] = pyp.utils.flatten_set
-        agg_dict["RTs"] = pyp.utils.flatten_set
-
-        agg_dict["Scan"] = pyp.utils.flatten_set
-        agg_dict["Ion Score"] = max
-        agg_dict["q-value"] = min
-        agg_dict["Confidence Level"] = partial(
+        agg_dict['Scan'] = pyp.utils.flatten_set
+        agg_dict['Ion Score'] = max
+        agg_dict['q-value'] = min
+        agg_dict['Confidence Level'] = partial(
             max,
-            key=lambda x: ["Low", "Medium", "High"].index(x),
+            key=lambda x: ['Low', 'Medium', 'High'].index(x),
         )
-        agg_dict["Isolation Interference"] = min
+        agg_dict['Isolation Interference'] = min
 
         new.psms = new.psms.groupby(
             by=[
@@ -519,7 +506,7 @@ class DataSet:
         ).agg(agg_dict).reset_index(drop=True)
 
         for channel in channels:
-            weight = "{}_weight".format(channel)
+            weight = '{}_weight'.format(channel)
             std = '{}_std'.format(channel)
             mean = '{}_mean'.format(channel)
             cv = '{}_cv'.format(channel)
@@ -539,7 +526,7 @@ class DataSet:
         return new
 
     def merge_subsequences(self, inplace=False):
-        """
+        '''
         Merges petides that are a subsequence of another peptide.
         (i.e. SVYTEIKIHK + SVYTEIK -> SVYTEIK)
 
@@ -553,7 +540,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         if not inplace:
@@ -564,24 +551,24 @@ class DataSet:
 
         # Find all proteins that have more than one peptide mapping to them
         for index, row in new.psms[
-            new.psms.duplicated(subset="Proteins", keep=False)
+            new.psms.duplicated(subset='Proteins', keep=False)
         ].iterrows():
-            seq = row["Sequence"]
+            seq = row['Sequence']
 
             # Then iterate over each peptide and find other non-identical
             # peptides that map to the same protein
             for o_index, o_row in new.psms[
                 np.logical_and(
-                    new.psms["Proteins"] == row["Proteins"],
-                    new.psms["Sequence"] != seq,
+                    new.psms['Proteins'] == row['Proteins'],
+                    new.psms['Sequence'] != seq,
                 )
             ].iterrows():
                 # If that other peptide is a subset of this peptide, rename it
-                if o_row["Sequence"] in seq:
+                if o_row['Sequence'] in seq:
                     cols = [
-                        "Sequence",
-                        "Modifications",
-                        "Missed Cleavages",
+                        'Sequence',
+                        'Modifications',
+                        'Missed Cleavages',
                     ]
                     new.psms.at[o_index, cols] = row[cols]
 
@@ -592,7 +579,7 @@ class DataSet:
         return new.merge_duplicates(inplace=inplace)
 
     def __add__(self, other):
-        """
+        '''
         Concatenate two data sets.
 
         Combines two data sets, adding together the channel values for any
@@ -605,13 +592,13 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         return merge_data([self, other])
 
     def rename_channels(self, inplace=False):
-        """
+        '''
         Rename all columns names for quantification channels to sample names.
-        (i.e. "126" => "Mouse #1").
+        (i.e. '126' => 'Mouse #1').
 
         Parameters
         ----------
@@ -620,7 +607,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         if not inplace:
@@ -628,21 +615,21 @@ class DataSet:
 
         for new_channel, old_channel in new.channels.items():
             if new_channel != old_channel:
-                new_weight = "{}_weight".format(new_channel)
+                new_weight = '{}_weight'.format(new_channel)
 
                 if (
                     new_channel in new.psms.columns or
                     new_weight in new.psms.columns
                 ):
                     raise Exception(
-                        "Channel {} already exists, cannot rename to it"
+                        'Channel {} already exists, cannot rename to it'
                         .format(new_channel)
                     )
 
                 new.psms[new_channel] = new.psms[old_channel]
                 del new.psms[old_channel]
 
-                old_weight = "{}_weight".format(old_channel)
+                old_weight = '{}_weight'.format(old_channel)
 
                 if old_weight in new.psms.columns:
                     new.psms[new_weight] = new.psms[old_weight]
@@ -660,7 +647,7 @@ class DataSet:
         other=None, 
         inplace=False,
     ):
-        """
+        '''
         Normalize runs to one channel for inter-run comparions.
 
         Parameters
@@ -676,7 +663,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         assert (
             norm_channels is not None or
             other is not None
@@ -703,12 +690,12 @@ class DataSet:
             if not other or chan in other.channels
         ]
         for channel in new.channels.values():
-            weight = "{}_weight".format(channel)
+            weight = '{}_weight'.format(channel)
 
             if weight not in new.psms.columns:
                 new.psms[weight] = (
                     new.psms[channel] *
-                    (100 - new.psms["Isolation Interference"]) / 100
+                    (100 - new.psms['Isolation Interference']) / 100
                 )
 
         # Calculate the mean normalization signal from each shared channel
@@ -722,30 +709,30 @@ class DataSet:
                 new.psms,
                 other.psms,
                 on=[
-                    # "ProteinStr",
-                    # "PeptideStr",
-                    "Proteins",
-                    "Sequence",
-                    "Modifications",
+                    # 'ProteinStr',
+                    # 'PeptideStr',
+                    'Proteins',
+                    'Sequence',
+                    'Modifications',
                 ],
-                how="left",
-                suffixes=("_self", "_other"),
+                how='left',
+                suffixes=('_self', '_other'),
             )
             assert merge.shape[0] == new.shape[0]
 
             self_mean = merge[
-                ["{}_self".format(i) for i in norm_channels]
+                ['{}_self'.format(i) for i in norm_channels]
             ].mean(axis=1)
 
             other_mean = merge[
-                ["{}_other".format(i) for i in norm_channels]
+                ['{}_other'.format(i) for i in norm_channels]
             ].mean(axis=1)
 
             for channel in new.channels.values():
                 vals = merge[
                     channel
                     if channel in merge.columns else
-                    "{}_self".format(channel)
+                    '{}_self'.format(channel)
                 ]
 
                 # Set scaling factor to 1 where other_mean is None
@@ -766,7 +753,7 @@ class DataSet:
         return new
 
     def normalize(self, lvls, inplace=False):
-        """
+        '''
         Normalize channels to given levels for intra-run comparisons.
 
         Divides all channel values by a given level.
@@ -782,7 +769,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         # Don't normalize a data set twice!
@@ -791,7 +778,7 @@ class DataSet:
         if not inplace:
             new = new.copy()
 
-        if hasattr(lvls, "levels"):
+        if hasattr(lvls, 'levels'):
             if not lvls.levels:
                 lvls.levels = pyp.levels.get_channel_levels(lvls)[1]
 
@@ -815,14 +802,14 @@ class DataSet:
         return new
 
     def check_raw(self):
-        """
+        '''
         Checks that all raw files referenced in search data can be found in
         :const:`pyproteome.paths.MS_RAW_DIR`.
 
         Returns
         -------
         found_all : bool
-        """
+        '''
         try:
             raw_dir = [
                 i.lower()
@@ -835,13 +822,13 @@ class DataSet:
 
         for raw in sorted(
             pyp.utils.flatten_set(
-                row["Raw Paths"]
+                row['Raw Paths']
                 for _, row in self.psms.iterrows()
             )
         ):
             if raw.lower() not in raw_dir:
                 LOGGER.warning(
-                    "{}: Unable to locate raw file for {}"
+                    '{}: Unable to locate raw file for {}'
                     .format(self.name, raw)
                 )
                 found_all = False
@@ -856,7 +843,7 @@ class DataSet:
         groups=None,
         inplace=False,
     ):
-        """
+        '''
         Drop any channels with NaN values.
 
         Parameters
@@ -870,7 +857,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         if not inplace:
@@ -880,7 +867,7 @@ class DataSet:
             columns = list(new.channels.values())
 
         if how is None and thresh is None:
-            how = "any"
+            how = 'any'
 
         if groups is not None:
             columns = [
@@ -900,7 +887,7 @@ class DataSet:
         return new
 
     def add_peptide(self, inserts):
-        """
+        '''
         Manually add a peptide or list of peptides to a data set.
 
         Parameters
@@ -916,42 +903,42 @@ class DataSet:
             prots = data_sets.protein.Proteins(
                 proteins=(
                     data_sets.protein.Protein(
-                        accession="Q920G3",
-                        gene="Siglec5",
-                        description="Sialic acid-binding Ig-like lectin 5",
+                        accession='Q920G3',
+                        gene='Siglec5',
+                        description='Sialic acid-binding Ig-like lectin 5',
                         full_sequence=(
-                            "MRWAWLLPLLWAGCLATDGYSLSVTGSVTVQEGLCVFVACQVQYPNSKGPVFGYWFREGA"
-                            "NIFSGSPVATNDPQRSVLKEAQGRFYLMGKENSHNCSLDIRDAQKIDTGTYFFRLDGSVK"
-                            "YSFQKSMLSVLVIALTEVPNIQVTSTLVSGNSTKLLCSVPWACEQGTPPIFSWMSSALTS"
-                            "LGHRTTLSSELNLTPRPQDNGTNLTCQVNLPGTGVTVERTQQLSVIYAPQKMTIRVSWGD"
-                            "DTGTKVLQSGASLQIQEGESLSLVCMADSNPPAVLSWERPTQKPFQLSTPAELQLPRAEL"
-                            "EDQGKYICQAQNSQGAQTASVSLSIRSLLQLLGPSCSFEGQGLHCSCSSRAWPAPSLRWR"
-                            "LGEGVLEGNSSNGSFTVKSSSAGQWANSSLILSMEFSSNHRLSCEAWSDNRVQRATILLV"
-                            "SGPKVSQAGKSETSRGTVLGAIWGAGLMALLAVCLCLIFFTVKVLRKKSALKVAATKGNH"
-                            "LAKNPASTINSASITSSNIALGYPIQGHLNEPGSQTQKEQPPLATVPDTQKDEPELHYAS"
-                            "LSFQGPMPPKPQNTEAMKSVYTEIKIHKC"
+                            'MRWAWLLPLLWAGCLATDGYSLSVTGSVTVQEGLCVFVACQVQYPNSKGPVFGYWFREGA'
+                            'NIFSGSPVATNDPQRSVLKEAQGRFYLMGKENSHNCSLDIRDAQKIDTGTYFFRLDGSVK'
+                            'YSFQKSMLSVLVIALTEVPNIQVTSTLVSGNSTKLLCSVPWACEQGTPPIFSWMSSALTS'
+                            'LGHRTTLSSELNLTPRPQDNGTNLTCQVNLPGTGVTVERTQQLSVIYAPQKMTIRVSWGD'
+                            'DTGTKVLQSGASLQIQEGESLSLVCMADSNPPAVLSWERPTQKPFQLSTPAELQLPRAEL'
+                            'EDQGKYICQAQNSQGAQTASVSLSIRSLLQLLGPSCSFEGQGLHCSCSSRAWPAPSLRWR'
+                            'LGEGVLEGNSSNGSFTVKSSSAGQWANSSLILSMEFSSNHRLSCEAWSDNRVQRATILLV'
+                            'SGPKVSQAGKSETSRGTVLGAIWGAGLMALLAVCLCLIFFTVKVLRKKSALKVAATKGNH'
+                            'LAKNPASTINSASITSSNIALGYPIQGHLNEPGSQTQKEQPPLATVPDTQKDEPELHYAS'
+                            'LSFQGPMPPKPQNTEAMKSVYTEIKIHKC'
                         ),
                     ),
                 ),
             )
-            seq = data_sets.sequence.extract_sequence(prots, "SVyTEIK")
+            seq = data_sets.sequence.extract_sequence(prots, 'SVyTEIK')
 
             mods = data_sets.modification.Modifications(
                 mods=[
                     data_sets.modification.Modification(
                         rel_pos=0,
-                        mod_type="TMT10plex",
+                        mod_type='TMT10plex',
                         nterm=True,
                         sequence=seq,
                     ),
                     data_sets.modification.Modification(
                         rel_pos=2,
-                        mod_type="Phospho",
+                        mod_type='Phospho',
                         sequence=seq,
                     ),
                     data_sets.modification.Modification(
                         rel_pos=6,
-                        mod_type="TMT10plex",
+                        mod_type='TMT10plex',
                         sequence=seq,
                     ),
                 ],
@@ -960,48 +947,48 @@ class DataSet:
             seq.modifications = mods
 
             ckh_sigf1_py_insert = {
-                "Proteins": prots,
-                "Sequence": seq,
-                "Modifications": mods,
-                "126":  1.46e4,
-                "127N": 2.18e4,
-                "127C": 1.88e4,
-                "128N": 4.66e3,
-                "128C": 6.70e3,
-                "129N": 7.88e3,
-                "129C": 1.03e4,
-                "130N": 7.28e3,
-                "130C": 2.98e3,
-                "131":  6.01e3,
-                "Validated": True,
-                "First Scan": {23074},
-                "Raw Paths": {"2019-04-24-CKp25-SiglecF-1-py-SpinCol-col189.raw"},
-                "Scan Paths": {"CK-7wk-H1-pY"},
-                "IonScore": 30,
-                "Isolation Interference": 0,
+                'Proteins': prots,
+                'Sequence': seq,
+                'Modifications': mods,
+                '126':  1.46e4,
+                '127N': 2.18e4,
+                '127C': 1.88e4,
+                '128N': 4.66e3,
+                '128C': 6.70e3,
+                '129N': 7.88e3,
+                '129C': 1.03e4,
+                '130N': 7.28e3,
+                '130C': 2.98e3,
+                '131':  6.01e3,
+                'Validated': True,
+                'First Scan': {23074},
+                'Raw Paths': {'2019-04-24-CKp25-SiglecF-1-py-SpinCol-col189.raw'},
+                'Scan Paths': {'CK-7wk-H1-pY'},
+                'IonScore': 30,
+                'Isolation Interference': 0,
             }
             ds.add_peptide([ckh_sigf1_py_insert])
-        """
+        '''
         defaults = {
-            "Proteins": protein.Proteins(),
-            "Sequence": sequence.Sequence(),
-            "Modifications": modification.Modifications(),
-            "Validated": False,
-            "Confidence Level": "High",
-            "Ion Score": 100,
-            "q-value": 0,
-            "Isolation Interference": 0,
-            "Missed Cleavages": 0,
-            "Ambiguous": False,
-            "Charges": set(),
-            "Masses": set(),
-            "RTs": set(),
-            "Intensities": set(),
-            "Raw Paths": set(),
-            "Scan Paths": set(),
-            "Scan": set(),
-            "Fold Change": np.nan,
-            "p-value": np.nan,
+            'Proteins': protein.Proteins(),
+            'Sequence': sequence.Sequence(),
+            'Modifications': modification.Modifications(),
+            'Validated': False,
+            'Confidence Level': 'High',
+            'Ion Score': 100,
+            'q-value': 0,
+            'Isolation Interference': 0,
+            'Missed Cleavages': 0,
+            'Ambiguous': False,
+            'Charges': set(),
+            'Masses': set(),
+            'RTs': set(),
+            'Intensities': set(),
+            'Raw Paths': set(),
+            'Scan Paths': set(),
+            'Scan': set(),
+            'Fold Change': np.nan,
+            'p-value': np.nan,
         }
 
         if isinstance(inserts, dict):
@@ -1023,7 +1010,7 @@ class DataSet:
         inplace=False,
         **kwargs
     ):
-        """
+        '''
         Filters a data set.
 
         Parameters
@@ -1040,14 +1027,14 @@ class DataSet:
         These parameters filter your data set to only include peptides that
         match a given attribute. For example::
 
-            >>> data.filter(mod="Y", p=0.01, fold=2)
+            >>> data.filter(mod='Y', p=0.01, fold=2)
 
         This function interprets both the argument filter and python `kwargs`
         magic. The three functions are all equivalent::
 
             >>> data.filter(p=0.01)
-            >>> data.filter([{"p": 0.01}])
-            >>> data.filter({"p": 0.01})
+            >>> data.filter([{'p': 0.01}])
+            >>> data.filter({'p': 0.01})
 
         Filter parameters can be one of any below:
 
@@ -1085,7 +1072,7 @@ class DataSet:
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         if filters is None:
@@ -1103,34 +1090,34 @@ class DataSet:
         filters = copy.deepcopy(filters)
 
         confidence = {
-            "High": ["High"],
-            "Medium": ["Medium", "High"],
-            "Low": ["Low", "Medium", "High"],
+            'High': ['High'],
+            'Medium': ['Medium', 'High'],
+            'Low': ['Low', 'Medium', 'High'],
         }
 
         fns = {
-            "series": lambda val, psms:
+            'series': lambda val, psms:
             val,
 
-            "fn": lambda val, psms:
+            'fn': lambda val, psms:
             psms.apply(val, axis=1),
 
-            "ambiguous": lambda val, psms:
-            psms["Ambiguous"] == val,
+            'ambiguous': lambda val, psms:
+            psms['Ambiguous'] == val,
 
-            "confidence": lambda val, psms:
-            psms["Confidence Level"].isin(confidence[val]),
+            'confidence': lambda val, psms:
+            psms['Confidence Level'].isin(confidence[val]),
 
-            "ion_score": lambda val, psms:
-            psms["Ion Score"] >= val,
+            'ion_score': lambda val, psms:
+            psms['Ion Score'] >= val,
 
-            "isolation": lambda val, psms:
-            psms["Isolation Interference"] <= val,
+            'isolation': lambda val, psms:
+            psms['Isolation Interference'] <= val,
 
-            "missed_cleavage": lambda val, psms:
-            psms["Missed Cleavages"] <= val,
+            'missed_cleavage': lambda val, psms:
+            psms['Missed Cleavages'] <= val,
 
-            "median_quant": lambda val, psms:
+            'median_quant': lambda val, psms:
             np.nan_to_num(
                 np.nanmedian(
                     psms[
@@ -1153,33 +1140,33 @@ class DataSet:
                 )
             ) <= val,
 
-            "p": lambda val, psms:
-            (~psms["p-value"].isnull()) &
-            (psms["p-value"] <= val),
+            'p': lambda val, psms:
+            (~psms['p-value'].isnull()) &
+            (psms['p-value'] <= val),
 
-            "q": lambda val, psms:
-            (~psms["q-value"].isnull()) &
-            (psms["q-value"] <= val),
+            'q': lambda val, psms:
+            (~psms['q-value'].isnull()) &
+            (psms['q-value'] <= val),
 
-            "asym_fold": lambda val, psms:
-            (~psms["Fold Change"].isnull()) &
+            'asym_fold': lambda val, psms:
+            (~psms['Fold Change'].isnull()) &
             (
-                psms["Fold Change"] >= val
+                psms['Fold Change'] >= val
                 if val > 1 else
-                psms["Fold Change"] <= val
+                psms['Fold Change'] <= val
             ),
 
-            "fold": lambda val, psms:
-            (~psms["Fold Change"].isnull()) &
+            'fold': lambda val, psms:
+            (~psms['Fold Change'].isnull()) &
             (
-                psms["Fold Change"].apply(
+                psms['Fold Change'].apply(
                     lambda x:
                     x if x > 1 else (1 / x if x else x)
                 ) >= (val if val > 1 else 1 / val)
             ),
 
-            "motif": lambda val, psms:
-            psms["Sequence"].apply(
+            'motif': lambda val, psms:
+            psms['Sequence'].apply(
                 lambda x:
                 any(
                     (
@@ -1189,20 +1176,20 @@ class DataSet:
                     ).match(nmer)
                     for nmer in pyp.motifs.generate_n_mers(
                         x,
-                        mods=f.get("mod", None),
+                        mods=f.get('mod', None),
                     )
                 )
             ),
 
-            "protein": lambda val, psms:
-            psms["Proteins"].apply(
+            'protein': lambda val, psms:
+            psms['Proteins'].apply(
                 lambda x: bool(set(val).intersection(x.genes))
             )
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            psms["Proteins"] == val.strip(),
+            psms['Proteins'] == val.strip(),
 
-            "accession": lambda val, psms:
-            psms["Proteins"].apply(
+            'accession': lambda val, psms:
+            psms['Proteins'].apply(
                 lambda x: bool(set(val).intersection(x.accessions))
             )
             if isinstance(val, (list, set, tuple, pd.Series)) else
@@ -1210,22 +1197,22 @@ class DataSet:
                 lambda x: any([i == val.strip() for i in x.accessions])
             ),
 
-            "sequence": lambda val, psms:
-            psms["Sequence"].apply(lambda x: any(i in x for i in val))
+            'sequence': lambda val, psms:
+            psms['Sequence'].apply(lambda x: any(i in x for i in val))
             if isinstance(val, (list, set, tuple, pd.Series)) else
-            psms["Sequence"] == val.strip(),
+            psms['Sequence'] == val.strip(),
 
-            "mod": lambda val, psms:
-            psms["Modifications"].apply(
+            'mod': lambda val, psms:
+            psms['Modifications'].apply(
                 lambda x: bool(list(x.get_mods(val).skip_labels()))
             ),
 
-            "only_validated": lambda val, psms:
+            'only_validated': lambda val, psms:
 
-            psms["Validated"] == val,
+            psms['Validated'] == val,
 
-            "scan_paths": lambda val, psms:
-            psms["Scan Paths"]
+            'scan_paths': lambda val, psms:
+            psms['Scan Paths']
             .apply(lambda x: any(i in val for i in x))
         }
 
@@ -1236,8 +1223,8 @@ class DataSet:
             )
 
             for f in filters:
-                group_a = f.pop("group_a", None)
-                group_b = f.pop("group_b", None)
+                group_a = f.pop('group_a', None)
+                group_b = f.pop('group_b', None)
 
                 if group_a or group_b:
                     new.update_group_changes(
@@ -1245,13 +1232,13 @@ class DataSet:
                         group_b=group_b,
                     )
 
-                inverse = f.pop("inverse", False)
-                rename = f.pop("rename", None)
+                inverse = f.pop('inverse', False)
+                rename = f.pop('rename', None)
 
                 if rename is not None:
                     new.name = rename
 
-                if f.pop("any", False):
+                if f.pop('any', False):
                     if new.shape[0] < 1:
                         return new
 
@@ -1291,7 +1278,7 @@ class DataSet:
         return new
 
     def get_groups(self, group_a=None, group_b=None):
-        """
+        '''
         Get channels associated with two groups.
 
         Parameters
@@ -1304,7 +1291,7 @@ class DataSet:
         samples : list of str
         labels : list of str
         groups : tuple of (str or list of str)
-        """
+        '''
         groups = [
             val
             for key, val in self.groups.items()
@@ -1334,7 +1321,7 @@ class DataSet:
                     for sample in self.groups[group]
                 )
             ]
-            label_a = ", ".join(group_a)
+            label_a = ', '.join(group_a)
             samples_a = [
                 sample
                 for i in group_a
@@ -1357,7 +1344,7 @@ class DataSet:
                     for sample in self.groups[group]
                 )
             ]
-            label_b = ", ".join(group_b)
+            label_b = ', '.join(group_b)
             samples_b = [
                 sample
                 for i in group_b
@@ -1368,7 +1355,7 @@ class DataSet:
         return (samples_a, samples_b), (label_a, label_b), (group_a, group_b)
 
     def update_group_changes(self, group_a=None, group_b=None):
-        """
+        '''
         Update a DataSet's Fold Change, and p-value for each peptide using the give two-group comparison.
 
         Values are calculated based on changes between group_a and group_b. p-values are calculated as a 2-sample t-test.
@@ -1380,7 +1367,7 @@ class DataSet:
             Single or multiple groups to use for fold change numerator.
         group_b : str or list of str, optional
             Single or multiple groups to use for fold change denominator.
-        """
+        '''
         (group_a, group_b), _, (self.group_a, self.group_b) = self.get_groups(
             group_a=group_a,
             group_b=group_b,
@@ -1400,8 +1387,8 @@ class DataSet:
 
         if channels_a and channels_b and self.shape[0] > 0:
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=RuntimeWarning)
-                self.psms["Fold Change"] = pd.Series(
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                self.psms['Fold Change'] = pd.Series(
                     np.nanmean(self.psms[channels_a], axis=1) /
                     np.nanmean(self.psms[channels_b], axis=1),
                     index=self.psms.index,
@@ -1411,7 +1398,7 @@ class DataSet:
                     self.psms[channels_a],
                     self.psms[channels_b],
                     axis=1,
-                    nan_policy="omit",
+                    nan_policy='omit',
                 )[1]
 
                 if ma.is_masked(pvals):
@@ -1421,13 +1408,13 @@ class DataSet:
                 elif pvals.shape == ():
                     pvals = [pvals]
 
-                self.psms["p-value"] = pd.Series(pvals, index=self.psms.index)
+                self.psms['p-value'] = pd.Series(pvals, index=self.psms.index)
         else:
-            self.psms["Fold Change"] = np.nan
-            self.psms["p-value"] = np.nan
+            self.psms['Fold Change'] = np.nan
+            self.psms['p-value'] = np.nan
 
     def norm_cmp_groups(self, cmp_groups, ctrl_groups=None, inplace=False):
-        """
+        '''
         Normalize between groups in a list. This can be used to compare data
         sets that have comparable control groups.
 
@@ -1448,25 +1435,25 @@ class DataSet:
 
         Examples
         --------
-        >>> channels = ["a", "b", "c", "d"]
+        >>> channels = ['a', 'b', 'c', 'd']
         >>> groups = {i: [i] for i in channels}
         >>> ds = data_sets.DataSet(channels=channels, groups=groups)
         >>> ds.add_peptide({'a': 1000, 'b': 500, 'c': 100, 'd': 25})
-        >>> ds = ds.norm_cmp_groups([["a", "b"], ["c", "d"]])
+        >>> ds = ds.norm_cmp_groups([['a', 'b'], ['c', 'd']])
         >>> ds.data
-        {"a": 1, "b": 0.5, "c": 1, "d": .25}
+        {'a': 1, 'b': 0.5, 'c': 1, 'd': .25}
 
         Returns
         -------
         ds : :class:`.DataSet`
-        """
+        '''
         new = self
 
         if not inplace:
             new = new.copy()
 
         if new.cmp_groups:
-            raise Exception("cmp_groups normalization already set")
+            raise Exception('cmp_groups normalization already set')
 
         new.cmp_groups = [
             tuple(i) for i in cmp_groups
@@ -1526,22 +1513,22 @@ class DataSet:
         return new
 
     def log_stats(self):
-        """
+        '''
         Log statistics information about peptides contained in the data
         set. This information includes total numbers, phospho-specificity,
         modification ambiguity, completeness of labeling, and missed
         cleavage counts.
-        """
-        data_p = self.filter(mod="Phospho")
-        data_no_p = self.filter(mod="Phospho", inverse=True)
-        data_pst = self.filter(mod=[("S", "Phospho"), ("T", "Phospho")])
-        data_py = self.filter(mod=[("Y", "Phospho")])
+        '''
+        data_p = self.filter(mod='Phospho')
+        data_no_p = self.filter(mod='Phospho', inverse=True)
+        data_pst = self.filter(mod=[('S', 'Phospho'), ('T', 'Phospho')])
+        data_py = self.filter(mod=[('Y', 'Phospho')])
 
-        LOGGER.info("{}: Data Set Statistics:".format(self.name))
+        LOGGER.info('{}: Data Set Statistics:'.format(self.name))
 
         LOGGER.info(
             (
-                "{}: -- {} pY - {} pST - {} total ({:.0%} phospho specificity)"
+                '{}: -- {} pY - {} pST - {} total ({:.0%} phospho specificity)'
             ).format(
                 self.name,
                 len(data_py.psms),
@@ -1552,7 +1539,7 @@ class DataSet:
         )
         LOGGER.info(
             (
-                "{}: -- {} unique proteins"
+                '{}: -- {} unique proteins'
             ).format(
                 self.name,
                 len(self.genes),
@@ -1567,8 +1554,8 @@ class DataSet:
 
             LOGGER.info(
                 (
-                    "{}: -- {:.0%} of phosphopeptides have "
-                    "protein quantification"
+                    '{}: -- {:.0%} of phosphopeptides have '
+                    'protein quantification'
                 ).format(self.name, per_prot_quant)
             )
 
@@ -1579,18 +1566,18 @@ class DataSet:
 
         LOGGER.info(
             (
-                "{}: -- {:.0%} of phosphopeptides have an ambiguous assignment"
+                '{}: -- {:.0%} of phosphopeptides have an ambiguous assignment'
             ).format(self.name, per_amb)
         )
 
         labeled = self.filter(
             fn=lambda x:
-            x["Sequence"].is_labeled
+            x['Sequence'].is_labeled
         ).shape[0]
 
         underlabeled = self.filter(
             fn=lambda x:
-            x["Sequence"].is_underlabeled
+            x['Sequence'].is_underlabeled
         ).shape[0]
 
         per_lab = labeled / max([self.shape[0], 1])
@@ -1598,31 +1585,31 @@ class DataSet:
 
         LOGGER.info(
             (
-                "{}: -- {:.0%} labeled - {:.0%} underlabeled"
+                '{}: -- {:.0%} labeled - {:.0%} underlabeled'
             ).format(self.name, per_lab, per_under_lab)
         )
 
-        mmc = self.psms["Missed Cleavages"].mean()
+        mmc = self.psms['Missed Cleavages'].mean()
 
         LOGGER.info(
             (
-                "{}: -- {:.1f} mean missed cleavages"
+                '{}: -- {:.1f} mean missed cleavages'
             ).format(self.name, mmc)
         )
 
     @property
     def genes(self):
-        """
+        '''
         Get all uniprot gene names occuring in this data set.
 
         Returns
         -------
         list of str
-        """
+        '''
         return sorted(
             set(
                 gene
-                for i in self.psms["Proteins"]
+                for i in self.psms['Proteins']
                 for gene in i.genes
             )
         )
@@ -1645,15 +1632,15 @@ class DataSet:
             set(
                 self.psms.apply(
                     lambda x:
-                    "{0}{1}{2}".format(
-                        pyp.utils.get_name(x["Proteins"]),
-                        " : "
+                    '{0}{1}{2}'.format(
+                        pyp.utils.get_name(x['Proteins']),
+                        ' : '
                         if len(x['Modifications'].get_mods('Phospho')) > 0 else
-                        "",
+                        '',
                         re.sub(
                             r'(\d+)',
                             r'\1',
-                            x["Modifications"].get_mods('Phospho').__str__(
+                            x['Modifications'].get_mods('Phospho').__str__(
                                 prot_index=0,
                                 show_mod_type=False,
                             ),
@@ -1666,7 +1653,7 @@ class DataSet:
 
     @property
     def accessions(self):
-        """
+        '''
         Get all uniprot accessions occuring in this data set.
 
         Returns
@@ -1677,24 +1664,24 @@ class DataSet:
         --------
             >>> ds.accessions
             ['P42227', 'Q920G3', 'Q9ES52']
-        """
+        '''
         return sorted(
             set(
                 gene
-                for i in self.psms["Proteins"]
+                for i in self.psms['Proteins']
                 for gene in i.accessions
             )
         )
 
     @property
     def data(self):
-        """
+        '''
         Get the quantification data for all samples and peptides in a data set.
 
         Returns
         -------
         df : :class:`pandas.DataFrame`
-        """
+        '''
         return self.get_data()
 
     def get_data(self, groups=None, mods=None, short_name=False):
@@ -1727,16 +1714,16 @@ class DataSet:
         ]
         d.index = self.psms.apply(
             lambda row:
-            "{} {} - {}".format(
+            '{} {} - {}'.format(
                 (
                     pyp.utils.get_name(row['Proteins'])
                     if short_name else
-                    " / ".join(row["Proteins"].genes)[:16]
+                    ' / '.join(row['Proteins'].genes)[:16]
                 ),
                 (
-                    row["Modifications"].get_mods(mods)
+                    row['Modifications'].get_mods(mods)
                     if mods else
-                    row["Modifications"]
+                    row['Modifications']
                 ).__str__(prot_index=0),
                 row['Sequence'],
             ),
@@ -1747,7 +1734,7 @@ class DataSet:
 
     @property
     def intensity_data(self, groups=None, norm_cmp=False):
-        """
+        '''
         Get the quantification data for all samples and peptides in a data set.
 
         Parameters
@@ -1757,7 +1744,7 @@ class DataSet:
         Returns
         -------
         df : :class:`pandas.DataFrame`
-        """
+        '''
         if groups is None:
             channel_names = self.samples
 
@@ -1769,9 +1756,9 @@ class DataSet:
         ]
         d.index = self.psms.apply(
             lambda row:
-            "{} {} - {}".format(
-                " / ".join(row["Proteins"].genes)[:16],
-                row["Modifications"].__str__(prot_index=0),
+            '{} {} - {}'.format(
+                ' / '.join(row['Proteins'].genes)[:16],
+                row['Modifications'].__str__(prot_index=0),
                 row['Sequence'],
             ),
             axis=1,
@@ -1793,7 +1780,7 @@ def load_all_data(
     replace_norm=True,
     **kwargs
 ):
-    """
+    '''
     Load, normalize, and merge all data sets found in
     :const:`pyproteome.paths.MS_SEARCHED_DIR`.
 
@@ -1825,46 +1812,46 @@ def load_all_data(
 
         ckh_channels = OrderedDict(
             [
-                ("3130 CK Hip",     "126"),
-                ("3131 CK-p25 Hip", "127"),
-                ("3145 CK-p25 Hip", "128"),
-                ("3146 CK-p25 Hip", "129"),
-                ("3148 CK Hip",     "130"),
-                ("3157 CK Hip",     "131"),
+                ('3130 CK Hip',     '126'),
+                ('3131 CK-p25 Hip', '127'),
+                ('3145 CK-p25 Hip', '128'),
+                ('3146 CK-p25 Hip', '129'),
+                ('3148 CK Hip',     '130'),
+                ('3157 CK Hip',     '131'),
             ]
         )
         ckx_channels = OrderedDict(
             [
-                ("3130 CK Cortex",     "126"),
-                ("3131 CK-p25 Cortex", "127"),
-                ("3145 CK-p25 Cortex", "128"),
-                ("3146 CK-p25 Cortex", "129"),
-                ("3148 CK Cortex",     "130"),
-                ("3157 CK Cortex",     "131"),
+                ('3130 CK Cortex',     '126'),
+                ('3131 CK-p25 Cortex', '127'),
+                ('3145 CK-p25 Cortex', '128'),
+                ('3146 CK-p25 Cortex', '129'),
+                ('3148 CK Cortex',     '130'),
+                ('3157 CK Cortex',     '131'),
             ]
         )
         ckp25_groups = OrderedDict(
             [
                 (
-                    "CK",
+                    'CK',
                     [
-                        "3130 CK Hip",
-                        "3148 CK Hip",
-                        "3157 CK Hip",
-                        "3130 CK Cortex",
-                        "3148 CK Cortex",
-                        "3157 CK Cortex",
+                        '3130 CK Hip',
+                        '3148 CK Hip',
+                        '3157 CK Hip',
+                        '3130 CK Cortex',
+                        '3148 CK Cortex',
+                        '3157 CK Cortex',
                     ],
                 ),
                 (
-                    "CK-p25",
+                    'CK-p25',
                     [
-                        "3131 CK-p25 Hip",
-                        "3145 CK-p25 Hip",
-                        "3146 CK-p25 Hip",
-                        "3131 CK-p25 Cortex",
-                        "3145 CK-p25 Cortex",
-                        "3146 CK-p25 Cortex",
+                        '3131 CK-p25 Hip',
+                        '3145 CK-p25 Hip',
+                        '3146 CK-p25 Hip',
+                        '3131 CK-p25 Cortex',
+                        '3145 CK-p25 Cortex',
+                        '3146 CK-p25 Cortex',
                     ],
                 ),
             ]
@@ -1880,19 +1867,19 @@ def load_all_data(
         # Load each data set, normalized to its respective global proteome analysis:
         datas = data_sets.load_all_data(
             chan_mapping={
-                "CK-H": ckh_channels,
-                "CK-X": ckx_channels,
+                'CK-H': ckh_channels,
+                'CK-X': ckx_channels,
             },
             # Normalize pY, pST, and Global runs to each sample's global data
             norm_mapping=OrderedDict([
-                ("CK-H1", "CK-H1-Global"),
-                ("CK-X1", "CK-X1-Global"),
+                ('CK-H1', 'CK-H1-Global'),
+                ('CK-X1', 'CK-X1-Global'),
             ]),
             # Merge together normalized hippocampus and cortex runs
             merge_mapping=OrderedDict([
-                ("CK Hip", ["CK-H1-pY", "CK-H1-pST", "CK-H1-Global"]),
-                ("CK Cortex", ["CK-X1-pY", "CK-X1-pST", "CK-X1-Global"]),
-                ("CK All", ["CK Hip", "CK Cortex"]),
+                ('CK Hip', ['CK-H1-pY', 'CK-H1-pST', 'CK-H1-Global']),
+                ('CK Cortex', ['CK-X1-pY', 'CK-X1-pST', 'CK-X1-Global']),
+                ('CK All', ['CK Hip', 'CK Cortex']),
             ]),
             groups=ckp25_groups,
         )
@@ -1901,19 +1888,19 @@ def load_all_data(
         data_sets.constand.DEFAULT_CONSTAND_COL = 'kde'
         datas = data_sets.load_all_data(
             chan_mapping={
-                "CK-H": ckh_channels,
-                "CK-X": ckx_channels,
+                'CK-H': ckh_channels,
+                'CK-X': ckx_channels,
             },
-        norm_mapping="constand",
+        norm_mapping='constand',
             # Merge together normalized hippocampus and cortex runs
             merge_mapping=OrderedDict([
-                ("CK Hip", ["CK-H1-pY", "CK-H1-pST", "CK-H1-Global"]),
-                ("CK Cortex", ["CK-X1-pY", "CK-X1-pST", "CK-X1-Global"]),
-                ("CK All", ["CK Hip", "CK Cortex"]),
+                ('CK Hip', ['CK-H1-pY', 'CK-H1-pST', 'CK-H1-Global']),
+                ('CK Cortex', ['CK-X1-pY', 'CK-X1-pST', 'CK-X1-Global']),
+                ('CK All', ['CK Hip', 'CK Cortex']),
             ]),
             groups=ckp25_groups,
         )
-    """
+    '''
     chan_mapping = chan_mapping or {}
     group_mapping = group_mapping or {}
     norm_mapping = norm_mapping or {}
@@ -1925,7 +1912,7 @@ def load_all_data(
     for f in sorted(os.listdir(pyp.paths.MS_SEARCHED_DIR)):
         name, ext = os.path.splitext(f)
 
-        if ext not in [".msf"]:
+        if ext not in ['.msf']:
             continue
 
         if (
@@ -1942,8 +1929,8 @@ def load_all_data(
         if 'constand_norm' not in kws and norm_mapping == 'constand':
             kws['constand_norm'] = True
 
-        chan = kws.pop("channels", None)
-        group = kws.pop("groups", None)
+        chan = kws.pop('channels', None)
+        group = kws.pop('groups', None)
 
         for key, val in chan_mapping.items():
             if name.startswith(key):
@@ -1985,7 +1972,7 @@ def norm_all_data(
     replace_norm=True,
     inplace=True,
 ):
-    """
+    '''
     Normalize all data sets.
 
     Parameters
@@ -2000,7 +1987,7 @@ def norm_all_data(
     -------
     datas : dict of (str, :class:`.DataSet`)
     mapped_names : dict of (str, str)
-    """
+    '''
     mapped_names = OrderedDict()
 
     if not inplace:
@@ -2012,18 +1999,18 @@ def norm_all_data(
         norm_mapping = {
             name: name + ('' if replace_norm else '-norm')
             for name in datas.keys()
-            if not name.endswith("-norm")
+            if not name.endswith('-norm')
         }
 
     for name, data in list(datas.items()):
-        if name.endswith("-norm"):
+        if name.endswith('-norm'):
             continue
 
         for key, val in norm_mapping.items():
             if not name.startswith(key):
                 continue
 
-            mapped_names[name] = "{}-norm".format(name)
+            mapped_names[name] = '{}-norm'.format(name)
 
             if not constand_norm:
                 data = data.normalize(datas[val], inplace=replace_norm)
@@ -2034,7 +2021,7 @@ def norm_all_data(
                 # )
                 pass
 
-            data.name += "-norm"
+            data.name += '-norm'
 
             datas[mapped_names[name]] = data
 
@@ -2053,7 +2040,7 @@ def merge_all_data(
     merged_fn=None,
     inplace=True,
 ):
-    """
+    '''
     Merge together multiple data sets.
 
     Parameters
@@ -2068,7 +2055,7 @@ def merge_all_data(
     Returns
     -------
     datas : dict of (str, :class:`.DataSet`)
-    """
+    '''
     if not inplace:
         datas = datas.copy()
 
@@ -2085,7 +2072,7 @@ def merge_all_data(
                 name == key
                 for key, vals in merge_mapping.items()
             ):
-                LOGGER.warning("Unmerged data: {}".format(name))
+                LOGGER.warning('Unmerged data: {}'.format(name))
 
     for key, vals in merge_mapping.items():
         if not any([mapped_names.get(val, val) in datas for val in vals]):
@@ -2112,7 +2099,7 @@ def merge_data(
     norm_channels=None,
     merge_duplicates=True,
 ):
-    """
+    '''
     Merge a list of data sets together.
 
     Parameters
@@ -2125,7 +2112,7 @@ def merge_data(
     Returns
     -------
     ds : :class:`.DataSet`
-    """
+    '''
     new = DataSet(
         name=name,
         skip_logging=True,
@@ -2139,7 +2126,7 @@ def merge_data(
 
     # if any(not isinstance(data, DataSet) for data in data_sets):
     #     raise TypeError(
-    #         "Incompatible types: {}".format(
+    #         'Incompatible types: {}'.format(
     #             [type(data) for data in data_sets]
     #         )
     #     )
@@ -2225,9 +2212,23 @@ def merge_data(
 
     return new
 
+def _unfirst(x):
+    return x.values[0]
+
+def _first(x):
+    if not all(i == x.values[0] for i in x.values):
+        LOGGER.warning(
+            'Mismatch between peptide data: \'{}\' not in {}'
+            .format(
+                x.values[0],
+                [str(i) for i in x.values[1:]],
+            )
+        )
+
+    return x.values[0]
 
 def merge_proteins(ds, inplace=False, fn=None):
-    """
+    '''
     Merge together all peptides mapped to the same protein. Maintains the
     first available peptide and calculates the median quantification value
     for each protein across all of its peptides.
@@ -2240,7 +2241,7 @@ def merge_proteins(ds, inplace=False, fn=None):
     Returns
     -------
     ds : :class:`.DataSet`
-    """
+    '''
     new = ds
 
     if not inplace:
@@ -2256,7 +2257,7 @@ def merge_proteins(ds, inplace=False, fn=None):
     agg_dict = {}
 
     for channel in channels:
-        weight = "{}_weight".format(channel)
+        weight = '{}_weight'.format(channel)
 
         if weight in new.psms.columns:
             # XXX: Use weight corresponding to median channel value?
@@ -2265,52 +2266,37 @@ def merge_proteins(ds, inplace=False, fn=None):
 
         agg_dict[channel] = fn
 
-    def _unfirst(x):
-        return x.values[0]
 
-    def _first(x):
-        if not all(i == x.values[0] for i in x.values):
-            LOGGER.warning(
-                "{}: Mismatch between peptide data: '{}' not in {}"
-                .format(
-                    new.name,
-                    x.values[0],
-                    [str(i) for i in x.values[1:]],
-                )
-            )
+    agg_dict['Sequence'] = _unfirst
+    agg_dict['Modifications'] = _unfirst
+    agg_dict['Missed Cleavages'] = _unfirst
+    agg_dict['Validated'] = all
 
-        return x.values[0]
+    agg_dict['Scan Paths'] = _unfirst
+    agg_dict['Raw Paths'] = _unfirst
 
-    agg_dict["Sequence"] = _unfirst
-    agg_dict["Modifications"] = _unfirst
-    agg_dict["Missed Cleavages"] = _unfirst
-    agg_dict["Validated"] = all
+    agg_dict['Ambiguous'] = _unfirst
 
-    agg_dict["Scan Paths"] = _unfirst
-    agg_dict["Raw Paths"] = _unfirst
+    agg_dict['Masses'] = _unfirst
+    agg_dict['Charges'] = _unfirst
+    agg_dict['Intensities'] = _unfirst
+    agg_dict['RTs'] = _unfirst
 
-    agg_dict["Ambiguous"] = _unfirst
-
-    agg_dict["Masses"] = _unfirst
-    agg_dict["Charges"] = _unfirst
-    agg_dict["Intensities"] = _unfirst
-    agg_dict["RTs"] = _unfirst
-
-    agg_dict["Scan"] = _unfirst
-    agg_dict["Ion Score"] = max
-    agg_dict["q-value"] = min
-    agg_dict["Confidence Level"] = partial(
+    agg_dict['Scan'] = _unfirst
+    agg_dict['Ion Score'] = max
+    agg_dict['q-value'] = min
+    agg_dict['Confidence Level'] = partial(
         max,
-        key=lambda x: ["Low", "Medium", "High"].index(x),
+        key=lambda x: ['Low', 'Medium', 'High'].index(x),
     )
-    agg_dict["Isolation Interference"] = min
-    agg_dict["Unique Peptides"] = len
+    agg_dict['Isolation Interference'] = min
+    agg_dict['Unique Peptides'] = len
 
-    new.psms["Unique Peptides"] = np.nan
+    new.psms['Unique Peptides'] = np.nan
 
     new.psms = new.psms.groupby(
         by=[
-            "Proteins",
+            'Proteins',
         ],
         sort=False,
         as_index=False,
@@ -2326,8 +2312,8 @@ def _cv(x):
     return np.nan if ma.is_masked(x) else x
 
 
-def update_correlation(ds, corr, metric="spearman", min_periods=5):
-    """
+def update_correlation(ds, corr, metric='spearman', min_periods=5):
+    '''
     Update a table's Fold-Change, and p-value columns.
 
     Values are calculated based on changes between group_a and group_b.
@@ -2342,7 +2328,7 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
     Returns
     -------
     ds : :class:`.DataSet`
-    """
+    '''
     ds = ds.copy()
 
     corr = pd.to_numeric(
@@ -2350,8 +2336,8 @@ def update_correlation(ds, corr, metric="spearman", min_periods=5):
     )
 
     metric = {
-        "spearman": partial(spearmanr, b=corr, nan_policy="omit"),
-        "pearson":
+        'spearman': partial(spearmanr, b=corr, nan_policy='omit'),
+        'pearson':
         lambda x: 
         pearsonr(
             x[~x.isnull()], 
