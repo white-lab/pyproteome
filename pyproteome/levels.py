@@ -21,6 +21,7 @@ from scipy import stats
 LOGGER = logging.getLogger('pyproteome.levels')
 WARN_PEP_CUTOFF = 50
 REL_CUTOFF = 5
+LEVELS_DPI = 90
 
 
 def kde_max(points):
@@ -78,12 +79,13 @@ def get_channel_levels(
     channel_levels = OrderedDict()
 
     rows = int(np.ceil(len(data.channels) / cols))
-    scale = 4
+    scale = 3
     f, axes = plt.subplots(
         rows, cols,
         sharex=True,
         sharey=True,
         figsize=(scale * cols, scale * rows),
+        dpi=LEVELS_DPI,
     )
     axes = [i for j in axes for i in j]
     ax_iter = iter(axes)
@@ -162,14 +164,14 @@ def get_channel_levels(
             s=txt,
             x=ax.get_xlim()[1] * .9,
             y=1,
+            fontsize=10,
             color='k',
             horizontalalignment='right',
             verticalalignment='center',
         ).set_bbox(
             dict(
-                # facecolor=_get_color(txt, x, y),
-                alpha=1,
-                linewidth=0.5,
+                alpha=.75,
+                linewidth=0.25,
                 facecolor='white',
                 zorder=1,
                 edgecolor='black',
@@ -183,6 +185,7 @@ def get_channel_levels(
     f.suptitle(
         '{}'.format(data.name),
         fontsize=16,
+        y=.92,
     )
 
     return f, channel_levels
