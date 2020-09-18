@@ -157,7 +157,7 @@ def plot(
     return figures
 
 
-def gen_groups(cmp_groups):
+def _gen_groups(cmp_groups):
     ret = []
 
     for i in cmp_groups:
@@ -376,7 +376,7 @@ def plot_group(
             cmp_star = cmp_groups_star
             
             if cmp_star is None:
-                cmp_star = gen_groups(cmp_groups)
+                cmp_star = _gen_groups(cmp_groups)
 
             offset = y_max_cp / offset_frac / 2
 

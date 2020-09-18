@@ -16,15 +16,25 @@ def auto_clusterer(
     cluster_kwargs=None,
     plot_clusters_kwargs=None,
     volcano_kwargs=None,
-    plots=True,
+    plots=False,
     close=False,
 ):
-    """
+    '''
     Cluster and generate plots for a data set.
 
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
+    get_data_kwargs : dict
+        Arguments passed to :func:`.clusterer.get_data`.
+    cluster_kwargs : dict
+        Arguments passed to :func:`.clusterer.cluster`.
+    plot_clusters_kwargs : dict
+        Arguments passed to :func:`.plot.plot_all_clusters`.
+    plots : bool, optional
+        Generate plots for each cluster.
+    close : bool, optional
+        Automatically close all figures.
 
     Returns
     -------
@@ -35,29 +45,49 @@ def auto_clusterer(
         List of cluster IDs for each peptide.
     clr
         scikit-learn's cluster object.
-    """
+
+    Examples
+    --------
+    >>> data, y_pred, clr = cluster.auto.auto_clusterer(
+    ...     ds,
+    ...     get_data_kwargs={
+    ...         'dropna': True,
+    ...         'corrcoef': False,
+    ...     },
+    ...     cluster_kwargs={
+    ...         'clr': sklearn.cluster.MiniBatchKMeans(
+    ...             n_clusters=n,
+    ...             random_state=0,
+    ...         ),
+    ...     },
+    ...     plots=False,
+    ... )
+    '''
     get_data_kwargs = get_data_kwargs or {}
     cluster_kwargs = cluster_kwargs or {}
     plot_clusters_kwargs = plot_clusters_kwargs or {}
     volcano_kwargs = volcano_kwargs or {}
 
-    LOGGER.info("Fetching data matrix.")
+    LOGGER.info('Fetching data matrix.')
 
-    data = pyp.cluster.get_data(
+    data = pyp.cluster.clusterer.get_data(
         data,
         **get_data_kwargs
     )
 
-    if "n_clusters" not in cluster_kwargs:
-        cluster_kwargs["n_clusters"] = 25
+    if 'n_clusters' not in cluster_kwargs:
+        if 'clr' in cluster_kwargs and hasattr(cluster_kwargs['clr'], 'n_clusters'):
+            cluster_kwargs['n_clusters'] = cluster_kwargs['clr'].n_clusters
+        else:
+            cluster_kwargs['n_clusters'] = 25
 
     LOGGER.info(
-        "Grouping data into n={} clusters.".format(
-            cluster_kwargs["n_clusters"],
+        'Grouping data into n={} clusters.'.format(
+            cluster_kwargs['n_clusters'],
         )
     )
 
-    clr, y_pred = pyp.cluster.cluster(
+    clr, y_pred = pyp.cluster.clusterer.cluster(
         data,
         **cluster_kwargs
     )
@@ -66,7 +96,7 @@ def auto_clusterer(
         return data, y_pred, clr
 
     LOGGER.info(
-        "Plotting cluster information (n={} clusters)".format(len(set(y_pred)))
+        'Plotting cluster information (n={} clusters)'.format(len(set(y_pred)))
     )
 
     # pyp.cluster.plot.pca(data)
@@ -85,7 +115,7 @@ def auto_clusterer(
     # ss = sorted(set(y_pred))
 
     # for ind in ss:
-    #     LOGGER.info("Plotting cluster #{}".format(ind))
+    #     LOGGER.info('Plotting cluster #{}'.format(ind))
 
     #     ax = pyp.cluster.plot.plot_cluster(
     #         data, y_pred, ind,
@@ -97,8 +127,8 @@ def auto_clusterer(
     #         plt.close(f)
     # #
     # #     f, _ = pyp.volcano.plot_volcano(
-    # #         data["ds"].filter(series=y_pred == ind),
-    # #         title="Cluster {}".format(ind),
+    # #         data['ds'].filter(series=y_pred == ind),
+    # #         title='Cluster {}'.format(ind),
     # #         **volcano_kwargs
     # #     )[:2]
     # #
@@ -106,20 +136,20 @@ def auto_clusterer(
     # #         plt.close(f)
     # #
     # #     f, _ = pyp.motifs.logo.make_logo(
-    # #         data["ds"], {"series": y_pred == ind},
-    # #         title="Cluster {}".format(ind),
+    # #         data['ds'], {'series': y_pred == ind},
+    # #         title='Cluster {}'.format(ind),
     # #     )
     # #
     # #     if f and close:
     # #         plt.close(f)
 
     # slices = [
-    #     data["ds"].filter({"series": y_pred == ind})
+    #     data['ds'].filter({'series': y_pred == ind})
     #     for ind in ss
     # ]
 
     # for ind, s in zip(ss, slices):
-    #     s.name = "Cluster {}".format(ind)
+    #     s.name = 'Cluster {}'.format(ind)
 
     # pyp.tables.write_full_tables(
     #     slices,

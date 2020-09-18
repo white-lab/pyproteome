@@ -15,7 +15,6 @@ def _zscore(x):
 def hierarchical_heatmap(
     data,
     cmp_groups=None,
-    baseline_channels=None,
     minmax=0,
     zscore=False,
     show_y=False,
@@ -28,10 +27,13 @@ def hierarchical_heatmap(
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
-    baseline_channels : list of str, optional
-        List of channels to average and use as baseline for each row.
-    row_cluster : bool, optional
-    col_cluster : bool, optional
+    cmp_groups : list of list of str
+    minmax : float, optional
+    zscore : bool, optional
+    show_y : bool, optional
+    title : str, optional
+    kwargs : dict
+        Kwargs passed directly to :func:`seaborn.clustermap`.
 
     Returns
     -------
