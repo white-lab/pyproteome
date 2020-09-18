@@ -45,13 +45,17 @@ to manage their Python environment and provide pyproteome's dependencies.
               'KO 1': '126',
               'KO 2': '127N',
               'KO 3': '127C',
-              'Ctrl 1': '128N',
-              'Ctrl 2': '128C',
-              'Ctrl 3': '131',
+              'KO 4': '128C',
+              'KO 5': '128C',
+              'Ctrl 1': '129N',
+              'Ctrl 2': '129C',
+              'Ctrl 3': '130N',
+              'Ctrl 4': '130C',
+              'Ctrl 5': '131',
           },
           groups={
-              'Control': ['Ctrl 1', 'Ctrl 2', 'Ctrl 3']},
-              'KO': ['KO 1', 'KO 2', 'KO 3'],
+              'Control': ['Ctrl 1', 'Ctrl 2', 'Ctrl 3', 'Ctrl 4', 'Ctrl 5']},
+              'KO': ['KO 1', 'KO 2', 'KO 3', 'KO 4', 'KO 5'],
           },
       )
 

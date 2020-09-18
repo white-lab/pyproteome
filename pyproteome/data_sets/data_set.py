@@ -1871,16 +1871,16 @@ def load_all_data(
                 'CK-X': ckx_channels,
             },
             # Normalize pY, pST, and Global runs to each sample's global data
-            norm_mapping=OrderedDict([
-                ('CK-H1', 'CK-H1-Global'),
-                ('CK-X1', 'CK-X1-Global'),
+            norm_mapping={
+                'CK-H1': 'CK-H1-Global',
+                'CK-X1': 'CK-X1-Global',
             ]),
             # Merge together normalized hippocampus and cortex runs
-            merge_mapping=OrderedDict([
-                ('CK Hip', ['CK-H1-pY', 'CK-H1-pST', 'CK-H1-Global']),
-                ('CK Cortex', ['CK-X1-pY', 'CK-X1-pST', 'CK-X1-Global']),
-                ('CK All', ['CK Hip', 'CK Cortex']),
-            ]),
+            merge_mapping={
+                'CK Hip': ['CK-H1-pY', 'CK-H1-pST', 'CK-H1-Global'],
+                'CK Cortex': ['CK-X1-pY', 'CK-X1-pST', 'CK-X1-Global'],
+                'CK All': ['CK Hip', 'CK Cortex'],
+            },
             groups=ckp25_groups,
         )
 
@@ -1891,13 +1891,13 @@ def load_all_data(
                 'CK-H': ckh_channels,
                 'CK-X': ckx_channels,
             },
-        norm_mapping='constand',
+            norm_mapping='constand',
             # Merge together normalized hippocampus and cortex runs
-            merge_mapping=OrderedDict([
-                ('CK Hip', ['CK-H1-pY', 'CK-H1-pST', 'CK-H1-Global']),
-                ('CK Cortex', ['CK-X1-pY', 'CK-X1-pST', 'CK-X1-Global']),
-                ('CK All', ['CK Hip', 'CK Cortex']),
-            ]),
+            merge_mapping={
+                'CK Hip': ['CK-H1-pY', 'CK-H1-pST', 'CK-H1-Global'],
+                'CK Cortex': ['CK-X1-pY', 'CK-X1-pST', 'CK-X1-Global'],
+                'CK All': ['CK Hip', 'CK Cortex'],
+            },
             groups=ckp25_groups,
         )
     '''
