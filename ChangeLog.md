@@ -1,5 +1,18 @@
 # Change Log
 
+### 0.11.2 (2020-09-18)
+
+Changes
+
+  - Improved the documentation substantially.
+  - Removed unused BCA and QC modules.
+
+### 0.11.1 (2020-09-17)
+
+Changes
+
+  - Fixed installing pyproteome on a vanilla python base.
+
 ### 0.11.0 (2020-09-14)
 
 Features

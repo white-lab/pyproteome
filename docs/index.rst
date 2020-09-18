@@ -33,7 +33,7 @@ to manage their Python environment and provide pyproteome's dependencies.
 
       $ pip install pyproteome
 
-  2. Open Python and load your data sets::
+  2. Open Python and load your data sets, using :func:`pyproteome.data_sets.load_all_data`::
 
       from pyproteome import *
       # if using IPython:
@@ -43,10 +43,10 @@ to manage their Python environment and provide pyproteome's dependencies.
       datas = data_sets.load_all_data(
           channels={
               "KO 1": "126",
-              "KO 2": "127_N",
-              "KO 3": "127_C",
-              "Ctrl 1": "128_N",
-              "Ctrl 2": "128_C",
+              "KO 2": "127N",
+              "KO 3": "127C",
+              "Ctrl 1": "128N",
+              "Ctrl 2": "128C",
               "Ctrl 3": "131",
           },
           groups={
@@ -55,7 +55,10 @@ to manage their Python environment and provide pyproteome's dependencies.
           },
       )
 
-  3. Analyze your data::
+  3. Analyze your data, using :func:`pyproteome.motifs.logo.make_logo`,
+     :func:`pyproteome.analysis.volcano.plot_volcano_filtered`,
+     :func:`pyproteome.analysis.tables.changes_table`, and
+     :func:`pyproteome.pathways.psea`::
 
       # Show sequence motifs in upregulated set of peptides
       logo.make_logo(

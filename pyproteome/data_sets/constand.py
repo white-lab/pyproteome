@@ -27,9 +27,9 @@ CONSTAND_METHODS = {
 '''
 Methods to estimate the center of a data set's rows or columns.
 
-One of ['mean', 'median', 'kde']. 'mean': applies :func:`numpy.nanmean()`,
-'median' applies :func:`numpy.nanmedian()`, and 'kde' applies
-:func:`.levels.kde_max()`.
+One of ['mean', 'median', 'kde']. 'mean': applies :func:`numpy.nanmean`,
+'median' applies :func:`numpy.nanmedian`, and 'kde' applies
+:func:`.levels.kde_max`.
 '''
 
 CONSTAND_ERR_METHODS = {
@@ -57,7 +57,7 @@ def constand(
 
     Parameters
     ----------
-    ds : :class:`.DataSet`
+    ds : :class:`.data_sets.DataSet`
         Data set to apply CONSTANd normalization on.
     inplace : bool, optional
         Modify this data set in place.
@@ -73,7 +73,7 @@ def constand(
 
     Returns
     -------
-    ds : :class:`.DataSet`
+    ds : :class:`.data_sets.DataSet`
     '''
     new = ds
 

@@ -103,7 +103,7 @@ def changes_table(
     sort="p-value",
 ):
     """
-    Show a table of fold changes and p-values.
+    Show a table of fold changes and p-values for each unique peptide in a data set.
 
     Parameters
     ----------

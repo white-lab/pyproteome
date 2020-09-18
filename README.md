@@ -53,22 +53,16 @@ and interface with CAMV. This pattern is as follows:
 
 ```
 base_directory/
-    BCA Protein Assays/
     CAMV Output/
-    CAMV Sessions/
     Figures/
     MS RAW/
-    Scripts/
     Searched/
 ```
-
-Under this scheme, all of your python code / IPython notebooks should go in the
-`Scripts` directory.
 
 See `pyproteome.paths` if you are using a custom directory hierarchy. i.e.:
 
 ```
 >>> from pyproteome import paths
->>> paths.CAMV_SESS_DIR = "../CAMV Save/"
->>> paths.BCA_ASSAY_DIR = "../BCA/"
+>>> paths.MS_RAW_DIR = "path/to/raw_files/"
+>>> paths.MS_SEARCHED_DIR = "path/to/msf_files/"
 ```

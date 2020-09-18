@@ -190,9 +190,9 @@ def make_logo(data, f, **kwargs):
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
     f : dict
-        Filter passed to data.filter() to define the foreground set.
+        Filter passed to :func:`pyproteome.data_sets.DataSet.filter` to define the foreground set.
     kwargs
-        Arguments passed on to logo()
+        Arguments passed on to :func:`.logo`
 
     Returns
     -------

@@ -468,13 +468,13 @@ def plot_volcano_filtered(data, f, **kwargs):
     Display a volcano plot, showing only peptides that are included by a given
     filter.
 
-    All extra arguments will be passed directly to `plot_volcano`.
+    All extra arguments will be passed directly to :func:`.plot_volcano`.
 
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
     f : dict or list of dict
-        Filters passed to data.filter().
+        Filters passed to :func:`pyproteome.data_sets.DataSet.filter`.
 
     Returns
     -------

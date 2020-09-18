@@ -1685,7 +1685,7 @@ def load_all_data(
 ):
     """
     Load, normalize, and merge all data sets found in
-    `pyproteome.paths.MS_SEARCHED_DIR`.
+    :const:`pyproteome.paths.MS_SEARCHED_DIR`.
 
     Parameters
     ----------
@@ -1701,7 +1701,7 @@ def load_all_data(
         If true, only keep the normalized version of a data set. Otherwise
         return both normalized and unnormalized version.
     kwargs : dict
-        Any extra arguments are passed directly to DataSet during
+        Any extra arguments are passed directly to :class:`.DataSet` during
         initialization.
 
     Returns
@@ -1767,6 +1767,7 @@ def load_all_data(
         #       CK-X1-pY.msf
         #       CK-X1-pST.msf
         #       CK-X1-Global.msf
+        # Load each data set, normalized to its respective global proteome analysis:
         datas = data_sets.load_all_data(
             chan_mapping={
                 "CK-H": ckh_channels,
@@ -1777,6 +1778,23 @@ def load_all_data(
                 ("CK-H1", "CK-H1-Global"),
                 ("CK-X1", "CK-X1-Global"),
             ]),
+            # Merge together normalized hippocampus and cortex runs
+            merge_mapping=OrderedDict([
+                ("CK Hip", ["CK-H1-pY", "CK-H1-pST", "CK-H1-Global"]),
+                ("CK Cortex", ["CK-X1-pY", "CK-X1-pST", "CK-X1-Global"]),
+                ("CK All", ["CK Hip", "CK Cortex"]),
+            ]),
+            groups=ckp25_groups,
+        )
+
+        # Alternatively, load each data set, using CONSTANd normalization:
+        data_sets.constand.DEFAULT_CONSTAND_COL = 'kde'
+        datas = data_sets.load_all_data(
+            chan_mapping={
+                "CK-H": ckh_channels,
+                "CK-X": ckx_channels,
+            },
+        norm_mapping="constand",
             # Merge together normalized hippocampus and cortex runs
             merge_mapping=OrderedDict([
                 ("CK Hip", ["CK-H1-pY", "CK-H1-pST", "CK-H1-Global"]),
