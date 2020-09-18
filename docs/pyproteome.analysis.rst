@@ -6,9 +6,6 @@ pyproteome.analysis package
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
-
 pyproteome.analysis.correlation module
 --------------------------------------
 

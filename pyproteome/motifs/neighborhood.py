@@ -6,18 +6,53 @@ from . import motif, plogo
 
 
 def enriched_neighborhood(
-    data, f, residues,
-    nmer_length=7, count_cutoff=2,
+    data,
+    f,
+    residues,
+    nmer_length=7,
+    count_cutoff=2,
+    mods=None,
 ):
+    '''
+    Calculates the hypergeometric enrichment value for the number of
+    adjacent residues within a given window around all modification sites
+    in a data set.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.data_set.DataSet`
+    f : dict or list of dict
+    residues : list of str
+    nmer_length : int, optional
+    count_cutoff : int, optional
+    mods : str or list of str
+
+    Returns
+    -------
+    f : :class:`matplotlib.figure.Figure`
+    ax : :class:`matplotlib.axes.Axes`
+    pval : float
+        P-value, calculated with :class:`scipy.stats.hypergeom`.
+    K : int
+        Number of sequences with # residues > count_cutoff in background list.
+    N : int
+        Size of the background list of sequences.
+    k : int
+        Number of sequences with # residues > count_cutoff in foreground list.
+    n : int
+        Size of the foreground list of sequences.
+    '''
+    if mods is None:
+        mods = [(None, "Phospho")]
     background = motif.generate_n_mers(
         data["Sequence"],
-        mods=[(None, "Phospho")],
+        mods=mods,
         n=nmer_length,
         all_matches=False,
     )
     foreground = motif.generate_n_mers(
         data.filter(f)["Sequence"],
-        mods=[(None, "Phospho")],
+        mods=mods,
         n=nmer_length,
         all_matches=False,
     )
@@ -71,14 +106,6 @@ def enriched_neighborhood(
         )
         ax.legend()
 
-    ax.set_title(
-        "SFK Substrate Enrichment\np = {:.2e}\nK={}, N={}, k={}, n={}"
-        .format(pval, K, N, k, n)
-    )
-    ax.set_xlabel(
-        "# of acidic residues within {} residues of pY"
-        .format(nmer_length // 2)
-    )
     ax.set_ylabel("Frequency")
 
-    return fig, ax, pval
+    return fig, ax, pval, K, N, k, n

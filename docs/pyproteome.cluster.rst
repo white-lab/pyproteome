@@ -6,9 +6,6 @@ pyproteome.cluster package
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
-
 pyproteome.cluster.auto module
 ------------------------------
 

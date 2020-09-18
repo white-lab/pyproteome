@@ -113,8 +113,11 @@ class Protein:
     '''
 
     def __init__(
-        self, accession,
-        gene=None, description=None, full_sequence=None
+        self,
+        accession=None,
+        gene=None, 
+        description=None,
+        full_sequence=None,
     ):
         self.accession = accession
         self.gene = gene

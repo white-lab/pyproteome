@@ -23,6 +23,18 @@ def format_title(
     f=None,
     data=None,
 ):
+    '''
+    Generates a title automatically from a given data set and list of filters.
+
+    Parameters
+    ----------
+    f : dict or list of dict
+    data : :class:`pyproteome.data_sets.data_set.DataSet`
+
+    Returns
+    -------
+    str
+    '''
     title = []
 
     if 'fold' in f:
@@ -51,7 +63,23 @@ def format_title(
     return title
 
 
-def make_logo(data, f, m=None, **kwargs):
+def make_logo(data, f, **kwargs):
+    '''
+    Wraps :func:`.plogo`, generating the list of foreground and background
+    peptide sequences from a data set.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.data_set.DataSet`
+    f : dict or list of dict
+        Argument passed to :func:`pyproteome.data_sets.data_set.DataSet.filter`.
+    kwargs : dict
+        Arguments passed to :func:`.plogo`.
+
+    Returns
+    -------
+    str or :class:`IPython.display.Image`
+    '''
     nmer_args = motif.get_nmer_args(kwargs)
 
     fore = [
@@ -60,7 +88,6 @@ def make_logo(data, f, m=None, **kwargs):
             data.filter(f)["Sequence"],
             **nmer_args
         )
-        if not m or m.match(n)
     ]
 
     back = [
@@ -107,9 +134,23 @@ def plogo(
     height=600,
     ymax=None,
 ):
-    u"""
-    Wraps calls to Plogo [1]_, returning an image showing the enrichment of a
-    sequence in a foreground set compared to a background set.
+    """
+    Wraps calls to the pLogo web server [1]_, returning an image showing the enrichment
+    of a sequence in a foreground set compared to a background set.
+
+    Parameters
+    ----------
+    foreground : list of str
+    background : list of str
+    fix_letter_pos : list of tuple of (str, int), optional
+    title : str, optional
+    width : int, optional
+    height : int, optional
+    ymax : float, optional
+
+    Returns
+    -------
+    str or :class:`IPython.display.Image`
 
     Notes
     -----

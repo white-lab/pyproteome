@@ -6,9 +6,6 @@ pyproteome.pathways package
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
-
 pyproteome.pathways.enrichments module
 --------------------------------------
 

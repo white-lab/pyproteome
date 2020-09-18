@@ -6,9 +6,6 @@ pyproteome.data_sets package
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
-
 pyproteome.data_sets.constand module
 ------------------------------------
 

@@ -909,6 +909,10 @@ class DataSet:
 
         Examples
         --------
+        
+        This example demostrates how to manually insert a peptide that was manually
+        validated by the user::
+
             prots = data_sets.protein.Proteins(
                 proteins=(
                     data_sets.protein.Protein(

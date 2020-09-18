@@ -6,9 +6,6 @@ pyproteome.motifs package
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
-
 pyproteome.motifs.icelogo module
 --------------------------------
 

@@ -81,11 +81,11 @@ def norm(channels):
 
     Parameters
     ----------
-    channels : list of str or OrderedDict of (str, str) or None
+    channels : list of str or dict of (str, str) or None
 
     Returns
     -------
-    new_channels : list of str or OrderedDict of str, str
+    new_channels : list of str or dict of str, str
     """
     if channels is None:
         return None
@@ -96,7 +96,7 @@ def norm(channels):
     if isinstance(channels, list):
         return [norm(i) for i in channels]
 
-    if isinstance(channels, OrderedDict):
+    if isinstance(channels, (dict, OrderedDict)):
         return OrderedDict(
             (key, norm(val))
             for key, val in channels.items()
@@ -278,6 +278,9 @@ def memoize(func):
 
 
 PICKLE_DIR = ".pyproteome"
+'''
+Default directory to use for saving / loading pickle files.
+'''
 
 
 def save(name, val=None):
@@ -334,13 +337,54 @@ def load(name, default=None):
 
 def adjust_text(*args, **kwargs):
     """
-    Wraps importing and calling adjustText.
+    Wraps importing and calling :func:`adjustText.adjust_text`.
     """
     from adjustText import adjust_text as at
     return at(*args, **kwargs)
 
 
 def get_name(proteins):
+    '''
+    Generates a shortened version of a protein name. For peptides
+    that map to multiple proteins, this function finds the longest
+    common prefix (excluding digits) that matches all proteins.
+
+    Parameters
+    ----------
+    proteins : :class:`.data_sets.protein.Proteins`
+
+    Returns
+    -------
+    str
+
+    Examples
+    --------
+    >>> pyp.utils.get_name(
+    ...     protein.Proteins([
+    ...         protein.Protein(gene='Dpysl2'),
+    ...         protein.Protein(gene='Dpysl3'),
+    ...     ])
+    ... )
+    'Dpysl2/3'
+    >>> pyp.utils.get_name(
+    ...     protein.Proteins([
+    ...         protein.Protein(gene='Src'),
+    ...         protein.Protein(gene='Fgr'),
+    ...         protein.Protein(gene='Fyn'),
+    ...     ])
+    ... )
+    'Src / Fgr / Fyn'
+    >>> pyp.utils.get_name(
+    ...     protein.Proteins([
+    ...         protein.Protein(gene='Tuba1a'),
+    ...         protein.Protein(gene='Tuba1b'),
+    ...         protein.Protein(gene='Tuba1c'),
+    ...         protein.Protein(gene='Tuba4a'),
+    ...         protein.Protein(gene='Tuba8'),
+    ...     ])
+    ... )
+    'Tuba1a/1b/1c/3a/4a/8'
+    '''
     genes = sorted(proteins.genes)
     common = ""
     sep = " / "
@@ -360,3 +404,38 @@ def get_name(proteins):
             sep = "/"
 
     return common + sep.join(i[len(common):] for i in genes)
+
+
+def stars(p, ns='ns'):
+    '''
+    Calculate the stars to indicate significant changes.
+
+    **** : p < 1e-4
+    
+    *** : p < 1e-3
+    
+    ** : p < 1e-2
+    
+    \* : p < 5e-2
+    
+    ns : not significant
+
+    Parameters
+    ----------
+    p : float
+    ns : str, optional
+
+    Returns
+    -------
+    str
+    '''
+    if p < 1e-4:
+        return '****'
+    elif (p < 1e-3):
+        return '***'
+    elif (p < 1e-2):
+        return '**'
+    elif (p < 0.05):
+        return '*'
+    else:
+        return ns

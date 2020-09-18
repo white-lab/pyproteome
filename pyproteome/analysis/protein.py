@@ -4,23 +4,30 @@ from matplotlib import pyplot as plt
 from collections import Counter
 
 
-def get_protein_seq(slc, gene):
+def _get_protein_seq(slc, gene):
     for _, row in slc.iterrows():
         for protein in row['Proteins'].proteins:
             if protein.gene == gene:
                 return protein.full_sequence
             
 
-def get_lc(fc, p, edge=False, p_cutoff=1e-2):
+def _get_lc(
+    fc, 
+    p, 
+    edge=False, 
+    p_cutoff=1e-2,
+    upper_fc_cutoff=1.05,
+    lower_fc_cutoff=0.95,
+):
     if p < p_cutoff:
-        if fc > 1.05:
+        if fc > upper_fc_cutoff:
             return '#ff0000' if edge else '#ff8888'
-        elif fc < 1/1.05:
+        elif fc < lower_fc_cutoff:
             return '#0000ff' if edge else '#8888ff'
     return '#000000' if edge else '#888888'
 
 
-def draw_line(
+def _draw_line(
     ax, 
     row, 
     col, 
@@ -50,10 +57,43 @@ def draw_protein_seq(
     genes,
     max_col=50,
     p_cutoff=1e-2,
+    upper_fc_cutoff=1.05,
+    lower_fc_cutoff=0.95,
+    missed_cleavage=1,
 ):
+    '''
+    Generate a figure showing all peptides in a data set mapping to the
+    full sequence of their respective proteins.
+    
+    Peptide differential regulation is indicated by bars for full peptide
+    sequences and circles indicating phosphorylated residues.
+    
+    Bars and circles are colored red for upregulation and blue for downregulation.
+    Dark grey bars indicate an unmodified peptide with no change. Light grey bars
+    indicate that only the phosphorylated version of that peptide was identified.
+
+    Parameters
+    ----------
+    ds : :class:`pyproteome.data_sets.data_set.DataSet`
+    genes : list of str
+    max_col : int, optional
+    p_cutoff : float, optional
+    upper_fc_cutoff : float, optional
+    lower_fc_cutoff : float, optional
+    missed_cleavage : int, optional
+
+    Returns
+    -------
+    figs : list of :class:`matplotlib.figure.Figure`
+
+    Examples
+    --------
+    >>> figs = analysis.protein.draw_protein_seq(
+    ...     ds, ['Mapt']
+    ... )    
+    '''
     ds = ds.filter(protein=genes)
-    # ds = ds.filter(missed_cleavage=0)
-    ds = ds.filter(missed_cleavage=1)
+    ds = ds.filter(missed_cleavage=missed_cleavage)
 
     max_col = 50
     print(genes)
@@ -72,8 +112,6 @@ def draw_protein_seq(
     
     figs = []
 
-    print(mod_types, colors)
-
     for gene in genes:
         slc = ds[ds['Proteins'] == gene]
         try:
@@ -91,7 +129,7 @@ def draw_protein_seq(
             continue
 #         display(slc[['Proteins', 'Sequence', 'Fold Change', 'p-value']])
 
-        prot_seq = get_protein_seq(slc, gene)
+        prot_seq = _get_protein_seq(slc, gene)
         row_max = int(np.ceil(len(prot_seq) / max_col))
 
         fig_x, fig_y = row_max / 4, max_col / 5
@@ -128,8 +166,21 @@ def draw_protein_seq(
             seq = pep['Sequence']
             match = [i for i in seq.protein_matches if i.protein.gene == gene][0]
 
-            fc_lc = get_lc(pep['Fold Change'], pep['p-value'], p_cutoff=p_cutoff)
-            ec_lc = get_lc(pep['Fold Change'], pep['p-value'], edge=True, p_cutoff=p_cutoff)
+            fc_lc = _get_lc(
+                pep['Fold Change'], 
+                pep['p-value'], 
+                p_cutoff=p_cutoff,
+                upper_fc_cutoff=upper_fc_cutoff,
+                lower_fc_cutoff=lower_fc_cutoff,
+            )
+            ec_lc = _get_lc(
+                pep['Fold Change'], 
+                pep['p-value'], 
+                edge=True, 
+                p_cutoff=p_cutoff,
+                upper_fc_cutoff=upper_fc_cutoff,
+                lower_fc_cutoff=lower_fc_cutoff,
+            )
 
             mods = seq.modifications.get_mods(mod_types)
             # print(seq.pep_seq, match.rel_pos, match.exact, str(seq))
@@ -186,7 +237,7 @@ def draw_protein_seq(
             rarrow = True
             # print(seq, fc_lc)
             while col2 > 0:
-                draw_line(
+                _draw_line(
                     ax,
                     row,
                     col, min([col2, max_col]),

@@ -52,6 +52,25 @@ def plot_volcano_labels(
 ):
     """
     Plot labels on a volcano plot.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.DataSet`
+    ax : :class:`matplotlib.axes.Axes`
+    upper_fold : float, optional
+    lower_fold : float, optional
+    p : float, optional
+    fold_and_p : bool, optional
+    sequence_labels : bool, optional
+    options : dict, optional
+    show_duplicates : bool, optional
+    compress_sym : bool, optional
+    adjust : bool, optional
+    mods : str or list of str, optional
+
+    Returns
+    -------
+    labels : :class:`pandas.DataFrame`
     """
     options = options or {}
 
@@ -281,8 +300,15 @@ def plot_volcano(
     group_b : str or list of str, optional
     p : float, optional
     fold : float, optional
+    xminmax : tuple of (float, float), optional
+    yminmax : tuple of (float, float), optional
     title : str, optional
-    figsize : tuple of float, float
+    ax : :class:`matplotlib.axes.Axes`
+    show_xlabel : bool, optional
+    show_ylabel : bool, optional
+    log2_fold : bool, optional
+    log10_p : bool, optional
+    bonferoni : bool, optional
     kwargs : dict
         Arguments passed to :func:`.plot_volcano_labels`
 
@@ -468,13 +494,13 @@ def plot_volcano_filtered(data, f, **kwargs):
     Display a volcano plot, showing only peptides that are included by a given
     filter.
 
-    All extra arguments will be passed directly to :func:`.plot_volcano`.
-
     Parameters
     ----------
     data : :class:`pyproteome.data_sets.DataSet`
     f : dict or list of dict
         Filters passed to :func:`pyproteome.data_sets.DataSet.filter`.
+    kwargs : dict
+        Extra arguments that are passed directly to :func:`.plot_volcano`.
 
     Returns
     -------

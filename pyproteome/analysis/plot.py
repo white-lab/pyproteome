@@ -157,19 +157,6 @@ def plot(
     return figures
 
 
-def stars(p, ns='ns'):
-    if p < 0.0001:
-        return '****'
-    elif (p < 0.001):
-        return '***'
-    elif (p < 0.01):
-        return '**'
-    elif (p < 0.05):
-        return '*'
-    else:
-        return ns
-
-
 def gen_groups(cmp_groups):
     ret = []
 
@@ -419,7 +406,7 @@ def plot_group(
                     values_a.values,
                     values_b.values,
                 ).pvalue
-                txt = stars(pval)
+                txt = pyp.utils.stars(pval)
 
                 if txt != 'ns' or show_ns:
                     plot_ax.annotate(
@@ -709,7 +696,7 @@ def plot_together(
                         plot_ax.text(
                             x=np.mean([index_a, index_b]),
                             y=y_max + offset + y_max / 40,
-                            s=stars(pval, ns='-'),
+                            s=pyp.utils.stars(pval, ns='-'),
                             horizontalalignment='center',
                             verticalalignment='center',
                         )
