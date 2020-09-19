@@ -205,6 +205,18 @@ class Motif:
 
 
 def get_nmer_args(kwargs):
+    '''
+    Extract all arguments from kwargs that are used by
+    :func:`.generate_n_mers`.
+
+    Parameters
+    ----------
+    kwargs : dict
+
+    Returns
+    -------
+    dict
+    '''
     nmer_args = {}
 
     nmer_args['all_matches'] = kwargs.pop('all_matches', False)
