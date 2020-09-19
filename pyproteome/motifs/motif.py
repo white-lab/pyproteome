@@ -505,6 +505,24 @@ def _add_cache(args, ret):
 
 
 def run_motif_enrichment(data, f, **kwargs):
+    '''
+    Wraps :func:`.motif_enrichment`, generating the list of foreground and background
+    peptide sequences from a data set.
+
+    Parameters
+    ----------
+    data : :class:`pyproteome.data_sets.data_set.DataSet`
+    f : dict or list of dict
+        Argument passed to :func:`pyproteome.data_sets.data_set.DataSet.filter`.
+    kwargs : dict
+        Arguments passed to :func:`.motif_enrichment`.
+
+    Returns
+    -------
+    df : :class:`pandas.DataFrame`
+    p_dist : list of float
+    pp_dist : list of float
+    '''
     nmer_args = get_nmer_args(kwargs)
     foreground = sorted(
         generate_n_mers(data.filter(f)['Sequence'], **nmer_args)
