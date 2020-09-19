@@ -36,7 +36,7 @@ DEFAULT_FILTER_BAD = dict(
     ion_score=15,
     isolation=30,
     median_quant=1.5e3,
-    q=0.05,
+    q=1e-2,
 )
 '''
 Default parameters for filtering data sets.
