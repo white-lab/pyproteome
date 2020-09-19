@@ -51,6 +51,10 @@ def generate_logos(
     kinases : list of str, optional
     min_foreground : int, optional
         Minimum number of substrates needed for logo generation.
+
+    Returns
+    -------
+    list of :class:`matplotlib.figure.Figure`
     '''
     species = pyp.species.ORGANISM_MAPPING.get(species, species).lower()
 
@@ -82,30 +86,3 @@ def generate_logos(
         figs.append(f)
 
     return figs
-
-
-def enriched(data, species=None):
-    df = get_data()
-
-    if species:
-        df = df[
-            np.logical_and(
-                df['KIN_ORGANISM'] == species,
-                df['SUB_ORGANISM'] == species,
-            )
-        ]
-
-    return df[
-        df['SITE_+/-7_AA'].isin(
-            motif.generate_n_mers(
-                data['Sequence'],
-                fill_left='_',
-                fill_right='_',
-                mods=[(None, 'Phospho')],
-            )
-        )
-    ].style.set_table_styles(
-        [
-            {'selector': 'th:first-child', 'props': [('display', 'none')]},
-        ]
-    )

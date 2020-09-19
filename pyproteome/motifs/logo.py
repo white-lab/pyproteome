@@ -462,7 +462,8 @@ def logo(
 
     Returns
     -------
-    fig, axes
+    fig : :class:`matplotlib.figure.Figure`
+    axes : :class:`matplotlib.axes.Axes`
     '''
     if len(back) == 0:
         return None, None
