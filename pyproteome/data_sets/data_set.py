@@ -2367,36 +2367,50 @@ def update_correlation(ds, corr, metric='spearman', min_periods=5):
     return ds
 
 
-def _pair_corr(row, x_val, y_val):
-    pcorr_df = pd.DataFrame([
+def _pair_corr(row, x_val, y_val, z_val=None, method='spearman'):
+    covar = ['x', 'y']
+
+    if z_val is not None:
+        covar += ['z']
+
+    pcorr_df = pd.DataFrame(zip(
         pd.to_numeric(row[x_val.index.tolist()]),
         x_val,
-        y_val
-    ]).T
-    pcorr_df.columns = ['row', 'x', 'y']
+        y_val,
+        z_val if z_val is not None else [1] * len(x_val),
+    ), columns=['row', 'x', 'y', 'z'])
 
     x_pair_corr = pcorr_df.pairwise_corr(
-        covar='y',
-        method='spearman',
+        covar=[i for i in covar if i != 'x'],
+        method=method,
     )
     y_pair_corr = pcorr_df.pairwise_corr(
-        covar='x',
-        method='spearman',
+        covar=[i for i in covar if i != 'y'],
+        method=method,
     )
-    x_corr = x_pair_corr['r'].iloc[0]
-    y_corr = y_pair_corr['r'].iloc[0]
-
-    x_p = x_pair_corr['p-unc'].iloc[0]
-    y_p = y_pair_corr['p-unc'].iloc[0]
+    z_pair_corr = pcorr_df.pairwise_corr(
+        covar=[i for i in covar if i != 'z'],
+        method=method,
+    )
     
     return pd.Series(
-        (x_corr, y_corr, x_p, y_p),
+        (
+            x_pair_corr['r'].iloc[0],
+            x_pair_corr['p-unc'].iloc[0],
+            y_pair_corr['r'].iloc[0],
+            y_pair_corr['p-unc'].iloc[0],
+            z_pair_corr['r'].iloc[0],
+            z_pair_corr['p-unc'].iloc[0],
+        )[:6 if z_val is not None else 4],
         index=[
-        'Correlation-x',
-        'Correlation-y',
-        'p-value-x',
-        'p-value-y',
-    ])
+            'Correlation-x',
+            'p-value-x',
+            'Correlation-y',
+            'p-value-y',
+            'Correlation-z',
+            'p-value-z',
+        ][:6 if z_val is not None else 4],
+    )
 
 
 def update_pairwise_corr(ds, x_val, y_val, inplace=False):
