@@ -17,7 +17,16 @@ import pyproteome as pyp
 
 
 RE_ACCESSION = re.compile(r'\[([A-Za-z0-9]+_[A-Z]+)\]')
-RE_DISCOVERER_ACCESSION = re.compile(r'^>(gi\|[\dA-Za-z]+\|)?sp\|([\dA-Za-z\-]+)\|[\dA-Za-z_]+ .*$')
+RE_DISCOVERER_ACCESSION = re.compile(
+    r'^'
+    r'(gi\|([\dA-Za-z]+)\|)?'
+    r'(uc\|(([\dA-Za-z]+)\|)?([\dA-Za-z\.]+\|)?)?'
+    r'(ref\|([\dA-Za-z\._]+)\|)?'
+    r'(gb\|([\dA-Za-z\._]+)\|)?'
+    r'(gnl\|[\dA-Za-z]+\|)?'
+    r'(sp\|([\dA-Za-z\-]+)\|)?'
+    r' ?([\dA-Za-z_\:\-]+) .+$'
+)
 
 UNIPROT_DATA = {}
 
