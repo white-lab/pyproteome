@@ -405,11 +405,45 @@ def write_full_tables(
             args = 0, ind, df.shape[0], ind
 
             if col.endswith('-p'):
-                args += {'type': '2_color_scale', 'minimum': 0, 'maximum': 5e-2},
+                args += {
+                    'type': '3_color_scale', 
+                    'min_type': 'num',
+                    'mid_type': 'num',
+                    'max_type': 'num',
+                    'min_value': 0, 
+                    'mid_value': 1e-4,
+                    'max_value': 0.05,
+                    'min_color': '#FF4444',
+                    'mid_color': '#FF8844',
+                    'max_color': '#FFFFFF',
+                },
+                print(col, args)
             elif col.endswith('-FC'):
-                args += {'type': '3_color_scale'},
+                args += {
+                    'type': '3_color_scale', 
+                    'min_type': 'num',
+                    'mid_type': 'num',
+                    'max_type': 'num',
+                    'min_value': .25, 
+                    'mid_value': 1,
+                    'max_value': 4,
+                    'min_color': '#6666FF',
+                    'mid_color': '#FFFFFF',
+                    'max_color': '#FF6666',
+                },
             elif col.endswith('-Corr') or col.endswith('-Correlation'):
-                args += {'type': '3_color_scale', 'minimum': -1, 'maximum': 1},
+                args += {
+                    'type': '3_color_scale', 
+                    'min_type': 'num',
+                    'mid_type': 'num',
+                    'max_type': 'num',
+                    'min_value': -1, 
+                    'mid_value': 0,
+                    'max_value': 1,
+                    'min_color': '#6666FF',
+                    'mid_color': '#FFFFFF',
+                    'max_color': '#FF6666',
+                },
             else:
                 continue
 
