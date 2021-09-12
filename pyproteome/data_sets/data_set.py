@@ -2341,18 +2341,23 @@ def update_correlation(ds, corr, metric='spearman', min_periods=5):
     )
 
     metric = {
-        'spearman': partial(spearmanr, b=corr, nan_policy='omit'),
+        'spearman':
+        lambda x:
+        spearmanr(
+            x,
+            b=corr,
+            nan_policy='omit',
+        ) if (~x.isnull()).sum() > 2 else (np.nan, np.nan),
         'pearson':
         lambda x: 
         pearsonr(
             x[~x.isnull()], 
             y=corr[~x.isnull()],
-        ),
+        ) if (~x.isnull()).sum() > 2 else (np.nan, np.nan),
     }[metric]
 
     # Avoids errors with correlation of 2 points
     cols = list(corr.index)
-    ds = ds.dropna(thresh=3, columns=cols)
 
     df = ds.psms[cols].apply(pd.to_numeric)
 
