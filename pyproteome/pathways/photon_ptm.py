@@ -95,7 +95,7 @@ def _get_templates(template_dir):
         f.write(r.content)
 
 
-def photon(ds, folder_name=None, write_output=False):
+def photon(ds, folder_name=None, write_output=False, log2=True):
     '''
     Run PHOTON algorithm on a data set to find functional phosphorylation sites
     using protein-protein interaction networks.
@@ -104,6 +104,7 @@ def photon(ds, folder_name=None, write_output=False):
     ----------
     ds : :class:`pyproteome.data_sets.DataSet`
     folder_name : str, optional
+    log2 : bool, optional
 
     Returns
     -------
@@ -159,7 +160,7 @@ def photon(ds, folder_name=None, write_output=False):
                     ('GeneID', entrez),
                     ('Amino.Acid', mod.letter),
                     ('Position', 1 + mod.abs_pos[0]),
-                    ('avg', np.log2(row['Fold Change'])),
+                    ('avg', np.log2(row['Fold Change']) if log2 else row['Fold Change']),
                     ('Symbol', symbol),
                 ]))
 
