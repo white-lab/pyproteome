@@ -184,6 +184,8 @@ def plot_group(
     y_max=None,
     p_ha='center',
     cmap='cool',
+    linecolor='#000000',
+    swarmcolor='#000000',
 ):
     '''
     Plot the levels of a sequence across each group.
@@ -337,7 +339,7 @@ def plot_group(
         sns.swarmplot(
             x=x,
             y=y,
-            color='.25',
+            color=swarmcolor,
             ax=plot_ax,
             size=size,
         )
@@ -421,7 +423,7 @@ def plot_group(
                         ),
                         xycoords='data',
                         textcoords='data',
-                        arrowprops=dict(arrowstyle='-', ec='#000000'),
+                        arrowprops=dict(arrowstyle='-', ec=linecolor),
                     )
                     p_x = {
                         'left': index_a,
@@ -630,7 +632,7 @@ def plot_together(
         sns.swarmplot(
             x=x,
             y=y,
-            color='.25',
+            color='k',
             ax=plot_ax,
             # size=10,
         )
