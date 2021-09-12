@@ -38,7 +38,7 @@ HANSEN_SPECIES_DATA = {}
 
 # MAPPING_URL = 'https://ftp.ncbi.nlm.nih.gov/gene/DATA/GENE_INFO/Mammalia/'
 MAPPING_URL = (
-    'https://github.com/white-lab/pyproteome-data/raw/master/brainrnaseq/'
+    'https://github.com/white-lab/pyproteome-data/blob/master/brainrnaseq/'
 )
 
 ENRICHMENT_CACHE = os.path.join(CACHE_DIR, 'enrichment_cache.pickle')
@@ -103,7 +103,7 @@ def get_hansen_seq_data(force=False):
 
 
 def fetch_mapping_data(species):
-    url = '{}{}.gene_info.gz'.format(MAPPING_URL, '_'.join(species.split(' ')))
+    url = '{}{}.gene_info.gz?raw=true'.format(MAPPING_URL, '_'.join(species.split(' ')))
     LOGGER.info('Fetching mapping data from {}'.format(url))
 
     response = requests.get(url, stream=True)
