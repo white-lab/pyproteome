@@ -13,7 +13,7 @@ TAXA = {
     'Homo sapiens': 9606,
 }
 
-def get_go_ids(go_ids, species='Homo sapiens'):
+def get_go_ids(go_ids, species='Homo sapiens', add_children=True):
     '''
     Fetch all gene symbols associated with a list of gene ontology term IDs.
 
@@ -21,6 +21,8 @@ def get_go_ids(go_ids, species='Homo sapiens'):
     ----------
     go_ids : str or list of str
     species : str, optional
+    add_children : bool, optional
+        Include all child terms of input GO IDs.
 
     Returns
     -------
@@ -31,8 +33,8 @@ def get_go_ids(go_ids, species='Homo sapiens'):
     if isinstance(go_ids, str):
         go_ids = [go_ids]
 
-    obo_fname = download_go_basic_obo('db/go/go-basic.obo')
-    gene2go = download_ncbi_associations('db/go/gene2go')
+    download_go_basic_obo('db/go/go-basic.obo')
+    download_ncbi_associations('db/go/gene2go')
 
     taxid = TAXA[species]
 
@@ -53,18 +55,17 @@ def get_go_ids(go_ids, species='Homo sapiens'):
 
     srchhelp = GoSearch('db/go/go-basic.obo', go2items=go2items)
 
-    with open('go.log', 'w') as log:
-        # Add children GOs
-        gos_all = srchhelp.add_children_gos(go_ids)
-        
-        # Get Entrez GeneIDs for cell cycle GOs
-        gene_ids = set()
+    # Add children GOs
+    gos_all = srchhelp.add_children_gos(go_ids)
+    
+    # Get Entrez GeneIDs for cell cycle GOs
+    gene_ids = set()
 
-        for go_items in [
-            go_ids,
-            gos_all,
-        ]:
-            gene_ids.update(srchhelp.get_items(go_items))
+    for go_items in [
+        go_ids,
+        gos_all if add_children else [],
+    ]:
+        gene_ids.update(srchhelp.get_items(go_items))
 
     genes = []
 
