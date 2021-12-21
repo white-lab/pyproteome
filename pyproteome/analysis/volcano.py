@@ -244,7 +244,7 @@ def plot_volcano_labels(
         for _, row in labels.iterrows()
     ]
 
-    LOGGER.info('Plotting volcano labels for {} peptides'.format(len(texts)))
+    LOGGER.info('Plotting volcano labels for {} peptides from {} points'.format(len(texts), data.shape[0]))
 
     if adjust and texts:
         texts = texts[:MAX_VOLCANO_LABELS]

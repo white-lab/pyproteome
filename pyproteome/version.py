@@ -1,4 +1,4 @@
-version = '0.11.2'
+version = '0.12.0'
 '''
 The version of pyproteome that is installed.
 '''

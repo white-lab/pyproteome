@@ -1,5 +1,17 @@
 # Change Log
 
+### 0.12.0 (2021-12-21)
+
+Features
+
+  - Added support for files with unlabeled peptide quantification.
+  - Added support for PD2.2 - PD2.5
+
+Changes
+
+  - Fixed several plotting display and fetch data bugs.
+  - Fixed a bug with newer pingouin versions.
+
 ### 0.11.2 (2020-09-18)
 
 Changes
