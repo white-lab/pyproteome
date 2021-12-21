@@ -2393,10 +2393,12 @@ def _pair_corr(row, x_val, y_val, z_val=None, method='spearman'):
         covar=[i for i in covar if i != 'y'],
         method=method,
     )
-    z_pair_corr = pcorr_df.pairwise_corr(
-        covar=[i for i in covar if i != 'z'],
-        method=method,
-    )
+
+    if z_val is not None:
+        z_pair_corr = pcorr_df.pairwise_corr(
+            covar=[i for i in covar if i != 'z'],
+            method=method,
+        )
     
     return pd.Series(
         (
@@ -2404,8 +2406,8 @@ def _pair_corr(row, x_val, y_val, z_val=None, method='spearman'):
             x_pair_corr['p-unc'].iloc[0],
             y_pair_corr['r'].iloc[0],
             y_pair_corr['p-unc'].iloc[0],
-            z_pair_corr['r'].iloc[0],
-            z_pair_corr['p-unc'].iloc[0],
+            z_pair_corr['r'].iloc[0] if z_val is not None else None,
+            z_pair_corr['p-unc'].iloc[0] if z_val is not None else None,
         )[:6 if z_val is not None else 4],
         index=[
             'Correlation-x',
